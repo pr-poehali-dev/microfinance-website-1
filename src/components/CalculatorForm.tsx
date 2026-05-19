@@ -64,7 +64,7 @@ export default function CalculatorForm() {
   const total = amount + interest;
 
   const amountPct = ((amount - 5000) / (200000 - 5000)) * 100;
-  const daysPct = ((days - 5) / (30 - 5)) * 100;
+  const daysPct = ((days - 5) / (730 - 5)) * 100;
 
   const handleFileChange = (key: string, file: File | null) => {
     setFiles((prev) => ({ ...prev, [key]: file }));
@@ -158,7 +158,7 @@ export default function CalculatorForm() {
                     <input
                       type="range"
                       min={5}
-                      max={30}
+                      max={730}
                       step={1}
                       value={days}
                       onChange={(e) => setDays(Number(e.target.value))}
@@ -169,7 +169,7 @@ export default function CalculatorForm() {
                     />
                     <div className="flex justify-between text-xs text-white/30 mt-1">
                       <span>5 дней</span>
-                      <span>30 дней</span>
+                      <span>730 дней</span>
                     </div>
                   </div>
                 </div>
