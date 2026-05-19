@@ -66,6 +66,7 @@ def handler(event: dict, context) -> dict:
     phone = body.get("phone", "").strip()
     email = body.get("email", "").strip()
     amount = body.get("amount", "").strip()
+    days = body.get("days", "").strip()
     birth_date = body.get("birthDate", "").strip()
     passport_series = body.get("passportSeries", "").strip()
     passport_number = body.get("passportNumber", "").strip()
@@ -105,7 +106,8 @@ def handler(event: dict, context) -> dict:
         f"📍 <b>Место рождения:</b> {birth_place}\n"
         f"📞 <b>Телефон:</b> {phone}\n"
         f"📧 <b>Email:</b> {email}\n"
-        f"💰 <b>Сумма:</b> {amount} ₽\n\n"
+        f"💰 <b>Сумма:</b> {amount} ₽\n"
+        f"📅 <b>Срок:</b> {days} дн.\n\n"
         f"📋 <b>Паспортные данные:</b>\n"
         f"  Серия/Номер: {passport_series} {passport_number}\n"
         f"  Дата выдачи: {passport_date}\n"

@@ -7,11 +7,13 @@ export default function CalculatorForm() {
   const [amount, setAmount] = useState(30000);
   const [days, setDays] = useState(15);
   const [formAmount, setFormAmount] = useState(50000);
+  const [formDays, setFormDays] = useState(15);
   const [form, setForm] = useState({
     fullName: "",
     phone: "",
     email: "",
     amount: "50000",
+    days: "15",
     birthDate: "",
     passportSeries: "",
     passportNumber: "",
@@ -375,6 +377,34 @@ export default function CalculatorForm() {
                     <div className="flex justify-between text-xs text-white/30 mt-1">
                       <span>5 000 ₽</span>
                       <span>500 000 ₽</span>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-white/10 px-4 py-4" style={{ background: "rgba(255,255,255,0.05)" }}>
+                    <div className="flex justify-between mb-3">
+                      <span className="text-white/70 text-sm">Срок займа</span>
+                      <span className="font-bold text-lg gradient-text">
+                        {formDays} {formDays === 1 ? "день" : formDays < 5 ? "дня" : "дней"}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min={5}
+                      max={30}
+                      step={1}
+                      value={formDays}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setFormDays(val);
+                        setForm({ ...form, days: String(val) });
+                      }}
+                      className="slider-custom w-full"
+                      style={{
+                        background: `linear-gradient(to right, #7C3AED ${((formDays - 5) / (30 - 5)) * 100}%, rgba(124,58,237,0.2) ${((formDays - 5) / (30 - 5)) * 100}%)`,
+                      }}
+                    />
+                    <div className="flex justify-between text-xs text-white/30 mt-1">
+                      <span>5 дней</span>
+                      <span>30 дней</span>
                     </div>
                   </div>
                   {/* FILE UPLOADS */}
