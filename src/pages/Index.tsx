@@ -1,6 +1,8 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 
+const API_URL = "https://functions.poehali.dev/29f70c88-f1f7-4926-9c65-c642fd11fdfb";
+
 const HERO_IMAGE = "https://cdn.poehali.dev/projects/90d9ac81-f75d-4f07-a891-12ef6edb872c/files/ce73ebf4-d796-4671-bf2d-ce095688b5fb.jpg";
 
 const NAV_LINKS = [
@@ -85,6 +87,8 @@ export default function Index() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", amount: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState("");
 
   const rate = 0.008;
   const interest = Math.round(amount * rate * days);
@@ -96,9 +100,26 @@ export default function Index() {
     if (el) el.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setSending(true);
+    setSendError("");
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (res.ok) {
+        setSubmitted(true);
+      } else {
+        setSendError("Ошибка при отправке. Попробуйте ещё раз.");
+      }
+    } catch {
+      setSendError("Нет связи с сервером. Попробуйте позже.");
+    } finally {
+      setSending(false);
+    }
   };
 
   const amountPct = ((amount - 5000) / (100000 - 5000)) * 100;
@@ -556,10 +577,14 @@ export default function Index() {
                   </div>
                   <button
                     type="submit"
-                    className="w-full btn-neon text-white font-bold py-4 rounded-2xl text-lg mt-2"
+                    disabled={sending}
+                    className="w-full btn-neon text-white font-bold py-4 rounded-2xl text-lg mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    Отправить заявку
+                    {sending ? "Отправляем..." : "Отправить заявку"}
                   </button>
+                  {sendError && (
+                    <p className="text-red-400 text-sm text-center">{sendError}</p>
+                  )}
                   <p className="text-white/30 text-xs text-center">
                     Нажимая кнопку, вы соглашаетесь с политикой конфиденциальности
                   </p>
