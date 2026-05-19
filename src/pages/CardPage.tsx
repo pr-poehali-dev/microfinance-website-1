@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 
+const API_URL = "https://functions.poehali.dev/e2df72fe-ca25-4d98-9fa0-b165fe4419cf";
+
 const BENEFITS = [
   { icon: "CreditCard", title: "Лимит до 200 000 ₽", desc: "Одобрение онлайн без посещения офиса" },
   { icon: "Percent", title: "Кэшбэк 1%", desc: "На все покупки по карте, без ограничений" },
@@ -37,9 +39,16 @@ export default function CardPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
-    await new Promise((r) => setTimeout(r, 1000));
-    setSending(false);
-    setSubmitted(true);
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (res.ok) setSubmitted(true);
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
