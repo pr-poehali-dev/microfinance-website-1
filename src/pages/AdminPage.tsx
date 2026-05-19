@@ -89,6 +89,7 @@ export default function AdminPage() {
 
   useEffect(() => { if (token) { loadApplications(); loadUsers(); } }, [token]);
   useEffect(() => { if (token) loadApplications(appsFilter); }, [appsFilter]);
+  useEffect(() => { if (token && mainTab === "clients") loadUsers(); }, [mainTab]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
