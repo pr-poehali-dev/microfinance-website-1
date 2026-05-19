@@ -84,6 +84,29 @@ def esc(val: str) -> str:
     return val.replace("'", "''")
 
 
+def send_email(to: str, subject: str, html: str):
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    smtp_user = os.environ.get("SMTP_USER", "")
+    smtp_pass = os.environ.get("SMTP_PASSWORD", "")
+    if not smtp_user or not smtp_pass or not to:
+        print(f"[send-email] skipped: user={bool(smtp_user)} pass={bool(smtp_pass)} to={bool(to)}")
+        return
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = f"PARAFINANS24 <{smtp_user}>"
+    msg["To"] = to
+    msg.attach(MIMEText(html, "html", "utf-8"))
+    try:
+        with smtplib.SMTP_SSL("smtp.yandex.ru", 465, timeout=10) as server:
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(smtp_user, to, msg.as_string())
+        print(f"[send-email] sent to {to}")
+    except Exception as ex:
+        print(f"[send-email] error: {ex}")
+
+
 def handler(event: dict, context) -> dict:
     """Приём заявки на займ от клиента: сохранение данных и документов."""
     cors_headers = {
@@ -150,18 +173,28 @@ def handler(event: dict, context) -> dict:
             print(f"[send-application] file upload error {key}: {ex}")
 
     # Сохраняем в БД (Simple Query — без %s)
-    import hashlib as _h, secrets as _s
+    import hashlib as _h, secrets as _s, string as _str
     conn = psycopg2.connect(os.environ["DATABASE_URL"])
     cur = conn.cursor()
     app_id = None
+    plain_password = None  # будет установлен если создаём нового пользователя
 
     try:
         cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = '{esc(phone)}'")
         if not cur.fetchone():
-            tmp_pw = _h.sha256(_s.token_hex(16).encode()).hexdigest()
+            # Генерируем читаемый пароль: 3 слова + цифры
+            alphabet = _str.ascii_letters + _str.digits
+            plain_password = (
+                _s.choice(_str.ascii_uppercase) +
+                "".join(_s.choice(_str.ascii_lowercase) for _ in range(4)) +
+                "".join(_s.choice(_str.digits) for _ in range(3)) +
+                _s.choice("!@#$") +
+                "".join(_s.choice(alphabet) for _ in range(3))
+            )
+            pw_hash = _h.sha256(plain_password.encode()).hexdigest()
             cur.execute(
                 f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email) "
-                f"VALUES ('{esc(phone)}', '{tmp_pw}', '{esc(full_name)}', '{esc(email)}')"
+                f"VALUES ('{esc(phone)}', '{pw_hash}', '{esc(full_name)}', '{esc(email)}')"
             )
 
         fp  = file_urls.get("passportMain", "")
@@ -205,6 +238,53 @@ def handler(event: dict, context) -> dict:
     finally:
         cur.close()
         conn.close()
+
+    # Отправляем пароль на email (только новым пользователям)
+    if plain_password and email:
+        email_html = f"""
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#0F0A1E;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0F0A1E;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#1a1030;border-radius:16px;overflow:hidden;border:1px solid rgba(124,58,237,0.3);">
+        <tr><td style="background:linear-gradient(135deg,#7c3aed,#a855f7);padding:32px 40px;text-align:center;">
+          <h1 style="margin:0;color:#fff;font-size:24px;font-weight:bold;">PARAFINANS24</h1>
+          <p style="margin:8px 0 0;color:rgba(255,255,255,0.8);font-size:14px;">Ваша заявка принята</p>
+        </td></tr>
+        <tr><td style="padding:36px 40px;">
+          <p style="color:rgba(255,255,255,0.8);font-size:16px;margin:0 0 16px;">Здравствуйте, <b style="color:#fff;">{full_name or phone}</b>!</p>
+          <p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0 0 24px;line-height:1.6;">
+            Ваша заявка на займ <b style="color:#fff;">#{app_id}</b> успешно принята и находится на рассмотрении.<br>
+            Мы свяжемся с вами в течение 15 минут.
+          </p>
+          <p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0 0 8px;">Данные для входа в личный кабинет:</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(124,58,237,0.15);border-radius:12px;border:1px solid rgba(124,58,237,0.3);margin-bottom:24px;">
+            <tr><td style="padding:20px 24px;">
+              <p style="margin:0 0 10px;color:rgba(255,255,255,0.5);font-size:12px;">ТЕЛЕФОН</p>
+              <p style="margin:0 0 16px;color:#fff;font-size:18px;font-weight:bold;">{phone}</p>
+              <p style="margin:0 0 10px;color:rgba(255,255,255,0.5);font-size:12px;">ПАРОЛЬ</p>
+              <p style="margin:0;color:#c084fc;font-size:22px;font-weight:bold;letter-spacing:2px;">{plain_password}</p>
+            </td></tr>
+          </table>
+          <p style="color:rgba(255,255,255,0.4);font-size:12px;margin:0 0 24px;">
+            Сохраните этот пароль. После входа вы сможете отслеживать статус займа в личном кабинете.
+          </p>
+          <p style="color:rgba(255,255,255,0.3);font-size:11px;margin:0;text-align:center;">
+            © PARAFINANS24 · Это письмо отправлено автоматически
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+        send_email(
+            to=email,
+            subject=f"Заявка #{app_id} принята — данные для входа в личный кабинет",
+            html=email_html,
+        )
 
     # Telegram уведомление
     tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
