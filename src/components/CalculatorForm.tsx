@@ -398,7 +398,7 @@ export default function CalculatorForm() {
                         <input
                           type="range"
                           min={5}
-                          max={30}
+                          max={730}
                           step={1}
                           value={formDays}
                           onChange={(e) => {
@@ -408,12 +408,12 @@ export default function CalculatorForm() {
                           }}
                           className="slider-custom w-full"
                           style={{
-                            background: `linear-gradient(to right, #7C3AED ${((formDays - 5) / (30 - 5)) * 100}%, rgba(124,58,237,0.2) ${((formDays - 5) / (30 - 5)) * 100}%)`,
+                            background: `linear-gradient(to right, #7C3AED ${((formDays - 5) / (730 - 5)) * 100}%, rgba(124,58,237,0.2) ${((formDays - 5) / (730 - 5)) * 100}%)`,
                           }}
                         />
                         <div className="flex justify-between text-xs text-white/30 mt-1">
                           <span>5 дней</span>
-                          <span>30 дней</span>
+                          <span>730 дней</span>
                         </div>
                       </div>
                       {/* Итог */}
