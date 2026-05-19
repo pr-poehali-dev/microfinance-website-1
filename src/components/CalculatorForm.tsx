@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 
-const API_URL = "https://functions.poehali.dev/29f70c88-f1f7-4926-9c65-c642fd11fdfb";
+const API_URL = "https://functions.poehali.dev/835b2dae-b259-4927-8f7b-64e84f2c730e";
 
 export default function CalculatorForm() {
   const [amount, setAmount] = useState(30000);
@@ -63,7 +63,7 @@ export default function CalculatorForm() {
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, ...encodedFiles }),
+        body: JSON.stringify({ ...form, name: form.fullName, ...encodedFiles }),
       });
       if (res.ok) {
         setSubmitted(true);
