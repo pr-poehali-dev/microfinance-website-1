@@ -52,6 +52,9 @@ export default function AdminPage() {
   const [actionMsg, setActionMsg]   = useState("");
   const [actionErr, setActionErr]   = useState("");
 
+  const [newAppNotif, setNewAppNotif] = useState(false);
+  const prevAppCountRef = useRef<number | null>(null);
+
   const tokenRef = useRef(token);
   useEffect(() => { tokenRef.current = token; }, [token]);
 
@@ -68,13 +71,37 @@ export default function AdminPage() {
     setToken(""); setUsers([]); setApplications([]); setSelectedUser(null);
   };
 
+  const playNotifSound = () => {
+    try {
+      const ctx = new AudioContext();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.setValueAtTime(880, ctx.currentTime);
+      o.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
+      g.gain.setValueAtTime(0.3, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.4);
+    } catch (e) { void e; }
+  };
+
   const loadApplications = useCallback((status?: string) => {
     if (!tokenRef.current) return;
     const s = status ?? appsFilterRef.current;
     setAppsLoading(true);
     fetch(`${ADMIN_URL}?sub=applications&status=${s}`, { headers: hdrs() })
       .then((r) => r.ok ? r.json() : r.status === 401 ? (doLogout(), null) : null)
-      .then((d) => { if (d) setApplications(d.applications || []); })
+      .then((d) => {
+        if (!d) return;
+        const apps: Application[] = d.applications || [];
+        if (s === "pending" && prevAppCountRef.current !== null && apps.length > prevAppCountRef.current) {
+          playNotifSound();
+          setNewAppNotif(true);
+          setTimeout(() => setNewAppNotif(false), 5000);
+        }
+        if (s === "pending") prevAppCountRef.current = apps.length;
+        setApplications(apps);
+      })
       .finally(() => setAppsLoading(false));
   }, []);
 
@@ -209,6 +236,14 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen font-golos" style={{ background: "#0F0A1E" }}>
+      {newAppNotif && (
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl text-white font-semibold text-sm animate-bounce"
+          style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", boxShadow: "0 0 30px rgba(168,85,247,0.5)" }}>
+          <span style={{ fontSize: 20 }}>🔔</span>
+          Новая заявка на займ!
+          <button onClick={() => { setNewAppNotif(false); setMainTab("applications"); }} className="ml-2 underline opacity-80 hover:opacity-100">Смотреть</button>
+        </div>
+      )}
       <AdminNavbar
         mainTab={mainTab}
         setMainTab={setMainTab}
