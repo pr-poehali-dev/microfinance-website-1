@@ -83,7 +83,7 @@ export default function FaqContactsFooter() {
             {[
               { icon: "Phone", title: "Телефон", value: "+7 (495) 663-51-24", sub: "Бесплатно, круглосуточно", href: "tel:+74956635124" },
               { icon: "Mail", title: "Email", value: "PARAFINANS24@ya.ru", sub: "Ответим в течение часа", href: "mailto:PARAFINANS24@ya.ru" },
-              { icon: "Clock", title: "Режим работы", value: "Пн–Пт: 9:00–20:00", sub: "Онлайн: 24/7", href: null },
+              { icon: "Clock", title: "Режим работы", value: "Круглосуточно", sub: "Онлайн: 24/7", href: null },
             ].map((c) => (
               <div key={c.title} className="glass card-hover rounded-2xl p-6 text-center">
                 <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-purple-600/20 flex items-center justify-center">
