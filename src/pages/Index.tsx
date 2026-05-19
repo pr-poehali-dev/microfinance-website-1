@@ -657,11 +657,11 @@ export default function Index() {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-6 mb-10">
             {[
               { icon: "Phone", title: "Телефон", value: "+7 (800) 000-00-00", sub: "Бесплатно, круглосуточно" },
               { icon: "Mail", title: "Email", value: "info@bystrozaim.ru", sub: "Ответим в течение 1 часа" },
-              { icon: "MapPin", title: "Офис", value: "Москва, ул. Примерная, 1", sub: "Пн–Пт: 9:00–20:00" },
+              { icon: "MapPin", title: "Офис", value: "Москва, Проспект Мира, 112", sub: "Пн–Пт: 9:00–20:00" },
             ].map((c) => (
               <div key={c.title} className="glass card-hover rounded-2xl p-8 text-center">
                 <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-purple-600/20 flex items-center justify-center">
@@ -672,6 +672,27 @@ export default function Index() {
                 <div className="text-white/40 text-sm">{c.sub}</div>
               </div>
             ))}
+          </div>
+
+          {/* Карта */}
+          <div className="rounded-3xl overflow-hidden" style={{ border: "1px solid rgba(168,85,247,0.2)", height: 360 }}>
+            <iframe
+              src="https://yandex.ru/map-widget/v1/?ll=37.641%2C55.820&z=16&pt=37.641%2C55.820~Москва%2C+Проспект+Мира%2C+112&text=Москва%2C+Проспект+Мира%2C+112"
+              width="100%"
+              height="360"
+              frameBorder="0"
+              allowFullScreen
+              title="Карта офиса БыстроЗайм"
+              style={{ display: "block" }}
+            />
+          </div>
+
+          <div className="mt-5 flex items-center gap-3 glass rounded-2xl px-6 py-4 w-fit">
+            <Icon name="Navigation" size={18} className="text-purple-400 shrink-0" />
+            <span className="text-white/70 text-sm">
+              <span className="text-white font-semibold">Москва, Проспект Мира, д. 112</span>
+              {" "}· метро Алексеевская / Рижская
+            </span>
           </div>
         </div>
       </section>
