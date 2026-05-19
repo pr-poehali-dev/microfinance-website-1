@@ -85,7 +85,7 @@ export default function Index() {
   const [days, setDays] = useState(15);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", phone: "", amount: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", amount: "" });
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
@@ -553,6 +553,18 @@ export default function Index() {
                       placeholder="+7 (900) 000-00-00"
                       value={form.phone}
                       onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      required
+                      className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                      style={{ background: "rgba(255,255,255,0.05)" }}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-white/70 text-sm mb-2 block">Email</label>
+                    <input
+                      type="email"
+                      placeholder="ivan@mail.ru"
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
                       required
                       className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
                       style={{ background: "rgba(255,255,255,0.05)" }}
