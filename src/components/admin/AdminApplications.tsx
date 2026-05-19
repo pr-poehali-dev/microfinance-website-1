@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Icon from "@/components/ui/icon";
 
 interface Application {
@@ -46,7 +47,29 @@ export default function AdminApplications({
   approveRate, setApproveRate, rejectReason, setRejectReason,
   onApprove, onReject,
 }: Props) {
+  const [lightbox, setLightbox] = useState<string | null>(null);
+  const [openDocs, setOpenDocs] = useState<Set<number>>(new Set());
+
+  const toggleDocs = (id: number) =>
+    setOpenDocs((prev) => {
+      const s = new Set(prev);
+      if (s.has(id)) { s.delete(id); } else { s.add(id); }
+      return s;
+    });
+
   return (
+    <>
+    {lightbox && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style={{ background: "rgba(0,0,0,0.9)" }}
+        onClick={() => setLightbox(null)}>
+        <button className="absolute top-4 right-4 text-white/60 hover:text-white" onClick={() => setLightbox(null)}>
+          <Icon name="X" size={28} />
+        </button>
+        <img src={lightbox} alt="doc" className="max-w-full max-h-[90vh] rounded-2xl object-contain"
+          onClick={(e) => e.stopPropagation()} />
+      </div>
+    )}
     <div className="pt-4">
       <div className="flex items-center gap-2 mb-5">
         {(["pending", "approved", "rejected"] as const).map((s) => {
@@ -117,23 +140,55 @@ export default function AdminApplications({
                 </div>
 
                 {/* Документы */}
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {FILE_LABELS.map(({ key, label }) => {
-                    const url = app[key] as string;
-                    return url ? (
-                      <a key={key} href={url} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-purple-300 transition-all hover:text-white"
-                        style={{ background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.3)" }}>
-                        <Icon name="FileImage" size={12} />{label}
-                      </a>
-                    ) : (
-                      <span key={key} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-white/20"
-                        style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                        <Icon name="FileX" size={12} />{label}
-                      </span>
-                    );
-                  })}
-                </div>
+                {(() => {
+                  const hasFiles = FILE_LABELS.some(({ key }) => !!(app[key] as string));
+                  const isOpen = openDocs.has(app.id);
+                  const fileCount = FILE_LABELS.filter(({ key }) => !!(app[key] as string)).length;
+                  return (
+                    <div className="mt-2">
+                      <button onClick={() => toggleDocs(app.id)}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                        style={hasFiles
+                          ? { background: "rgba(124,58,237,0.2)", color: "#c084fc", border: "1px solid rgba(124,58,237,0.3)" }
+                          : { background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.25)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                        <Icon name="Paperclip" size={12} />
+                        Документы {hasFiles ? `(${fileCount}/${FILE_LABELS.length})` : "(не загружены)"}
+                        {hasFiles && <Icon name={isOpen ? "ChevronUp" : "ChevronDown"} size={12} />}
+                      </button>
+
+                      {isOpen && (
+                        <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          {FILE_LABELS.map(({ key, label }) => {
+                            const url = app[key] as string;
+                            return (
+                              <div key={key} className="flex flex-col gap-1">
+                                <span className="text-white/40 text-xs">{label}</span>
+                                {url ? (
+                                  <button onClick={() => setLightbox(url)}
+                                    className="relative group rounded-xl overflow-hidden"
+                                    style={{ aspectRatio: "4/3", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(124,58,237,0.3)" }}>
+                                    <img src={url} alt={label}
+                                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                      style={{ background: "rgba(0,0,0,0.5)" }}>
+                                      <Icon name="ZoomIn" size={20} className="text-white" />
+                                    </div>
+                                  </button>
+                                ) : (
+                                  <div className="rounded-xl flex items-center justify-center"
+                                    style={{ aspectRatio: "4/3", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                                    <Icon name="FileX" size={20} className="text-white/20" />
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {app.rejectReason && <div className="text-red-400 text-xs mt-2">Причина отказа: {app.rejectReason}</div>}
               </div>
@@ -220,5 +275,6 @@ export default function AdminApplications({
         ))}
       </div>
     </div>
+    </>
   );
 }
