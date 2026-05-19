@@ -659,7 +659,7 @@ export default function Index() {
 
           <div className="grid md:grid-cols-3 gap-6 mb-10">
             {[
-              { icon: "Phone", title: "Телефон", value: "+7 (800) 000-00-00", sub: "Бесплатно, круглосуточно" },
+              { icon: "Phone", title: "Телефон", value: "+7 (495) 663-51-24", sub: "Бесплатно, круглосуточно" },
               { icon: "Mail", title: "Email", value: "info@bystrozaim.ru", sub: "Ответим в течение 1 часа" },
               { icon: "MapPin", title: "Офис", value: "Москва, Проспект Мира, 112", sub: "Пн–Пт: 9:00–20:00" },
             ].map((c) => (

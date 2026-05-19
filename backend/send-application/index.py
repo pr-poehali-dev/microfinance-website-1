@@ -95,7 +95,7 @@ def handler(event: dict, context) -> dict:
           <p style="margin: 0; color: #666; font-size: 13px;">Запрошенная сумма</p>
           <p style="margin: 6px 0 0; color: #7C3AED; font-size: 24px; font-weight: bold;">{amount} ₽</p>
         </div>
-        <p style="color: #888; font-size: 13px;">Если у вас есть вопросы — звоните: <strong>+7 (800) 000-00-00</strong> (бесплатно, круглосуточно)</p>
+        <p style="color: #888; font-size: 13px;">Если у вас есть вопросы — звоните: <strong>+7 (495) 663-51-24</strong></p>
         <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
         <p style="color: #bbb; font-size: 11px; text-align: center;">БыстроЗайм · Лицензия ЦБ РФ · {now}</p>
       </div>
