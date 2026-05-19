@@ -76,9 +76,9 @@ def get_conn():
 
 
 def check_admin_token(cur, token: str) -> bool:
+    t = token.replace("'", "''")
     cur.execute(
-        f"SELECT id FROM {SCHEMA}.admin_sessions WHERE token = %s AND expires_at > NOW()",
-        (token,)
+        f"SELECT id FROM {SCHEMA}.admin_sessions WHERE token = '{t}' AND expires_at > NOW()"
     )
     return cur.fetchone() is not None
 
@@ -111,10 +111,9 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Неверный пароль"})}
 
         tok = secrets.token_hex(32)
-        expires_at = datetime.now() + timedelta(hours=12)
         cur.execute(
-            f"INSERT INTO {SCHEMA}.admin_sessions (token, expires_at) VALUES (%s, %s)",
-            (tok, expires_at)
+            f"INSERT INTO {SCHEMA}.admin_sessions (token, expires_at) "
+            f"VALUES ('{tok}', NOW() + INTERVAL '12 hours')"
         )
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"token": tok})}
@@ -144,13 +143,10 @@ def handler(event: dict, context) -> dict:
 
     # --- ЗАЙМЫ КЛИЕНТА (GET, sub='loans', userId=...) ---
     if sub == "loans" and method == "GET":
-        user_id = qs.get("userId")
-        cur.execute(
-            f"SELECT id, amount, days, rate, status, created_at FROM {SCHEMA}.loans WHERE user_id = %s ORDER BY created_at DESC",
-            (user_id,)
-        )
+        user_id = int(qs.get("userId", 0))
+        cur.execute(f"SELECT id, amount, days, rate, status, created_at FROM {SCHEMA}.loans WHERE user_id = {user_id} ORDER BY created_at DESC")
         rows = cur.fetchall()
-        cur.execute(f"SELECT phone, full_name FROM {SCHEMA}.users WHERE id = %s", (user_id,))
+        cur.execute(f"SELECT phone, full_name FROM {SCHEMA}.users WHERE id = {user_id}")
         u = cur.fetchone()
         cur.close(); conn.close()
         loans = [{"id": r[0], "amount": float(r[1]), "days": r[2], "rate": float(r[3]),
@@ -172,16 +168,14 @@ def handler(event: dict, context) -> dict:
             cur.close(); conn.close()
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Заполните все поля"})}
 
-        cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = %s", (phone,))
+        ph_e = phone.replace("'", "''")
+        cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = '{ph_e}'")
         user = cur.fetchone()
         if not user:
             cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Клиент с таким номером не найден"})}
 
-        cur.execute(
-            f"INSERT INTO {SCHEMA}.loans (user_id, amount, days, rate, status) VALUES (%s, %s, %s, %s, 'active') RETURNING id",
-            (user[0], amount, days, rate)
-        )
+        cur.execute(f"INSERT INTO {SCHEMA}.loans (user_id, amount, days, rate, status) VALUES ({user[0]}, {amount}, {days}, {rate}, 'active') RETURNING id")
         loan_id = cur.fetchone()[0]
         conn.commit(); cur.close(); conn.close()
 
@@ -203,12 +197,11 @@ def handler(event: dict, context) -> dict:
     if sub == "loan" and method == "PUT":
         loan_id = qs.get("loanId")
         status  = body.get("status", "active")
-        cur.execute(
-            f"SELECT l.amount, u.phone FROM {SCHEMA}.loans l JOIN {SCHEMA}.users u ON u.id = l.user_id WHERE l.id = %s",
-            (loan_id,)
-        )
+        lid = int(loan_id) if loan_id else 0
+        st_e = status.replace("'", "''")
+        cur.execute(f"SELECT l.amount, u.phone FROM {SCHEMA}.loans l JOIN {SCHEMA}.users u ON u.id = l.user_id WHERE l.id = {lid}")
         row = cur.fetchone()
-        cur.execute(f"UPDATE {SCHEMA}.loans SET status = %s WHERE id = %s", (status, loan_id))
+        cur.execute(f"UPDATE {SCHEMA}.loans SET status = '{st_e}' WHERE id = {lid}")
         conn.commit(); cur.close(); conn.close()
 
         STATUS_LABELS = {"active": "Активен ✅", "paid": "Погашен ✔️", "overdue": "Просрочен ⚠️", "review": "На рассмотрении 🔍"}
@@ -233,15 +226,14 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Телефон и пароль обязательны"})}
 
         pw_hash = hashlib.sha256(password.encode()).hexdigest()
-        cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = %s", (phone,))
+        ph_e = phone.replace("'", "''")
+        fn_e = (full_name or "").replace("'", "''")
+        cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = '{ph_e}'")
         if cur.fetchone():
             cur.close(); conn.close()
             return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": "Клиент уже зарегистрирован"})}
 
-        cur.execute(
-            f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name) VALUES (%s, %s, %s) RETURNING id",
-            (phone, pw_hash, full_name)
-        )
+        cur.execute(f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name) VALUES ('{ph_e}', '{pw_hash}', '{fn_e}') RETURNING id")
         uid = cur.fetchone()[0]
         conn.commit(); cur.close(); conn.close()
 
