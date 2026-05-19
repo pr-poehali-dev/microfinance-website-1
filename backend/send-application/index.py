@@ -84,10 +84,21 @@ def handler(event: dict, context) -> dict:
             "body": json.dumps({"error": "Заполните все поля"}, ensure_ascii=False),
         }
 
-    # Сохраняем заявку в БД
+    # Сохраняем заявку в БД и создаём клиента если его ещё нет
+    import hashlib as _h, secrets as _s
     app_id = None
     conn = psycopg2.connect(os.environ["DATABASE_URL"])
     cur = conn.cursor()
+
+    # Создаём клиента (если не существует)
+    cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = %s", (phone,))
+    if not cur.fetchone():
+        tmp_pw = _h.sha256(_s.token_hex(16).encode()).hexdigest()
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email) VALUES (%s, %s, %s, %s)",
+            (phone, tmp_pw, full_name or None, email or None)
+        )
+
     cur.execute(
         f"""INSERT INTO {SCHEMA}.applications
             (full_name, phone, email, amount, days, birth_date, birth_place,
