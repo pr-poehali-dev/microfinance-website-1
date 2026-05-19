@@ -1,4 +1,4 @@
-"""Отправка заявки на займ на email менеджера."""
+"""Отправка заявки на займ на email менеджера. v2"""
 import json
 import smtplib
 from email.mime.text import MIMEText
