@@ -11,9 +11,12 @@ interface User { id: number; phone: string; fullName: string; email: string; cre
 interface Loan  { id: number; amount: number; days: number; rate: number; ratePercent: number; status: string; createdAt: string; }
 interface Application {
   id: number; fullName: string; phone: string; email: string;
-  amount: number; days: number; birthDate: string;
-  passportSeries: string; passportNumber: string;
+  amount: number; days: number; birthDate: string; birthPlace: string;
+  passportSeries: string; passportNumber: string; passportDate: string;
+  passportCode: string; passportBy: string; telegramId: string;
   status: string; createdAt: string; rejectReason: string;
+  filePassport: string; fileRegistration: string;
+  fileSelfie: string; filePreviousPassports: string;
 }
 
 type MainTab = "applications" | "clients";

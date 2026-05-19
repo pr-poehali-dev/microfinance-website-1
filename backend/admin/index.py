@@ -236,22 +236,29 @@ def handler(event: dict, context) -> dict:
     if sub == "applications" and method == "GET":
         status_filter = qs.get("status", "pending")
         print(f"[applications] status_filter={status_filter!r}")
-        cur.execute(
-            f"""SELECT id, full_name, phone, email, amount, days, birth_date,
-                       passport_series, passport_number, status, created_at, reject_reason
-                FROM {SCHEMA}.applications
-                WHERE status = %s ORDER BY created_at DESC""",
-            (status_filter,)
-        )
+        sf = status_filter.replace("'", "''")
+        cur.execute(f"""
+            SELECT id, full_name, phone, email, amount, days, birth_date,
+                   passport_series, passport_number, status, created_at, reject_reason,
+                   telegram_id, birth_place, passport_date, passport_code, passport_by,
+                   file_passport, file_registration, file_selfie, file_previous_passports
+            FROM {SCHEMA}.applications
+            WHERE status = '{sf}' ORDER BY created_at DESC
+        """)
         rows = cur.fetchall()
         print(f"[applications] found {len(rows)} rows")
         cur.close(); conn.close()
         apps = [{
             "id": r[0], "fullName": r[1] or "", "phone": r[2], "email": r[3] or "",
             "amount": float(r[4]) if r[4] else 0, "days": r[5] or 0,
-            "birthDate": r[6] or "", "passportSeries": r[7] or "",
+            "birthDate": str(r[6]) if r[6] else "", "passportSeries": r[7] or "",
             "passportNumber": r[8] or "", "status": r[9],
-            "createdAt": r[10].strftime("%d.%m.%Y в %H:%M"), "rejectReason": r[11] or ""
+            "createdAt": r[10].strftime("%d.%m.%Y в %H:%M"), "rejectReason": r[11] or "",
+            "telegramId": r[12] or "", "birthPlace": r[13] or "",
+            "passportDate": str(r[14]) if r[14] else "", "passportCode": r[15] or "",
+            "passportBy": r[16] or "",
+            "filePassport": r[17] or "", "fileRegistration": r[18] or "",
+            "fileSelfie": r[19] or "", "filePreviousPassports": r[20] or "",
         } for r in rows]
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"applications": apps}, ensure_ascii=False)}
 

@@ -2,9 +2,12 @@ import Icon from "@/components/ui/icon";
 
 interface Application {
   id: number; fullName: string; phone: string; email: string;
-  amount: number; days: number; birthDate: string;
-  passportSeries: string; passportNumber: string;
+  amount: number; days: number; birthDate: string; birthPlace: string;
+  passportSeries: string; passportNumber: string; passportDate: string;
+  passportCode: string; passportBy: string; telegramId: string;
   status: string; createdAt: string; rejectReason: string;
+  filePassport: string; fileRegistration: string;
+  fileSelfie: string; filePreviousPassports: string;
 }
 
 interface Props {
@@ -28,6 +31,13 @@ interface Props {
   onApprove: () => void;
   onReject: () => void;
 }
+
+const FILE_LABELS: { key: keyof Application; label: string }[] = [
+  { key: "filePassport",          label: "Паспорт" },
+  { key: "fileRegistration",      label: "Прописка" },
+  { key: "fileSelfie",            label: "Селфи" },
+  { key: "filePreviousPassports", label: "Ранее выданные" },
+];
 
 export default function AdminApplications({
   applications, appsLoading, appsFilter, setAppsFilter,
@@ -78,18 +88,53 @@ export default function AdminApplications({
           <div key={app.id} className="glass rounded-2xl p-5">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
+                {/* Заголовок */}
                 <div className="flex items-center gap-3 mb-3 flex-wrap">
                   <span className="text-white font-bold text-lg">{app.fullName || app.phone}</span>
                   <span className="text-white/30 text-sm">#{app.id}</span>
                   <span className="text-white/30 text-xs">{app.createdAt}</span>
+                  {app.telegramId && (
+                    <span className="text-purple-400 text-xs">@{app.telegramId}</span>
+                  )}
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+
+                {/* Основные данные */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm mb-3">
                   <div><div className="text-white/40 text-xs mb-0.5">Телефон</div><div className="text-white">{app.phone}</div></div>
+                  <div><div className="text-white/40 text-xs mb-0.5">Email</div><div className="text-white text-xs">{app.email || "—"}</div></div>
                   <div><div className="text-white/40 text-xs mb-0.5">Сумма</div><div className="text-white font-bold">{app.amount.toLocaleString("ru-RU")} ₽</div></div>
                   <div><div className="text-white/40 text-xs mb-0.5">Срок</div><div className="text-white">{app.days} дн.</div></div>
-                  <div><div className="text-white/40 text-xs mb-0.5">Паспорт</div><div className="text-white">{app.passportSeries} {app.passportNumber}</div></div>
                 </div>
-                {app.birthDate && <div className="text-white/30 text-xs mt-2">Дата рождения: {app.birthDate}</div>}
+
+                {/* Паспортные данные */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm mb-3 p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.04)" }}>
+                  <div><div className="text-white/40 text-xs mb-0.5">Серия / Номер</div><div className="text-white">{app.passportSeries} {app.passportNumber}</div></div>
+                  <div><div className="text-white/40 text-xs mb-0.5">Дата выдачи</div><div className="text-white">{app.passportDate || "—"}</div></div>
+                  <div><div className="text-white/40 text-xs mb-0.5">Код подразделения</div><div className="text-white">{app.passportCode || "—"}</div></div>
+                  <div className="col-span-2"><div className="text-white/40 text-xs mb-0.5">Кем выдан</div><div className="text-white text-xs">{app.passportBy || "—"}</div></div>
+                  <div><div className="text-white/40 text-xs mb-0.5">Дата рождения</div><div className="text-white">{app.birthDate || "—"}</div></div>
+                  {app.birthPlace && <div className="col-span-2 sm:col-span-3"><div className="text-white/40 text-xs mb-0.5">Место рождения</div><div className="text-white text-xs">{app.birthPlace}</div></div>}
+                </div>
+
+                {/* Документы */}
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {FILE_LABELS.map(({ key, label }) => {
+                    const url = app[key] as string;
+                    return url ? (
+                      <a key={key} href={url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-purple-300 transition-all hover:text-white"
+                        style={{ background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.3)" }}>
+                        <Icon name="FileImage" size={12} />{label}
+                      </a>
+                    ) : (
+                      <span key={key} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-white/20"
+                        style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                        <Icon name="FileX" size={12} />{label}
+                      </span>
+                    );
+                  })}
+                </div>
+
                 {app.rejectReason && <div className="text-red-400 text-xs mt-2">Причина отказа: {app.rejectReason}</div>}
               </div>
 
