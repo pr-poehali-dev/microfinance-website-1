@@ -135,7 +135,7 @@ export default function Index() {
               <Icon name="Wallet" size={20} className="text-white" />
             </div>
             <span className="font-oswald text-xl font-bold tracking-wide text-white">
-              БЫСТРО<span className="gradient-text">ЗАЙМ</span>
+              PARA<span className="gradient-text">FINANS24</span>
             </span>
           </div>
 
@@ -711,11 +711,11 @@ export default function Index() {
               <Icon name="Wallet" size={16} className="text-white" />
             </div>
             <span className="font-oswald text-lg font-bold text-white">
-              БЫСТРО<span className="gradient-text">ЗАЙМ</span>
+              PARA<span className="gradient-text">FINANS24</span>
             </span>
           </div>
           <div className="text-white/30 text-sm text-center">
-            © 2024 БыстроЗайм. Лицензия ЦБ РФ. Все права защищены.
+            © 2024 PARAFINANS24. Лицензия ЦБ РФ. Все права защищены.
           </div>
           <div className="flex gap-4">
             {["Политика", "Условия", "Реквизиты"].map((l) => (

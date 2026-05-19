@@ -52,7 +52,7 @@ def handler(event: dict, context) -> dict:
     manager_html = f"""
     <html><body style="font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px;">
       <div style="max-width: 500px; margin: 0 auto; background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-        <h2 style="color: #7C3AED; margin-top: 0;">🚀 Новая заявка на займ</h2>
+        <h2 style="color: #7C3AED; margin-top: 0;">🚀 Новая заявка — PARAFINANS24</h2>
         <table style="width: 100%; border-collapse: collapse;">
           <tr>
             <td style="padding: 10px 0; color: #666; width: 40%;">Имя</td>
@@ -97,7 +97,7 @@ def handler(event: dict, context) -> dict:
         </div>
         <p style="color: #888; font-size: 13px;">Если у вас есть вопросы — звоните: <strong>+7 (495) 663-51-24</strong></p>
         <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-        <p style="color: #bbb; font-size: 11px; text-align: center;">БыстроЗайм · Лицензия ЦБ РФ · {now}</p>
+        <p style="color: #bbb; font-size: 11px; text-align: center;">PARAFINANS24 · Лицензия ЦБ РФ · {now}</p>
       </div>
     </body></html>
     """
@@ -105,7 +105,7 @@ def handler(event: dict, context) -> dict:
     with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT) as server:
         server.login(SMTP_USER, password)
         send_email(server, SMTP_USER, MANAGER_EMAIL, f"Новая заявка на займ от {name}", manager_html)
-        send_email(server, SMTP_USER, email, "Ваша заявка на займ принята — БыстроЗайм", client_html)
+        send_email(server, SMTP_USER, email, "Ваша заявка на займ принята — PARAFINANS24", client_html)
 
     return {
         "statusCode": 200,
