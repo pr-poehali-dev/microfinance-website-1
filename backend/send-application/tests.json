@@ -10,7 +10,7 @@
       "name": "Missing fields returns 400",
       "method": "POST",
       "path": "/",
-      "body": {"name": "", "phone": "", "amount": ""},
+      "body": {"fullName": "", "phone": "", "email": "", "amount": ""},
       "expectedStatus": 400
     }
   ]
