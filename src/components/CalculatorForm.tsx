@@ -36,7 +36,7 @@ export default function CalculatorForm() {
   const interest = Math.round(amount * rate * days);
   const total = amount + interest;
 
-  const amountPct = ((amount - 5000) / (100000 - 5000)) * 100;
+  const amountPct = ((amount - 5000) / (200000 - 5000)) * 100;
   const daysPct = ((days - 5) / (30 - 5)) * 100;
 
   const handleFileChange = (key: string, file: File | null) => {
@@ -108,7 +108,7 @@ export default function CalculatorForm() {
                     <input
                       type="range"
                       min={5000}
-                      max={100000}
+                      max={200000}
                       step={1000}
                       value={amount}
                       onChange={(e) => setAmount(Number(e.target.value))}
@@ -119,7 +119,7 @@ export default function CalculatorForm() {
                     />
                     <div className="flex justify-between text-xs text-white/30 mt-1">
                       <span>5 000 ₽</span>
-                      <span>100 000 ₽</span>
+                      <span>200 000 ₽</span>
                     </div>
                   </div>
 
@@ -369,7 +369,7 @@ export default function CalculatorForm() {
                         <input
                           type="range"
                           min={5000}
-                          max={500000}
+                          max={200000}
                           step={5000}
                           value={formAmount}
                           onChange={(e) => {
@@ -379,12 +379,12 @@ export default function CalculatorForm() {
                           }}
                           className="slider-custom w-full"
                           style={{
-                            background: `linear-gradient(to right, #7C3AED ${((formAmount - 5000) / (500000 - 5000)) * 100}%, rgba(124,58,237,0.2) ${((formAmount - 5000) / (500000 - 5000)) * 100}%)`,
+                            background: `linear-gradient(to right, #7C3AED ${((formAmount - 5000) / (200000 - 5000)) * 100}%, rgba(124,58,237,0.2) ${((formAmount - 5000) / (200000 - 5000)) * 100}%)`,
                           }}
                         />
                         <div className="flex justify-between text-xs text-white/30 mt-1">
                           <span>5 000 ₽</span>
-                          <span>500 000 ₽</span>
+                          <span>200 000 ₽</span>
                         </div>
                       </div>
                       {/* Срок */}

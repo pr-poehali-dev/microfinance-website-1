@@ -24,7 +24,7 @@ const SERVICES = [
   {
     icon: "Shield",
     title: "Займ под залог",
-    desc: "До 500 000 ₽ под залог имущества. Самая низкая ставка.",
+    desc: "До 200 000 ₽ под залог имущества. Самая низкая ставка.",
     badge: "Максимум",
     rate: "от 0.2%/день",
     term: "до 24 месяцев",
@@ -76,7 +76,7 @@ export default function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) 
             </h1>
 
             <p className="text-white/60 text-lg mb-8 leading-relaxed max-w-md">
-              Быстрые займы без лишних документов. От 5 000 до 500 000 ₽. Одобрение онлайн, перевод на любую карту.
+              Быстрые займы без лишних документов. От 5 000 до 200 000 ₽. Одобрение онлайн, перевод на любую карту.
             </p>
 
             <div className="flex flex-wrap gap-4">
