@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLogin from "@/components/admin/AdminLogin";
 import AdminNavbar from "@/components/admin/AdminNavbar";
@@ -52,39 +52,40 @@ export default function AdminPage() {
   const [actionMsg, setActionMsg]   = useState("");
   const [actionErr, setActionErr]   = useState("");
 
-  const authHeaders = useCallback(() => ({
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`,
-  }), [token]);
+  const tokenRef = useRef(token);
+  useEffect(() => { tokenRef.current = token; }, [token]);
 
-  const handleUnauth = useCallback(() => {
+  const appsFilterRef = useRef(appsFilter);
+  useEffect(() => { appsFilterRef.current = appsFilter; }, [appsFilter]);
+
+  const hdrs = () => ({
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${tokenRef.current}`,
+  });
+
+  const doLogout = () => {
     sessionStorage.removeItem("admin_token");
     setToken(""); setUsers([]); setApplications([]); setSelectedUser(null);
-  }, []);
+  };
 
-  const loadApplications = useCallback((status = appsFilter) => {
-    if (!token) return;
+  const loadApplications = useCallback((status?: string) => {
+    if (!tokenRef.current) return;
+    const s = status ?? appsFilterRef.current;
     setAppsLoading(true);
-    fetch(`${ADMIN_URL}?sub=applications&status=${status}`, { headers: authHeaders() })
-      .then((r) => {
-        if (r.status === 401) { handleUnauth(); return null; }
-        return r.json();
-      })
+    fetch(`${ADMIN_URL}?sub=applications&status=${s}`, { headers: hdrs() })
+      .then((r) => r.ok ? r.json() : r.status === 401 ? (doLogout(), null) : null)
       .then((d) => { if (d) setApplications(d.applications || []); })
       .finally(() => setAppsLoading(false));
-  }, [token, appsFilter, authHeaders, handleUnauth]);
+  }, []);
 
   const loadUsers = useCallback(() => {
-    if (!token) return;
+    if (!tokenRef.current) return;
     setUsersLoading(true);
-    fetch(ADMIN_URL, { headers: authHeaders() })
-      .then((r) => {
-        if (r.status === 401) { handleUnauth(); return null; }
-        return r.json();
-      })
+    fetch(ADMIN_URL, { headers: hdrs() })
+      .then((r) => r.ok ? r.json() : r.status === 401 ? (doLogout(), null) : null)
       .then((d) => { if (d) setUsers(d.users || []); })
       .finally(() => setUsersLoading(false));
-  }, [token, authHeaders, handleUnauth]);
+  }, []);
 
   useEffect(() => { if (token) { loadApplications(); loadUsers(); } }, [token]);
   useEffect(() => { if (token) loadApplications(appsFilter); }, [appsFilter]);
@@ -110,7 +111,7 @@ export default function AdminPage() {
     if (!selectedApp) return;
     setAppProcessing(true); setAppMsg(""); setAppErr("");
     const res = await fetch(`${ADMIN_URL}?sub=approve&appId=${selectedApp.id}`, {
-      method: "POST", headers: authHeaders(),
+      method: "POST", headers: hdrs(),
       body: JSON.stringify({ rate: parseFloat(approveRate) / 100 }),
     });
     const data = await res.json();
@@ -126,7 +127,7 @@ export default function AdminPage() {
     if (!selectedApp) return;
     setAppProcessing(true); setAppMsg(""); setAppErr("");
     const res = await fetch(`${ADMIN_URL}?sub=reject&appId=${selectedApp.id}`, {
-      method: "POST", headers: authHeaders(),
+      method: "POST", headers: hdrs(),
       body: JSON.stringify({ reason: rejectReason }),
     });
     const data = await res.json();
@@ -140,7 +141,7 @@ export default function AdminPage() {
   const openUser = (user: User) => {
     setSelectedUser(user); setLoansLoad(true); setClientTab("loans");
     setActionMsg(""); setActionErr("");
-    fetch(`${ADMIN_URL}?sub=loans&userId=${user.id}`, { headers: authHeaders() })
+    fetch(`${ADMIN_URL}?sub=loans&userId=${user.id}`, { headers: hdrs() })
       .then((r) => r.json())
       .then((d) => setLoans(d.loans || []))
       .finally(() => setLoansLoad(false));
@@ -148,7 +149,7 @@ export default function AdminPage() {
 
   const changeStatus = async (loanId: number, status: string) => {
     await fetch(`${ADMIN_URL}?sub=loan&loanId=${loanId}`, {
-      method: "PUT", headers: authHeaders(),
+      method: "PUT", headers: hdrs(),
       body: JSON.stringify({ status }),
     });
     setLoans((prev) => prev.map((l) => l.id === loanId ? { ...l, status } : l));
@@ -157,7 +158,7 @@ export default function AdminPage() {
   const addLoan = async (e: React.FormEvent) => {
     e.preventDefault(); setActionMsg(""); setActionErr("");
     const res = await fetch(`${ADMIN_URL}?sub=loans`, {
-      method: "POST", headers: authHeaders(),
+      method: "POST", headers: hdrs(),
       body: JSON.stringify({ phone: selectedUser?.phone, amount: parseFloat(newLoan.amount), days: parseInt(newLoan.days), rate: parseFloat(newLoan.rate) / 100 }),
     });
     const data = await res.json();
@@ -169,7 +170,7 @@ export default function AdminPage() {
   const registerClient = async (e: React.FormEvent) => {
     e.preventDefault(); setActionMsg(""); setActionErr("");
     const res = await fetch(`${ADMIN_URL}?sub=register`, {
-      method: "POST", headers: authHeaders(),
+      method: "POST", headers: hdrs(),
       body: JSON.stringify(newClient),
     });
     const data = await res.json();
