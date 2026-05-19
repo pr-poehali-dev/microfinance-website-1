@@ -21,6 +21,7 @@ export default function CalculatorForm() {
     passportCode: "",
     passportBy: "",
     birthPlace: "",
+    telegramId: "",
   });
   const [files, setFiles] = useState<{ [key: string]: File | null }>({
     passportMain: null,
@@ -329,6 +330,28 @@ export default function CalculatorForm() {
                       className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
                       style={{ background: "rgba(255,255,255,0.05)" }}
                     />
+                  </div>
+                  <div>
+                    <label className="text-white/70 text-sm mb-2 block">
+                      Ваш Telegram (username или ID)
+                      <span className="text-white/30 font-normal ml-1">— для получения решения</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 text-sm">@</span>
+                      <input
+                        type="text"
+                        placeholder="username"
+                        value={form.telegramId}
+                        onChange={(e) => setForm({ ...form, telegramId: e.target.value.replace(/^@/, "") })}
+                        className="w-full rounded-xl pl-8 pr-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                        style={{ background: "rgba(255,255,255,0.05)" }}
+                      />
+                    </div>
+                    <p className="text-white/30 text-xs mt-1.5 flex items-center gap-1">
+                      <span>Напишите нашему боту</span>
+                      <a href="https://t.me/parafinans24bot" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 transition-colors">@parafinans24bot</a>
+                      <span>команду /start перед подачей заявки</span>
+                    </p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>

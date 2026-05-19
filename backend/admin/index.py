@@ -25,6 +25,23 @@ def tg(text: str):
     except Exception:
         pass
 
+
+def tg_client(username: str, text: str):
+    """Отправляет сообщение клиенту по @username через Telegram-бота."""
+    token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+    if not token or not username:
+        return
+    chat_id = f"@{username}" if not username.startswith("@") else username
+    data = json.dumps({"chat_id": chat_id, "text": text, "parse_mode": "HTML"}).encode()
+    req = urllib.request.Request(
+        f"https://api.telegram.org/bot{token}/sendMessage",
+        data=data, headers={"Content-Type": "application/json"}
+    )
+    try:
+        urllib.request.urlopen(req, timeout=5)
+    except Exception:
+        pass
+
 CORS = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -239,7 +256,7 @@ def handler(event: dict, context) -> dict:
         rate = float(body.get("rate", 0.008))
 
         cur.execute(
-            f"SELECT full_name, phone, amount, days FROM {SCHEMA}.applications WHERE id = %s AND status = 'pending'",
+            f"SELECT full_name, phone, amount, days, telegram_id FROM {SCHEMA}.applications WHERE id = %s AND status = 'pending'",
             (app_id,)
         )
         app = cur.fetchone()
@@ -247,7 +264,7 @@ def handler(event: dict, context) -> dict:
             cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена или уже обработана"})}
 
-        full_name, phone, amount, days = app
+        full_name, phone, amount, days, tg_username = app
 
         # Находим или создаём пользователя
         cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = %s", (phone,))
@@ -287,6 +304,19 @@ def handler(event: dict, context) -> dict:
             f"📅 <b>Срок:</b> {days} дн.\n"
             f"🔖 <b>Займ №:</b> {loan_id}"
         )
+        # Уведомляем клиента в Telegram
+        if tg_username:
+            interest = round(float(amount) * rate * int(days))
+            total = float(amount) + interest
+            tg_client(
+                tg_username,
+                f"✅ <b>Ваша заявка одобрена!</b>\n\n"
+                f"💰 <b>Сумма займа:</b> {int(amount):,} ₽\n".replace(",", " ") +
+                f"📅 <b>Срок:</b> {days} дн.\n"
+                f"📈 <b>Ставка:</b> {round(rate * 100, 1)}%/день\n"
+                f"💳 <b>К возврату:</b> {int(total):,} ₽\n\n".replace(",", " ") +
+                f"Деньги будут переведены на вашу карту. Ожидайте звонка специалиста."
+            )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "loanId": loan_id})}
 
     # --- ОТКАЗАТЬ ПО ЗАЯВКЕ (POST, sub='reject', appId=...) ---
@@ -295,7 +325,7 @@ def handler(event: dict, context) -> dict:
         reason = (body.get("reason") or "").strip()
 
         cur.execute(
-            f"SELECT full_name, phone, amount FROM {SCHEMA}.applications WHERE id = %s AND status = 'pending'",
+            f"SELECT full_name, phone, amount, telegram_id FROM {SCHEMA}.applications WHERE id = %s AND status = 'pending'",
             (app_id,)
         )
         app = cur.fetchone()
@@ -318,6 +348,14 @@ def handler(event: dict, context) -> dict:
             f"💰 <b>Сумма:</b> {int(app[2]):,} ₽\n".replace(",", " ") +
             (f"📝 <b>Причина:</b> {reason}" if reason else "")
         )
+        # Уведомляем клиента в Telegram
+        if app[3]:
+            client_msg = (
+                f"❌ <b>По вашей заявке принято отрицательное решение.</b>\n\n"
+                + (f"📝 <b>Причина:</b> {reason}\n\n" if reason else "")
+                + f"Вы можете подать новую заявку позже или связаться с нами для уточнения деталей."
+            )
+            tg_client(app[3], client_msg)
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     cur.close(); conn.close()

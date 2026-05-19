@@ -75,6 +75,7 @@ def handler(event: dict, context) -> dict:
     passport_code = body.get("passportCode", "").strip()
     passport_by = body.get("passportBy", "").strip()
     birth_place = body.get("birthPlace", "").strip()
+    telegram_username = body.get("telegramId", "").strip().lstrip("@")
 
     if not full_name or not phone or not amount:
         return {
@@ -91,14 +92,16 @@ def handler(event: dict, context) -> dict:
         cur.execute(
             f"""INSERT INTO {SCHEMA}.applications
                 (full_name, phone, email, amount, days, birth_date, birth_place,
-                 passport_series, passport_number, passport_date, passport_code, passport_by, status)
-               VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'pending') RETURNING id""",
+                 passport_series, passport_number, passport_date, passport_code, passport_by,
+                 telegram_id, status)
+               VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'pending') RETURNING id""",
             (full_name, phone, email,
              float(amount) if amount else None,
              int(days) if days else None,
              birth_date or None, birth_place or None,
              passport_series or None, passport_number or None,
-             passport_date or None, passport_code or None, passport_by or None)
+             passport_date or None, passport_code or None, passport_by or None,
+             telegram_username or None)
         )
         app_id = cur.fetchone()[0]
         conn.commit()
@@ -138,7 +141,8 @@ def handler(event: dict, context) -> dict:
         f"  Дата выдачи: {passport_date}\n"
         f"  Код: {passport_code}\n"
         f"  Кем выдан: {passport_by}\n\n"
-        f"📎 <b>Документы:</b> {docs_status}"
+        f"📎 <b>Документы:</b> {docs_status}\n"
+        f"💬 <b>Telegram:</b> {('@' + telegram_username) if telegram_username else '—'}"
     )
 
     send_telegram_message(token, TELEGRAM_CHAT_ID, text)
