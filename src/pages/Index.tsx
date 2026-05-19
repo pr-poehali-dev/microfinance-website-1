@@ -85,7 +85,7 @@ export default function Index() {
   const [days, setDays] = useState(15);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", phone: "", email: "", amount: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", amount: "", passportSeries: "", passportNumber: "", passportDate: "", passportCode: "", passportBy: "", birthPlace: "" });
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
@@ -565,6 +565,83 @@ export default function Index() {
                       placeholder="ivan@mail.ru"
                       value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      required
+                      className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                      style={{ background: "rgba(255,255,255,0.05)" }}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-white/70 text-sm mb-2 block">Серия паспорта</label>
+                      <input
+                        type="text"
+                        placeholder="1234"
+                        value={form.passportSeries}
+                        onChange={(e) => setForm({ ...form, passportSeries: e.target.value })}
+                        required
+                        maxLength={4}
+                        className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                        style={{ background: "rgba(255,255,255,0.05)" }}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-white/70 text-sm mb-2 block">Номер паспорта</label>
+                      <input
+                        type="text"
+                        placeholder="567890"
+                        value={form.passportNumber}
+                        onChange={(e) => setForm({ ...form, passportNumber: e.target.value })}
+                        required
+                        maxLength={6}
+                        className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                        style={{ background: "rgba(255,255,255,0.05)" }}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-white/70 text-sm mb-2 block">Дата выдачи</label>
+                      <input
+                        type="date"
+                        value={form.passportDate}
+                        onChange={(e) => setForm({ ...form, passportDate: e.target.value })}
+                        required
+                        className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                        style={{ background: "rgba(255,255,255,0.05)" }}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-white/70 text-sm mb-2 block">Код подразделения</label>
+                      <input
+                        type="text"
+                        placeholder="123-456"
+                        value={form.passportCode}
+                        onChange={(e) => setForm({ ...form, passportCode: e.target.value })}
+                        required
+                        className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                        style={{ background: "rgba(255,255,255,0.05)" }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-white/70 text-sm mb-2 block">Кем выдан</label>
+                    <input
+                      type="text"
+                      placeholder="УМВД России по г. Москве"
+                      value={form.passportBy}
+                      onChange={(e) => setForm({ ...form, passportBy: e.target.value })}
+                      required
+                      className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                      style={{ background: "rgba(255,255,255,0.05)" }}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-white/70 text-sm mb-2 block">Место рождения</label>
+                    <input
+                      type="text"
+                      placeholder="г. Москва"
+                      value={form.birthPlace}
+                      onChange={(e) => setForm({ ...form, birthPlace: e.target.value })}
                       required
                       className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
                       style={{ background: "rgba(255,255,255,0.05)" }}
