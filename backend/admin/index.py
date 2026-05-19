@@ -72,9 +72,10 @@ def handler(event: dict, context) -> dict:
     raw = event.get("body") or "{}"
     body = json.loads(raw) if isinstance(raw, str) else raw
 
-    headers_in = event.get("headers") or {}
-    raw_token = headers_in.get("Authorization") or headers_in.get("X-Authorization") or ""
-    token = raw_token.replace("Bearer ", "").strip()
+    headers_in = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
+    raw_token = (headers_in.get("x-authorization") or headers_in.get("authorization") or "")
+    token = raw_token.replace("Bearer ", "").replace("bearer ", "").strip()
+    print(f"[admin] method={method} sub={sub!r} token_len={len(token)}")
 
     conn = get_conn()
     cur = conn.cursor()
@@ -97,7 +98,9 @@ def handler(event: dict, context) -> dict:
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"token": tok})}
 
     # --- ПРОВЕРКА ТОКЕНА ---
-    if not check_admin_token(cur, token):
+    token_valid = check_admin_token(cur, token)
+    print(f"[admin] token_valid={token_valid}")
+    if not token_valid:
         cur.close(); conn.close()
         return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
 
