@@ -351,76 +351,86 @@ export default function CalculatorForm() {
                       style={{ background: "rgba(255,255,255,0.05)" }}
                     />
                   </div>
-                  <div className="rounded-xl border border-white/10 px-4 py-4" style={{ background: "rgba(255,255,255,0.05)" }}>
-                    <div className="flex justify-between mb-3">
-                      <span className="text-white/70 text-sm">Желаемая сумма</span>
-                      <span className="font-bold text-lg gradient-text">
-                        {formAmount.toLocaleString("ru-RU")} ₽
-                      </span>
+                  {/* КАЛЬКУЛЯТОР */}
+                  <div className="rounded-2xl border border-purple-500/40 overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.15), rgba(168,85,247,0.08))" }}>
+                    <div className="flex items-center gap-2 px-5 pt-4 pb-3 border-b border-white/10">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(124,58,237,0.4)" }}>
+                        <Icon name="Calculator" size={14} className="text-purple-300" />
+                      </div>
+                      <span className="text-white/80 text-sm font-medium">Параметры займа</span>
                     </div>
-                    <input
-                      type="range"
-                      min={5000}
-                      max={500000}
-                      step={5000}
-                      value={formAmount}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        setFormAmount(val);
-                        setForm({ ...form, amount: String(val) });
-                      }}
-                      className="slider-custom w-full"
-                      style={{
-                        background: `linear-gradient(to right, #7C3AED ${((formAmount - 5000) / (500000 - 5000)) * 100}%, rgba(124,58,237,0.2) ${((formAmount - 5000) / (500000 - 5000)) * 100}%)`,
-                      }}
-                    />
-                    <div className="flex justify-between text-xs text-white/30 mt-1">
-                      <span>5 000 ₽</span>
-                      <span>500 000 ₽</span>
-                    </div>
-                  </div>
-                  <div className="rounded-xl border border-white/10 px-4 py-4" style={{ background: "rgba(255,255,255,0.05)" }}>
-                    <div className="flex justify-between mb-3">
-                      <span className="text-white/70 text-sm">Срок займа</span>
-                      <span className="font-bold text-lg gradient-text">
-                        {formDays} {formDays === 1 ? "день" : formDays < 5 ? "дня" : "дней"}
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min={5}
-                      max={30}
-                      step={1}
-                      value={formDays}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        setFormDays(val);
-                        setForm({ ...form, days: String(val) });
-                      }}
-                      className="slider-custom w-full"
-                      style={{
-                        background: `linear-gradient(to right, #7C3AED ${((formDays - 5) / (30 - 5)) * 100}%, rgba(124,58,237,0.2) ${((formDays - 5) / (30 - 5)) * 100}%)`,
-                      }}
-                    />
-                    <div className="flex justify-between text-xs text-white/30 mt-1">
-                      <span>5 дней</span>
-                      <span>30 дней</span>
-                    </div>
-                  </div>
-                  {/* ИТОГ */}
-                  <div className="rounded-xl px-4 py-4 border border-purple-500/30" style={{ background: "rgba(124,58,237,0.1)" }}>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-white/60 text-sm">Сумма займа</span>
-                      <span className="text-white text-sm">{formAmount.toLocaleString("ru-RU")} ₽</span>
-                    </div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-white/60 text-sm">Проценты (0.8% × {formDays} дн.)</span>
-                      <span className="text-white text-sm">{Math.round(formAmount * 0.008 * formDays).toLocaleString("ru-RU")} ₽</span>
-                    </div>
-                    <div className="border-t border-white/10 my-2" />
-                    <div className="flex justify-between items-center">
-                      <span className="text-white/80 font-medium">К возврату</span>
-                      <span className="font-bold text-xl gradient-text">{(formAmount + Math.round(formAmount * 0.008 * formDays)).toLocaleString("ru-RU")} ₽</span>
+                    <div className="px-5 py-4 space-y-5">
+                      {/* Сумма */}
+                      <div>
+                        <div className="flex justify-between mb-2">
+                          <span className="text-white/60 text-sm">Желаемая сумма</span>
+                          <span className="font-bold text-base gradient-text">{formAmount.toLocaleString("ru-RU")} ₽</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={5000}
+                          max={500000}
+                          step={5000}
+                          value={formAmount}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setFormAmount(val);
+                            setForm({ ...form, amount: String(val) });
+                          }}
+                          className="slider-custom w-full"
+                          style={{
+                            background: `linear-gradient(to right, #7C3AED ${((formAmount - 5000) / (500000 - 5000)) * 100}%, rgba(124,58,237,0.2) ${((formAmount - 5000) / (500000 - 5000)) * 100}%)`,
+                          }}
+                        />
+                        <div className="flex justify-between text-xs text-white/30 mt-1">
+                          <span>5 000 ₽</span>
+                          <span>500 000 ₽</span>
+                        </div>
+                      </div>
+                      {/* Срок */}
+                      <div>
+                        <div className="flex justify-between mb-2">
+                          <span className="text-white/60 text-sm">Срок займа</span>
+                          <span className="font-bold text-base gradient-text">
+                            {formDays} {formDays === 1 ? "день" : formDays < 5 ? "дня" : "дней"}
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min={5}
+                          max={30}
+                          step={1}
+                          value={formDays}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setFormDays(val);
+                            setForm({ ...form, days: String(val) });
+                          }}
+                          className="slider-custom w-full"
+                          style={{
+                            background: `linear-gradient(to right, #7C3AED ${((formDays - 5) / (30 - 5)) * 100}%, rgba(124,58,237,0.2) ${((formDays - 5) / (30 - 5)) * 100}%)`,
+                          }}
+                        />
+                        <div className="flex justify-between text-xs text-white/30 mt-1">
+                          <span>5 дней</span>
+                          <span>30 дней</span>
+                        </div>
+                      </div>
+                      {/* Итог */}
+                      <div className="rounded-xl px-4 py-3 space-y-2" style={{ background: "rgba(0,0,0,0.25)" }}>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-white/50">Сумма займа</span>
+                          <span className="text-white/80">{formAmount.toLocaleString("ru-RU")} ₽</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-white/50">Проценты (0.8% × {formDays} дн.)</span>
+                          <span className="text-white/80">{Math.round(formAmount * 0.008 * formDays).toLocaleString("ru-RU")} ₽</span>
+                        </div>
+                        <div className="border-t border-white/10 pt-2 flex justify-between items-center">
+                          <span className="text-white font-semibold">К возврату</span>
+                          <span className="font-bold text-2xl gradient-text">{(formAmount + Math.round(formAmount * 0.008 * formDays)).toLocaleString("ru-RU")} ₽</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   {/* FILE UPLOADS */}
