@@ -91,6 +91,15 @@ export default function AdminPage() {
   useEffect(() => { if (token) loadApplications(appsFilter); }, [appsFilter]);
   useEffect(() => { if (token && mainTab === "clients") loadUsers(); }, [mainTab]);
 
+  useEffect(() => {
+    if (!token) return;
+    const interval = setInterval(() => {
+      loadApplications();
+      loadUsers();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [token]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginErr(""); setLoginLoad(true);
