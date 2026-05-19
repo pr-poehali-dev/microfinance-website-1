@@ -1,7 +1,6 @@
 {
+  "admin": "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6",
   "loans": "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff",
   "auth": "https://functions.poehali.dev/81fdd868-863a-42d5-acf7-ab535f8cadae",
-  "send-card": "https://functions.poehali.dev/e2df72fe-ca25-4d98-9fa0-b165fe4419cf",
-  "send-form": "https://functions.poehali.dev/835b2dae-b259-4927-8f7b-64e84f2c730e",
   "send-application": "https://functions.poehali.dev/29f70c88-f1f7-4926-9c65-c642fd11fdfb"
 }

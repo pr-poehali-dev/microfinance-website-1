@@ -7,11 +7,10 @@
       "expectedStatus": 200
     },
     {
-      "name": "Missing fields returns 400",
-      "method": "POST",
+      "name": "No token returns 401",
+      "method": "GET",
       "path": "/",
-      "body": {"fullName": "", "phone": "", "email": "", "amount": ""},
-      "expectedStatus": 400
+      "expectedStatus": 401
     }
   ]
 }

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 
-const API_URL = "https://functions.poehali.dev/e2df72fe-ca25-4d98-9fa0-b165fe4419cf";
+const API_URL = "https://functions.poehali.dev/29f70c88-f1f7-4926-9c65-c642fd11fdfb";
 
 const BENEFITS = [
   { icon: "CreditCard", title: "Лимит до 200 000 ₽", desc: "Одобрение онлайн без посещения офиса" },

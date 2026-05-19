@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import Icon from "@/components/ui/icon";
 
-const API_URL = "https://functions.poehali.dev/835b2dae-b259-4927-8f7b-64e84f2c730e";
+const API_URL = "https://functions.poehali.dev/29f70c88-f1f7-4926-9c65-c642fd11fdfb";
 
 export default function CalculatorForm() {
   const [amount, setAmount] = useState(30000);
