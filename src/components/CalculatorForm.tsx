@@ -7,16 +7,23 @@ export default function CalculatorForm() {
   const [amount, setAmount] = useState(30000);
   const [days, setDays] = useState(15);
   const [form, setForm] = useState({
-    name: "",
+    fullName: "",
     phone: "",
     email: "",
     amount: "",
+    birthDate: "",
     passportSeries: "",
     passportNumber: "",
     passportDate: "",
     passportCode: "",
     passportBy: "",
     birthPlace: "",
+  });
+  const [files, setFiles] = useState<{ [key: string]: File | null }>({
+    passportMain: null,
+    registration: null,
+    selfie: null,
+    previousPassports: null,
   });
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
@@ -29,15 +36,34 @@ export default function CalculatorForm() {
   const amountPct = ((amount - 5000) / (100000 - 5000)) * 100;
   const daysPct = ((days - 5) / (30 - 5)) * 100;
 
+  const handleFileChange = (key: string, file: File | null) => {
+    setFiles((prev) => ({ ...prev, [key]: file }));
+  };
+
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve((reader.result as string).split(",")[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
     setSendError("");
     try {
+      const encodedFiles: { [key: string]: string } = {};
+      for (const [key, file] of Object.entries(files)) {
+        if (file) {
+          encodedFiles[key] = await fileToBase64(file);
+          encodedFiles[`${key}_name`] = file.name;
+        }
+      }
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, ...encodedFiles }),
       });
       if (res.ok) {
         setSubmitted(true);
@@ -199,12 +225,23 @@ export default function CalculatorForm() {
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div>
-                    <label className="text-white/70 text-sm mb-2 block">Ваше имя</label>
+                    <label className="text-white/70 text-sm mb-2 block">Фамилия Имя Отчество</label>
                     <input
                       type="text"
-                      placeholder="Иван Иванов"
-                      value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      placeholder="Иванов Иван Иванович"
+                      value={form.fullName}
+                      onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                      required
+                      className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                      style={{ background: "rgba(255,255,255,0.05)" }}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-white/70 text-sm mb-2 block">Дата рождения</label>
+                    <input
+                      type="date"
+                      value={form.birthDate}
+                      onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
                       required
                       className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
                       style={{ background: "rgba(255,255,255,0.05)" }}
@@ -328,6 +365,41 @@ export default function CalculatorForm() {
                       <option value="500000">До 500 000 ₽</option>
                     </select>
                   </div>
+                  {/* FILE UPLOADS */}
+                  <div className="pt-2">
+                    <div className="text-white/70 text-sm mb-3 font-medium">Документы (фото или скан)</div>
+                    <div className="space-y-3">
+                      {[
+                        { key: "passportMain", label: "Паспорт — главная страница" },
+                        { key: "registration", label: "Прописка (страница регистрации)" },
+                        { key: "selfie", label: "Селфи с паспортом" },
+                        { key: "previousPassports", label: "О ранее выданных паспортах" },
+                      ].map(({ key, label }) => (
+                        <label
+                          key={key}
+                          className="flex items-center gap-3 rounded-xl px-4 py-3 border border-white/10 cursor-pointer hover:border-purple-500 transition-colors"
+                          style={{ background: "rgba(255,255,255,0.05)" }}
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-purple-600/20 flex items-center justify-center shrink-0">
+                            <Icon name={files[key] ? "CheckCircle" : "Upload"} size={16} className={files[key] ? "text-green-400" : "text-purple-400"} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-white/70 text-sm">{label}</div>
+                            {files[key] && (
+                              <div className="text-green-400 text-xs truncate">{files[key]!.name}</div>
+                            )}
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/*,.pdf"
+                            className="hidden"
+                            onChange={(e) => handleFileChange(key, e.target.files?.[0] ?? null)}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
                   <button
                     type="submit"
                     disabled={sending}
