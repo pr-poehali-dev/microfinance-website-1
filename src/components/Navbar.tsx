@@ -49,12 +49,21 @@ export default function Navbar({ mobileOpen, setMobileOpen, scrollTo }: NavbarPr
           </button>
         </div>
 
-        <button
-          onClick={() => scrollTo("#form")}
-          className="hidden md:flex btn-neon text-white text-sm font-semibold px-5 py-2.5 rounded-xl"
-        >
-          Получить займ
-        </button>
+        <div className="hidden md:flex items-center gap-3">
+          <button
+            onClick={() => navigate(localStorage.getItem("token") ? "/dashboard" : "/login")}
+            className="flex items-center gap-2 text-sm text-white/70 hover:text-white border border-white/15 hover:border-purple-500 px-4 py-2.5 rounded-xl transition-all"
+          >
+            <Icon name="User" size={15} />
+            {localStorage.getItem("token") ? "Кабинет" : "Войти"}
+          </button>
+          <button
+            onClick={() => scrollTo("#form")}
+            className="btn-neon text-white text-sm font-semibold px-5 py-2.5 rounded-xl"
+          >
+            Получить займ
+          </button>
+        </div>
 
         <button
           className="md:hidden text-white p-2"
@@ -81,6 +90,13 @@ export default function Navbar({ mobileOpen, setMobileOpen, scrollTo }: NavbarPr
           >
             <Icon name="CreditCard" size={16} />
             Карта PARAFINANS
+          </button>
+          <button
+            onClick={() => { setMobileOpen(false); navigate(localStorage.getItem("token") ? "/dashboard" : "/login"); }}
+            className="text-left text-white/80 hover:text-purple-300 py-2 flex items-center gap-2 transition-colors"
+          >
+            <Icon name="User" size={16} />
+            {localStorage.getItem("token") ? "Личный кабинет" : "Войти в кабинет"}
           </button>
           <button
             onClick={() => scrollTo("#form")}
