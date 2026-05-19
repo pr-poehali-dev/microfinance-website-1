@@ -137,7 +137,7 @@ export default function FaqContactsFooter() {
             </span>
           </div>
           <div className="text-white/30 text-sm text-center">
-            © 2024 PARAFINANS24. Лицензия ЦБ РФ. Все права защищены.
+            © 2026 МКК МОРЕФИНАНС. Лицензия ЦБ РФ. Все права защищены.
           </div>
           <div className="flex gap-4">
             {["Политика", "Условия", "Реквизиты"].map((l) => (
