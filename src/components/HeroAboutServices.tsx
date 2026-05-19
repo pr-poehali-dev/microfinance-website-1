@@ -79,7 +79,7 @@ export default function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) 
             </h1>
 
             <p className="text-white/60 text-lg mb-8 leading-relaxed max-w-md">
-              Быстрые займы без лишних документов. От 5 000 до 200 000 ₽. Одобрение онлайн, перевод на любую карту.
+              PARAFINANS — быстрые займы без лишних документов. От 5 000 до 200 000 ₽. Одобрение онлайн, перевод на любую карту.
             </p>
 
             <div className="flex flex-wrap gap-4">
