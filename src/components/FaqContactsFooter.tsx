@@ -82,7 +82,7 @@ export default function FaqContactsFooter() {
           <div className="grid md:grid-cols-3 gap-6 mb-10">
             {[
               { icon: "Phone", title: "Телефон", value: "+7 (495) 663-51-24", sub: "Бесплатно, круглосуточно", href: "tel:+74956635124" },
-              { icon: "Mail", title: "Email", value: "info@bystrozaim.ru", sub: "Ответим в течение часа", href: "mailto:info@bystrozaim.ru" },
+              { icon: "Mail", title: "Email", value: "PARAFINANS24@ya.ru", sub: "Ответим в течение часа", href: "mailto:PARAFINANS24@ya.ru" },
               { icon: "Clock", title: "Режим работы", value: "Пн–Пт: 9:00–20:00", sub: "Онлайн: 24/7", href: null },
             ].map((c) => (
               <div key={c.title} className="glass card-hover rounded-2xl p-6 text-center">
