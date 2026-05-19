@@ -232,6 +232,7 @@ def handler(event: dict, context) -> dict:
     # --- СПИСОК ЗАЯВОК (GET, sub='applications') ---
     if sub == "applications" and method == "GET":
         status_filter = qs.get("status", "pending")
+        print(f"[applications] status_filter={status_filter!r}")
         cur.execute(
             f"""SELECT id, full_name, phone, email, amount, days, birth_date,
                        passport_series, passport_number, status, created_at, reject_reason
@@ -240,6 +241,7 @@ def handler(event: dict, context) -> dict:
             (status_filter,)
         )
         rows = cur.fetchall()
+        print(f"[applications] found {len(rows)} rows")
         cur.close(); conn.close()
         apps = [{
             "id": r[0], "fullName": r[1] or "", "phone": r[2], "email": r[3] or "",

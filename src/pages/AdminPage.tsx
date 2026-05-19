@@ -57,23 +57,34 @@ export default function AdminPage() {
     "Authorization": `Bearer ${token}`,
   }), [token]);
 
+  const handleUnauth = useCallback(() => {
+    sessionStorage.removeItem("admin_token");
+    setToken(""); setUsers([]); setApplications([]); setSelectedUser(null);
+  }, []);
+
   const loadApplications = useCallback((status = appsFilter) => {
     if (!token) return;
     setAppsLoading(true);
     fetch(`${ADMIN_URL}?sub=applications&status=${status}`, { headers: authHeaders() })
-      .then((r) => r.json())
-      .then((d) => setApplications(d.applications || []))
+      .then((r) => {
+        if (r.status === 401) { handleUnauth(); return null; }
+        return r.json();
+      })
+      .then((d) => { if (d) setApplications(d.applications || []); })
       .finally(() => setAppsLoading(false));
-  }, [token, appsFilter, authHeaders]);
+  }, [token, appsFilter, authHeaders, handleUnauth]);
 
   const loadUsers = useCallback(() => {
     if (!token) return;
     setUsersLoading(true);
     fetch(ADMIN_URL, { headers: authHeaders() })
-      .then((r) => r.json())
-      .then((d) => setUsers(d.users || []))
+      .then((r) => {
+        if (r.status === 401) { handleUnauth(); return null; }
+        return r.json();
+      })
+      .then((d) => { if (d) setUsers(d.users || []); })
       .finally(() => setUsersLoading(false));
-  }, [token, authHeaders]);
+  }, [token, authHeaders, handleUnauth]);
 
   useEffect(() => { if (token) { loadApplications(); loadUsers(); } }, [token]);
   useEffect(() => { if (token) loadApplications(appsFilter); }, [appsFilter]);
