@@ -549,11 +549,14 @@ export default function CalculatorForm() {
 
                   <button
                     type="submit"
-                    disabled={sending}
+                    disabled={sending || !files.passportMain || !files.registration || !files.selfie || !files.previousPassports}
                     className="w-full btn-neon text-white font-bold py-4 rounded-2xl text-lg mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {sending ? "Отправляем..." : "Отправить заявку"}
                   </button>
+                  {(!files.passportMain || !files.registration || !files.selfie || !files.previousPassports) && (
+                    <p className="text-yellow-400/70 text-xs text-center">Прикрепите все 4 документа для отправки заявки</p>
+                  )}
                   {sendError && (
                     <p className="text-red-400 text-sm text-center">{sendError}</p>
                   )}
