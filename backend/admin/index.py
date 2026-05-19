@@ -4,9 +4,26 @@ import os
 import hashlib
 import secrets
 from datetime import datetime, timedelta
+import urllib.request
 import psycopg2
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
+TELEGRAM_CHAT_ID = "8540431915"
+
+
+def tg(text: str):
+    token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+    if not token:
+        return
+    data = json.dumps({"chat_id": TELEGRAM_CHAT_ID, "text": text, "parse_mode": "HTML"}).encode()
+    req = urllib.request.Request(
+        f"https://api.telegram.org/bot{token}/sendMessage",
+        data=data, headers={"Content-Type": "application/json"}
+    )
+    try:
+        urllib.request.urlopen(req, timeout=5)
+    except Exception:
+        pass
 
 CORS = {
     "Access-Control-Allow-Origin": "*",
@@ -125,14 +142,42 @@ def handler(event: dict, context) -> dict:
         )
         loan_id = cur.fetchone()[0]
         conn.commit(); cur.close(); conn.close()
+
+        interest = round(amount * rate * days)
+        now = datetime.now().strftime("%d.%m.%Y в %H:%M")
+        tg(
+            f"💰 <b>Новый займ выдан</b>\n"
+            f"⏱ {now}\n\n"
+            f"📞 <b>Клиент:</b> {phone}\n"
+            f"💵 <b>Сумма:</b> {int(amount):,} ₽\n".replace(",", " ") +
+            f"📅 <b>Срок:</b> {days} дн.\n"
+            f"📈 <b>Ставка:</b> {round(rate * 100, 1)}%/день\n"
+            f"💳 <b>К возврату:</b> {int(amount + interest):,} ₽\n".replace(",", " ") +
+            f"🔖 <b>Займ №:</b> {loan_id}"
+        )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "loanId": loan_id})}
 
     # --- ИЗМЕНИТЬ СТАТУС ЗАЙМА (PUT, sub='loan', loanId=...) ---
     if sub == "loan" and method == "PUT":
         loan_id = qs.get("loanId")
         status  = body.get("status", "active")
+        cur.execute(
+            f"SELECT l.amount, u.phone FROM {SCHEMA}.loans l JOIN {SCHEMA}.users u ON u.id = l.user_id WHERE l.id = %s",
+            (loan_id,)
+        )
+        row = cur.fetchone()
         cur.execute(f"UPDATE {SCHEMA}.loans SET status = %s WHERE id = %s", (status, loan_id))
         conn.commit(); cur.close(); conn.close()
+
+        STATUS_LABELS = {"active": "Активен ✅", "paid": "Погашен ✔️", "overdue": "Просрочен ⚠️", "review": "На рассмотрении 🔍"}
+        if row:
+            tg(
+                f"🔄 <b>Статус займа изменён</b>\n\n"
+                f"📞 <b>Клиент:</b> {row[1]}\n"
+                f"💵 <b>Сумма:</b> {int(row[0]):,} ₽\n".replace(",", " ") +
+                f"🔖 <b>Займ №:</b> {loan_id}\n"
+                f"📌 <b>Новый статус:</b> {STATUS_LABELS.get(status, status)}"
+            )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     # --- ЗАРЕГИСТРИРОВАТЬ КЛИЕНТА (POST, sub='register') ---
@@ -157,6 +202,14 @@ def handler(event: dict, context) -> dict:
         )
         uid = cur.fetchone()[0]
         conn.commit(); cur.close(); conn.close()
+
+        now = datetime.now().strftime("%d.%m.%Y в %H:%M")
+        tg(
+            f"👤 <b>Новый клиент зарегистрирован</b>\n"
+            f"⏱ {now}\n\n"
+            f"📞 <b>Телефон:</b> {phone}\n"
+            f"🙍 <b>ФИО:</b> {full_name or '—'}"
+        )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "userId": uid})}
 
     cur.close(); conn.close()
