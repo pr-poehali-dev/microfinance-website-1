@@ -659,16 +659,22 @@ export default function Index() {
 
           <div className="grid md:grid-cols-3 gap-6 mb-10">
             {[
-              { icon: "Phone", title: "Телефон", value: "+7 (495) 663-51-24", sub: "Бесплатно, круглосуточно" },
-              { icon: "Mail", title: "Email", value: "info@bystrozaim.ru", sub: "Ответим в течение 1 часа" },
-              { icon: "MapPin", title: "Офис", value: "Москва, Проспект Мира, 112", sub: "Пн–Пт: 9:00–20:00" },
+              { icon: "Phone", title: "Телефон", value: "+7 (495) 663-51-24", sub: "Бесплатно, круглосуточно", href: "tel:+74956635124" },
+              { icon: "Mail", title: "Email", value: "info@bystrozaim.ru", sub: "Ответим в течение 1 часа", href: "mailto:info@bystrozaim.ru" },
+              { icon: "MapPin", title: "Офис", value: "Москва, Проспект Мира, 112", sub: "Пн–Пт: 9:00–20:00", href: null },
             ].map((c) => (
               <div key={c.title} className="glass card-hover rounded-2xl p-8 text-center">
                 <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-purple-600/20 flex items-center justify-center">
                   <Icon name={c.icon} size={24} className="text-purple-400" />
                 </div>
                 <div className="text-white/50 text-sm mb-2">{c.title}</div>
-                <div className="text-white font-bold text-lg mb-1">{c.value}</div>
+                {c.href ? (
+                  <a href={c.href} className="text-white font-bold text-lg mb-1 hover:text-purple-300 transition-colors block">
+                    {c.value}
+                  </a>
+                ) : (
+                  <div className="text-white font-bold text-lg mb-1">{c.value}</div>
+                )}
                 <div className="text-white/40 text-sm">{c.sub}</div>
               </div>
             ))}
