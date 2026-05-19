@@ -49,6 +49,28 @@ CORS = {
 }
 
 
+def send_email(to: str, subject: str, html: str):
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    smtp_user = os.environ.get("SMTP_USER", "")
+    smtp_pass = os.environ.get("SMTP_PASSWORD", "")
+    if not smtp_user or not smtp_pass or not to:
+        return
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = f"PARAFINANS24 <{smtp_user}>"
+    msg["To"] = to
+    msg.attach(MIMEText(html, "html", "utf-8"))
+    try:
+        with smtplib.SMTP_SSL("smtp.yandex.ru", 465, timeout=10) as server:
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(smtp_user, to, msg.as_string())
+        print(f"[send-email] sent to {to}")
+    except Exception as ex:
+        print(f"[send-email] error: {ex}")
+
+
 def get_conn():
     return psycopg2.connect(os.environ["DATABASE_URL"])
 
@@ -267,26 +289,28 @@ def handler(event: dict, context) -> dict:
         app_id = qs.get("appId")
         rate = float(body.get("rate", 0.008))
 
-        cur.execute(
-            f"SELECT full_name, phone, amount, days, telegram_id FROM {SCHEMA}.applications WHERE id = %s AND status = 'pending'",
-            (app_id,)
-        )
+        app_id_esc = str(app_id).replace("'", "''")
+        cur.execute(f"""
+            SELECT full_name, phone, amount, days, telegram_id, email
+            FROM {SCHEMA}.applications WHERE id = '{app_id_esc}' AND status = 'pending'
+        """)
         app = cur.fetchone()
         if not app:
             cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена или уже обработана"})}
 
-        full_name, phone, amount, days, tg_username = app
+        full_name, phone, amount, days, tg_username, client_email = app
 
         # Находим или создаём пользователя
-        cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = %s", (phone,))
+        phone_esc = phone.replace("'", "''")
+        cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = '{phone_esc}'")
         user = cur.fetchone()
         if not user:
             import secrets as _s, hashlib as _h
             tmp_pw = _h.sha256(_s.token_hex(16).encode()).hexdigest()
+            fn_esc = (full_name or "").replace("'", "''")
             cur.execute(
-                f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name) VALUES (%s, %s, %s) RETURNING id",
-                (phone, tmp_pw, full_name)
+                f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name) VALUES ('{phone_esc}', '{tmp_pw}', '{fn_esc}') RETURNING id"
             )
             user_id = cur.fetchone()[0]
         else:
@@ -294,19 +318,18 @@ def handler(event: dict, context) -> dict:
 
         # Создаём займ
         cur.execute(
-            f"INSERT INTO {SCHEMA}.loans (user_id, amount, days, rate, status) VALUES (%s,%s,%s,%s,'active') RETURNING id",
-            (user_id, amount, days, rate)
+            f"INSERT INTO {SCHEMA}.loans (user_id, amount, days, rate, status) VALUES ({user_id},{amount},{days},{rate},'active') RETURNING id"
         )
         loan_id = cur.fetchone()[0]
 
         # Обновляем статус заявки
-        cur.execute(
-            f"UPDATE {SCHEMA}.applications SET status='approved', reviewed_at=NOW() WHERE id=%s",
-            (app_id,)
-        )
+        cur.execute(f"UPDATE {SCHEMA}.applications SET status='approved', reviewed_at=NOW() WHERE id='{app_id_esc}'")
         conn.commit(); cur.close(); conn.close()
 
-        now = datetime.now().strftime("%d.%m.%Y в %H:%M")
+        interest = round(float(amount) * rate * int(days))
+        total = float(amount) + interest
+        now = datetime.now().strftime("%d.%m.%Y в %H:%М")
+
         tg(
             f"✅ <b>Заявка одобрена</b>\n"
             f"⏱ {now}\n\n"
@@ -316,10 +339,7 @@ def handler(event: dict, context) -> dict:
             f"📅 <b>Срок:</b> {days} дн.\n"
             f"🔖 <b>Займ №:</b> {loan_id}"
         )
-        # Уведомляем клиента в Telegram
         if tg_username:
-            interest = round(float(amount) * rate * int(days))
-            total = float(amount) + interest
             tg_client(
                 tg_username,
                 f"✅ <b>Ваша заявка одобрена!</b>\n\n"
@@ -329,6 +349,51 @@ def handler(event: dict, context) -> dict:
                 f"💳 <b>К возврату:</b> {int(total):,} ₽\n\n".replace(",", " ") +
                 f"Деньги будут переведены на вашу карту. Ожидайте звонка специалиста."
             )
+        if client_email:
+            send_email(
+                to=client_email,
+                subject=f"Ваш займ #{loan_id} одобрен — PARAFINANS24",
+                html=f"""<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#0F0A1E;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0F0A1E;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#1a1030;border-radius:16px;overflow:hidden;border:1px solid rgba(74,222,128,0.3);">
+        <tr><td style="background:linear-gradient(135deg,#16a34a,#22c55e);padding:32px 40px;text-align:center;">
+          <h1 style="margin:0;color:#fff;font-size:24px;font-weight:bold;">PARAFINANS24</h1>
+          <p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:16px;">✅ Займ одобрен!</p>
+        </td></tr>
+        <tr><td style="padding:36px 40px;">
+          <p style="color:rgba(255,255,255,0.8);font-size:16px;margin:0 0 20px;">Здравствуйте, <b style="color:#fff;">{full_name or phone}</b>!</p>
+          <p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0 0 24px;line-height:1.6;">Ваша заявка рассмотрена и <b style="color:#4ade80;">одобрена</b>. Деньги будут переведены на вашу карту. Ожидайте звонка специалиста.</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(74,222,128,0.1);border-radius:12px;border:1px solid rgba(74,222,128,0.3);margin-bottom:24px;">
+            <tr><td style="padding:20px 24px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding:6px 0;"><span style="color:rgba(255,255,255,0.5);font-size:13px;">Сумма займа</span></td>
+                  <td align="right"><b style="color:#fff;font-size:16px;">{int(amount):,} ₽</b></td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 0;"><span style="color:rgba(255,255,255,0.5);font-size:13px;">Срок</span></td>
+                  <td align="right"><b style="color:#fff;font-size:16px;">{days} дней</b></td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 0;"><span style="color:rgba(255,255,255,0.5);font-size:13px;">Ставка</span></td>
+                  <td align="right"><b style="color:#fff;font-size:16px;">{round(rate * 100, 1)}% в день</b></td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 0;border-top:1px solid rgba(255,255,255,0.1);padding-top:12px;margin-top:6px;"><span style="color:rgba(255,255,255,0.5);font-size:13px;">К возврату</span></td>
+                  <td align="right" style="border-top:1px solid rgba(255,255,255,0.1);"><b style="color:#4ade80;font-size:20px;">{int(total):,} ₽</b></td>
+                </tr>
+              </table>
+            </td></tr>
+          </table>
+          <p style="color:rgba(255,255,255,0.3);font-size:11px;margin:0;text-align:center;">© PARAFINANS24 · Это письмо отправлено автоматически</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>""".replace(",", " ")
+            )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "loanId": loan_id})}
 
     # --- ОТКАЗАТЬ ПО ЗАЯВКЕ (POST, sub='reject', appId=...) ---
@@ -336,38 +401,63 @@ def handler(event: dict, context) -> dict:
         app_id = qs.get("appId")
         reason = (body.get("reason") or "").strip()
 
-        cur.execute(
-            f"SELECT full_name, phone, amount, telegram_id FROM {SCHEMA}.applications WHERE id = %s AND status = 'pending'",
-            (app_id,)
-        )
+        app_id_esc = str(app_id).replace("'", "''")
+        reason_esc = reason.replace("'", "''")
+        cur.execute(f"""
+            SELECT full_name, phone, amount, telegram_id, email
+            FROM {SCHEMA}.applications WHERE id = '{app_id_esc}' AND status = 'pending'
+        """)
         app = cur.fetchone()
         if not app:
             cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена или уже обработана"})}
 
-        cur.execute(
-            f"UPDATE {SCHEMA}.applications SET status='rejected', reviewed_at=NOW(), reject_reason=%s WHERE id=%s",
-            (reason, app_id)
-        )
+        full_name, phone, amount, tg_username, client_email = app
+        reason_val = f"'{reason_esc}'" if reason_esc else "NULL"
+        cur.execute(f"UPDATE {SCHEMA}.applications SET status='rejected', reviewed_at=NOW(), reject_reason={reason_val} WHERE id='{app_id_esc}'")
         conn.commit(); cur.close(); conn.close()
 
         now = datetime.now().strftime("%d.%m.%Y в %H:%M")
         tg(
             f"❌ <b>Заявка отклонена</b>\n"
             f"⏱ {now}\n\n"
-            f"👤 <b>Клиент:</b> {app[0] or app[1]}\n"
-            f"📞 <b>Телефон:</b> {app[1]}\n"
-            f"💰 <b>Сумма:</b> {int(app[2]):,} ₽\n".replace(",", " ") +
+            f"👤 <b>Клиент:</b> {full_name or phone}\n"
+            f"📞 <b>Телефон:</b> {phone}\n"
+            f"💰 <b>Сумма:</b> {int(amount):,} ₽\n".replace(",", " ") +
             (f"📝 <b>Причина:</b> {reason}" if reason else "")
         )
-        # Уведомляем клиента в Telegram
-        if app[3]:
-            client_msg = (
+        if tg_username:
+            tg_client(tg_username,
                 f"❌ <b>По вашей заявке принято отрицательное решение.</b>\n\n"
                 + (f"📝 <b>Причина:</b> {reason}\n\n" if reason else "")
-                + f"Вы можете подать новую заявку позже или связаться с нами для уточнения деталей."
+                + "Вы можете подать новую заявку позже или связаться с нами для уточнения деталей."
             )
-            tg_client(app[3], client_msg)
+        if client_email:
+            reason_block = f'<p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0 0 16px;"><b style="color:#f87171;">Причина:</b> {reason}</p>' if reason else ""
+            send_email(
+                to=client_email,
+                subject="По вашей заявке принято решение — PARAFINANS24",
+                html=f"""<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#0F0A1E;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0F0A1E;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#1a1030;border-radius:16px;overflow:hidden;border:1px solid rgba(239,68,68,0.3);">
+        <tr><td style="background:linear-gradient(135deg,#dc2626,#ef4444);padding:32px 40px;text-align:center;">
+          <h1 style="margin:0;color:#fff;font-size:24px;font-weight:bold;">PARAFINANS24</h1>
+          <p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:16px;">По заявке принято решение</p>
+        </td></tr>
+        <tr><td style="padding:36px 40px;">
+          <p style="color:rgba(255,255,255,0.8);font-size:16px;margin:0 0 16px;">Здравствуйте, <b style="color:#fff;">{full_name or phone}</b>!</p>
+          <p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0 0 16px;line-height:1.6;">К сожалению, по вашей заявке на займ принято <b style="color:#f87171;">отрицательное решение</b>.</p>
+          {reason_block}
+          <p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0 0 24px;line-height:1.6;">Вы можете подать новую заявку позже или связаться с нами для уточнения деталей.</p>
+          <p style="color:rgba(255,255,255,0.3);font-size:11px;margin:0;text-align:center;">© PARAFINANS24 · Это письмо отправлено автоматически</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>"""
+            )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     cur.close(); conn.close()
