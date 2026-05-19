@@ -212,5 +212,113 @@ def handler(event: dict, context) -> dict:
         )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "userId": uid})}
 
+    # --- СПИСОК ЗАЯВОК (GET, sub='applications') ---
+    if sub == "applications" and method == "GET":
+        status_filter = qs.get("status", "pending")
+        cur.execute(
+            f"""SELECT id, full_name, phone, email, amount, days, birth_date,
+                       passport_series, passport_number, status, created_at, reject_reason
+                FROM {SCHEMA}.applications
+                WHERE status = %s ORDER BY created_at DESC""",
+            (status_filter,)
+        )
+        rows = cur.fetchall()
+        cur.close(); conn.close()
+        apps = [{
+            "id": r[0], "fullName": r[1] or "", "phone": r[2], "email": r[3] or "",
+            "amount": float(r[4]) if r[4] else 0, "days": r[5] or 0,
+            "birthDate": r[6] or "", "passportSeries": r[7] or "",
+            "passportNumber": r[8] or "", "status": r[9],
+            "createdAt": r[10].strftime("%d.%m.%Y в %H:%M"), "rejectReason": r[11] or ""
+        } for r in rows]
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"applications": apps}, ensure_ascii=False)}
+
+    # --- ОДОБРИТЬ ЗАЯВКУ (POST, sub='approve', appId=...) ---
+    if sub == "approve" and method == "POST":
+        app_id = qs.get("appId")
+        rate = float(body.get("rate", 0.008))
+
+        cur.execute(
+            f"SELECT full_name, phone, amount, days FROM {SCHEMA}.applications WHERE id = %s AND status = 'pending'",
+            (app_id,)
+        )
+        app = cur.fetchone()
+        if not app:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена или уже обработана"})}
+
+        full_name, phone, amount, days = app
+
+        # Находим или создаём пользователя
+        cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = %s", (phone,))
+        user = cur.fetchone()
+        if not user:
+            import secrets as _s, hashlib as _h
+            tmp_pw = _h.sha256(_s.token_hex(16).encode()).hexdigest()
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name) VALUES (%s, %s, %s) RETURNING id",
+                (phone, tmp_pw, full_name)
+            )
+            user_id = cur.fetchone()[0]
+        else:
+            user_id = user[0]
+
+        # Создаём займ
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.loans (user_id, amount, days, rate, status) VALUES (%s,%s,%s,%s,'active') RETURNING id",
+            (user_id, amount, days, rate)
+        )
+        loan_id = cur.fetchone()[0]
+
+        # Обновляем статус заявки
+        cur.execute(
+            f"UPDATE {SCHEMA}.applications SET status='approved', reviewed_at=NOW() WHERE id=%s",
+            (app_id,)
+        )
+        conn.commit(); cur.close(); conn.close()
+
+        now = datetime.now().strftime("%d.%m.%Y в %H:%M")
+        tg(
+            f"✅ <b>Заявка одобрена</b>\n"
+            f"⏱ {now}\n\n"
+            f"👤 <b>Клиент:</b> {full_name or phone}\n"
+            f"📞 <b>Телефон:</b> {phone}\n"
+            f"💰 <b>Сумма:</b> {int(amount):,} ₽\n".replace(",", " ") +
+            f"📅 <b>Срок:</b> {days} дн.\n"
+            f"🔖 <b>Займ №:</b> {loan_id}"
+        )
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "loanId": loan_id})}
+
+    # --- ОТКАЗАТЬ ПО ЗАЯВКЕ (POST, sub='reject', appId=...) ---
+    if sub == "reject" and method == "POST":
+        app_id = qs.get("appId")
+        reason = (body.get("reason") or "").strip()
+
+        cur.execute(
+            f"SELECT full_name, phone, amount FROM {SCHEMA}.applications WHERE id = %s AND status = 'pending'",
+            (app_id,)
+        )
+        app = cur.fetchone()
+        if not app:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена или уже обработана"})}
+
+        cur.execute(
+            f"UPDATE {SCHEMA}.applications SET status='rejected', reviewed_at=NOW(), reject_reason=%s WHERE id=%s",
+            (reason, app_id)
+        )
+        conn.commit(); cur.close(); conn.close()
+
+        now = datetime.now().strftime("%d.%m.%Y в %H:%M")
+        tg(
+            f"❌ <b>Заявка отклонена</b>\n"
+            f"⏱ {now}\n\n"
+            f"👤 <b>Клиент:</b> {app[0] or app[1]}\n"
+            f"📞 <b>Телефон:</b> {app[1]}\n"
+            f"💰 <b>Сумма:</b> {int(app[2]):,} ₽\n".replace(",", " ") +
+            (f"📝 <b>Причина:</b> {reason}" if reason else "")
+        )
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     cur.close(); conn.close()
     return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Маршрут не найден"})}

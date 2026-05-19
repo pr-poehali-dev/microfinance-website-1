@@ -1,9 +1,12 @@
-"""Отправка заявки на займ с документами менеджеру через Telegram. v8"""
+"""Отправка заявки на займ: сохранение в БД + уведомление в Telegram."""
 import json
 import base64
 import os
 import urllib.request
 from datetime import datetime
+import psycopg2
+
+SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
 
 TELEGRAM_CHAT_ID = "8540431915"
 
@@ -80,6 +83,29 @@ def handler(event: dict, context) -> dict:
             "body": json.dumps({"error": "Заполните все поля"}, ensure_ascii=False),
         }
 
+    # Сохраняем заявку в БД
+    app_id = None
+    try:
+        conn = psycopg2.connect(os.environ["DATABASE_URL"])
+        cur = conn.cursor()
+        cur.execute(
+            f"""INSERT INTO {SCHEMA}.applications
+                (full_name, phone, email, amount, days, birth_date, birth_place,
+                 passport_series, passport_number, passport_date, passport_code, passport_by, status)
+               VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'pending') RETURNING id""",
+            (full_name, phone, email,
+             float(amount) if amount else None,
+             int(days) if days else None,
+             birth_date or None, birth_place or None,
+             passport_series or None, passport_number or None,
+             passport_date or None, passport_code or None, passport_by or None)
+        )
+        app_id = cur.fetchone()[0]
+        conn.commit()
+        cur.close(); conn.close()
+    except Exception:
+        pass
+
     attachments = []
     for key, label in FILE_LABELS.items():
         b64 = body.get(key, "")
@@ -96,8 +122,9 @@ def handler(event: dict, context) -> dict:
 
     docs_status = f"{len(attachments)} из {len(FILE_LABELS)}" if attachments else "не приложены"
 
+    app_label = f" (#{app_id})" if app_id else ""
     text = (
-        f"🚀 <b>Новая заявка — PARAFINANS24</b>\n"
+        f"🚀 <b>Новая заявка — PARAFINANS24{app_label}</b>\n"
         f"⏱ {now}\n\n"
         f"👤 <b>ФИО:</b> {full_name}\n"
         f"🎂 <b>Дата рождения:</b> {birth_date}\n"
