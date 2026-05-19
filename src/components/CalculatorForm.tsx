@@ -407,6 +407,22 @@ export default function CalculatorForm() {
                       <span>30 дней</span>
                     </div>
                   </div>
+                  {/* ИТОГ */}
+                  <div className="rounded-xl px-4 py-4 border border-purple-500/30" style={{ background: "rgba(124,58,237,0.1)" }}>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-white/60 text-sm">Сумма займа</span>
+                      <span className="text-white text-sm">{formAmount.toLocaleString("ru-RU")} ₽</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-white/60 text-sm">Проценты (0.8% × {formDays} дн.)</span>
+                      <span className="text-white text-sm">{Math.round(formAmount * 0.008 * formDays).toLocaleString("ru-RU")} ₽</span>
+                    </div>
+                    <div className="border-t border-white/10 my-2" />
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/80 font-medium">К возврату</span>
+                      <span className="font-bold text-xl gradient-text">{(formAmount + Math.round(formAmount * 0.008 * formDays)).toLocaleString("ru-RU")} ₽</span>
+                    </div>
+                  </div>
                   {/* FILE UPLOADS */}
                   <div className="pt-2">
                     <div className="text-white/70 text-sm mb-3 font-medium">Документы (фото или скан)</div>
