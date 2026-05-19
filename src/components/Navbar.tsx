@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 
 const NAV_LINKS = [
@@ -16,6 +17,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ mobileOpen, setMobileOpen, scrollTo }: NavbarProps) {
+  const navigate = useNavigate();
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass" style={{ borderBottom: "1px solid rgba(168,85,247,0.2)" }}>
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -38,6 +40,13 @@ export default function Navbar({ mobileOpen, setMobileOpen, scrollTo }: NavbarPr
               {l.label}
             </button>
           ))}
+          <button
+            onClick={() => navigate("/card")}
+            className="text-sm font-semibold gradient-text hover:opacity-80 transition-opacity flex items-center gap-1"
+          >
+            <Icon name="CreditCard" size={14} />
+            Карта
+          </button>
         </div>
 
         <button
@@ -66,6 +75,13 @@ export default function Navbar({ mobileOpen, setMobileOpen, scrollTo }: NavbarPr
               {l.label}
             </button>
           ))}
+          <button
+            onClick={() => { setMobileOpen(false); navigate("/card"); }}
+            className="text-left gradient-text font-semibold py-2 flex items-center gap-2"
+          >
+            <Icon name="CreditCard" size={16} />
+            Карта PARAFINANS
+          </button>
           <button
             onClick={() => scrollTo("#form")}
             className="btn-neon text-white font-semibold py-3 rounded-xl mt-2"

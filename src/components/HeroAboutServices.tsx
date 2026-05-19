@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 
 const HERO_IMAGE = "https://cdn.poehali.dev/projects/90d9ac81-f75d-4f07-a891-12ef6edb872c/files/ce73ebf4-d796-4671-bf2d-ce095688b5fb.jpg";
@@ -29,6 +30,7 @@ const SERVICES = [
     rate: "от 0.2%/день",
     term: "до 24 месяцев",
     color: "from-emerald-600 to-teal-700",
+    link: "/card",
   },
 ];
 
@@ -50,6 +52,7 @@ interface HeroAboutServicesProps {
 }
 
 export default function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
+  const navigate = useNavigate();
   return (
     <>
       {/* HERO */}
@@ -242,10 +245,10 @@ export default function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) 
                     </div>
                   </div>
                   <button
-                    onClick={() => document.querySelector("#form")?.scrollIntoView({ behavior: "smooth" })}
+                    onClick={() => s.link ? navigate(s.link) : document.querySelector("#form")?.scrollIntoView({ behavior: "smooth" })}
                     className="w-full btn-neon text-white font-semibold py-3 rounded-xl"
                   >
-                    Оформить
+                    {s.link ? "Подробнее" : "Оформить"}
                   </button>
                 </div>
               </div>
