@@ -23,6 +23,14 @@ interface User {
   email: string;
 }
 
+interface Application {
+  id: number;
+  amount: number;
+  days: number;
+  status: string;
+  createdAt: string;
+}
+
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
   active:   { label: "Активен",       color: "#4ade80", bg: "rgba(74,222,128,0.15)" },
   paid:     { label: "Погашен",       color: "#a78bfa", bg: "rgba(167,139,250,0.15)" },
@@ -34,6 +42,7 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [loans, setLoans] = useState<Loan[]>([]);
+  const [application, setApplication] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -49,6 +58,7 @@ export default function DashboardPage() {
         if (data.error) { localStorage.removeItem("token"); navigate("/login"); return; }
         setUser(data.user);
         setLoans(data.loans);
+        setApplication(data.application || null);
       })
       .catch(() => setError("Ошибка загрузки данных"))
       .finally(() => setLoading(false));
@@ -125,6 +135,24 @@ export default function DashboardPage() {
         {/* ЗАЙМЫ */}
         {!loading && !error && (
           <>
+            {/* БЛОК СТАТУСА ЗАЯВКИ */}
+            {application && application.status === "pending" && (
+              <div className="glass rounded-2xl p-5 mb-6 flex items-center gap-4"
+                style={{ border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.05)" }}>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: "rgba(251,191,36,0.2)" }}>
+                  <Icon name="Clock" size={22} className="text-yellow-400" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-white font-semibold mb-0.5">Заявка #{application.id} на рассмотрении</div>
+                  <div className="text-white/50 text-sm">
+                    {application.amount.toLocaleString("ru-RU")} ₽ · {application.days} дн. · подана {application.createdAt}
+                  </div>
+                  <div className="text-yellow-400 text-xs mt-1">Обычно рассматриваем в течение 15 минут</div>
+                </div>
+              </div>
+            )}
+
             <h2 className="font-oswald text-2xl font-bold text-white mb-4">
               Мои займы
             </h2>
@@ -134,15 +162,24 @@ export default function DashboardPage() {
                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(124,58,237,0.2)" }}>
                   <Icon name="FileText" size={28} className="text-purple-400" />
                 </div>
-                <h3 className="text-white font-semibold text-lg mb-2">Займов пока нет</h3>
-                <p className="text-white/50 text-sm mb-6">Оформите первый займ прямо сейчас</p>
-                <button
-                  onClick={() => navigate("/")}
-                  className="btn-neon text-white font-semibold px-6 py-3 rounded-xl inline-flex items-center gap-2"
-                >
-                  <Icon name="Plus" size={16} />
-                  Оформить займ
-                </button>
+                {application && application.status === "pending" ? (
+                  <>
+                    <h3 className="text-white font-semibold text-lg mb-2">Заявка отправлена</h3>
+                    <p className="text-white/50 text-sm">Как только заявка будет одобрена — займ появится здесь</p>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-white font-semibold text-lg mb-2">Займов пока нет</h3>
+                    <p className="text-white/50 text-sm mb-6">Оформите первый займ прямо сейчас</p>
+                    <button
+                      onClick={() => navigate("/")}
+                      className="btn-neon text-white font-semibold px-6 py-3 rounded-xl inline-flex items-center gap-2"
+                    >
+                      <Icon name="Plus" size={16} />
+                      Оформить займ
+                    </button>
+                  </>
+                )}
               </div>
             ) : (
               <div className="space-y-4">

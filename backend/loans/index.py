@@ -47,10 +47,26 @@ def handler(event: dict, context) -> dict:
     user_id, phone, full_name, email = user
 
     cur.execute(
-        f"SELECT id, amount, days, rate, status, created_at FROM {SCHEMA}.loans WHERE user_id = %s ORDER BY created_at DESC",
-        (user_id,)
+        f"SELECT id, amount, days, rate, status, created_at FROM {SCHEMA}.loans WHERE user_id = {user_id} ORDER BY created_at DESC"
     )
     rows = cur.fetchall()
+
+    # Получаем последнюю заявку пользователя
+    cur.execute(
+        f"SELECT id, amount, days, status, created_at FROM {SCHEMA}.applications "
+        f"WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1"
+    )
+    app_row = cur.fetchone()
+    application = None
+    if app_row:
+        application = {
+            "id": app_row[0],
+            "amount": float(app_row[1]) if app_row[1] else 0,
+            "days": app_row[2] or 0,
+            "status": app_row[3],
+            "createdAt": app_row[4].strftime("%d.%m.%Y"),
+        }
+
     cur.close(); conn.close()
 
     loans = []
@@ -74,6 +90,7 @@ def handler(event: dict, context) -> dict:
         "headers": CORS,
         "body": json.dumps({
             "user": {"id": user_id, "phone": phone, "fullName": full_name or "", "email": email or ""},
-            "loans": loans
+            "loans": loans,
+            "application": application,
         }, ensure_ascii=False)
     }

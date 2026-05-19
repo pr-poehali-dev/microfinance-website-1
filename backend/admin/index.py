@@ -301,20 +301,32 @@ def handler(event: dict, context) -> dict:
 
         full_name, phone, amount, days, tg_username, client_email = app
 
-        # Находим или создаём пользователя
+        # Находим или создаём пользователя, всегда генерируем новый пароль
+        import secrets as _s, hashlib as _h, string as _str
+        alphabet = _str.ascii_letters + _str.digits
+        plain_password = (
+            _s.choice(_str.ascii_uppercase) +
+            "".join(_s.choice(_str.ascii_lowercase) for _ in range(4)) +
+            "".join(_s.choice(_str.digits) for _ in range(3)) +
+            _s.choice("!@#$") +
+            "".join(_s.choice(alphabet) for _ in range(3))
+        )
+        pw_hash = _h.sha256(plain_password.encode()).hexdigest()
+
         phone_esc = phone.replace("'", "''")
+        fn_esc = (full_name or "").replace("'", "''")
+        em_esc = (client_email or "").replace("'", "''")
         cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = '{phone_esc}'")
         user = cur.fetchone()
         if not user:
-            import secrets as _s, hashlib as _h
-            tmp_pw = _h.sha256(_s.token_hex(16).encode()).hexdigest()
-            fn_esc = (full_name or "").replace("'", "''")
             cur.execute(
-                f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name) VALUES ('{phone_esc}', '{tmp_pw}', '{fn_esc}') RETURNING id"
+                f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email) "
+                f"VALUES ('{phone_esc}', '{pw_hash}', '{fn_esc}', '{em_esc}') RETURNING id"
             )
             user_id = cur.fetchone()[0]
         else:
             user_id = user[0]
+            cur.execute(f"UPDATE {SCHEMA}.users SET password_hash='{pw_hash}' WHERE id={user_id}")
 
         # Создаём займ
         cur.execute(
@@ -350,6 +362,8 @@ def handler(event: dict, context) -> dict:
                 f"Деньги будут переведены на вашу карту. Ожидайте звонка специалиста."
             )
         if client_email:
+            amount_fmt = f"{int(amount):,}".replace(",", " ")
+            total_fmt = f"{int(total):,}".replace(",", " ")
             send_email(
                 to=client_email,
                 subject=f"Ваш займ #{loan_id} одобрен — PARAFINANS24",
@@ -363,14 +377,14 @@ def handler(event: dict, context) -> dict:
           <p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:16px;">✅ Займ одобрен!</p>
         </td></tr>
         <tr><td style="padding:36px 40px;">
-          <p style="color:rgba(255,255,255,0.8);font-size:16px;margin:0 0 20px;">Здравствуйте, <b style="color:#fff;">{full_name or phone}</b>!</p>
-          <p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0 0 24px;line-height:1.6;">Ваша заявка рассмотрена и <b style="color:#4ade80;">одобрена</b>. Деньги будут переведены на вашу карту. Ожидайте звонка специалиста.</p>
-          <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(74,222,128,0.1);border-radius:12px;border:1px solid rgba(74,222,128,0.3);margin-bottom:24px;">
+          <p style="color:rgba(255,255,255,0.8);font-size:16px;margin:0 0 16px;">Здравствуйте, <b style="color:#fff;">{full_name or phone}</b>!</p>
+          <p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0 0 20px;line-height:1.6;">Ваша заявка рассмотрена и <b style="color:#4ade80;">одобрена</b>. Деньги будут переведены на вашу карту. Ожидайте звонка специалиста.</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(74,222,128,0.1);border-radius:12px;border:1px solid rgba(74,222,128,0.3);margin-bottom:20px;">
             <tr><td style="padding:20px 24px;">
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="padding:6px 0;"><span style="color:rgba(255,255,255,0.5);font-size:13px;">Сумма займа</span></td>
-                  <td align="right"><b style="color:#fff;font-size:16px;">{int(amount):,} ₽</b></td>
+                  <td align="right"><b style="color:#fff;font-size:16px;">{amount_fmt} ₽</b></td>
                 </tr>
                 <tr>
                   <td style="padding:6px 0;"><span style="color:rgba(255,255,255,0.5);font-size:13px;">Срок</span></td>
@@ -381,10 +395,19 @@ def handler(event: dict, context) -> dict:
                   <td align="right"><b style="color:#fff;font-size:16px;">{round(rate * 100, 1)}% в день</b></td>
                 </tr>
                 <tr>
-                  <td style="padding:6px 0;border-top:1px solid rgba(255,255,255,0.1);padding-top:12px;margin-top:6px;"><span style="color:rgba(255,255,255,0.5);font-size:13px;">К возврату</span></td>
-                  <td align="right" style="border-top:1px solid rgba(255,255,255,0.1);"><b style="color:#4ade80;font-size:20px;">{int(total):,} ₽</b></td>
+                  <td style="padding:6px 0;border-top:1px solid rgba(255,255,255,0.1);padding-top:12px;"><span style="color:rgba(255,255,255,0.5);font-size:13px;">К возврату</span></td>
+                  <td align="right" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:12px;"><b style="color:#4ade80;font-size:20px;">{total_fmt} ₽</b></td>
                 </tr>
               </table>
+            </td></tr>
+          </table>
+          <p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0 0 8px;">Данные для входа в личный кабинет:</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(124,58,237,0.15);border-radius:12px;border:1px solid rgba(124,58,237,0.3);margin-bottom:24px;">
+            <tr><td style="padding:20px 24px;">
+              <p style="margin:0 0 10px;color:rgba(255,255,255,0.5);font-size:12px;">ТЕЛЕФОН</p>
+              <p style="margin:0 0 16px;color:#fff;font-size:18px;font-weight:bold;">{phone}</p>
+              <p style="margin:0 0 10px;color:rgba(255,255,255,0.5);font-size:12px;">ПАРОЛЬ</p>
+              <p style="margin:0;color:#c084fc;font-size:22px;font-weight:bold;letter-spacing:2px;">{plain_password}</p>
             </td></tr>
           </table>
           <p style="color:rgba(255,255,255,0.3);font-size:11px;margin:0;text-align:center;">© PARAFINANS24 · Это письмо отправлено автоматически</p>
@@ -392,7 +415,7 @@ def handler(event: dict, context) -> dict:
       </table>
     </td></tr>
   </table>
-</body></html>""".replace(",", " ")
+</body></html>"""
             )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "loanId": loan_id})}
 
