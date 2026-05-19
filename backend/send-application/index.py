@@ -86,28 +86,25 @@ def handler(event: dict, context) -> dict:
 
     # Сохраняем заявку в БД
     app_id = None
-    try:
-        conn = psycopg2.connect(os.environ["DATABASE_URL"])
-        cur = conn.cursor()
-        cur.execute(
-            f"""INSERT INTO {SCHEMA}.applications
-                (full_name, phone, email, amount, days, birth_date, birth_place,
-                 passport_series, passport_number, passport_date, passport_code, passport_by,
-                 telegram_id, status)
-               VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'pending') RETURNING id""",
-            (full_name, phone, email,
-             float(amount) if amount else None,
-             int(days) if days else None,
-             birth_date or None, birth_place or None,
-             passport_series or None, passport_number or None,
-             passport_date or None, passport_code or None, passport_by or None,
-             telegram_username or None)
-        )
-        app_id = cur.fetchone()[0]
-        conn.commit()
-        cur.close(); conn.close()
-    except Exception:
-        pass
+    conn = psycopg2.connect(os.environ["DATABASE_URL"])
+    cur = conn.cursor()
+    cur.execute(
+        f"""INSERT INTO {SCHEMA}.applications
+            (full_name, phone, email, amount, days, birth_date, birth_place,
+             passport_series, passport_number, passport_date, passport_code, passport_by,
+             telegram_id, status)
+           VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'pending') RETURNING id""",
+        (full_name, phone, email,
+         float(amount) if amount else None,
+         int(days) if days else None,
+         birth_date or None, birth_place or None,
+         passport_series or None, passport_number or None,
+         passport_date or None, passport_code or None, passport_by or None,
+         telegram_username or None)
+    )
+    app_id = cur.fetchone()[0]
+    conn.commit()
+    cur.close(); conn.close()
 
     attachments = []
     for key, label in FILE_LABELS.items():
