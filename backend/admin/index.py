@@ -500,7 +500,7 @@ def handler(event: dict, context) -> dict:
     if sub == "restore" and method == "POST":
         app_id = qs.get("appId", "")
         app_id_e = str(app_id).replace("'", "''")
-        cur.execute(f"UPDATE {SCHEMA}.applications SET status='pending', reviewed_at=NULL WHERE id='{app_id_e}' AND status IN ('postponed','approved')")
+        cur.execute(f"UPDATE {SCHEMA}.applications SET status='pending', reviewed_at=NULL WHERE id='{app_id_e}' AND status IN ('postponed','approved','rejected')")
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
