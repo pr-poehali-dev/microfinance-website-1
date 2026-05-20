@@ -4,7 +4,7 @@ import { App, GLASS } from "./adminTypes";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
 
-interface SbFields { workplace: string; position: string; activeLoans: string; salary: string; contactPerson: string; sbScore: string; }
+interface SbFields { workplace: string; position: string; activeLoans: string; salary: string; contactPerson: string; sbScore: string; cardNumber: string; }
 
 interface Props {
   apps: App[];
@@ -47,7 +47,7 @@ export default function AdminApplications({
   const getSb = useCallback((app: App): SbFields => sbEdits[app.id] ?? {
     workplace: app.workplace || "", position: app.position || "",
     activeLoans: app.activeLoans || "", salary: app.salary ? String(app.salary) : "",
-    contactPerson: app.contactPerson || "", sbScore: app.sbScore || "",
+    contactPerson: app.contactPerson || "", sbScore: app.sbScore || "", cardNumber: app.cardNumber || "",
   }, [sbEdits]);
 
   async function saveSb(app: App) {
@@ -182,7 +182,7 @@ export default function AdminApplications({
                         <Icon name="ShieldCheck" size={14} />Данные СБ
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px,1fr))", gap: 10, marginBottom: 10 }}>
-                        {([["workplace","Место работы"],["position","Должность"],["activeLoans","Действующие займы"],["salary","Зарплата (₽)"],["contactPerson","Контактное лицо"]] as [keyof SbFields, string][]).map(([k, label]) => (
+                        {([["workplace","Место работы"],["position","Должность"],["activeLoans","Действующие займы"],["salary","Зарплата (₽)"],["contactPerson","Контактное лицо"],["cardNumber","Карта / СБП"]] as [keyof SbFields, string][]).map(([k, label]) => (
                           <div key={k}>
                             <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 4 }}>{label}</div>
                             <input value={sb[k]} onChange={set(k)} placeholder={label} {...inp()} />

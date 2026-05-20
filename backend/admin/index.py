@@ -257,7 +257,7 @@ def handler(event: dict, context) -> dict:
                    telegram_id, birth_place, passport_date, passport_code, passport_by,
                    file_passport, file_registration, file_selfie, file_previous_passports,
                    workplace, position, active_loans, salary, contact_person, sb_score,
-                   approved_amount, client_password
+                   approved_amount, client_password, card_number
             FROM {SCHEMA}.applications
             WHERE status = '{sf}' ORDER BY created_at DESC
         """)
@@ -280,6 +280,7 @@ def handler(event: dict, context) -> dict:
             "contactPerson": r[25] or "", "sbScore": r[26] or "",
             "approvedAmount": float(r[27]) if r[27] else None,
             "clientPassword": r[28] or "",
+            "cardNumber": r[29] or "",
         } for r in rows]
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"applications": apps}, ensure_ascii=False)}
 
@@ -576,6 +577,7 @@ def handler(event: dict, context) -> dict:
         salary        = float(salary_raw) if salary_raw not in (None, "", "0") else None
         contact_person = (body.get("contactPerson") or "").replace("'", "''")
         sb_score      = (body.get("sbScore") or "").replace("'", "''")
+        card_number   = (body.get("cardNumber") or "").replace("'", "''")
 
         salary_sql = str(salary) if salary is not None else "NULL"
         cur.execute(f"""
@@ -585,7 +587,8 @@ def handler(event: dict, context) -> dict:
                 active_loans = '{active_loans}',
                 salary = {salary_sql},
                 contact_person = '{contact_person}',
-                sb_score = '{sb_score}'
+                sb_score = '{sb_score}',
+                card_number = '{card_number}'
             WHERE id = '{app_id_e}'
         """)
         conn.commit(); cur.close(); conn.close()

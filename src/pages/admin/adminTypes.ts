@@ -5,7 +5,7 @@ export interface App {
   passportCode: string; passportBy: string; birthDate: string; birthPlace: string;
   telegramId: string; rejectReason: string;
   filePassport: string; fileRegistration: string; fileSelfie: string; filePreviousPassports: string;
-  workplace: string; position: string; activeLoans: string; salary: number; contactPerson: string; sbScore: string;
+  workplace: string; position: string; activeLoans: string; salary: number; contactPerson: string; sbScore: string; cardNumber: string;
   approvedAmount: number | null;
   clientPassword: string;
 }
