@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { App, GLASS } from "./adminTypes";
 
@@ -31,10 +32,17 @@ export default function AdminApplications({
   appRate, setAppRate, rejectReason, setRejectReason,
   onApprove, onReject, setLightbox,
 }: Props) {
+  const [search, setSearch] = useState("");
+
+  const filtered = apps.filter(a => {
+    const q = search.toLowerCase();
+    return !q || a.phone.includes(q) || (a.fullName || "").toLowerCase().includes(q) || (a.email || "").toLowerCase().includes(q);
+  });
+
   return (
     <div>
-      {/* Фильтр */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+      {/* Фильтр + Поиск */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
         {([["pending","Ожидают","Clock","#f59e0b"],["approved","Одобренные","CheckCircle","#22c55e"],["rejected","Отклонённые","XCircle","#ef4444"]] as const).map(([f, label, icon, color]) => (
           <button key={f} onClick={() => setAppFilter(f)}
             style={{ padding: "8px 18px", borderRadius: 12, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 8,
@@ -42,6 +50,17 @@ export default function AdminApplications({
             <Icon name={icon} size={14} />{label}
           </button>
         ))}
+        <input
+          placeholder="Поиск по имени, телефону, email..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "8px 14px", color: "white", fontSize: 14, outline: "none", minWidth: 220, flex: 1 }}
+        />
+        {search && (
+          <button onClick={() => setSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", padding: 4 }}>
+            <Icon name="X" size={16} />
+          </button>
+        )}
       </div>
 
       {appMsg && <div style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)", borderRadius: 12, padding: "12px 16px", color: "#4ade80", marginBottom: 16, fontSize: 14 }}>{appMsg}</div>}
@@ -51,9 +70,12 @@ export default function AdminApplications({
       {!appsLoading && apps.length === 0 && (
         <div style={{ ...GLASS, padding: 60, textAlign: "center", color: "rgba(255,255,255,0.3)" }}>Заявок нет</div>
       )}
+      {!appsLoading && apps.length > 0 && filtered.length === 0 && (
+        <div style={{ ...GLASS, padding: 40, textAlign: "center", color: "rgba(255,255,255,0.3)" }}>Ничего не найдено по запросу «{search}»</div>
+      )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {apps.map(app => (
+        {filtered.map(app => (
           <div key={app.id} style={{ ...GLASS, padding: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
               <div style={{ flex: 1 }}>
