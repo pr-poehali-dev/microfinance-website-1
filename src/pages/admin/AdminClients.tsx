@@ -217,15 +217,27 @@ export default function AdminClients({
               <div style={{ ...GLASS, padding: 24 }}>
                 <h3 style={{ color: "white", fontWeight: 700, margin: "0 0 20px" }}>Зарегистрировать клиента</h3>
                 <form onSubmit={onAddClient} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  {[["Телефон","phone","tel","+7 (999) 000-00-00",true],["ФИО","fullName","text","Иванов Иван Иванович",false],["Пароль","password","text","Пароль для клиента",true]].map(([label, key, type, ph, req]) => (
-                    <div key={key as string}>
-                      <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 6 }}>{label as string}</div>
-                      <input type={type as string} required={req as boolean} placeholder={ph as string}
-                        value={newClient[key as keyof typeof newClient]}
-                        onChange={e => setNewClient({ ...newClient, [key as string]: e.target.value })}
-                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: "100%", boxSizing: "border-box", outline: "none" }} />
-                    </div>
-                  ))}
+                  <div>
+                    <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 6 }}>Телефон</div>
+                    <input type="text" required placeholder="+7 (999) 000-00-00"
+                      value={newClient.phone}
+                      onChange={e => setNewClient({ ...newClient, phone: e.target.value })}
+                      style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: "100%", boxSizing: "border-box", outline: "none" }} />
+                  </div>
+                  <div>
+                    <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 6 }}>ФИО</div>
+                    <input type="text" placeholder="Иванов Иван Иванович"
+                      value={newClient.fullName}
+                      onChange={e => setNewClient({ ...newClient, fullName: e.target.value })}
+                      style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: "100%", boxSizing: "border-box", outline: "none" }} />
+                  </div>
+                  <div>
+                    <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 6 }}>Пароль</div>
+                    <input type="text" required placeholder="Пароль для клиента"
+                      value={newClient.password}
+                      onChange={e => setNewClient({ ...newClient, password: e.target.value })}
+                      style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: "100%", boxSizing: "border-box", outline: "none" }} />
+                  </div>
                   <button type="submit"
                     style={{ ...PURPLE, color: "white", border: "none", borderRadius: 12, padding: "14px", cursor: "pointer", fontWeight: 700, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                     <Icon name="UserPlus" size={18} />Зарегистрировать
