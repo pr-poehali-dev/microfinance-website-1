@@ -8,7 +8,7 @@ SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
 
 CORS = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, X-Authorization",
 }
 
@@ -28,7 +28,7 @@ def get_user_by_token(cur, token: str):
 
 
 def handler(event: dict, context) -> dict:
-    """Получение займов и данных текущего пользователя по токену."""
+    """Получение займов пользователя и подписание оффера."""
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
 
@@ -46,8 +46,30 @@ def handler(event: dict, context) -> dict:
 
     user_id, phone, full_name, email = user
 
+    # --- ПОДПИСАТЬ ОФФЕР (PUT, loanId=...) ---
+    if event.get("httpMethod") == "PUT":
+        qs = event.get("queryStringParameters") or {}
+        loan_id = int(qs.get("loanId", 0))
+        if not loan_id:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Не указан loanId"})}
+
+        cur.execute(
+            f"SELECT id FROM {SCHEMA}.loans WHERE id = {loan_id} AND user_id = {user_id} AND signed = FALSE AND status = 'review'"
+        )
+        if not cur.fetchone():
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Оффер не найден или уже подписан"})}
+
+        cur.execute(
+            f"UPDATE {SCHEMA}.loans SET signed = TRUE, signed_at = NOW(), status = 'active' WHERE id = {loan_id}"
+        )
+        conn.commit()
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     cur.execute(
-        f"SELECT id, amount, days, rate, status, created_at FROM {SCHEMA}.loans WHERE user_id = {user_id} ORDER BY created_at DESC"
+        f"SELECT id, amount, days, rate, status, created_at, signed, offer_amount, offer_days, offer_rate FROM {SCHEMA}.loans WHERE user_id = {user_id} ORDER BY created_at DESC"
     )
     rows = cur.fetchall()
 
@@ -71,9 +93,9 @@ def handler(event: dict, context) -> dict:
 
     loans = []
     for row in rows:
-        loan_id, amount, days, rate, status, created_at = row
+        loan_id, amount, days, rate, status, created_at, signed, offer_amount, offer_days, offer_rate = row
         interest = round(float(amount) * float(rate) * days)
-        loans.append({
+        loan_data = {
             "id": loan_id,
             "amount": float(amount),
             "days": days,
@@ -83,7 +105,21 @@ def handler(event: dict, context) -> dict:
             "total": float(amount) + interest,
             "status": status,
             "createdAt": created_at.strftime("%d.%m.%Y"),
-        })
+            "signed": signed,
+        }
+        if status == "review" and not signed and offer_amount:
+            oa = float(offer_amount)
+            od = offer_days or days
+            or_ = float(offer_rate) if offer_rate else float(rate)
+            oi = round(oa * or_ * od)
+            loan_data["offer"] = {
+                "amount": oa,
+                "days": od,
+                "rate": or_,
+                "ratePercent": round(or_ * 100, 1),
+                "total": oa + oi,
+            }
+        loans.append(loan_data)
 
     return {
         "statusCode": 200,

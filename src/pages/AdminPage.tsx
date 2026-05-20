@@ -49,9 +49,10 @@ export default function AdminPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [loans, setLoans]           = useState<Loan[]>([]);
   const [loansLoad, setLoansLoad]   = useState(false);
-  const [clientTab, setClientTab]   = useState<"loans" | "add" | "register">("loans");
+  const [clientTab, setClientTab]   = useState<"loans" | "add" | "register" | "offer">("loans");
   const [newLoan, setNewLoan]       = useState({ amount: "", days: "", rate: "0.8" });
   const [newClient, setNewClient]   = useState({ phone: "", fullName: "", password: "" });
+  const [newOffer, setNewOffer]     = useState({ amount: "", days: "", rate: "0.8" });
   const [actionMsg, setActionMsg]   = useState("");
   const [actionErr, setActionErr]   = useState("");
 
@@ -219,6 +220,25 @@ export default function AdminPage() {
     loadUsers();
   };
 
+  const createOffer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+    setActionErr(""); setActionMsg("");
+    const res = await fetch(`${ADMIN_URL}?sub=offer&userId=${selectedUser.id}`, {
+      method: "POST",
+      headers: hdrs(),
+      body: JSON.stringify({
+        offerAmount: parseFloat(newOffer.amount),
+        offerDays: parseInt(newOffer.days),
+        offerRate: parseFloat(newOffer.rate) / 100,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) { setActionErr(data.error); return; }
+    setActionMsg("Оффер отправлен! Клиент увидит его в личном кабинете.");
+    setNewOffer({ amount: "", days: "", rate: "0.8" });
+  };
+
   const logout = () => {
     localStorage.removeItem("admin_token");
     setToken(""); setUsers([]); setApplications([]); setSelectedUser(null);
@@ -298,6 +318,8 @@ export default function AdminPage() {
             setNewLoan={setNewLoan}
             newClient={newClient}
             setNewClient={setNewClient}
+            newOffer={newOffer}
+            setNewOffer={setNewOffer}
             actionMsg={actionMsg}
             actionErr={actionErr}
             setActionMsg={setActionMsg}
@@ -306,6 +328,7 @@ export default function AdminPage() {
             onChangeStatus={changeStatus}
             onAddLoan={addLoan}
             onRegisterClient={registerClient}
+            onCreateOffer={createOffer}
           />
         )}
       </div>

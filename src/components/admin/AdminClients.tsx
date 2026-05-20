@@ -20,12 +20,14 @@ interface Props {
   setSelectedUser: (u: User | null) => void;
   loans: Loan[];
   loansLoad: boolean;
-  clientTab: "loans" | "add" | "register";
-  setClientTab: (t: "loans" | "add" | "register") => void;
+  clientTab: "loans" | "add" | "register" | "offer";
+  setClientTab: (t: "loans" | "add" | "register" | "offer") => void;
   newLoan: { amount: string; days: string; rate: string };
   setNewLoan: (v: { amount: string; days: string; rate: string }) => void;
   newClient: { phone: string; fullName: string; password: string };
   setNewClient: (v: { phone: string; fullName: string; password: string }) => void;
+  newOffer: { amount: string; days: string; rate: string };
+  setNewOffer: (v: { amount: string; days: string; rate: string }) => void;
   actionMsg: string;
   actionErr: string;
   setActionMsg: (v: string) => void;
@@ -34,6 +36,7 @@ interface Props {
   onChangeStatus: (loanId: number, status: string) => void;
   onAddLoan: (e: React.FormEvent) => void;
   onRegisterClient: (e: React.FormEvent) => void;
+  onCreateOffer: (e: React.FormEvent) => void;
 }
 
 export default function AdminClients({
@@ -43,8 +46,9 @@ export default function AdminClients({
   clientTab, setClientTab,
   newLoan, setNewLoan,
   newClient, setNewClient,
+  newOffer, setNewOffer,
   actionMsg, actionErr, setActionMsg, setActionErr,
-  onOpenUser, onChangeStatus, onAddLoan, onRegisterClient,
+  onOpenUser, onChangeStatus, onAddLoan, onRegisterClient, onCreateOffer,
 }: Props) {
   return (
     <div className="pt-4 flex gap-5" style={{ minHeight: "calc(100vh - 100px)" }}>
@@ -105,12 +109,14 @@ export default function AdminClients({
               </button>
             </div>
 
-            <div className="flex gap-2 mb-4">
-              {([["loans","Займы","CreditCard"],["add","Добавить займ","Plus"],["register","Новый клиент","UserPlus"]] as const).map(([t, label, icon]) => (
+            <div className="flex gap-2 mb-4 flex-wrap">
+              {([["loans","Займы","CreditCard"],["offer","Создать оффер","FileSignature"],["add","Добавить займ","Plus"],["register","Новый клиент","UserPlus"]] as const).map(([t, label, icon]) => (
                 <button key={t} onClick={() => { setClientTab(t); setActionMsg(""); setActionErr(""); }}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
                   style={clientTab === t
-                    ? { background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white" }
+                    ? t === "offer"
+                      ? { background: "linear-gradient(135deg,#0ea5e9,#38bdf8)", color: "white" }
+                      : { background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white" }
                     : { background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)" }}>
                   <Icon name={icon} size={14} />{label}
                 </button>
@@ -184,6 +190,68 @@ export default function AdminClients({
                   {actionMsg && <p className="text-green-400 text-sm flex items-center gap-2"><Icon name="CheckCircle" size={14} />{actionMsg}</p>}
                   <button type="submit" className="btn-neon text-white font-semibold px-6 py-3 rounded-xl flex items-center gap-2">
                     <Icon name="Plus" size={16} />Добавить займ
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {clientTab === "offer" && (
+              <div className="glass rounded-2xl p-6" style={{ border: "1px solid rgba(14,165,233,0.3)" }}>
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(14,165,233,0.2)" }}>
+                    <Icon name="FileSignature" size={18} className="text-sky-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold">Создать оффер для {selectedUser.phone}</h3>
+                    <p className="text-white/40 text-xs">Клиент увидит условия в личном кабинете и сможет подписать</p>
+                  </div>
+                </div>
+                <form onSubmit={onCreateOffer} className="space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: "Одобренная сумма (₽)", key: "amount", placeholder: "50000", min: "1000" },
+                      { label: "Срок (дней)", key: "days", placeholder: "15", min: "1" },
+                      { label: "Ставка (%/день)", key: "rate", placeholder: "0.8", min: "0.1", step: "0.1" },
+                    ].map(({ label, key, placeholder, min, step }) => (
+                      <div key={key}>
+                        <label className="text-white/50 text-xs mb-1 block">{label}</label>
+                        <input type="number" required min={min} step={step || "1"} placeholder={placeholder}
+                          value={newOffer[key as keyof typeof newOffer]}
+                          onChange={(e) => setNewOffer({ ...newOffer, [key]: e.target.value })}
+                          className="w-full rounded-xl px-3 py-2.5 text-white text-sm placeholder-white/20 outline-none border border-white/10 focus:border-sky-500 transition-colors"
+                          style={{ background: "rgba(255,255,255,0.05)" }} />
+                      </div>
+                    ))}
+                  </div>
+
+                  {newOffer.amount && newOffer.days && newOffer.rate && (
+                    <div className="rounded-2xl p-4 space-y-2" style={{ background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.25)" }}>
+                      <div className="text-sky-400 text-xs font-semibold uppercase tracking-wider mb-3">Условия оффера</div>
+                      {[
+                        { label: "Одобренная сумма", value: `${parseFloat(newOffer.amount).toLocaleString("ru-RU")} ₽` },
+                        { label: "Срок", value: `${newOffer.days} дней` },
+                        { label: "Ставка", value: `${newOffer.rate}% в день` },
+                      ].map(({ label, value }) => (
+                        <div key={label} className="flex justify-between text-sm">
+                          <span className="text-white/50">{label}</span>
+                          <span className="text-white font-medium">{value}</span>
+                        </div>
+                      ))}
+                      <div className="flex justify-between text-sm pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+                        <span className="text-white/50">К возврату</span>
+                        <span className="text-sky-300 font-bold text-base">
+                          {Math.round(parseFloat(newOffer.amount) * (1 + parseFloat(newOffer.rate) / 100 * parseInt(newOffer.days))).toLocaleString("ru-RU")} ₽
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {actionErr && <p className="text-red-400 text-sm flex items-center gap-2"><Icon name="AlertCircle" size={14} />{actionErr}</p>}
+                  {actionMsg && <p className="text-green-400 text-sm flex items-center gap-2"><Icon name="CheckCircle" size={14} />{actionMsg}</p>}
+                  <button type="submit"
+                    className="text-white font-semibold px-6 py-3 rounded-xl flex items-center gap-2 transition-all hover:opacity-90"
+                    style={{ background: "linear-gradient(135deg,#0ea5e9,#38bdf8)" }}>
+                    <Icon name="Send" size={16} />Отправить оффер клиенту
                   </button>
                 </form>
               </div>

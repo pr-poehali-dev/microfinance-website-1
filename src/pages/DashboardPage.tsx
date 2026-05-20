@@ -4,6 +4,14 @@ import Icon from "@/components/ui/icon";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 
+interface LoanOffer {
+  amount: number;
+  days: number;
+  rate: number;
+  ratePercent: number;
+  total: number;
+}
+
 interface Loan {
   id: number;
   amount: number;
@@ -14,6 +22,8 @@ interface Loan {
   total: number;
   status: string;
   createdAt: string;
+  signed: boolean;
+  offer?: LoanOffer;
 }
 
 interface User {
@@ -45,6 +55,8 @@ export default function DashboardPage() {
   const [application, setApplication] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [signingId, setSigningId] = useState<number | null>(null);
+  const [signMsg, setSignMsg] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -72,6 +84,22 @@ export default function DashboardPage() {
 
   const handlePay = (loan: Loan) => {
     alert(`Оплата займа #${loan.id} на сумму ${loan.total.toLocaleString("ru-RU")} ₽\n\nДля оплаты свяжитесь с нами:\n📞 +7 (495) 663-51-24\n📧 PARAFINANS24@ya.ru`);
+  };
+
+  const handleSign = async (loan: Loan) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setSigningId(loan.id);
+    setSignMsg("");
+    const res = await fetch(`${LOANS_URL}?loanId=${loan.id}`, {
+      method: "PUT",
+      headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+    });
+    const data = await res.json();
+    setSigningId(null);
+    if (!res.ok) { setSignMsg(data.error || "Ошибка"); return; }
+    setSignMsg("Договор подписан! Ожидайте перевода средств.");
+    setLoans((prev) => prev.map((l) => l.id === loan.id ? { ...l, signed: true, status: "active", offer: undefined } : l));
   };
 
   return (
@@ -135,6 +163,58 @@ export default function DashboardPage() {
         {/* ЗАЙМЫ */}
         {!loading && !error && (
           <>
+            {/* ОФФЕР ОТ МЕНЕДЖЕРА */}
+            {loans.some((l) => l.status === "review" && !l.signed && l.offer) && (
+              <div className="mb-6">
+                {loans.filter((l) => l.status === "review" && !l.signed && l.offer).map((loan) => (
+                  <div key={loan.id} className="glass rounded-2xl overflow-hidden"
+                    style={{ border: "1px solid rgba(14,165,233,0.4)", background: "rgba(14,165,233,0.04)" }}>
+                    <div className="px-6 py-4 flex items-center gap-3" style={{ background: "linear-gradient(135deg,rgba(14,165,233,0.2),rgba(56,189,248,0.08))" }}>
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(14,165,233,0.25)" }}>
+                        <Icon name="FileSignature" size={18} className="text-sky-400" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-white font-semibold">Вам одобрен займ!</div>
+                        <div className="text-sky-300 text-xs mt-0.5">Ознакомьтесь с условиями и подпишите договор</div>
+                      </div>
+                      <span className="text-xs px-3 py-1 rounded-full font-semibold animate-pulse"
+                        style={{ background: "rgba(14,165,233,0.2)", color: "#38bdf8" }}>Ожидает подписи</span>
+                    </div>
+                    <div className="px-6 py-5">
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        {[
+                          { label: "Одобренная сумма", value: `${loan.offer!.amount.toLocaleString("ru-RU")} ₽`, big: true },
+                          { label: "К возврату", value: `${loan.offer!.total.toLocaleString("ru-RU")} ₽`, highlight: true },
+                          { label: "Срок", value: `${loan.offer!.days} дней` },
+                          { label: "Процентная ставка", value: `${loan.offer!.ratePercent}% в день` },
+                        ].map(({ label, value, big, highlight }) => (
+                          <div key={label} className="rounded-xl px-4 py-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                            <div className="text-white/40 text-xs mb-1">{label}</div>
+                            <div className={`font-bold ${big ? "text-xl text-white" : highlight ? "text-sky-300 text-xl" : "text-white text-base"}`}>{value}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {signMsg && (
+                        <div className="rounded-xl px-4 py-3 mb-4 text-sm font-medium"
+                          style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)", color: "#4ade80" }}>
+                          <Icon name="CheckCircle" size={14} className="inline mr-2" />{signMsg}
+                        </div>
+                      )}
+                      <button onClick={() => handleSign(loan)} disabled={signingId === loan.id}
+                        className="w-full text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 text-base transition-all hover:opacity-90 disabled:opacity-60"
+                        style={{ background: "linear-gradient(135deg,#0ea5e9,#38bdf8)", boxShadow: "0 4px 20px rgba(14,165,233,0.3)" }}>
+                        {signingId === loan.id
+                          ? <><Icon name="Loader2" size={18} className="animate-spin" />Подписываем...</>
+                          : <><Icon name="PenLine" size={18} />Подписать договор</>
+                        }
+                      </button>
+                      <p className="text-white/20 text-xs text-center mt-3">Нажимая «Подписать», вы соглашаетесь с условиями займа</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* БЛОК СТАТУСА ЗАЯВКИ */}
             {application && application.status === "pending" && (
               <div className="glass rounded-2xl p-5 mb-6 flex items-center gap-4"

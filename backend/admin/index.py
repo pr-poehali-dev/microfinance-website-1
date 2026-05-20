@@ -475,5 +475,46 @@ def handler(event: dict, context) -> dict:
             )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
+    # --- СОЗДАТЬ ОФФЕР ДЛЯ КЛИЕНТА (POST, sub='offer', userId=...) ---
+    if sub == "offer" and method == "POST":
+        user_id = int(qs.get("userId", 0))
+        offer_amount = float(body.get("offerAmount", 0))
+        offer_days   = int(body.get("offerDays", 0))
+        offer_rate   = float(body.get("offerRate", 0.008))
+
+        if not user_id or offer_amount <= 0 or offer_days <= 0:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Заполните все поля"})}
+
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.loans (user_id, amount, days, rate, status, offer_amount, offer_days, offer_rate, signed) "
+            f"VALUES ({user_id}, {offer_amount}, {offer_days}, {offer_rate}, 'review', {offer_amount}, {offer_days}, {offer_rate}, FALSE) RETURNING id"
+        )
+        loan_id = cur.fetchone()[0]
+        conn.commit()
+
+        cur.execute(f"SELECT phone, full_name FROM {SCHEMA}.users WHERE id = {user_id}")
+        u = cur.fetchone()
+        cur.close(); conn.close()
+
+        phone_u = u[0] if u else ""
+        name_u  = u[1] if u else phone_u
+        interest = round(offer_amount * offer_rate * offer_days)
+        total = int(offer_amount + interest)
+        now = datetime.now().strftime("%d.%m.%Y в %H:%M")
+        tg(
+            f"📋 <b>Создан оффер для клиента</b>\n"
+            f"⏱ {now}\n\n"
+            f"👤 <b>Клиент:</b> {name_u}\n"
+            f"📞 <b>Телефон:</b> {phone_u}\n"
+            f"💵 <b>Сумма:</b> {int(offer_amount):,} ₽\n".replace(",", " ") +
+            f"📅 <b>Срок:</b> {offer_days} дн.\n"
+            f"📈 <b>Ставка:</b> {round(offer_rate * 100, 1)}%/день\n"
+            f"💳 <b>К возврату:</b> {total:,} ₽\n".replace(",", " ") +
+            f"🔖 <b>Займ №:</b> {loan_id}\n"
+            f"⏳ <i>Ожидает подписи клиента</i>"
+        )
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "loanId": loan_id})}
+
     cur.close(); conn.close()
     return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Маршрут не найден"})}
