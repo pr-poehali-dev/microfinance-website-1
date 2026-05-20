@@ -234,8 +234,7 @@ export default function AdminClients({
                     </div>
                   ))}
                   <button
-                    type="button"
-                    onClick={onAddClient as unknown as React.MouseEventHandler}
+                    type="submit"
                     style={{ ...PURPLE, color: "white", border: "none", borderRadius: 12, padding: "14px", cursor: "pointer", fontWeight: 700, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                     <Icon name="UserPlus" size={18} />Зарегистрировать
                   </button>

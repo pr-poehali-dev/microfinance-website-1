@@ -516,5 +516,42 @@ def handler(event: dict, context) -> dict:
         )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "loanId": loan_id})}
 
+    # --- ЗАРЕГИСТРИРОВАТЬ КЛИЕНТА (POST, sub='register') ---
+    if sub == "register" and method == "POST":
+        phone    = (body.get("phone") or "").strip()
+        full_name = (body.get("fullName") or "").strip()
+        password  = (body.get("password") or "").strip()
+
+        if not phone or not password:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Телефон и пароль обязательны"})}
+
+        pw_hash = hashlib.sha256(password.encode()).hexdigest()
+        phone_e = phone.replace("'", "''")
+        fn_e    = full_name.replace("'", "''")
+
+        cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = '{phone_e}'")
+        existing = cur.fetchone()
+        if existing:
+            cur.close(); conn.close()
+            return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": "Клиент с таким номером уже существует"})}
+
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name) "
+            f"VALUES ('{phone_e}', '{pw_hash}', '{fn_e}') RETURNING id"
+        )
+        user_id = cur.fetchone()[0]
+        conn.commit(); cur.close(); conn.close()
+
+        now = datetime.now().strftime("%d.%m.%Y в %H:%M")
+        tg(
+            f"👤 <b>Новый клиент зарегистрирован</b>\n"
+            f"⏱ {now}\n\n"
+            f"📞 <b>Телефон:</b> {phone}\n"
+            f"👤 <b>ФИО:</b> {full_name or '—'}\n"
+            f"🔖 <b>ID:</b> {user_id}"
+        )
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "userId": user_id}, ensure_ascii=False)}
+
     cur.close(); conn.close()
     return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Маршрут не найден"})}
