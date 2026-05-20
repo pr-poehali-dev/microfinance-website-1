@@ -36,11 +36,38 @@ def handler(event: dict, context) -> dict:
     phone = (body.get("phone") or "").strip()
     password = (body.get("password") or "").strip()
 
-    if not phone or not password:
-        return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Введите телефон и пароль"})}
+    if not phone:
+        return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Введите номер телефона"})}
 
     conn = get_conn()
     cur = conn.cursor()
+
+    # --- ВХОД ПО НОМЕРУ ТЕЛЕФОНА (для клиентов с одобренной заявкой) ---
+    if action == "phone_login":
+        cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = %s", (phone,))
+        user_row = cur.fetchone()
+        if not user_row:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Аккаунт не найден. Сначала подайте заявку на займ."})}
+
+        # Проверяем что у пользователя есть одобренная заявка
+        phone_e = phone.replace("'", "''")
+        cur.execute(f"SELECT id FROM {SCHEMA}.applications WHERE phone = '{phone_e}' AND status = 'approved' LIMIT 1")
+        if not cur.fetchone():
+            cur.close(); conn.close()
+            return {"statusCode": 403, "headers": CORS, "body": json.dumps({"error": "Вход по номеру телефона доступен только клиентам с одобренным займом."})}
+
+        user_id = user_row[0]
+        token = secrets.token_hex(32)
+        expires_at = datetime.now() + timedelta(days=30)
+        cur.execute(f"INSERT INTO {SCHEMA}.sessions (user_id, token, expires_at) VALUES (%s, %s, %s)", (user_id, token, expires_at))
+        cur.execute(f"SELECT id, phone, full_name, email FROM {SCHEMA}.users WHERE id = %s", (user_id,))
+        u = cur.fetchone()
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"token": token, "user": {"id": u[0], "phone": u[1], "fullName": u[2] or "", "email": u[3] or ""}}, ensure_ascii=False)}
+
+    if not password:
+        return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Введите пароль"})}
 
     if action == "register":
         full_name = (body.get("fullName") or "").strip()
