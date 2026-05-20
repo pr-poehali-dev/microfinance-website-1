@@ -255,7 +255,8 @@ def handler(event: dict, context) -> dict:
             SELECT id, full_name, phone, email, amount, days, birth_date,
                    passport_series, passport_number, status, created_at, reject_reason,
                    telegram_id, birth_place, passport_date, passport_code, passport_by,
-                   file_passport, file_registration, file_selfie, file_previous_passports
+                   file_passport, file_registration, file_selfie, file_previous_passports,
+                   workplace, position, active_loans, salary, contact_person, sb_score
             FROM {SCHEMA}.applications
             WHERE status = '{sf}' ORDER BY created_at DESC
         """)
@@ -273,6 +274,9 @@ def handler(event: dict, context) -> dict:
             "passportBy": r[16] or "",
             "filePassport": r[17] or "", "fileRegistration": r[18] or "",
             "fileSelfie": r[19] or "", "filePreviousPassports": r[20] or "",
+            "workplace": r[21] or "", "position": r[22] or "",
+            "activeLoans": r[23] or "", "salary": float(r[24]) if r[24] else 0,
+            "contactPerson": r[25] or "", "sbScore": r[26] or "",
         } for r in rows]
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"applications": apps}, ensure_ascii=False)}
 
@@ -552,6 +556,32 @@ def handler(event: dict, context) -> dict:
             f"🔖 <b>ID:</b> {user_id}"
         )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "userId": user_id}, ensure_ascii=False)}
+
+    # --- ОБНОВИТЬ ПОЛЯ СБ ЗАЯВКИ (POST, sub='app_update', appId=...) ---
+    if sub == "app_update" and method == "POST":
+        app_id = qs.get("appId", "")
+        app_id_e = str(app_id).replace("'", "''")
+        workplace     = (body.get("workplace") or "").replace("'", "''")
+        position      = (body.get("position") or "").replace("'", "''")
+        active_loans  = (body.get("activeLoans") or "").replace("'", "''")
+        salary_raw    = body.get("salary")
+        salary        = float(salary_raw) if salary_raw not in (None, "", "0") else None
+        contact_person = (body.get("contactPerson") or "").replace("'", "''")
+        sb_score      = (body.get("sbScore") or "").replace("'", "''")
+
+        salary_sql = str(salary) if salary is not None else "NULL"
+        cur.execute(f"""
+            UPDATE {SCHEMA}.applications SET
+                workplace = '{workplace}',
+                position = '{position}',
+                active_loans = '{active_loans}',
+                salary = {salary_sql},
+                contact_person = '{contact_person}',
+                sb_score = '{sb_score}'
+            WHERE id = '{app_id_e}'
+        """)
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     cur.close(); conn.close()
     return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Маршрут не найден"})}

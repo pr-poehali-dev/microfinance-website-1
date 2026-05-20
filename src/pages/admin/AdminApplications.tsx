@@ -1,6 +1,10 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 import { App, GLASS } from "./adminTypes";
+
+const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
+
+interface SbFields { workplace: string; position: string; activeLoans: string; salary: string; contactPerson: string; sbScore: string; }
 
 interface Props {
   apps: App[];
@@ -23,6 +27,7 @@ interface Props {
   onApprove: () => void;
   onReject: () => void;
   setLightbox: (url: string) => void;
+  token: string;
 }
 
 export default function AdminApplications({
@@ -30,9 +35,31 @@ export default function AdminApplications({
   appMsg, appErr2, appProcessing,
   selApp, setSelApp, appAction, setAppAction, setAppMsg, setAppErr2,
   appRate, setAppRate, rejectReason, setRejectReason,
-  onApprove, onReject, setLightbox,
+  onApprove, onReject, setLightbox, token,
 }: Props) {
   const [search, setSearch] = useState("");
+  const [sbEdits, setSbEdits] = useState<Record<number, SbFields>>({});
+  const [sbSaving, setSbSaving] = useState<Record<number, boolean>>({});
+  const [sbSaved, setSbSaved] = useState<Record<number, boolean>>({});
+
+  const getSb = useCallback((app: App): SbFields => sbEdits[app.id] ?? {
+    workplace: app.workplace || "", position: app.position || "",
+    activeLoans: app.activeLoans || "", salary: app.salary ? String(app.salary) : "",
+    contactPerson: app.contactPerson || "", sbScore: app.sbScore || "",
+  }, [sbEdits]);
+
+  async function saveSb(app: App) {
+    const fields = getSb(app);
+    setSbSaving(p => ({ ...p, [app.id]: true }));
+    await fetch(`${ADMIN_URL}?sub=app_update&appId=${app.id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify({ ...fields, salary: fields.salary ? parseFloat(fields.salary) : null }),
+    });
+    setSbSaving(p => ({ ...p, [app.id]: false }));
+    setSbSaved(p => ({ ...p, [app.id]: true }));
+    setTimeout(() => setSbSaved(p => ({ ...p, [app.id]: false })), 2000);
+  }
 
   const filtered = apps.filter(a => {
     const q = search.toLowerCase();
@@ -98,7 +125,7 @@ export default function AdminApplications({
                 </div>
 
                 {/* Документы */}
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
                   {[["filePassport","Паспорт"],["fileRegistration","Прописка"],["fileSelfie","Селфи"],["filePreviousPassports","Доп.паспорт"]].map(([key, label]) => {
                     const url = app[key as keyof App] as string;
                     return url ? (
@@ -109,6 +136,46 @@ export default function AdminApplications({
                     ) : null;
                   })}
                 </div>
+
+                {/* Блок СБ */}
+                {(() => {
+                  const sb = getSb(app);
+                  const set = (k: keyof SbFields) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+                    setSbEdits(p => ({ ...p, [app.id]: { ...getSb(app), [k]: e.target.value } }));
+                  const inp = (style?: React.CSSProperties) => ({
+                    style: { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, padding: "7px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const, outline: "none", ...style },
+                  });
+                  return (
+                    <div style={{ background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: 12, padding: 14 }}>
+                      <div style={{ color: "#fbbf24", fontWeight: 700, fontSize: 13, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                        <Icon name="ShieldCheck" size={14} />Данные СБ
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px,1fr))", gap: 10, marginBottom: 10 }}>
+                        {([["workplace","Место работы"],["position","Должность"],["activeLoans","Действующие займы"],["salary","Зарплата (₽)"],["contactPerson","Контактное лицо"]] as [keyof SbFields, string][]).map(([k, label]) => (
+                          <div key={k}>
+                            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 4 }}>{label}</div>
+                            <input value={sb[k]} onChange={set(k)} placeholder={label} {...inp()} />
+                          </div>
+                        ))}
+                        <div>
+                          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 4 }}>Оценка СБ</div>
+                          <select value={sb.sbScore} onChange={set("sbScore")}
+                            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, padding: "7px 10px", color: "white", fontSize: 13, width: "100%", outline: "none" }}>
+                            <option value="">— Не выбрано —</option>
+                            <option value="✅ Одобрен">✅ Одобрен</option>
+                            <option value="⚠️ Под вопросом">⚠️ Под вопросом</option>
+                            <option value="❌ Отказ">❌ Отказ</option>
+                          </select>
+                        </div>
+                      </div>
+                      <button onClick={() => saveSb(app)} disabled={sbSaving[app.id]}
+                        style={{ background: sbSaved[app.id] ? "linear-gradient(135deg,#16a34a,#22c55e)" : "linear-gradient(135deg,#d97706,#fbbf24)", color: "white", border: "none", borderRadius: 8, padding: "8px 16px", cursor: "pointer", fontWeight: 600, fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+                        <Icon name={sbSaved[app.id] ? "Check" : "Save"} size={13} />
+                        {sbSaving[app.id] ? "Сохранение..." : sbSaved[app.id] ? "Сохранено!" : "Сохранить данные СБ"}
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Кнопки действий */}

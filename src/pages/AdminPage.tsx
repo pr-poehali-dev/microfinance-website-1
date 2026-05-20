@@ -199,6 +199,7 @@ export default function AdminPage() {
             rejectReason={rejectReason} setRejectReason={setRejectReason}
             onApprove={approveApp} onReject={rejectApp}
             setLightbox={setLightbox}
+            token={token}
           />
         )}
         {tab === "clients" && (
