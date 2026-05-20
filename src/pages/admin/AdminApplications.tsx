@@ -29,6 +29,7 @@ interface Props {
   onApprove: () => void;
   onReject: () => void;
   onPostpone: (appId: number) => void;
+  onRestore: (appId: number) => void;
   setLightbox: (url: string) => void;
   token: string;
 }
@@ -38,7 +39,7 @@ export default function AdminApplications({
   appMsg, appErr2, appProcessing,
   selApp, setSelApp, appAction, setAppAction, setAppMsg, setAppErr2,
   appRate, setAppRate, appAmount, setAppAmount, rejectReason, setRejectReason,
-  onApprove, onReject, onPostpone, setLightbox, token,
+  onApprove, onReject, onPostpone, onRestore, setLightbox, token,
 }: Props) {
   const [search, setSearch] = useState("");
   const [sbEdits, setSbEdits] = useState<Record<number, SbFields>>({});
@@ -209,6 +210,16 @@ export default function AdminApplications({
                   );
                 })()}
               </div>
+
+              {/* Кнопки действий — Отложенные */}
+              {app.status === "postponed" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 140 }}>
+                  <button onClick={() => onRestore(app.id)}
+                    style={{ background: "linear-gradient(135deg,#d97706,#f59e0b)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                    <Icon name="RotateCcw" size={16} />Вернуть в ожидание
+                  </button>
+                </div>
+              )}
 
               {/* Кнопки действий */}
               {app.status === "pending" && (

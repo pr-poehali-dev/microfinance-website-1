@@ -113,6 +113,14 @@ export default function AdminPage() {
     }
   }
 
+  async function restoreApp(appId: number) {
+    const r = await fetch(`${ADMIN_URL}?sub=restore&appId=${appId}`, { method: "POST", headers: hdrs() });
+    if (r.ok) {
+      setAppMsg("Заявка возвращена в ожидание.");
+      setApps(prev => prev.filter(a => a.id !== appId));
+    }
+  }
+
   async function rejectApp() {
     if (!selApp) return;
     setAppProcessing(true); setAppMsg(""); setAppErr2("");
@@ -208,7 +216,7 @@ export default function AdminPage() {
             appRate={appRate} setAppRate={setAppRate}
             appAmount={appAmount} setAppAmount={setAppAmount}
             rejectReason={rejectReason} setRejectReason={setRejectReason}
-            onApprove={approveApp} onReject={rejectApp} onPostpone={postponeApp}
+            onApprove={approveApp} onReject={rejectApp} onPostpone={postponeApp} onRestore={restoreApp}
             setLightbox={setLightbox}
             token={token}
           />
