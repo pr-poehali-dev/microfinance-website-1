@@ -102,25 +102,38 @@ export default function CalculatorForm() {
     setSendError("");
     setSendStep("");
     try {
-      const fileEntries = Object.entries(files).filter(([, f]) => f);
-      const encodedFiles: { [key: string]: string } = {};
-      for (let i = 0; i < fileEntries.length; i++) {
-        const [key, file] = fileEntries[i];
-        setSendStep(`Сжимаем фото ${i + 1} из ${fileEntries.length}...`);
-        encodedFiles[key] = await compressImage(file!);
-        encodedFiles[`${key}_name`] = file!.name.replace(/\.[^.]+$/, ".webp");
-      }
+      // Шаг 1: отправляем данные заявки без фото
       setSendStep("Отправляем заявку...");
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, name: form.fullName, ...encodedFiles }),
+        body: JSON.stringify({ ...form, name: form.fullName }),
       });
-      if (res.ok) {
-        setSubmitted(true);
-      } else {
+      if (!res.ok) {
         setSendError("Ошибка при отправке. Попробуйте ещё раз.");
+        return;
       }
+      const data = await res.json();
+      const appId = data.appId;
+
+      // Шаг 2: загружаем фото по одному
+      const fileEntries = Object.entries(files).filter(([, f]) => f);
+      for (let i = 0; i < fileEntries.length; i++) {
+        const [key, file] = fileEntries[i];
+        setSendStep(`Загружаем фото ${i + 1} из ${fileEntries.length}...`);
+        const encoded = await compressImage(file!);
+        const fileName = file!.name.replace(/\.[^.]+$/, ".webp");
+        const putRes = await fetch(API_URL, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ appId, fileKey: key, file: encoded, fileName }),
+        });
+        if (!putRes.ok) {
+          console.warn(`Не удалось загрузить фото ${key}`);
+        }
+      }
+
+      setSubmitted(true);
     } catch {
       setSendError("Нет связи с сервером. Попробуйте позже.");
     } finally {
