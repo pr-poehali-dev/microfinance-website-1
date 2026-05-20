@@ -4,6 +4,7 @@ import base64
 import os
 import urllib.request
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import psycopg2
 import boto3
 
@@ -41,10 +42,17 @@ def s3_client():
     )
 
 
-def upload_file(s3, key: str, data: bytes, content_type: str) -> str:
-    s3.put_object(Bucket="files", Key=key, Body=data, ContentType=content_type)
+def upload_one(key, s3_suffix, b64, filename, phone, now_ts):
+    s3 = s3_client()
+    file_data = base64.b64decode(b64)
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "webp"
+    s3_key = f"applications/{now_ts}_{phone.replace('+','')}_{s3_suffix}.{ext}"
+    ct = "image/webp" if ext == "webp" else "image/jpeg" if ext in ("jpg", "jpeg") else f"image/{ext}"
+    s3.put_object(Bucket="files", Key=s3_key, Body=file_data, ContentType=ct)
     access_key = os.environ["AWS_ACCESS_KEY_ID"]
-    return f"https://cdn.poehali.dev/projects/{access_key}/bucket/{key}"
+    url = f"https://cdn.poehali.dev/projects/{access_key}/bucket/{s3_key}"
+    print(f"[send-application] uploaded {key} -> {url}")
+    return key, url
 
 
 def send_telegram_message(token: str, chat_id: str, text: str):
@@ -84,114 +92,19 @@ def send_email(to: str, subject: str, html: str):
 
 
 def handler(event: dict, context) -> dict:
-    """Приём заявки и загрузка фото по отдельности."""
+    """Приём заявки на займ: данные + параллельная загрузка фото в S3."""
     cors_headers = {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, PUT, OPTIONS",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type",
     }
 
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": cors_headers, "body": ""}
 
-    method = event.get("httpMethod", "POST")
     raw_body = event.get("body") or "{}"
     body = json.loads(raw_body) if isinstance(raw_body, str) else raw_body
 
-    # ── PUT: загрузка одного фото для существующей заявки ──────────────────
-    if method == "PUT":
-        app_id = body.get("appId")
-        file_key = body.get("fileKey")  # passportMain / registration / selfie / previousPassports
-        b64 = body.get("file", "")
-        filename = body.get("fileName", f"{file_key}.webp")
-
-        if not app_id or not file_key or not b64:
-            return {"statusCode": 400, "headers": cors_headers,
-                    "body": json.dumps({"error": "Не указан appId, fileKey или file"})}
-
-        if file_key not in FILE_KEYS:
-            return {"statusCode": 400, "headers": cors_headers,
-                    "body": json.dumps({"error": "Неизвестный тип файла"})}
-
-        try:
-            file_data = base64.b64decode(b64)
-        except Exception:
-            return {"statusCode": 400, "headers": cors_headers,
-                    "body": json.dumps({"error": "Ошибка декодирования файла"})}
-
-        s3 = s3_client()
-        now_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "webp"
-        s3_key = f"applications/{now_ts}_{app_id}_{FILE_KEYS[file_key]}.{ext}"
-        ct = "image/webp" if ext == "webp" else "image/jpeg" if ext in ("jpg", "jpeg") else f"image/{ext}"
-
-        try:
-            url = upload_file(s3, s3_key, file_data, ct)
-            print(f"[send-application] uploaded {file_key} for app#{app_id} -> {url}")
-        except Exception as ex:
-            print(f"[send-application] s3 error: {ex}")
-            return {"statusCode": 500, "headers": cors_headers,
-                    "body": json.dumps({"error": "Ошибка загрузки файла"})}
-
-        db_col = DB_FILE_COLS[file_key]
-        conn = psycopg2.connect(os.environ["DATABASE_URL"])
-        cur = conn.cursor()
-        try:
-            cur.execute(f"UPDATE {SCHEMA}.applications SET {db_col} = '{esc(url)}' WHERE id = {int(app_id)}")
-            conn.commit()
-        finally:
-            cur.close(); conn.close()
-
-        # Если все 4 фото загружены — шлём Telegram-уведомление
-        conn2 = psycopg2.connect(os.environ["DATABASE_URL"])
-        cur2 = conn2.cursor()
-        try:
-            cur2.execute(
-                f"SELECT full_name, phone, email, amount, days, "
-                f"passport_series, passport_number, passport_date, passport_code, passport_by, "
-                f"birth_date, birth_place, telegram_id, "
-                f"file_passport, file_registration, file_selfie, file_previous_passports "
-                f"FROM {SCHEMA}.applications WHERE id = {int(app_id)}"
-            )
-            row = cur2.fetchone()
-        finally:
-            cur2.close(); conn2.close()
-
-        if row:
-            (full_name, phone, email, amount, days,
-             ps, pn, pd, pc, pb,
-             birth_date, birth_place, tg_username,
-             fp, fr, fs, fpp) = row
-
-            file_urls = {k: v for k, v in
-                         [("passportMain", fp), ("registration", fr),
-                          ("selfie", fs), ("previousPassports", fpp)] if v}
-
-            if len(file_urls) == 4:
-                tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-                now_fmt = datetime.now().strftime("%d.%m.%Y в %H:%M")
-                text = (
-                    f"🚀 <b>Новая заявка — PARAFINANS24 (#{app_id})</b>\n"
-                    f"⏱ {now_fmt}\n\n"
-                    f"👤 <b>ФИО:</b> {full_name}\n"
-                    f"🎂 <b>Дата рождения:</b> {birth_date or '—'}\n"
-                    f"📍 <b>Место рождения:</b> {birth_place or '—'}\n"
-                    f"📞 <b>Телефон:</b> {phone}\n"
-                    f"📧 <b>Email:</b> {email or '—'}\n"
-                    f"💰 <b>Сумма:</b> {int(amount):,} ₽\n".replace(",", " ") +
-                    f"📅 <b>Срок:</b> {days} дн.\n\n"
-                    f"📋 <b>Паспорт:</b> {ps or ''} {pn or ''} | {pd or '—'} | {pc or '—'}\n"
-                    f"   Кем выдан: {pb or '—'}\n\n"
-                    f"💬 <b>Telegram:</b> {'@' + tg_username if tg_username else '—'}\n\n"
-                    f"🔗 <b>Документы:</b>\n" +
-                    "\n".join(f'📄 <a href="{url}">{FILE_LABELS[k]}</a>' for k, url in file_urls.items())
-                )
-                send_telegram_message(tg_token, TELEGRAM_CHAT_ID, text)
-
-        return {"statusCode": 200, "headers": cors_headers,
-                "body": json.dumps({"success": True, "url": url}, ensure_ascii=False)}
-
-    # ── POST: создание заявки без фото ─────────────────────────────────────
     full_name = (body.get("fullName") or "").strip()
     phone = (body.get("phone") or "").strip()
     email = (body.get("email") or "").strip()
@@ -219,6 +132,30 @@ def handler(event: dict, context) -> dict:
     except Exception:
         days = 0
 
+    # Параллельная загрузка всех фото в S3
+    now_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_urls: dict[str, str] = {}
+    upload_tasks = []
+    for key, s3_suffix in FILE_KEYS.items():
+        b64 = body.get(key, "")
+        filename = body.get(f"{key}_name", f"{key}.webp")
+        if b64:
+            upload_tasks.append((key, s3_suffix, b64, filename))
+
+    if upload_tasks:
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            futures = {
+                pool.submit(upload_one, key, s3_suffix, b64, filename, phone, now_ts): key
+                for key, s3_suffix, b64, filename in upload_tasks
+            }
+            for future in as_completed(futures):
+                try:
+                    k, url = future.result()
+                    file_urls[k] = url
+                except Exception as ex:
+                    print(f"[send-application] upload error: {ex}")
+
+    # Сохраняем в БД
     import hashlib as _h, secrets as _s, string as _str
     conn = psycopg2.connect(os.environ["DATABASE_URL"])
     cur = conn.cursor()
@@ -241,6 +178,11 @@ def handler(event: dict, context) -> dict:
                 f"VALUES ('{esc(phone)}', '{pw_hash}', '{esc(full_name)}', '{esc(email)}')"
             )
 
+        fp  = file_urls.get("passportMain", "")
+        fr  = file_urls.get("registration", "")
+        fs  = file_urls.get("selfie", "")
+        fpp = file_urls.get("previousPassports", "")
+
         bd_val  = f"'{esc(birth_date)}'" if birth_date else "NULL"
         bp_val  = f"'{esc(birth_place)}'" if birth_place else "NULL"
         ps_val  = f"'{esc(passport_series)}'" if passport_series else "NULL"
@@ -250,16 +192,22 @@ def handler(event: dict, context) -> dict:
         pb_val  = f"'{esc(passport_by)}'" if passport_by else "NULL"
         tg_val  = f"'{esc(telegram_username)}'" if telegram_username else "NULL"
         em_val  = f"'{esc(email)}'" if email else "NULL"
+        fp_val  = f"'{esc(fp)}'" if fp else "NULL"
+        fr_val  = f"'{esc(fr)}'" if fr else "NULL"
+        fs_val  = f"'{esc(fs)}'" if fs else "NULL"
+        fpp_val = f"'{esc(fpp)}'" if fpp else "NULL"
 
         cur.execute(f"""
             INSERT INTO {SCHEMA}.applications
                 (full_name, phone, email, amount, days, birth_date, birth_place,
                  passport_series, passport_number, passport_date, passport_code, passport_by,
-                 telegram_id, status)
+                 telegram_id, status,
+                 file_passport, file_registration, file_selfie, file_previous_passports)
             VALUES (
                 '{esc(full_name)}', '{esc(phone)}', {em_val}, {amount}, {days},
                 {bd_val}, {bp_val}, {ps_val}, {pn_val}, {pd_val}, {pc_val}, {pb_val},
-                {tg_val}, 'pending'
+                {tg_val}, 'pending',
+                {fp_val}, {fr_val}, {fs_val}, {fpp_val}
             ) RETURNING id
         """)
         app_id = cur.fetchone()[0]
@@ -299,11 +247,38 @@ def handler(event: dict, context) -> dict:
     </td></tr>
   </table>
 </body></html>"""
-        send_email(
-            to=email,
-            subject=f"Заявка #{app_id} принята — данные для входа",
-            html=email_html,
+        send_email(to=email, subject=f"Заявка #{app_id} принята — данные для входа", html=email_html)
+
+    tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+    now = datetime.now().strftime("%d.%m.%Y в %H:%M")
+    docs_count = len(file_urls)
+    app_label = f" (#{app_id})" if app_id else ""
+    text = (
+        f"🚀 <b>Новая заявка — PARAFINANS24{app_label}</b>\n"
+        f"⏱ {now}\n\n"
+        f"👤 <b>ФИО:</b> {full_name}\n"
+        f"🎂 <b>Дата рождения:</b> {birth_date or '—'}\n"
+        f"📍 <b>Место рождения:</b> {birth_place or '—'}\n"
+        f"📞 <b>Телефон:</b> {phone}\n"
+        f"📧 <b>Email:</b> {email or '—'}\n"
+        f"💰 <b>Сумма:</b> {int(amount):,} ₽\n".replace(",", " ") +
+        f"📅 <b>Срок:</b> {days} дн.\n\n"
+        f"📋 <b>Паспортные данные:</b>\n"
+        f"  Серия/Номер: {passport_series} {passport_number}\n"
+        f"  Дата выдачи: {passport_date or '—'}\n"
+        f"  Код: {passport_code or '—'}\n"
+        f"  Кем выдан: {passport_by or '—'}\n\n"
+        f"📎 <b>Документы загружены:</b> {docs_count} из {len(FILE_KEYS)}\n"
+        f"💬 <b>Telegram:</b> {'@' + telegram_username if telegram_username else '—'}"
+    )
+    if file_urls:
+        doc_lines = "\n".join(
+            f'📄 <a href="{url}">{FILE_LABELS[key]}</a>'
+            for key, url in file_urls.items()
         )
+        text += f"\n\n🔗 <b>Документы:</b>\n{doc_lines}"
+
+    send_telegram_message(tg_token, TELEGRAM_CHAT_ID, text)
 
     return {
         "statusCode": 200,
