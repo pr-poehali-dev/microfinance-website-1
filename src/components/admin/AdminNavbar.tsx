@@ -27,7 +27,7 @@ export default function AdminNavbar({ mainTab, setMainTab, appsFilter, applicati
                 ? { background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white" }
                 : { background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)" }}>
               <Icon name="FileText" size={14} />Заявки
-              {appsFilter === "pending" && applicationsCount > 0 && (
+              {applicationsCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs flex items-center justify-center text-white font-bold">
                   {applicationsCount}
                 </span>
