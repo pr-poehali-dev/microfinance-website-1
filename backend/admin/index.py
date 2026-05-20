@@ -256,7 +256,8 @@ def handler(event: dict, context) -> dict:
                    passport_series, passport_number, status, created_at, reject_reason,
                    telegram_id, birth_place, passport_date, passport_code, passport_by,
                    file_passport, file_registration, file_selfie, file_previous_passports,
-                   workplace, position, active_loans, salary, contact_person, sb_score
+                   workplace, position, active_loans, salary, contact_person, sb_score,
+                   approved_amount
             FROM {SCHEMA}.applications
             WHERE status = '{sf}' ORDER BY created_at DESC
         """)
@@ -277,6 +278,7 @@ def handler(event: dict, context) -> dict:
             "workplace": r[21] or "", "position": r[22] or "",
             "activeLoans": r[23] or "", "salary": float(r[24]) if r[24] else 0,
             "contactPerson": r[25] or "", "sbScore": r[26] or "",
+            "approvedAmount": float(r[27]) if r[27] else None,
         } for r in rows]
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"applications": apps}, ensure_ascii=False)}
 
@@ -334,8 +336,8 @@ def handler(event: dict, context) -> dict:
         )
         loan_id = cur.fetchone()[0]
 
-        # Обновляем статус заявки
-        cur.execute(f"UPDATE {SCHEMA}.applications SET status='approved', reviewed_at=NOW() WHERE id='{app_id_esc}'")
+        # Обновляем статус заявки и сохраняем одобренную сумму
+        cur.execute(f"UPDATE {SCHEMA}.applications SET status='approved', reviewed_at=NOW(), approved_amount={amount} WHERE id='{app_id_esc}'")
         conn.commit(); cur.close(); conn.close()
 
         interest = round(float(amount) * rate * int(days))

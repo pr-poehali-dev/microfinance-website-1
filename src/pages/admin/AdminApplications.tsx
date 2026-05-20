@@ -114,9 +114,24 @@ export default function AdminApplications({
                   {app.telegramId && <span style={{ color: "#a78bfa", fontSize: 13 }}>@{app.telegramId}</span>}
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px,1fr))", gap: 12, marginBottom: 12 }}>
-                  {[["Телефон", app.phone], ["Email", app.email||"—"], ["Сумма", `${app.amount.toLocaleString("ru-RU")} ₽`], ["Срок", `${app.days} дн.`]].map(([l, v]) => (
-                    <div key={l}><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>{l}</div><div style={{ color: "white", fontWeight: 600 }}>{v}</div></div>
-                  ))}
+                  <div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Телефон</div><div style={{ color: "white", fontWeight: 600 }}>{app.phone}</div></div>
+                  <div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Email</div><div style={{ color: "white", fontWeight: 600 }}>{app.email||"—"}</div></div>
+                  <div>
+                    <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Запрошено</div>
+                    <div style={{ color: "white", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+                      {app.amount.toLocaleString("ru-RU")} ₽
+                      {app.approvedAmount !== null && app.approvedAmount !== app.amount && (
+                        <span style={{ color: "#fbbf24", fontSize: 11, fontWeight: 500 }}>→ одобрено</span>
+                      )}
+                    </div>
+                  </div>
+                  {app.approvedAmount !== null && app.approvedAmount !== app.amount && (
+                    <div>
+                      <div style={{ color: "#fbbf24", fontSize: 11, marginBottom: 2 }}>Одобренная сумма</div>
+                      <div style={{ color: "#fbbf24", fontWeight: 700 }}>{app.approvedAmount!.toLocaleString("ru-RU")} ₽</div>
+                    </div>
+                  )}
+                  <div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Срок</div><div style={{ color: "white", fontWeight: 600 }}>{app.days} дн.</div></div>
                 </div>
                 <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 12, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px,1fr))", gap: 10, marginBottom: 12 }}>
                   {[["Серия/Номер", `${app.passportSeries} ${app.passportNumber}`], ["Дата выдачи", app.passportDate||"—"], ["Код", app.passportCode||"—"], ["Дата рождения", app.birthDate||"—"]].map(([l, v]) => (

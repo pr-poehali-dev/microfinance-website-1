@@ -6,6 +6,7 @@ export interface App {
   telegramId: string; rejectReason: string;
   filePassport: string; fileRegistration: string; fileSelfie: string; filePreviousPassports: string;
   workplace: string; position: string; activeLoans: string; salary: number; contactPerson: string; sbScore: string;
+  approvedAmount: number | null;
 }
 export interface User { id: number; phone: string; fullName: string; email: string; createdAt: string; loanCount: number; debt: number; }
 export interface Loan { id: number; amount: number; days: number; ratePercent: number; status: string; createdAt: string; }
