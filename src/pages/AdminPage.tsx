@@ -132,7 +132,7 @@ export default function AdminPage() {
     if (selUser) loadLoans(selUser.id);
   }
 
-  async function addClient(e: React.FormEvent) {
+  async function addClient(e: React.SyntheticEvent) {
     e.preventDefault(); setActionMsg(""); setActionErr("");
     const r = await fetch(`${ADMIN_URL}?sub=register`, { method: "POST", headers: hdrs(), body: JSON.stringify(newClient) });
     const d = await r.json();

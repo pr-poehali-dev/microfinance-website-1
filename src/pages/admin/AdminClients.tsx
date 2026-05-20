@@ -26,7 +26,7 @@ interface Props {
   onLoadLoans: (userId: number) => void;
   onSendOffer: (e: React.FormEvent) => void;
   onAddLoan: (e: React.FormEvent) => void;
-  onAddClient: (e: React.FormEvent) => void;
+  onAddClient: (e: React.SyntheticEvent) => void;
   onChangeStatus: (loanId: number, status: string) => void;
 }
 
@@ -217,28 +217,25 @@ export default function AdminClients({
               <div style={{ ...GLASS, padding: 24 }}>
                 <h3 style={{ color: "white", fontWeight: 700, margin: "0 0 20px" }}>Зарегистрировать клиента</h3>
                 <form onSubmit={onAddClient} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  <div>
-                    <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 6 }}>Телефон</div>
-                    <input type="text" required placeholder="+7 (999) 000-00-00"
-                      value={newClient.phone}
-                      onChange={e => setNewClient({ ...newClient, phone: e.target.value })}
-                      style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: "100%", boxSizing: "border-box", outline: "none" }} />
-                  </div>
-                  <div>
-                    <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 6 }}>ФИО</div>
-                    <input type="text" placeholder="Иванов Иван Иванович"
-                      value={newClient.fullName}
-                      onChange={e => setNewClient({ ...newClient, fullName: e.target.value })}
-                      style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: "100%", boxSizing: "border-box", outline: "none" }} />
-                  </div>
-                  <div>
-                    <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 6 }}>Пароль</div>
-                    <input type="text" required placeholder="Пароль для клиента"
-                      value={newClient.password}
-                      onChange={e => setNewClient({ ...newClient, password: e.target.value })}
-                      style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: "100%", boxSizing: "border-box", outline: "none" }} />
-                  </div>
-                  <button type="submit"
+                  {[
+                    { label: "Телефон", key: "phone" as const, placeholder: "+7 (999) 000-00-00" },
+                    { label: "ФИО", key: "fullName" as const, placeholder: "Иванов Иван Иванович" },
+                    { label: "Пароль", key: "password" as const, placeholder: "Пароль для клиента" },
+                  ].map(({ label, key, placeholder }) => (
+                    <div key={key}>
+                      <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 6 }}>{label}</div>
+                      <input
+                        type="text"
+                        placeholder={placeholder}
+                        value={newClient[key]}
+                        onChange={e => setNewClient({ ...newClient, [key]: e.target.value })}
+                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: "100%", boxSizing: "border-box", outline: "none" }}
+                      />
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={onAddClient as unknown as React.MouseEventHandler}
                     style={{ ...PURPLE, color: "white", border: "none", borderRadius: 12, padding: "14px", cursor: "pointer", fontWeight: 700, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                     <Icon name="UserPlus" size={18} />Зарегистрировать
                   </button>
