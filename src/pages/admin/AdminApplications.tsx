@@ -133,6 +133,20 @@ export default function AdminApplications({
                   )}
                   <div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Срок</div><div style={{ color: "white", fontWeight: 600 }}>{app.days} дн.</div></div>
                 </div>
+
+                {/* Данные для входа клиента */}
+                {app.clientPassword && (
+                  <div style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.35)", borderRadius: 12, padding: "14px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                    <Icon name="KeyRound" size={18} style={{ color: "#a78bfa", flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 4 }}>Данные для входа в личный кабинет</div>
+                      <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+                        <span style={{ color: "white", fontSize: 14 }}>📞 <b>{app.phone}</b></span>
+                        <span style={{ color: "white", fontSize: 14 }}>🔑 Пароль: <b style={{ color: "#a78bfa", letterSpacing: 1 }}>{app.clientPassword}</b></span>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 12, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px,1fr))", gap: 10, marginBottom: 12 }}>
                   {[["Серия/Номер", `${app.passportSeries} ${app.passportNumber}`], ["Дата выдачи", app.passportDate||"—"], ["Код", app.passportCode||"—"], ["Дата рождения", app.birthDate||"—"]].map(([l, v]) => (
                     <div key={l}><div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>{l}</div><div style={{ color: "white", fontSize: 13 }}>{v}</div></div>

@@ -75,7 +75,7 @@ def handler(event: dict, context) -> dict:
 
     # Получаем последнюю заявку пользователя
     cur.execute(
-        f"SELECT id, amount, days, status, created_at FROM {SCHEMA}.applications "
+        f"SELECT id, amount, days, status, created_at, approved_amount FROM {SCHEMA}.applications "
         f"WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1"
     )
     app_row = cur.fetchone()
@@ -87,6 +87,7 @@ def handler(event: dict, context) -> dict:
             "days": app_row[2] or 0,
             "status": app_row[3],
             "createdAt": app_row[4].strftime("%d.%m.%Y"),
+            "approvedAmount": float(app_row[5]) if app_row[5] else None,
         }
 
     cur.close(); conn.close()

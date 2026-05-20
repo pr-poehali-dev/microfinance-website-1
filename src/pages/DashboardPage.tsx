@@ -39,6 +39,7 @@ interface Application {
   days: number;
   status: string;
   createdAt: string;
+  approvedAmount: number | null;
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
@@ -229,6 +230,49 @@ export default function DashboardPage() {
                     {application.amount.toLocaleString("ru-RU")} ₽ · {application.days} дн. · подана {application.createdAt}
                   </div>
                   <div className="text-yellow-400 text-xs mt-1">Обычно рассматриваем в течение 15 минут</div>
+                </div>
+              </div>
+            )}
+
+            {/* ЗАЯВКА ОДОБРЕНА */}
+            {application && application.status === "approved" && (
+              <div className="glass rounded-2xl overflow-hidden mb-6"
+                style={{ border: "1px solid rgba(74,222,128,0.4)", background: "rgba(74,222,128,0.03)" }}>
+                <div className="px-6 py-4 flex items-center gap-3"
+                  style={{ background: "linear-gradient(135deg,rgba(22,163,74,0.25),rgba(74,222,128,0.08))" }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: "rgba(74,222,128,0.2)" }}>
+                    <Icon name="CheckCircle" size={20} className="text-green-400" />
+                  </div>
+                  <div>
+                    <div className="text-white font-bold">Заявка #{application.id} одобрена!</div>
+                    <div className="text-green-400 text-xs mt-0.5">Подана {application.createdAt}</div>
+                  </div>
+                </div>
+                <div className="px-6 py-5">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-xl px-4 py-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                      <div className="text-white/40 text-xs mb-1">Запрошено</div>
+                      <div className="text-white font-bold text-lg">{application.amount.toLocaleString("ru-RU")} ₽</div>
+                    </div>
+                    <div className="rounded-xl px-4 py-3" style={{ background: application.approvedAmount && application.approvedAmount !== application.amount ? "rgba(74,222,128,0.08)" : "rgba(255,255,255,0.04)", border: application.approvedAmount && application.approvedAmount !== application.amount ? "1px solid rgba(74,222,128,0.3)" : "1px solid rgba(255,255,255,0.08)" }}>
+                      <div className="text-white/40 text-xs mb-1">Одобренная сумма</div>
+                      <div className="font-bold text-lg" style={{ color: "#4ade80" }}>
+                        {(application.approvedAmount ?? application.amount).toLocaleString("ru-RU")} ₽
+                      </div>
+                    </div>
+                    <div className="rounded-xl px-4 py-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                      <div className="text-white/40 text-xs mb-1">Срок</div>
+                      <div className="text-white font-bold text-lg">{application.days} дней</div>
+                    </div>
+                    <div className="rounded-xl px-4 py-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                      <div className="text-white/40 text-xs mb-1">Статус</div>
+                      <div className="font-semibold text-green-400 flex items-center gap-1.5">
+                        <Icon name="BadgeCheck" size={14} /> Одобрен
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-white/40 text-xs text-center mt-4">Деньги будут переведены на вашу карту. Ожидайте звонка специалиста.</p>
                 </div>
               </div>
             )}
