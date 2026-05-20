@@ -70,11 +70,28 @@ export default function CalculatorForm() {
     setFiles((prev) => ({ ...prev, [key]: file }));
   };
 
-  const fileToBase64 = (file: File): Promise<string> =>
+  const compressImage = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve((reader.result as string).split(",")[1]);
       reader.onerror = reject;
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = reject;
+        img.onload = () => {
+          const MAX = 1200;
+          let { width, height } = img;
+          if (width > MAX || height > MAX) {
+            if (width > height) { height = Math.round(height * MAX / width); width = MAX; }
+            else { width = Math.round(width * MAX / height); height = MAX; }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/webp", 0.82).split(",")[1]);
+        };
+        img.src = reader.result as string;
+      };
       reader.readAsDataURL(file);
     });
 
@@ -86,8 +103,8 @@ export default function CalculatorForm() {
       const encodedFiles: { [key: string]: string } = {};
       for (const [key, file] of Object.entries(files)) {
         if (file) {
-          encodedFiles[key] = await fileToBase64(file);
-          encodedFiles[`${key}_name`] = file.name;
+          encodedFiles[key] = await compressImage(file);
+          encodedFiles[`${key}_name`] = file.name.replace(/\.[^.]+$/, ".webp");
         }
       }
       const res = await fetch(API_URL, {
