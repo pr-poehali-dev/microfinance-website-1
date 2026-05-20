@@ -50,7 +50,7 @@ def handler(event: dict, context) -> dict:
         cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = %s", (phone,))
         if cur.fetchone():
             cur.close(); conn.close()
-            return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": "Пользователь с таким номером уже существует"})}
+            return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": "Повторная регистрация невозможна. Войдите в личный кабинет."})}
 
         cur.execute(
             f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email) VALUES (%s, %s, %s, %s) RETURNING id",

@@ -9,12 +9,13 @@ export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [form, setForm] = useState({ phone: "", password: "", fullName: "", email: "" });
   const [error, setError] = useState("");
+  const [isExisting, setIsExisting] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError(""); setIsExisting(false);
     setLoading(true);
     try {
       const res = await fetch(AUTH_URL, {
@@ -23,7 +24,11 @@ export default function LoginPage() {
         body: JSON.stringify({ action: mode, ...form }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || "Ошибка"); return; }
+      if (!res.ok) {
+        if (res.status === 409) setIsExisting(true);
+        setError(data.error || "Ошибка");
+        return;
+      }
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       navigate("/dashboard");
@@ -75,7 +80,7 @@ export default function LoginPage() {
               {(["login", "register"] as const).map((m) => (
                 <button
                   key={m}
-                  onClick={() => { setMode(m); setError(""); }}
+                  onClick={() => { setMode(m); setError(""); setIsExisting(false); }}
                   className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all"
                   style={mode === m ? { background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white" } : { color: "rgba(255,255,255,0.5)" }}
                 >
@@ -150,10 +155,27 @@ export default function LoginPage() {
                 {mode === "register" && <p className="text-white/30 text-xs mt-1">Минимум 6 символов</p>}
               </div>
 
-              {error && (
+              {error && !isExisting && (
                 <div className="rounded-xl px-4 py-3 flex items-center gap-2 text-sm" style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#fca5a5" }}>
                   <Icon name="AlertCircle" size={16} />
                   {error}
+                </div>
+              )}
+              {isExisting && (
+                <div className="rounded-xl px-4 py-4 text-sm" style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.4)" }}>
+                  <div className="flex items-center gap-2 mb-3" style={{ color: "#fca5a5" }}>
+                    <Icon name="UserX" size={16} />
+                    <span className="font-semibold">Повторная регистрация невозможна.</span>
+                  </div>
+                  <p className="text-white/50 mb-3">Аккаунт с этим номером уже существует. Войдите в личный кабинет.</p>
+                  <button
+                    type="button"
+                    onClick={() => { setMode("login"); setError(""); setIsExisting(false); }}
+                    className="w-full py-2.5 rounded-xl font-semibold text-white text-sm"
+                    style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)" }}
+                  >
+                    Войти в кабинет
+                  </button>
                 </div>
               )}
 
