@@ -23,7 +23,7 @@ type MainTab = "applications" | "clients";
 
 export default function AdminPage() {
   const navigate = useNavigate();
-  const [token, setToken]       = useState(() => sessionStorage.getItem("admin_token") || "");
+  const [token, setToken]       = useState(() => localStorage.getItem("admin_token") || "");
   const [password, setPassword] = useState("");
   const [loginErr, setLoginErr] = useState("");
   const [loginLoad, setLoginLoad] = useState(false);
@@ -70,7 +70,7 @@ export default function AdminPage() {
   });
 
   const doLogout = () => {
-    sessionStorage.removeItem("admin_token");
+    localStorage.removeItem("admin_token");
     setToken(""); setUsers([]); setApplications([]); setSelectedUser(null);
   };
 
@@ -141,7 +141,7 @@ export default function AdminPage() {
       });
       const data = await res.json();
       if (!res.ok) { setLoginErr(data.error || "Неверный пароль"); return; }
-      sessionStorage.setItem("admin_token", data.token);
+      localStorage.setItem("admin_token", data.token);
       setToken(data.token);
     } catch { setLoginErr("Ошибка соединения"); }
     finally { setLoginLoad(false); }
@@ -220,7 +220,7 @@ export default function AdminPage() {
   };
 
   const logout = () => {
-    sessionStorage.removeItem("admin_token");
+    localStorage.removeItem("admin_token");
     setToken(""); setUsers([]); setApplications([]); setSelectedUser(null);
   };
 
