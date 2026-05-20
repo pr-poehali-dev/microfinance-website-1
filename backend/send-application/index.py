@@ -310,18 +310,15 @@ def handler(event: dict, context) -> dict:
         f"📎 <b>Документы загружены:</b> {docs_count} из {len(FILE_KEYS)}\n"
         f"💬 <b>Telegram:</b> {'@' + telegram_username if telegram_username else '—'}"
     )
-    send_telegram_message(tg_token, TELEGRAM_CHAT_ID, text)
+    # Добавляем ссылки на документы прямо в сообщение
+    if file_urls:
+        doc_lines = "\n".join(
+            f'📄 <a href="{url}">{FILE_LABELS[key]}</a>'
+            for key, url in file_urls.items()
+        )
+        text += f"\n\n🔗 <b>Документы:</b>\n{doc_lines}"
 
-    # Отправляем файлы в Telegram
-    for key, label in FILE_LABELS.items():
-        b64 = body.get(key, "")
-        filename = body.get(f"{key}_name", f"{key}.jpg")
-        if b64:
-            try:
-                file_data = base64.b64decode(b64)
-                send_telegram_document(tg_token, TELEGRAM_CHAT_ID, file_data, filename, label)
-            except Exception:
-                pass
+    send_telegram_message(tg_token, TELEGRAM_CHAT_ID, text)
 
     return {
         "statusCode": 200,
