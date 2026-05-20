@@ -143,7 +143,10 @@ export default function AdminPage() {
       const data = await res.json();
       if (!res.ok) { setLoginErr(data.error || "Неверный пароль"); return; }
       localStorage.setItem("admin_token", data.token);
+      tokenRef.current = data.token;
       setToken(data.token);
+      // сразу грузим данные с актуальным токеном
+      setTimeout(() => { loadApplications(); loadUsers(); }, 50);
     } catch { setLoginErr("Ошибка соединения"); }
     finally { setLoginLoad(false); }
   };

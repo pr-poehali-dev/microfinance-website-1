@@ -24,7 +24,10 @@ export default function AdminLogin({ password, setPassword, loginErr, loginLoad,
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
               <label className="text-white/60 text-sm mb-2 block">Пароль</label>
-              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
+              <input type="password" required value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onBlur={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
                 placeholder="Введите пароль"
                 className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
                 style={{ background: "rgba(255,255,255,0.05)" }} />
