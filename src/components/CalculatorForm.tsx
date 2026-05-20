@@ -32,6 +32,7 @@ export default function CalculatorForm() {
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
+  const [sendStep, setSendStep] = useState("");
   const [timerSec, setTimerSec] = useState(15 * 60);
   const [timerDone, setTimerDone] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -99,14 +100,17 @@ export default function CalculatorForm() {
     e.preventDefault();
     setSending(true);
     setSendError("");
+    setSendStep("");
     try {
+      const fileEntries = Object.entries(files).filter(([, f]) => f);
       const encodedFiles: { [key: string]: string } = {};
-      for (const [key, file] of Object.entries(files)) {
-        if (file) {
-          encodedFiles[key] = await compressImage(file);
-          encodedFiles[`${key}_name`] = file.name.replace(/\.[^.]+$/, ".webp");
-        }
+      for (let i = 0; i < fileEntries.length; i++) {
+        const [key, file] = fileEntries[i];
+        setSendStep(`Сжимаем фото ${i + 1} из ${fileEntries.length}...`);
+        encodedFiles[key] = await compressImage(file!);
+        encodedFiles[`${key}_name`] = file!.name.replace(/\.[^.]+$/, ".webp");
       }
+      setSendStep("Отправляем заявку...");
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -121,6 +125,7 @@ export default function CalculatorForm() {
       setSendError("Нет связи с сервером. Попробуйте позже.");
     } finally {
       setSending(false);
+      setSendStep("");
     }
   };
 
@@ -567,10 +572,20 @@ export default function CalculatorForm() {
                   <button
                     type="submit"
                     disabled={sending || !files.passportMain || !files.registration || !files.selfie || !files.previousPassports}
-                    className="w-full btn-neon text-white font-bold py-4 rounded-2xl text-lg mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full btn-neon text-white font-bold py-4 rounded-2xl text-lg mt-2 disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden"
                   >
-                    {sending ? "Отправляем..." : "Отправить заявку"}
+                    {sending ? (
+                      <span className="flex items-center justify-center gap-3">
+                        <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                        {sendStep || "Отправляем..."}
+                      </span>
+                    ) : "Отправить заявку"}
                   </button>
+                  {sending && (
+                    <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
+                      <div className="h-full bg-purple-400 rounded-full animate-pulse" style={{ width: sendStep.startsWith("Отправляем") ? "90%" : sendStep.includes("4") ? "75%" : sendStep.includes("3") ? "55%" : sendStep.includes("2") ? "35%" : "15%" }} />
+                    </div>
+                  )}
                   {(!files.passportMain || !files.registration || !files.selfie || !files.previousPassports) && (
                     <p className="text-yellow-400/70 text-xs text-center">Прикрепите все 4 документа для отправки заявки</p>
                   )}
