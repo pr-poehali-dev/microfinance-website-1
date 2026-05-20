@@ -89,11 +89,12 @@ export default function AdminPage() {
     } catch (e) { void e; }
   };
 
-  const loadApplications = useCallback((status?: string) => {
-    if (!tokenRef.current) return;
+  const loadApplications = useCallback((status?: string, tok?: string) => {
+    const t = tok ?? tokenRef.current;
+    if (!t) return;
     const s = status ?? appsFilterRef.current;
     setAppsLoading(true);
-    fetch(`${ADMIN_URL}?sub=applications&status=${s}`, { headers: hdrs() })
+    fetch(`${ADMIN_URL}?sub=applications&status=${s}`, { headers: { "Content-Type": "application/json", "Authorization": `Bearer ${t}` } })
       .then((r) => r.ok ? r.json() : r.status === 401 ? (doLogout(), null) : null)
       .then((d) => {
         if (!d) return;
@@ -109,10 +110,11 @@ export default function AdminPage() {
       .finally(() => setAppsLoading(false));
   }, []);
 
-  const loadUsers = useCallback(() => {
-    if (!tokenRef.current) return;
+  const loadUsers = useCallback((tok?: string) => {
+    const t = tok ?? tokenRef.current;
+    if (!t) return;
     setUsersLoading(true);
-    fetch(ADMIN_URL, { headers: hdrs() })
+    fetch(ADMIN_URL, { headers: { "Content-Type": "application/json", "Authorization": `Bearer ${t}` } })
       .then((r) => r.ok ? r.json() : r.status === 401 ? (doLogout(), null) : null)
       .then((d) => { if (d) setUsers(d.users || []); })
       .finally(() => setUsersLoading(false));
@@ -145,8 +147,8 @@ export default function AdminPage() {
       localStorage.setItem("admin_token", data.token);
       tokenRef.current = data.token;
       setToken(data.token);
-      // сразу грузим данные с актуальным токеном
-      setTimeout(() => { loadApplications(); loadUsers(); }, 50);
+      loadApplications(undefined, data.token);
+      loadUsers(data.token);
     } catch { setLoginErr("Ошибка соединения"); }
     finally { setLoginLoad(false); }
   };

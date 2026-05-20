@@ -56,7 +56,15 @@ export default function AdminClients({
       <div className="w-80 shrink-0 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h2 className="font-oswald text-xl font-bold text-white">Клиенты</h2>
-          <span className="text-white/40 text-sm">{filtered.length}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-white/40 text-sm">{filtered.length}</span>
+            <button
+              onClick={() => { setSelectedUser(null); setClientTab("register"); setActionMsg(""); setActionErr(""); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+              style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white" }}>
+              <Icon name="UserPlus" size={13} />Добавить
+            </button>
+          </div>
         </div>
         <div className="relative">
           <Icon name="Search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
@@ -85,12 +93,55 @@ export default function AdminClients({
 
       {/* Правая колонка — детали */}
       <div className="flex-1 overflow-y-auto" style={{ maxHeight: "calc(100vh - 100px)" }}>
-        {!selectedUser ? (
+        {!selectedUser && clientTab !== "register" ? (
           <div className="flex flex-col items-center justify-center h-full text-center py-20">
             <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: "rgba(124,58,237,0.15)" }}>
               <Icon name="Users" size={28} className="text-purple-400" />
             </div>
-            <p className="text-white/50">Выберите клиента из списка слева</p>
+            <p className="text-white/50 mb-4">Выберите клиента из списка слева</p>
+            <button
+              onClick={() => { setClientTab("register"); setActionMsg(""); setActionErr(""); }}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
+              style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white" }}>
+              <Icon name="UserPlus" size={15} />Добавить нового клиента
+            </button>
+          </div>
+        ) : !selectedUser && clientTab === "register" ? (
+          <div className="pt-2">
+            <div className="glass rounded-2xl p-6">
+              <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                <Icon name="UserPlus" size={18} className="text-purple-400" />
+                Новый клиент
+              </h3>
+              <form onSubmit={onRegisterClient} className="space-y-4">
+                {[
+                  { label: "Телефон", key: "phone", type: "tel", placeholder: "+7 (999) 000-00-00", required: true },
+                  { label: "ФИО", key: "fullName", type: "text", placeholder: "Иванов Иван Иванович", required: false },
+                  { label: "Пароль для клиента", key: "password", type: "text", placeholder: "Пароль, который передадите клиенту", required: true },
+                ].map(({ label, key, type, placeholder, required }) => (
+                  <div key={key}>
+                    <label className="text-white/50 text-xs mb-1 block">{label}</label>
+                    <input type={type} required={required} placeholder={placeholder}
+                      value={newClient[key as keyof typeof newClient]}
+                      onChange={(e) => setNewClient({ ...newClient, [key]: e.target.value })}
+                      className="w-full rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/20 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                      style={{ background: "rgba(255,255,255,0.05)" }} />
+                  </div>
+                ))}
+                {actionErr && <p className="text-red-400 text-sm flex items-center gap-2"><Icon name="AlertCircle" size={14} />{actionErr}</p>}
+                {actionMsg && <p className="text-green-400 text-sm flex items-center gap-2"><Icon name="CheckCircle" size={14} />{actionMsg}</p>}
+                <div className="flex gap-3">
+                  <button type="submit" className="btn-neon text-white font-semibold px-6 py-3 rounded-xl flex items-center gap-2">
+                    <Icon name="UserPlus" size={16} />Зарегистрировать
+                  </button>
+                  <button type="button" onClick={() => setClientTab("loans")}
+                    className="px-4 py-3 rounded-xl text-white/50 hover:text-white transition-colors text-sm"
+                    style={{ background: "rgba(255,255,255,0.05)" }}>
+                    Отмена
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         ) : (
           <>
