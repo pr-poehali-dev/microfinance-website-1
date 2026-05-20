@@ -35,6 +35,7 @@ export default function AdminPage() {
 
   const [selApp, setSelApp]     = useState<App | null>(null);
   const [appRate, setAppRate]   = useState("0.8");
+  const [appAmount, setAppAmount] = useState("");
   const [rejectReason, setRejectReason] = useState("");
   const [appAction, setAppAction] = useState<"approve"|"reject"|null>(null);
   const [appProcessing, setAppProcessing] = useState(false);
@@ -94,7 +95,8 @@ export default function AdminPage() {
   async function approveApp() {
     if (!selApp) return;
     setAppProcessing(true); setAppMsg(""); setAppErr2("");
-    const r = await fetch(`${ADMIN_URL}?sub=approve&appId=${selApp.id}`, { method: "POST", headers: hdrs(), body: JSON.stringify({ rate: parseFloat(appRate) / 100 }) });
+    const amount = appAmount ? parseFloat(appAmount) : selApp.amount;
+    const r = await fetch(`${ADMIN_URL}?sub=approve&appId=${selApp.id}`, { method: "POST", headers: hdrs(), body: JSON.stringify({ rate: parseFloat(appRate) / 100, amount }) });
     const d = await r.json();
     if (!r.ok) { setAppErr2(d.error); setAppProcessing(false); return; }
     setAppMsg(`Займ #${d.loanId} создан!`);
@@ -196,6 +198,7 @@ export default function AdminPage() {
             appAction={appAction} setAppAction={setAppAction}
             setAppMsg={setAppMsg} setAppErr2={setAppErr2}
             appRate={appRate} setAppRate={setAppRate}
+            appAmount={appAmount} setAppAmount={setAppAmount}
             rejectReason={rejectReason} setRejectReason={setRejectReason}
             onApprove={approveApp} onReject={rejectApp}
             setLightbox={setLightbox}

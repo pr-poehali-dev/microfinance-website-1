@@ -284,6 +284,7 @@ def handler(event: dict, context) -> dict:
     if sub == "approve" and method == "POST":
         app_id = qs.get("appId")
         rate = float(body.get("rate", 0.008))
+        approved_amount = body.get("amount")  # Если админ изменил сумму
 
         app_id_esc = str(app_id).replace("'", "''")
         cur.execute(f"""
@@ -296,6 +297,9 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена или уже обработана"})}
 
         full_name, phone, amount, days, tg_username, client_email = app
+        # Используем сумму от администратора если указана, иначе из заявки
+        if approved_amount:
+            amount = float(approved_amount)
 
         # Находим или создаём пользователя, всегда генерируем новый пароль
         import secrets as _s, hashlib as _h, string as _str

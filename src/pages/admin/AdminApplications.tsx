@@ -22,6 +22,8 @@ interface Props {
   setAppErr2: (s: string) => void;
   appRate: string;
   setAppRate: (v: string) => void;
+  appAmount: string;
+  setAppAmount: (v: string) => void;
   rejectReason: string;
   setRejectReason: (v: string) => void;
   onApprove: () => void;
@@ -34,7 +36,7 @@ export default function AdminApplications({
   apps, appsLoading, appFilter, setAppFilter,
   appMsg, appErr2, appProcessing,
   selApp, setSelApp, appAction, setAppAction, setAppMsg, setAppErr2,
-  appRate, setAppRate, rejectReason, setRejectReason,
+  appRate, setAppRate, appAmount, setAppAmount, rejectReason, setRejectReason,
   onApprove, onReject, setLightbox, token,
 }: Props) {
   const [search, setSearch] = useState("");
@@ -183,16 +185,20 @@ export default function AdminApplications({
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 140 }}>
                   {selApp?.id === app.id && appAction === "approve" ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>Сумма займа (₽)</label>
+                      <input type="number" value={appAmount} onChange={e => setAppAmount(e.target.value)} min="1"
+                        placeholder={String(app.amount)}
+                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: 130, boxSizing: "border-box" }} />
                       <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>Ставка %/день</label>
                       <input type="number" value={appRate} onChange={e => setAppRate(e.target.value)} step="0.1" min="0.1"
                         style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: 130, boxSizing: "border-box" }} />
-                      {appRate && <div style={{ color: "#4ade80", fontSize: 13 }}>К возврату: {Math.round(app.amount * (1 + +appRate/100 * app.days)).toLocaleString("ru-RU")} ₽</div>}
+                      {appRate && <div style={{ color: "#4ade80", fontSize: 13 }}>К возврату: {Math.round((appAmount ? +appAmount : app.amount) * (1 + +appRate/100 * app.days)).toLocaleString("ru-RU")} ₽</div>}
                       {appErr2 && <p style={{ color: "#f87171", fontSize: 12, margin: 0 }}>{appErr2}</p>}
                       <button onClick={onApprove} disabled={appProcessing}
                         style={{ background: "linear-gradient(135deg,#16a34a,#22c55e)", color: "white", border: "none", borderRadius: 10, padding: "10px", cursor: "pointer", fontWeight: 700, fontSize: 14 }}>
                         {appProcessing ? "..." : "Подтвердить"}
                       </button>
-                      <button onClick={() => { setSelApp(null); setAppAction(null); }}
+                      <button onClick={() => { setSelApp(null); setAppAction(null); setAppAmount(""); }}
                         style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "none", borderRadius: 10, padding: "8px", cursor: "pointer", fontSize: 13 }}>
                         Отмена
                       </button>
