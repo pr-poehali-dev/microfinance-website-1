@@ -9,8 +9,8 @@ interface SbFields { workplace: string; position: string; activeLoans: string; s
 interface Props {
   apps: App[];
   appsLoading: boolean;
-  appFilter: "pending" | "approved" | "rejected";
-  setAppFilter: (f: "pending" | "approved" | "rejected") => void;
+  appFilter: "pending" | "approved" | "rejected" | "postponed";
+  setAppFilter: (f: "pending" | "approved" | "rejected" | "postponed") => void;
   appMsg: string;
   appErr2: string;
   appProcessing: boolean;
@@ -28,6 +28,7 @@ interface Props {
   setRejectReason: (v: string) => void;
   onApprove: () => void;
   onReject: () => void;
+  onPostpone: (appId: number) => void;
   setLightbox: (url: string) => void;
   token: string;
 }
@@ -37,7 +38,7 @@ export default function AdminApplications({
   appMsg, appErr2, appProcessing,
   selApp, setSelApp, appAction, setAppAction, setAppMsg, setAppErr2,
   appRate, setAppRate, appAmount, setAppAmount, rejectReason, setRejectReason,
-  onApprove, onReject, setLightbox, token,
+  onApprove, onReject, onPostpone, setLightbox, token,
 }: Props) {
   const [search, setSearch] = useState("");
   const [sbEdits, setSbEdits] = useState<Record<number, SbFields>>({});
@@ -72,7 +73,7 @@ export default function AdminApplications({
     <div>
       {/* Фильтр + Поиск */}
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-        {([["pending","Ожидают","Clock","#f59e0b"],["approved","Одобренные","CheckCircle","#22c55e"],["rejected","Отклонённые","XCircle","#ef4444"]] as const).map(([f, label, icon, color]) => (
+        {([["pending","Ожидают","Clock","#f59e0b"],["postponed","Отложенные","PhoneMissed","#60a5fa"],["approved","Одобренные","CheckCircle","#22c55e"],["rejected","Отклонённые","XCircle","#ef4444"]] as const).map(([f, label, icon, color]) => (
           <button key={f} onClick={() => setAppFilter(f)}
             style={{ padding: "8px 18px", borderRadius: 12, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 8,
               background: appFilter === f ? color : "rgba(255,255,255,0.07)", color: appFilter === f ? "white" : "rgba(255,255,255,0.5)" }}>
@@ -251,6 +252,10 @@ export default function AdminApplications({
                       <button onClick={() => { setSelApp(app); setAppAction("approve"); setAppMsg(""); setAppErr2(""); }}
                         style={{ background: "linear-gradient(135deg,#16a34a,#22c55e)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
                         <Icon name="CheckCircle" size={16} />Одобрить
+                      </button>
+                      <button onClick={() => onPostpone(app.id)}
+                        style={{ background: "linear-gradient(135deg,#1d4ed8,#3b82f6)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                        <Icon name="PhoneMissed" size={16} />Отложить
                       </button>
                       <button onClick={() => { setSelApp(app); setAppAction("reject"); setAppMsg(""); setAppErr2(""); }}
                         style={{ background: "linear-gradient(135deg,#dc2626,#ef4444)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>

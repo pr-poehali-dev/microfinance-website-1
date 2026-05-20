@@ -16,7 +16,7 @@ export default function AdminPage() {
 
   const [tab, setTab]   = useState<"apps" | "clients">("apps");
   const [apps, setApps] = useState<App[]>([]);
-  const [appFilter, setAppFilter] = useState<"pending"|"approved"|"rejected">("pending");
+  const [appFilter, setAppFilter] = useState<"pending"|"approved"|"rejected"|"postponed">("pending");
   const [appsLoading, setAppsLoading] = useState(false);
 
   const [users, setUsers]       = useState<User[]>([]);
@@ -103,6 +103,14 @@ export default function AdminPage() {
     setApps(prev => prev.filter(a => a.id !== selApp.id));
     setSelApp(null); setAppAction(null); setAppProcessing(false);
     loadUsers();
+  }
+
+  async function postponeApp(appId: number) {
+    const r = await fetch(`${ADMIN_URL}?sub=postpone&appId=${appId}`, { method: "POST", headers: hdrs() });
+    if (r.ok) {
+      setAppMsg("Заявка отложена.");
+      setApps(prev => prev.filter(a => a.id !== appId));
+    }
   }
 
   async function rejectApp() {
@@ -200,7 +208,7 @@ export default function AdminPage() {
             appRate={appRate} setAppRate={setAppRate}
             appAmount={appAmount} setAppAmount={setAppAmount}
             rejectReason={rejectReason} setRejectReason={setRejectReason}
-            onApprove={approveApp} onReject={rejectApp}
+            onApprove={approveApp} onReject={rejectApp} onPostpone={postponeApp}
             setLightbox={setLightbox}
             token={token}
           />

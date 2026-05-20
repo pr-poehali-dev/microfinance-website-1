@@ -488,6 +488,14 @@ def handler(event: dict, context) -> dict:
             )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
+    # --- ОТЛОЖИТЬ ЗАЯВКУ (POST, sub='postpone', appId=...) ---
+    if sub == "postpone" and method == "POST":
+        app_id = qs.get("appId", "")
+        app_id_e = str(app_id).replace("'", "''")
+        cur.execute(f"UPDATE {SCHEMA}.applications SET status='postponed', reviewed_at=NOW() WHERE id='{app_id_e}' AND status='pending'")
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     # --- СОЗДАТЬ ОФФЕР ДЛЯ КЛИЕНТА (POST, sub='offer', userId=...) ---
     if sub == "offer" and method == "POST":
         user_id = int(qs.get("userId", 0))
