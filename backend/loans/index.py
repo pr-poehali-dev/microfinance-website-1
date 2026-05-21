@@ -9,7 +9,7 @@ SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
 CORS = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, X-Authorization",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Authorization",
 }
 
 
@@ -32,7 +32,9 @@ def handler(event: dict, context) -> dict:
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
 
-    token = (event.get("headers") or {}).get("X-Authorization", "").replace("Bearer ", "").strip()
+    hdrs = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
+    raw_token = hdrs.get("x-authorization") or hdrs.get("authorization") or ""
+    token = raw_token.replace("Bearer ", "").replace("bearer ", "").strip()
     if not token:
         return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
 

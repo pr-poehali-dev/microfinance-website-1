@@ -76,27 +76,42 @@ export default function DashboardPage() {
   const [cardSaved, setCardSaved] = useState(false);
   const [cardError, setCardError] = useState("");
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) { navigate("/login"); return; }
-
+  const loadData = (token: string, isInitial = false) => {
+    if (isInitial) setLoading(true);
     fetch(LOANS_URL, {
-      headers: { "Authorization": `Bearer ${token}` },
+      headers: { "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}` },
     })
       .then((r) => r.json())
       .then((data) => {
-        if (data.error) { localStorage.removeItem("token"); navigate("/login"); return; }
+        if (data.error) {
+          if (isInitial) { localStorage.removeItem("token"); navigate("/login"); }
+          return;
+        }
         setUser(data.user);
-        setLoans(data.loans);
+        setLoans(data.loans || []);
         const app = data.application || null;
         setApplication(app);
         if (app?.cardNumber) {
           setCardInput(app.cardNumber);
           setCardSaved(true);
         }
+        setError("");
       })
-      .catch(() => setError("Ошибка загрузки данных"))
-      .finally(() => setLoading(false));
+      .catch(() => { if (isInitial) setError("Ошибка загрузки данных"); })
+      .finally(() => { if (isInitial) setLoading(false); });
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) { navigate("/login"); return; }
+    loadData(token, true);
+
+    // Автообновление каждые 10 секунд — чтобы статус одобрения появлялся без перезагрузки
+    const interval = setInterval(() => {
+      const t = localStorage.getItem("token");
+      if (t) loadData(t, false);
+    }, 10000);
+    return () => clearInterval(interval);
   }, [navigate]);
 
   // Запускаем таймер только когда заявка pending
@@ -140,7 +155,7 @@ export default function DashboardPage() {
     setSignMsg("");
     const res = await fetch(`${LOANS_URL}?loanId=${loan.id}`, {
       method: "PUT",
-      headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+      headers: { "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
     });
     const data = await res.json();
     setSigningId(null);
@@ -157,7 +172,7 @@ export default function DashboardPage() {
     setCardError("");
     const res = await fetch(LOANS_URL, {
       method: "PATCH",
-      headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+      headers: { "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ cardNumber: cardInput.trim() }),
     });
     const data = await res.json();
