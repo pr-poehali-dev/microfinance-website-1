@@ -157,6 +157,34 @@ export default function AdminApplications({
                   <div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Срок</div><div style={{ color: "white", fontWeight: 600 }}>{app.days} дн.</div></div>
                 </div>
 
+                {/* Блок условий партнёра */}
+                {app.status === "partner_card" && (app.approvedAmount || app.approvedDays || app.approvedRate) && (
+                  <div style={{ background: "rgba(124,58,237,0.07)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 12, padding: "14px 16px", marginBottom: 12 }}>
+                    <div style={{ color: "#c084fc", fontWeight: 700, fontSize: 13, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+                      <Icon name="CreditCard" size={14} />Условия займа (партнёр)
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: 8 }}>
+                      {[
+                        ["Сумма", app.approvedAmount ? `${app.approvedAmount.toLocaleString("ru-RU")} ₽` : "—"],
+                        ["Срок", app.approvedDays ? `${app.approvedDays} дн.` : "—"],
+                        ["Ставка", app.approvedRate ? `${(app.approvedRate * 100).toFixed(1)}% / день` : "—"],
+                        ["К возврату", (() => {
+                          const amt = app.approvedAmount;
+                          const rate = app.approvedRate;
+                          const days = app.approvedDays;
+                          if (!amt || !rate || !days) return "—";
+                          return `${Math.round(amt + amt * rate * days).toLocaleString("ru-RU")} ₽`;
+                        })()],
+                      ].map(([label, value]) => (
+                        <div key={label}>
+                          <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>{label}</div>
+                          <div style={{ color: "#e9d5ff", fontSize: 13, fontWeight: 600 }}>{value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Блок активного займа — выдан */}
                 {app.status === "approved" && app.loanId && (app.loanStatus === "active" || disbursed[app.id]) && (
                   <div style={{ background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.3)", borderRadius: 12, padding: "14px 16px", marginBottom: 12 }}>
