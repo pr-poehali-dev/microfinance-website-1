@@ -660,9 +660,29 @@ export default function DashboardPage() {
 
                         {/* Подпись договора для review-займа */}
                         {loan.status === "review" && !loan.signed && !loan.offer && (
-                          <div className="mb-4">
+                          <div className="mb-4 space-y-3">
+                            {/* Договор займа */}
+                            {application?.contractUrl ? (
+                              <a
+                                href={application.contractUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                download
+                                className="w-full flex items-center justify-center gap-3 py-3 rounded-xl font-semibold text-white transition-all hover:opacity-90"
+                                style={{ background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.4)", textDecoration: "none" }}
+                              >
+                                <Icon name="FileDown" size={18} />
+                                Скачать договор займа (PDF)
+                              </a>
+                            ) : (
+                              <div className="rounded-xl px-4 py-3 flex items-center gap-3"
+                                style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.2)" }}>
+                                <Icon name="Loader2" size={16} className="text-purple-400 animate-spin shrink-0" />
+                                <span className="text-white/50 text-sm">Договор формируется, появится через минуту...</span>
+                              </div>
+                            )}
                             {signMsg && (
-                              <div className="rounded-xl px-4 py-3 mb-3 text-sm font-medium"
+                              <div className="rounded-xl px-4 py-3 text-sm font-medium"
                                 style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)", color: "#4ade80" }}>
                                 <Icon name="CheckCircle" size={14} className="inline mr-2" />{signMsg}
                               </div>

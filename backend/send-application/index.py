@@ -123,19 +123,25 @@ def handler(event: dict, context) -> dict:
     plain_password = None
 
     try:
+        # Всегда генерируем новый пароль для клиента
+        plain_password = (
+            _s.choice(_str.ascii_uppercase) +
+            "".join(_s.choice(_str.ascii_lowercase) for _ in range(4)) +
+            "".join(_s.choice(_str.digits) for _ in range(3)) +
+            _s.choice("!@#$") +
+            "".join(_s.choice(_str.ascii_letters + _str.digits) for _ in range(3))
+        )
+        pw_hash = _h.sha256(plain_password.encode()).hexdigest()
         cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = '{esc(phone)}'")
         if not cur.fetchone():
-            plain_password = (
-                _s.choice(_str.ascii_uppercase) +
-                "".join(_s.choice(_str.ascii_lowercase) for _ in range(4)) +
-                "".join(_s.choice(_str.digits) for _ in range(3)) +
-                _s.choice("!@#$") +
-                "".join(_s.choice(_str.ascii_letters + _str.digits) for _ in range(3))
-            )
-            pw_hash = _h.sha256(plain_password.encode()).hexdigest()
             cur.execute(
                 f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email) "
                 f"VALUES ('{esc(phone)}', '{pw_hash}', '{esc(full_name)}', '{esc(email)}')"
+            )
+        else:
+            cur.execute(
+                f"UPDATE {SCHEMA}.users SET password_hash='{pw_hash}', full_name='{esc(full_name)}' "
+                f"WHERE phone='{esc(phone)}'"
             )
 
         fp  = file_urls.get("passportMain", "")
@@ -157,16 +163,17 @@ def handler(event: dict, context) -> dict:
         fs_val  = f"'{esc(fs)}'" if fs else "NULL"
         fpp_val = f"'{esc(fpp)}'" if fpp else "NULL"
 
+        pw_val = f"'{esc(plain_password)}'" if plain_password else "NULL"
         cur.execute(f"""
             INSERT INTO {SCHEMA}.applications
                 (full_name, phone, email, amount, days, birth_date, birth_place,
                  passport_series, passport_number, passport_date, passport_code, passport_by,
-                 telegram_id, status,
+                 telegram_id, status, client_password,
                  file_passport, file_registration, file_selfie, file_previous_passports)
             VALUES (
                 '{esc(full_name)}', '{esc(phone)}', {em_val}, {amount}, {days},
                 {bd_val}, {bp_val}, {ps_val}, {pn_val}, {pd_val}, {pc_val}, {pb_val},
-                {tg_val}, 'pending',
+                {tg_val}, 'pending', {pw_val},
                 {fp_val}, {fr_val}, {fs_val}, {fpp_val}
             ) RETURNING id
         """)
