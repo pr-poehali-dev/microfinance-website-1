@@ -4,6 +4,8 @@ import Icon from "@/components/ui/icon";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 
+const fmtAppId = (id: number) => String(id).padStart(12, "0");
+
 interface LoanOffer {
   amount: number;
   days: number;
@@ -146,7 +148,7 @@ export default function DashboardPage() {
   };
 
   const handlePay = (loan: Loan) => {
-    alert(`Оплата займа #${loan.id} на сумму ${loan.total.toLocaleString("ru-RU")} ₽\n\nДля оплаты свяжитесь с нами:\n📞 +7 (495) 663-51-24\n📧 PARAFINANS24@ya.ru`);
+    alert(`Оплата займа №${fmtAppId(loan.id)} на сумму ${loan.total.toLocaleString("ru-RU")} ₽\n\nДля оплаты свяжитесь с нами:\n📞 +7 (495) 663-51-24\n📧 PARAFINANS24@ya.ru`);
   };
 
   const handleSign = async (loan: Loan) => {
@@ -305,7 +307,7 @@ export default function DashboardPage() {
                     <Icon name="Clock" size={20} className="text-yellow-400" />
                   </div>
                   <div className="flex-1">
-                    <div className="text-white font-semibold">Заявка #{application.id} принята</div>
+                    <div className="text-white font-semibold">Заявка №{fmtAppId(application.id)} принята</div>
                     <div className="text-white/50 text-xs mt-0.5">
                       {application.amount.toLocaleString("ru-RU")} ₽ · {application.days} дн. · подана {application.createdAt}
                     </div>
@@ -347,7 +349,7 @@ export default function DashboardPage() {
                     <Icon name="CheckCircle" size={20} className="text-green-400" />
                   </div>
                   <div className="flex-1">
-                    <div className="text-white font-bold">Заявка #{application.id} одобрена!</div>
+                    <div className="text-white font-bold">Заявка №{fmtAppId(application.id)} одобрена!</div>
                     <div className="text-green-400 text-xs mt-0.5">Подана {application.createdAt}</div>
                   </div>
                   <span className="text-xs px-3 py-1 rounded-full font-semibold"

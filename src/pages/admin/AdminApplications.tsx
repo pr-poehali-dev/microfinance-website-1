@@ -4,6 +4,8 @@ import { App, GLASS } from "./adminTypes";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
 
+const fmtAppId = (id: number) => String(id).padStart(12, "0");
+
 interface SbFields { workplace: string; position: string; activeLoans: string; salary: string; contactPerson: string; sbScore: string; cardNumber: string; }
 
 interface Props {
@@ -126,7 +128,7 @@ export default function AdminApplications({
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
                   <span style={{ color: "white", fontWeight: 700, fontSize: 18 }}>{app.fullName || app.phone}</span>
-                  <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>#{app.id} · {app.createdAt}</span>
+                  <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>№{fmtAppId(app.id)} · {app.createdAt}</span>
                   {app.telegramId && <span style={{ color: "#a78bfa", fontSize: 13 }}>@{app.telegramId}</span>}
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px,1fr))", gap: 12, marginBottom: 12 }}>

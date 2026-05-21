@@ -1,0 +1,1 @@
+ALTER SEQUENCE t_p30184577_microfinance_website.applications_id_seq RESTART WITH 20265556;

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 
+const fmtAppId = (id: number) => String(id).padStart(12, "0");
+
 interface Application {
   id: number; fullName: string; phone: string; email: string;
   amount: number; days: number; birthDate: string; birthPlace: string;
@@ -114,7 +116,7 @@ export default function AdminApplications({
                 {/* Заголовок */}
                 <div className="flex items-center gap-3 mb-3 flex-wrap">
                   <span className="text-white font-bold text-lg">{app.fullName || app.phone}</span>
-                  <span className="text-white/30 text-sm">#{app.id}</span>
+                  <span className="text-white/30 text-sm">№{fmtAppId(app.id)}</span>
                   <span className="text-white/30 text-xs">{app.createdAt}</span>
                   {app.telegramId && (
                     <span className="text-purple-400 text-xs">@{app.telegramId}</span>
