@@ -341,6 +341,19 @@ export default function AdminApplications({
                 </div>
               )}
 
+              {/* Кнопки действий — Партнёр */}
+              {app.status === "partner_card" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 140 }}>
+                  <div style={{ padding: "8px 12px", borderRadius: 10, fontSize: 12, fontWeight: 600, textAlign: "center", background: "rgba(168,85,247,0.15)", color: "#c084fc", border: "1px solid rgba(168,85,247,0.3)" }}>
+                    Ожидает карту партнёра
+                  </div>
+                  <button onClick={() => onRestore(app.id)}
+                    style={{ background: "linear-gradient(135deg,#d97706,#f59e0b)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                    <Icon name="RotateCcw" size={16} />Вернуть в ожидание
+                  </button>
+                </div>
+              )}
+
               {/* Кнопки действий */}
               {app.status === "pending" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 140 }}>
