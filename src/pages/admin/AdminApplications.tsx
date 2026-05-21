@@ -53,6 +53,9 @@ export default function AdminApplications({
   const [disbursed, setDisbursed] = useState<Record<number, boolean>>({});
   const [partnerForm, setPartnerForm] = useState<Record<number, { amount: string; days: string; rate: string }>>({});
   const [partnerOpen, setPartnerOpen] = useState<number | null>(null);
+  const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "month" | "custom">("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   async function handleDisburse(app: App) {
     if (!app.loanId) return;
@@ -88,7 +91,25 @@ export default function AdminApplications({
   const filtered = apps.filter(a => {
     if (a.status !== appFilter) return false;
     const q = search.toLowerCase();
-    return !q || a.phone.includes(q) || (a.fullName || "").toLowerCase().includes(q) || (a.email || "").toLowerCase().includes(q);
+    if (q && !a.phone.includes(q) && !(a.fullName || "").toLowerCase().includes(q) && !(a.email || "").toLowerCase().includes(q)) return false;
+    if (dateFilter !== "all") {
+      const [d, m, y] = a.createdAt.split(".");
+      const appDate = new Date(+y, +m - 1, +d);
+      const now = new Date(); now.setHours(0, 0, 0, 0);
+      if (dateFilter === "today") {
+        if (appDate < now) return false;
+      } else if (dateFilter === "week") {
+        const from = new Date(now); from.setDate(now.getDate() - 7);
+        if (appDate < from) return false;
+      } else if (dateFilter === "month") {
+        const from = new Date(now); from.setMonth(now.getMonth() - 1);
+        if (appDate < from) return false;
+      } else if (dateFilter === "custom") {
+        if (dateFrom) { const f = new Date(dateFrom); if (appDate < f) return false; }
+        if (dateTo) { const t = new Date(dateTo); t.setHours(23,59,59); if (appDate > t) return false; }
+      }
+    }
+    return true;
   });
 
   return (
@@ -112,6 +133,32 @@ export default function AdminApplications({
           <button onClick={() => setSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", padding: 4 }}>
             <Icon name="X" size={16} />
           </button>
+        )}
+      </div>
+
+      {/* Фильтр по дате */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+        <Icon name="CalendarDays" size={15} style={{ color: "rgba(255,255,255,0.35)" }} />
+        {([["all","Все время"],["today","Сегодня"],["week","7 дней"],["month","Месяц"],["custom","Период"]] as const).map(([f, label]) => (
+          <button key={f} onClick={() => setDateFilter(f)}
+            style={{ padding: "6px 14px", borderRadius: 8, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13,
+              background: dateFilter === f ? "rgba(124,58,237,0.4)" : "rgba(255,255,255,0.05)",
+              color: dateFilter === f ? "#e9d5ff" : "rgba(255,255,255,0.4)",
+              border: dateFilter === f ? "1px solid rgba(124,58,237,0.5)" : "1px solid transparent" }}>
+            {label}
+          </button>
+        ))}
+        {dateFilter === "custom" && (
+          <>
+            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: "6px 10px", color: "white", fontSize: 13, outline: "none", colorScheme: "dark" }} />
+            <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>—</span>
+            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: "6px 10px", color: "white", fontSize: 13, outline: "none", colorScheme: "dark" }} />
+          </>
+        )}
+        {dateFilter !== "all" && (
+          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>· {filtered.length} заявок</span>
         )}
       </div>
 
