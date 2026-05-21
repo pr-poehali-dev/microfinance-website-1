@@ -532,11 +532,31 @@ def handler(event: dict, context) -> dict:
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
+    # --- ПАРТНЁРСКОЕ ОДОБРЕНИЕ (POST, sub='partner_approve', appId=...) ---
+    if sub == "partner_approve" and method == "POST":
+        app_id = qs.get("appId", "")
+        app_id_e = str(app_id).replace("'", "''")
+        cur.execute(f"SELECT full_name, phone, telegram_id FROM {SCHEMA}.applications WHERE id='{app_id_e}' AND status='pending'")
+        app = cur.fetchone()
+        if not app:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
+        full_name, phone, tg_username = app
+        cur.execute(f"UPDATE {SCHEMA}.applications SET status='partner_card', reviewed_at=NOW() WHERE id='{app_id_e}'")
+        conn.commit(); cur.close(); conn.close()
+        if tg_username:
+            tg_client(tg_username,
+                "✅ <b>Ваша заявка одобрена!</b>\n\n"
+                "Для получения займа вам необходимо оформить карту нашего партнёра.\n"
+                "Подробности — в вашем личном кабинете."
+            )
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     # --- ВЕРНУТЬ ЗАЯВКУ В ОЖИДАНИЕ (POST, sub='restore', appId=...) ---
     if sub == "restore" and method == "POST":
         app_id = qs.get("appId", "")
         app_id_e = str(app_id).replace("'", "''")
-        cur.execute(f"UPDATE {SCHEMA}.applications SET status='pending', reviewed_at=NULL WHERE id='{app_id_e}' AND status IN ('postponed','approved','rejected')")
+        cur.execute(f"UPDATE {SCHEMA}.applications SET status='pending', reviewed_at=NULL WHERE id='{app_id_e}' AND status IN ('postponed','approved','rejected','partner_card')")
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 

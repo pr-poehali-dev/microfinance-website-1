@@ -32,6 +32,7 @@ interface Props {
   onReject: () => void;
   onPostpone: (appId: number) => void;
   onRestore: (appId: number) => void;
+  onPartnerApprove: (appId: number) => void;
   setLightbox: (url: string) => void;
   token: string;
 }
@@ -41,7 +42,7 @@ export default function AdminApplications({
   appMsg, appErr2, appProcessing,
   selApp, setSelApp, appAction, setAppAction, setAppMsg, setAppErr2,
   appRate, setAppRate, appAmount, setAppAmount, rejectReason, setRejectReason,
-  onApprove, onReject, onPostpone, onRestore, setLightbox, token,
+  onApprove, onReject, onPostpone, onRestore, onPartnerApprove, setLightbox, token,
 }: Props) {
   const [search, setSearch] = useState("");
   const [sbEdits, setSbEdits] = useState<Record<number, SbFields>>({});
@@ -382,6 +383,10 @@ export default function AdminApplications({
                       <button onClick={() => { setSelApp(app); setAppAction("approve"); setAppMsg(""); setAppErr2(""); }}
                         style={{ background: "linear-gradient(135deg,#16a34a,#22c55e)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
                         <Icon name="CheckCircle" size={16} />Одобрить
+                      </button>
+                      <button onClick={() => onPartnerApprove(app.id)}
+                        style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                        <Icon name="CreditCard" size={16} />Партнёр
                       </button>
                       <button onClick={() => onPostpone(app.id)}
                         style={{ background: "linear-gradient(135deg,#1d4ed8,#3b82f6)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>

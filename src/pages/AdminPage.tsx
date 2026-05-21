@@ -170,6 +170,14 @@ export default function AdminPage() {
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, fullName: data.fullName, phone: data.phone, email: data.email } : u));
   }
 
+  async function partnerApprove(appId: number) {
+    const r = await fetch(`${ADMIN_URL}?sub=partner_approve&appId=${appId}`, { method: "POST", headers: hdrs() });
+    if (r.ok) {
+      setAppMsg("Клиент направлен к партнёру.");
+      setApps(prev => prev.filter(a => a.id !== appId));
+    }
+  }
+
   async function uploadDocs(userId: number, files: Record<string, string>) {
     const r = await fetch(`${ADMIN_URL}?sub=docs_upload&userId=${userId}`, { method: "POST", headers: hdrs(), body: JSON.stringify(files) });
     if (!r.ok) throw new Error("upload failed");
@@ -232,7 +240,7 @@ export default function AdminPage() {
             appRate={appRate} setAppRate={setAppRate}
             appAmount={appAmount} setAppAmount={setAppAmount}
             rejectReason={rejectReason} setRejectReason={setRejectReason}
-            onApprove={approveApp} onReject={rejectApp} onPostpone={postponeApp} onRestore={restoreApp}
+            onApprove={approveApp} onReject={rejectApp} onPostpone={postponeApp} onRestore={restoreApp} onPartnerApprove={partnerApprove}
             setLightbox={setLightbox}
             token={token}
           />

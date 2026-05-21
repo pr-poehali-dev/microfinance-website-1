@@ -338,6 +338,85 @@ export default function DashboardPage() {
               </div>
             )}
 
+            {/* БЛОК СТАТУСА ЗАЯВКИ: PARTNER_CARD — оформление карты партнёра */}
+            {application && application.status === "partner_card" && (
+              <div className="glass rounded-2xl overflow-hidden mb-6"
+                style={{ border: "1px solid rgba(168,85,247,0.4)", background: "rgba(168,85,247,0.03)" }}>
+                <div className="px-6 py-4 flex items-center gap-3"
+                  style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.3),rgba(168,85,247,0.1))" }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: "rgba(168,85,247,0.2)" }}>
+                    <Icon name="CheckCircle" size={20} className="text-purple-400" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-white font-bold">Ваша заявка одобрена!</div>
+                    <div className="text-purple-300 text-xs mt-0.5">Подана {application.createdAt}</div>
+                  </div>
+                  <span className="text-xs px-3 py-1 rounded-full font-semibold"
+                    style={{ background: "rgba(168,85,247,0.2)", color: "#c084fc" }}>Одобрено</span>
+                </div>
+                <div className="px-6 py-6 space-y-5">
+                  <div className="rounded-xl p-5 space-y-3"
+                    style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.25)" }}>
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+                        style={{ background: "rgba(168,85,247,0.2)" }}>
+                        <Icon name="CreditCard" size={16} className="text-purple-400" />
+                      </div>
+                      <div>
+                        <div className="text-white font-semibold text-sm mb-1">Для получения займа вам нужно пройти идентификацию</div>
+                        <div className="text-white/50 text-sm leading-relaxed">Получив карту нашего партнёра, мы сможем выдать вам займ на неё. После того как вы получите карту — введите её номер в личном кабинете и подпишите договор.</div>
+                      </div>
+                    </div>
+                  </div>
+                  <a
+                    href="https://pxl.leads.su/click/152151788fe92075070c72172c5b0a24?erid=2W5zFGL3CaV"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90"
+                    style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", boxShadow: "0 4px 20px rgba(124,58,237,0.4)", textDecoration: "none" }}>
+                    <Icon name="CreditCard" size={20} />
+                    Оформить карту партнёра
+                  </a>
+                  <p className="text-white/25 text-xs text-center">После получения карты курьером — введите её номер ниже</p>
+                  <div className="rounded-xl p-4 space-y-3"
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <div className="text-white/60 text-sm font-medium flex items-center gap-2">
+                      <Icon name="CreditCard" size={15} className="text-purple-400" />
+                      Введите номер полученной карты
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={cardInput}
+                        onChange={(e) => { setCardInput(e.target.value); setCardSaved(false); setCardError(""); }}
+                        placeholder="Номер карты"
+                        className="flex-1 px-4 py-3 rounded-xl text-white text-sm outline-none"
+                        style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)" }}
+                        disabled={cardSaved}
+                      />
+                      {!cardSaved ? (
+                        <button onClick={handleSaveCard} disabled={cardSaving}
+                          className="px-5 py-3 rounded-xl text-white text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-60 flex items-center gap-2"
+                          style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)" }}>
+                          {cardSaving ? <Icon name="Loader2" size={16} className="animate-spin" /> : <Icon name="Save" size={16} />}
+                          Сохранить
+                        </button>
+                      ) : (
+                        <button onClick={() => setCardSaved(false)}
+                          className="px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2"
+                          style={{ background: "rgba(168,85,247,0.15)", color: "#c084fc", border: "1px solid rgba(168,85,247,0.3)" }}>
+                          <Icon name="CheckCircle" size={16} />
+                          Сохранено
+                        </button>
+                      )}
+                    </div>
+                    {cardError && <p className="text-red-400 text-xs">{cardError}</p>}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* БЛОК СТАТУСА ЗАЯВКИ: APPROVED — детали + карта + договор */}
             {application && application.status === "approved" && (
               <div className="glass rounded-2xl overflow-hidden mb-6"
