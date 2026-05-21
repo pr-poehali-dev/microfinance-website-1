@@ -12,8 +12,8 @@ interface Props {
   setSelUser: (u: User | null) => void;
   loans: Loan[];
   loansLoading: boolean;
-  clientView: "loans" | "offer" | "addloan" | "addclient" | "edit";
-  setClientView: (v: "loans" | "offer" | "addloan" | "addclient" | "edit") => void;
+  clientView: "loans" | "offer" | "addloan" | "addclient" | "edit" | "docs";
+  setClientView: (v: "loans" | "offer" | "addloan" | "addclient" | "edit" | "docs") => void;
   offer: { amount: string; days: string; rate: string };
   setOffer: (v: { amount: string; days: string; rate: string }) => void;
   newLoan: { amount: string; days: string; rate: string };
@@ -30,6 +30,7 @@ interface Props {
   onAddClient: (e: React.SyntheticEvent) => void;
   onChangeStatus: (loanId: number, status: string) => void;
   onUpdateUser: (userId: number, data: { fullName: string; phone: string; email: string; password: string }) => Promise<void>;
+  onUploadDocs: (userId: number, files: Record<string, string>) => Promise<void>;
 }
 
 const INPUT = { background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: "100%", boxSizing: "border-box" as const, outline: "none" };
@@ -40,10 +41,65 @@ export default function AdminClients({
   clientView, setClientView,
   offer, setOffer, newLoan, setNewLoan, newClient, setNewClient,
   actionMsg, actionErr, setActionMsg, setActionErr,
-  onLoadLoans, onSendOffer, onAddLoan, onAddClient, onChangeStatus, onUpdateUser,
+  onLoadLoans, onSendOffer, onAddLoan, onAddClient, onChangeStatus, onUpdateUser, onUploadDocs,
 }: Props) {
   const [editForm, setEditForm] = useState({ fullName: "", phone: "", email: "", password: "" });
   const [editSaving, setEditSaving] = useState(false);
+
+  const [docFiles, setDocFiles] = useState<Record<string, File | null>>({ passportMain: null, registration: null, selfie: null, previousPassports: null });
+  const [docUploading, setDocUploading] = useState(false);
+
+  const DOC_LABELS: { key: string; label: string }[] = [
+    { key: "passportMain",      label: "Паспорт — главная страница" },
+    { key: "registration",      label: "Прописка" },
+    { key: "selfie",            label: "Селфи с паспортом" },
+    { key: "previousPassports", label: "О ранее выданных паспортах" },
+  ];
+
+  const compressDoc = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = reject;
+        img.onload = () => {
+          const MAX = 600;
+          let { width, height } = img;
+          if (width > MAX || height > MAX) {
+            if (width > height) { height = Math.round(height * MAX / width); width = MAX; }
+            else { width = Math.round(width * MAX / height); height = MAX; }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = width; canvas.height = height;
+          canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/webp", 0.5).split(",")[1]);
+        };
+        img.src = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+
+  async function handleDocsSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selUser) return;
+    const hasAny = Object.values(docFiles).some(f => f);
+    if (!hasAny) { setActionErr("Выберите хотя бы один файл"); return; }
+    setDocUploading(true); setActionMsg(""); setActionErr("");
+    try {
+      const encoded: Record<string, string> = {};
+      for (const [key, file] of Object.entries(docFiles)) {
+        if (file) encoded[key] = await compressDoc(file);
+      }
+      await onUploadDocs(selUser.id, encoded);
+      setActionMsg("Документы загружены!");
+      setDocFiles({ passportMain: null, registration: null, selfie: null, previousPassports: null });
+    } catch {
+      setActionErr("Ошибка при загрузке документов");
+    } finally {
+      setDocUploading(false);
+    }
+  }
 
   useEffect(() => {
     if (selUser && clientView === "edit") {
@@ -128,11 +184,11 @@ export default function AdminClients({
 
             {/* Вкладки */}
             <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
-              {selUser && ([["loans","Займы","CreditCard"],["offer","Создать оффер","FileSignature"],["addloan","Добавить займ","Plus"],["edit","Редактировать","Pencil"]] as const).map(([v, label, icon]) => (
+              {selUser && ([["loans","Займы","CreditCard"],["offer","Создать оффер","FileSignature"],["addloan","Добавить займ","Plus"],["docs","Документы","FileImage"],["edit","Редактировать","Pencil"]] as const).map(([v, label, icon]) => (
                 <button key={v} onClick={() => { setClientView(v); setActionMsg(""); setActionErr(""); }}
                   style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13, display: "flex", alignItems: "center", gap: 6,
                     background: clientView === v
-                      ? (v === "offer" ? "linear-gradient(135deg,#0ea5e9,#38bdf8)" : v === "edit" ? "linear-gradient(135deg,#d97706,#f59e0b)" : "linear-gradient(135deg,#7c3aed,#a855f7)")
+                      ? (v === "offer" ? "linear-gradient(135deg,#0ea5e9,#38bdf8)" : v === "edit" ? "linear-gradient(135deg,#d97706,#f59e0b)" : v === "docs" ? "linear-gradient(135deg,#059669,#10b981)" : "linear-gradient(135deg,#7c3aed,#a855f7)")
                       : "rgba(255,255,255,0.07)",
                     color: clientView === v ? "white" : "rgba(255,255,255,0.5)" }}>
                   <Icon name={icon} size={13} />{label}
@@ -148,6 +204,35 @@ export default function AdminClients({
 
             {actionMsg && <div style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)", borderRadius: 12, padding: "12px 16px", color: "#4ade80", marginBottom: 16, fontSize: 14 }}>{actionMsg}</div>}
             {actionErr && <div style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 12, padding: "12px 16px", color: "#f87171", marginBottom: 16, fontSize: 14 }}>{actionErr}</div>}
+
+            {/* Документы клиента */}
+            {clientView === "docs" && selUser && (
+              <div style={{ ...GLASS, padding: 24, border: "1px solid rgba(16,185,129,0.3)" }}>
+                <h3 style={{ color: "white", fontWeight: 700, margin: "0 0 6px" }}>Загрузить документы</h3>
+                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, margin: "0 0 20px" }}>Загруженные файлы обновят документы в заявке клиента</p>
+                <form onSubmit={handleDocsSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    {DOC_LABELS.map(({ key, label }) => (
+                      <label key={key} style={{ ...GLASS, padding: 16, borderRadius: 14, cursor: "pointer", display: "flex", flexDirection: "column", gap: 8, border: docFiles[key] ? "1px solid rgba(16,185,129,0.5)" : "1px solid rgba(255,255,255,0.1)" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <Icon name={docFiles[key] ? "CheckCircle" : "Upload"} size={16} style={{ color: docFiles[key] ? "#10b981" : "rgba(255,255,255,0.4)" }} />
+                          <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 600 }}>{label}</span>
+                        </div>
+                        {docFiles[key] && <span style={{ color: "#10b981", fontSize: 11, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{docFiles[key]!.name}</span>}
+                        {!docFiles[key] && <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>Нажмите для выбора файла</span>}
+                        <input type="file" accept="image/*,.pdf" style={{ display: "none" }}
+                          onChange={e => setDocFiles(p => ({ ...p, [key]: e.target.files?.[0] ?? null }))} />
+                      </label>
+                    ))}
+                  </div>
+                  <button type="submit" disabled={docUploading}
+                    style={{ background: "linear-gradient(135deg,#059669,#10b981)", color: "white", border: "none", borderRadius: 12, padding: "14px", cursor: docUploading ? "not-allowed" : "pointer", fontWeight: 700, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, opacity: docUploading ? 0.7 : 1 }}>
+                    {docUploading ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="Upload" size={18} />}
+                    {docUploading ? "Загружаем..." : "Загрузить документы"}
+                  </button>
+                </form>
+              </div>
+            )}
 
             {/* Редактировать клиента */}
             {clientView === "edit" && selUser && (

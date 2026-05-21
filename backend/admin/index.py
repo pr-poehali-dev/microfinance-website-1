@@ -678,6 +678,59 @@ def handler(event: dict, context) -> dict:
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True}, ensure_ascii=False)}
 
+    # --- ЗАГРУЗИТЬ ДОКУМЕНТЫ КЛИЕНТА (POST, sub='docs_upload', userId=...) ---
+    if sub == "docs_upload" and method == "POST":
+        import base64, boto3
+        user_id = int(qs.get("userId", 0))
+        if not user_id:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Не указан userId"})}
+
+        cur.execute(f"SELECT phone FROM {SCHEMA}.users WHERE id = {user_id}")
+        row = cur.fetchone()
+        if not row:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Клиент не найден"})}
+        phone = row[0]
+
+        cur.execute(f"SELECT id FROM {SCHEMA}.applications WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1")
+        app_row = cur.fetchone()
+        if not app_row:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
+        app_id = app_row[0]
+
+        s3 = boto3.client("s3", endpoint_url="https://bucket.poehali.dev",
+            aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"])
+        access_key = os.environ["AWS_ACCESS_KEY_ID"]
+        now_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        phone_clean = phone.replace("+", "")
+
+        FILE_MAP = {
+            "passportMain":      ("file_passport",          "passport_main"),
+            "registration":      ("file_registration",      "registration"),
+            "selfie":            ("file_selfie",            "selfie"),
+            "previousPassports": ("file_previous_passports","previous_passports"),
+        }
+        sets = []
+        for key, (col, suffix) in FILE_MAP.items():
+            b64 = body.get(key, "")
+            if not b64:
+                continue
+            file_data = base64.b64decode(b64)
+            s3_key = f"applications/{now_ts}_{phone_clean}_{suffix}.webp"
+            s3.put_object(Bucket="files", Key=s3_key, Body=file_data, ContentType="image/webp")
+            url = f"https://cdn.poehali.dev/projects/{access_key}/bucket/{s3_key}"
+            col_e = url.replace("'", "''")
+            sets.append(f"{col} = '{col_e}'")
+
+        if sets:
+            cur.execute(f"UPDATE {SCHEMA}.applications SET {', '.join(sets)} WHERE id = {app_id}")
+            conn.commit()
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     # --- ОБНОВИТЬ ПОЛЯ СБ ЗАЯВКИ (POST, sub='app_update', appId=...) ---
     if sub == "app_update" and method == "POST":
         app_id = qs.get("appId", "")

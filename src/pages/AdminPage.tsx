@@ -26,7 +26,7 @@ export default function AdminPage() {
   const [loans, setLoans]       = useState<Loan[]>([]);
   const [loansLoading, setLoansLoading] = useState(false);
 
-  const [clientView, setClientView] = useState<"loans"|"offer"|"addloan"|"addclient"|"edit">("loans");
+  const [clientView, setClientView] = useState<"loans"|"offer"|"addloan"|"addclient"|"edit"|"docs">("loans");
   const [offer, setOffer] = useState({ amount: "", days: "", rate: "0.8" });
   const [newLoan, setNewLoan] = useState({ amount: "", days: "", rate: "0.8" });
   const [newClient, setNewClient] = useState({ phone: "", fullName: "", password: "" });
@@ -170,6 +170,11 @@ export default function AdminPage() {
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, fullName: data.fullName, phone: data.phone, email: data.email } : u));
   }
 
+  async function uploadDocs(userId: number, files: Record<string, string>) {
+    const r = await fetch(`${ADMIN_URL}?sub=docs_upload&userId=${userId}`, { method: "POST", headers: hdrs(), body: JSON.stringify(files) });
+    if (!r.ok) throw new Error("upload failed");
+  }
+
   async function changeStatus(loanId: number, status: string) {
     await fetch(`${ADMIN_URL}?sub=loan&loanId=${loanId}`, { method: "PUT", headers: hdrs(), body: JSON.stringify({ status }) });
     if (selUser) loadLoans(selUser.id);
@@ -247,7 +252,7 @@ export default function AdminPage() {
             onLoadLoans={loadLoans}
             onSendOffer={sendOffer} onAddLoan={addLoan}
             onAddClient={addClient} onChangeStatus={changeStatus}
-            onUpdateUser={updateUser}
+            onUpdateUser={updateUser} onUploadDocs={uploadDocs}
           />
         )}
       </div>

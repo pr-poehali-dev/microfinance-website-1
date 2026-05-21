@@ -590,7 +590,7 @@ export default function CalculatorForm() {
 
                   <button
                     type="submit"
-                    disabled={sending || !files.passportMain || !files.registration || !files.selfie || !files.previousPassports}
+                    disabled={sending}
                     className="w-full btn-neon text-white font-bold py-4 rounded-2xl text-lg mt-2 disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden"
                   >
                     {sending ? (
@@ -605,9 +605,7 @@ export default function CalculatorForm() {
                       <div className="h-full bg-purple-400 rounded-full animate-pulse" style={{ width: sendStep.startsWith("Отправляем") ? "90%" : sendStep.includes("4") ? "75%" : sendStep.includes("3") ? "55%" : sendStep.includes("2") ? "35%" : "15%" }} />
                     </div>
                   )}
-                  {(!files.passportMain || !files.registration || !files.selfie || !files.previousPassports) && (
-                    <p className="text-yellow-400/70 text-xs text-center">Прикрепите все 4 документа для отправки заявки</p>
-                  )}
+
                   {sendError && (
                     <p className="text-red-400 text-sm text-center">{sendError}</p>
                   )}
