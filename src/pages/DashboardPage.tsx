@@ -46,6 +46,7 @@ interface Application {
   approvedTotal: number;
   rejectReason: string;
   cardNumber: string;
+  contractUrl: string;
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
@@ -413,6 +414,27 @@ export default function DashboardPage() {
                     {cardError && <p className="text-red-400 text-xs">{cardError}</p>}
                     <p className="text-white/30 text-xs">Введите номер карты или номер телефона (СБП) для получения займа</p>
                   </div>
+
+                  {/* Скачать договор PDF */}
+                  {application.contractUrl ? (
+                    <a
+                      href={application.contractUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                      className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90"
+                      style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", boxShadow: "0 4px 20px rgba(124,58,237,0.35)", textDecoration: "none" }}
+                    >
+                      <Icon name="FileDown" size={20} />
+                      Скачать договор займа (PDF)
+                    </a>
+                  ) : (
+                    <div className="rounded-xl px-5 py-4 flex items-center gap-3"
+                      style={{ background: "rgba(124,58,237,0.07)", border: "1px solid rgba(124,58,237,0.2)" }}>
+                      <Icon name="Loader2" size={18} className="text-purple-400 animate-spin shrink-0" />
+                      <div className="text-white/50 text-sm">Договор формируется, появится в течение минуты...</div>
+                    </div>
+                  )}
 
                   {/* Кнопка подписать договор */}
                   {loans.some((l) => l.status === "review" && !l.signed) ? null : (

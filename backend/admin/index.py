@@ -364,6 +364,21 @@ def handler(event: dict, context) -> dict:
         )
         conn.commit(); cur.close(); conn.close()
 
+        # Генерируем PDF договора асинхронно (не блокируем ответ)
+        try:
+            import urllib.request as _ur
+            contract_payload = json.dumps({"appId": int(app_id), "loanId": loan_id}).encode()
+            contract_req = _ur.Request(
+                "https://functions.poehali.dev/9cdc3bea-1348-49df-a7a3-4aeef6088ff3",
+                data=contract_payload,
+                headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"},
+                method="POST"
+            )
+            _ur.urlopen(contract_req, timeout=60)
+            print(f"[admin] contract generated for app_id={app_id}")
+        except Exception as ex:
+            print(f"[admin] contract generation error: {ex}")
+
         interest = round(float(amount) * rate * int(days))
         total = float(amount) + interest
         now = datetime.now().strftime("%d.%m.%Y в %H:%М")

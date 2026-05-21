@@ -94,7 +94,7 @@ def handler(event: dict, context) -> dict:
 
     # Получаем последнюю заявку пользователя
     cur.execute(
-        f"SELECT id, amount, days, status, created_at, approved_amount, approved_rate, approved_days, reject_reason, card_number "
+        f"SELECT id, amount, days, status, created_at, approved_amount, approved_rate, approved_days, reject_reason, card_number, contract_url "
         f"FROM {SCHEMA}.applications "
         f"WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1"
     )
@@ -106,7 +106,6 @@ def handler(event: dict, context) -> dict:
         approved_amount = float(app_row[5]) if app_row[5] else None
         approved_rate = float(app_row[6]) if app_row[6] else 0.008
         approved_days = int(app_row[7]) if app_row[7] else app_days
-        # Рассчитываем сумму к возврату
         eff_amount = approved_amount if approved_amount else app_amount
         approved_interest = round(eff_amount * approved_rate * approved_days)
         approved_total = eff_amount + approved_interest
@@ -123,6 +122,7 @@ def handler(event: dict, context) -> dict:
             "approvedTotal": approved_total,
             "rejectReason": app_row[8] or "",
             "cardNumber": app_row[9] or "",
+            "contractUrl": app_row[10] or "",
         }
 
     cur.close(); conn.close()
