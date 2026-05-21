@@ -532,21 +532,33 @@ def handler(event: dict, context) -> dict:
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
-    # --- ПАРТНЁРСКОЕ ОДОБРЕНИЕ (POST, sub='partner_approve', appId=...) ---
+    # --- ПАРТНЁРСКОЕ ОДОБРЕНИЕ (POST, sub='partner_approve', appId=..., body: {amount, days, rate}) ---
     if sub == "partner_approve" and method == "POST":
         app_id = qs.get("appId", "")
         app_id_e = str(app_id).replace("'", "''")
+        body = json.loads(event.get("body") or "{}") if isinstance(event.get("body"), str) else (event.get("body") or {})
+        p_amount = float(body.get("amount", 0)) if body.get("amount") else None
+        p_days = int(body.get("days", 0)) if body.get("days") else None
+        p_rate = float(body.get("rate", 0)) if body.get("rate") else None
         cur.execute(f"SELECT full_name, phone, telegram_id FROM {SCHEMA}.applications WHERE id='{app_id_e}' AND status='pending'")
         app = cur.fetchone()
         if not app:
             cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
         full_name, phone, tg_username = app
-        cur.execute(f"UPDATE {SCHEMA}.applications SET status='partner_card', reviewed_at=NOW() WHERE id='{app_id_e}'")
+        set_parts = ["status='partner_card'", "reviewed_at=NOW()"]
+        if p_amount: set_parts.append(f"approved_amount={p_amount}")
+        if p_days: set_parts.append(f"approved_days={p_days}")
+        if p_rate: set_parts.append(f"approved_rate={p_rate}")
+        cur.execute(f"UPDATE {SCHEMA}.applications SET {', '.join(set_parts)} WHERE id='{app_id_e}'")
         conn.commit(); cur.close(); conn.close()
+        loan_info = ""
+        if p_amount and p_days and p_rate:
+            interest = round(p_amount * p_rate * p_days)
+            loan_info = f"\n\n💰 <b>Условия займа:</b>\nСумма: {int(p_amount):,} ₽\nСрок: {p_days} дней\nСтавка: {round(p_rate*100,1)}% в день\nК возврату: {int(p_amount+interest):,} ₽"
         if tg_username:
             tg_client(tg_username,
-                "✅ <b>Ваша заявка одобрена!</b>\n\n"
+                f"✅ <b>Ваша заявка одобрена!</b>{loan_info}\n\n"
                 "Для получения займа вам необходимо оформить карту нашего партнёра.\n"
                 "Подробности — в вашем личном кабинете."
             )

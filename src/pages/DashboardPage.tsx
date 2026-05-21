@@ -356,6 +356,30 @@ export default function DashboardPage() {
                     style={{ background: "rgba(168,85,247,0.2)", color: "#c084fc" }}>Одобрено</span>
                 </div>
                 <div className="px-6 py-6 space-y-5">
+                  {application.approvedAmount && (
+                    <div className="rounded-xl p-4"
+                      style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.3)" }}>
+                      <div className="text-purple-300 text-xs font-semibold uppercase tracking-wider mb-3">Условия вашего займа</div>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="rounded-lg p-3 text-center" style={{ background: "rgba(255,255,255,0.05)" }}>
+                          <div className="text-white font-bold text-lg">{application.approvedAmount.toLocaleString("ru-RU")} ₽</div>
+                          <div className="text-white/40 text-xs mt-0.5">Сумма займа</div>
+                        </div>
+                        <div className="rounded-lg p-3 text-center" style={{ background: "rgba(255,255,255,0.05)" }}>
+                          <div className="text-white font-bold text-lg">{application.approvedDays} дн.</div>
+                          <div className="text-white/40 text-xs mt-0.5">Срок</div>
+                        </div>
+                        <div className="rounded-lg p-3 text-center" style={{ background: "rgba(255,255,255,0.05)" }}>
+                          <div className="text-white font-bold text-lg">{application.approvedRatePercent}%</div>
+                          <div className="text-white/40 text-xs mt-0.5">Ставка/день</div>
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-3 flex justify-between items-center" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                        <span className="text-white/50 text-sm">К возврату:</span>
+                        <span className="text-purple-300 font-bold text-base">{application.approvedTotal.toLocaleString("ru-RU")} ₽</span>
+                      </div>
+                    </div>
+                  )}
                   <div className="rounded-xl p-5 space-y-3"
                     style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.25)" }}>
                     <div className="flex items-start gap-3">

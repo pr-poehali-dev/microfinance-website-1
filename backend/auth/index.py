@@ -50,12 +50,12 @@ def handler(event: dict, context) -> dict:
             cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Аккаунт не найден. Сначала подайте заявку на займ."})}
 
-        # Проверяем что у пользователя есть одобренная заявка
+        # Проверяем что у пользователя есть одобренная или партнёрская заявка
         phone_e = phone.replace("'", "''")
-        cur.execute(f"SELECT id FROM {SCHEMA}.applications WHERE phone = '{phone_e}' AND status = 'approved' LIMIT 1")
+        cur.execute(f"SELECT id FROM {SCHEMA}.applications WHERE phone = '{phone_e}' AND status IN ('approved', 'partner_card') LIMIT 1")
         if not cur.fetchone():
             cur.close(); conn.close()
-            return {"statusCode": 403, "headers": CORS, "body": json.dumps({"error": "Вход по номеру телефона доступен только клиентам с одобренным займом."})}
+            return {"statusCode": 403, "headers": CORS, "body": json.dumps({"error": "Вход по номеру телефона доступен только клиентам с одобренной заявкой."})}
 
         user_id = user_row[0]
         token = secrets.token_hex(32)

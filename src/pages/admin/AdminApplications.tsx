@@ -32,7 +32,7 @@ interface Props {
   onReject: () => void;
   onPostpone: (appId: number) => void;
   onRestore: (appId: number) => void;
-  onPartnerApprove: (appId: number) => void;
+  onPartnerApprove: (appId: number, conditions: { amount: number; days: number; rate: number }) => void;
   setLightbox: (url: string) => void;
   token: string;
 }
@@ -50,6 +50,8 @@ export default function AdminApplications({
   const [sbSaved, setSbSaved] = useState<Record<number, boolean>>({});
   const [disbursing, setDisbursing] = useState<Record<number, boolean>>({});
   const [disbursed, setDisbursed] = useState<Record<number, boolean>>({});
+  const [partnerForm, setPartnerForm] = useState<Record<number, { amount: string; days: string; rate: string }>>({});
+  const [partnerOpen, setPartnerOpen] = useState<number | null>(null);
 
   async function handleDisburse(app: App) {
     if (!app.loanId) return;
@@ -397,10 +399,54 @@ export default function AdminApplications({
                         style={{ background: "linear-gradient(135deg,#16a34a,#22c55e)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
                         <Icon name="CheckCircle" size={16} />Одобрить
                       </button>
-                      <button onClick={() => onPartnerApprove(app.id)}
-                        style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
-                        <Icon name="CreditCard" size={16} />Партнёр
-                      </button>
+                      {partnerOpen === app.id ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 140 }}>
+                          <input
+                            type="number" placeholder="Сумма, ₽"
+                            value={partnerForm[app.id]?.amount ?? ""}
+                            onChange={e => setPartnerForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], amount: e.target.value } }))}
+                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                          />
+                          <input
+                            type="number" placeholder="Срок, дней"
+                            value={partnerForm[app.id]?.days ?? ""}
+                            onChange={e => setPartnerForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], days: e.target.value } }))}
+                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                          />
+                          <input
+                            type="number" placeholder="Ставка %/день" step="0.1"
+                            value={partnerForm[app.id]?.rate ?? ""}
+                            onChange={e => setPartnerForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], rate: e.target.value } }))}
+                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                          />
+                          <button
+                            onClick={() => {
+                              const f = partnerForm[app.id] || {};
+                              const amount = parseFloat(f.amount || "0");
+                              const days = parseInt(f.days || "0");
+                              const rate = parseFloat(f.rate || "0") / 100;
+                              if (!amount || !days || !rate) return;
+                              onPartnerApprove(app.id, { amount, days, rate });
+                              setPartnerOpen(null);
+                            }}
+                            disabled={appProcessing}
+                            style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white", border: "none", borderRadius: 8, padding: "9px 10px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                            <Icon name="Send" size={14} />{appProcessing ? "..." : "Отправить"}
+                          </button>
+                          <button onClick={() => setPartnerOpen(null)}
+                            style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "none", borderRadius: 8, padding: "7px", cursor: "pointer", fontSize: 12 }}>
+                            Отмена
+                          </button>
+                        </div>
+                      ) : (
+                        <button onClick={() => {
+                          setPartnerOpen(app.id);
+                          setPartnerForm(prev => ({ ...prev, [app.id]: { amount: String(app.approvedAmount ?? app.amount ?? ""), days: String(app.approvedDays ?? app.days ?? ""), rate: String(app.approvedRate ? app.approvedRate * 100 : "") } }));
+                        }}
+                          style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                          <Icon name="CreditCard" size={16} />Партнёр
+                        </button>
+                      )}
                       <button onClick={() => onPostpone(app.id)}
                         style={{ background: "linear-gradient(135deg,#1d4ed8,#3b82f6)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
                         <Icon name="PhoneMissed" size={16} />Отложить
