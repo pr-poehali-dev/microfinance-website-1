@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 
 const API_URL = "https://functions.poehali.dev/29f70c88-f1f7-4926-9c65-c642fd11fdfb";
 
 export default function CalculatorForm() {
+  const navigate = useNavigate();
   const [amount, setAmount] = useState(30000);
   const [days, setDays] = useState(15);
   const [formAmount, setFormAmount] = useState(50000);
@@ -117,7 +119,11 @@ export default function CalculatorForm() {
         body: JSON.stringify({ ...form, name: form.fullName, ...encodedFiles }),
       });
       if (res.ok) {
-        setSubmitted(true);
+        const data = await res.json();
+        if (data.token) {
+          localStorage.setItem("token", data.token);
+        }
+        navigate("/dashboard");
       } else {
         setSendError("Ошибка при отправке. Попробуйте ещё раз.");
       }

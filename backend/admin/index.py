@@ -332,15 +332,20 @@ def handler(event: dict, context) -> dict:
             user_id = user[0]
             cur.execute(f"UPDATE {SCHEMA}.users SET password_hash='{pw_hash}' WHERE id={user_id}")
 
-        # Создаём займ
+        # Создаём займ со статусом review — клиент сам подпишет договор в ЛК
         cur.execute(
-            f"INSERT INTO {SCHEMA}.loans (user_id, amount, days, rate, status) VALUES ({user_id},{amount},{days},{rate},'active') RETURNING id"
+            f"INSERT INTO {SCHEMA}.loans (user_id, amount, days, rate, status, offer_amount, offer_days, offer_rate) "
+            f"VALUES ({user_id},{amount},{days},{rate},'review',{amount},{days},{rate}) RETURNING id"
         )
         loan_id = cur.fetchone()[0]
 
-        # Обновляем статус заявки, сохраняем одобренную сумму и пароль клиента
+        # Обновляем статус заявки, сохраняем сумму, ставку, срок и пароль клиента
         pw_esc = plain_password.replace("'", "''")
-        cur.execute(f"UPDATE {SCHEMA}.applications SET status='approved', reviewed_at=NOW(), approved_amount={amount}, client_password='{pw_esc}' WHERE id='{app_id_esc}'")
+        cur.execute(
+            f"UPDATE {SCHEMA}.applications SET status='approved', reviewed_at=NOW(), "
+            f"approved_amount={amount}, approved_rate={rate}, approved_days={days}, "
+            f"client_password='{pw_esc}' WHERE id='{app_id_esc}'"
+        )
         conn.commit(); cur.close(); conn.close()
 
         interest = round(float(amount) * rate * int(days))

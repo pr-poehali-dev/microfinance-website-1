@@ -280,8 +280,30 @@ def handler(event: dict, context) -> dict:
 
     send_telegram_message(tg_token, TELEGRAM_CHAT_ID, text)
 
+    # Создаём сессию для автоматического входа клиента в ЛК
+    session_token = None
+    try:
+        import secrets as _sec
+        from datetime import timedelta
+        conn2 = psycopg2.connect(os.environ["DATABASE_URL"])
+        cur2 = conn2.cursor()
+        cur2.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = '{esc(phone)}'")
+        user_row = cur2.fetchone()
+        if user_row:
+            user_id = user_row[0]
+            session_token = _sec.token_hex(32)
+            expires_at = (datetime.now() + timedelta(days=30)).isoformat()
+            cur2.execute(
+                f"INSERT INTO {SCHEMA}.sessions (user_id, token, expires_at) "
+                f"VALUES ({user_id}, '{session_token}', '{expires_at}')"
+            )
+            conn2.commit()
+        cur2.close(); conn2.close()
+    except Exception as ex:
+        print(f"[send-application] session error: {ex}")
+
     return {
         "statusCode": 200,
         "headers": cors_headers,
-        "body": json.dumps({"success": True, "appId": app_id}, ensure_ascii=False),
+        "body": json.dumps({"success": True, "appId": app_id, "token": session_token}, ensure_ascii=False),
     }

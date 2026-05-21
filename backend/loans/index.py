@@ -8,7 +8,7 @@ SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
 
 CORS = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, X-Authorization",
 }
 
@@ -46,6 +46,23 @@ def handler(event: dict, context) -> dict:
 
     user_id, phone, full_name, email = user
 
+    # --- СОХРАНИТЬ НОМЕР КАРТЫ/СБП (PATCH) ---
+    if event.get("httpMethod") == "PATCH":
+        raw_b = event.get("body") or "{}"
+        b = json.loads(raw_b) if isinstance(raw_b, str) else raw_b
+        card_number = (b.get("cardNumber") or "").strip()
+        if not card_number:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите номер карты или телефон СБП"})}
+        ph_e = phone.replace("'", "''")
+        card_e = card_number.replace("'", "''")
+        cur.execute(
+            f"UPDATE {SCHEMA}.applications SET card_number='{card_e}' "
+            f"WHERE id = (SELECT id FROM {SCHEMA}.applications WHERE phone='{ph_e}' AND status='approved' ORDER BY created_at DESC LIMIT 1)"
+        )
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     # --- ПОДПИСАТЬ ОФФЕР (PUT, loanId=...) ---
     if event.get("httpMethod") == "PUT":
         qs = event.get("queryStringParameters") or {}
@@ -75,19 +92,35 @@ def handler(event: dict, context) -> dict:
 
     # Получаем последнюю заявку пользователя
     cur.execute(
-        f"SELECT id, amount, days, status, created_at, approved_amount FROM {SCHEMA}.applications "
+        f"SELECT id, amount, days, status, created_at, approved_amount, approved_rate, approved_days, reject_reason, card_number "
+        f"FROM {SCHEMA}.applications "
         f"WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1"
     )
     app_row = cur.fetchone()
     application = None
     if app_row:
+        app_amount = float(app_row[1]) if app_row[1] else 0
+        app_days = app_row[2] or 0
+        approved_amount = float(app_row[5]) if app_row[5] else None
+        approved_rate = float(app_row[6]) if app_row[6] else 0.008
+        approved_days = int(app_row[7]) if app_row[7] else app_days
+        # Рассчитываем сумму к возврату
+        eff_amount = approved_amount if approved_amount else app_amount
+        approved_interest = round(eff_amount * approved_rate * approved_days)
+        approved_total = eff_amount + approved_interest
         application = {
             "id": app_row[0],
-            "amount": float(app_row[1]) if app_row[1] else 0,
-            "days": app_row[2] or 0,
+            "amount": app_amount,
+            "days": app_days,
             "status": app_row[3],
             "createdAt": app_row[4].strftime("%d.%m.%Y"),
-            "approvedAmount": float(app_row[5]) if app_row[5] else None,
+            "approvedAmount": approved_amount,
+            "approvedRate": approved_rate,
+            "approvedRatePercent": round(approved_rate * 100, 1),
+            "approvedDays": approved_days,
+            "approvedTotal": approved_total,
+            "rejectReason": app_row[8] or "",
+            "cardNumber": app_row[9] or "",
         }
 
     cur.close(); conn.close()
