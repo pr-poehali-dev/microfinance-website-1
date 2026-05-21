@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 
 const API_URL = "https://functions.poehali.dev/29f70c88-f1f7-4926-9c65-c642fd11fdfb";
+const UPLOAD_URL = "https://functions.poehali.dev/45733e38-49ca-4566-9ae3-b5323aec9a63";
 
 export default function CalculatorForm() {
   const navigate = useNavigate();
@@ -81,7 +82,7 @@ export default function CalculatorForm() {
         const img = new Image();
         img.onerror = reject;
         img.onload = () => {
-          const MAX = 800;
+          const MAX = 600;
           let { width, height } = img;
           if (width > MAX || height > MAX) {
             if (width > height) { height = Math.round(height * MAX / width); width = MAX; }
@@ -91,12 +92,23 @@ export default function CalculatorForm() {
           canvas.width = width;
           canvas.height = height;
           canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL("image/webp", 0.6).split(",")[1]);
+          resolve(canvas.toDataURL("image/webp", 0.5).split(",")[1]);
         };
         img.src = reader.result as string;
       };
       reader.readAsDataURL(file);
     });
+
+  const uploadFile = async (b64: string, filename: string, folder: string): Promise<string> => {
+    const res = await fetch(UPLOAD_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: b64, filename, folder }),
+    });
+    if (!res.ok) throw new Error("upload failed");
+    const data = await res.json();
+    return data.url as string;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,18 +117,23 @@ export default function CalculatorForm() {
     setSendStep("");
     try {
       const fileEntries = Object.entries(files).filter(([, f]) => f);
-      const encodedFiles: { [key: string]: string } = {};
+      const fileUrls: { [key: string]: string } = {};
+      const now = Date.now();
+      const phone = form.phone.replace(/\D/g, "");
+
       for (let i = 0; i < fileEntries.length; i++) {
         const [key, file] = fileEntries[i];
-        setSendStep(`Сжимаем фото ${i + 1} из ${fileEntries.length}...`);
-        encodedFiles[key] = await compressImage(file!);
-        encodedFiles[`${key}_name`] = file!.name.replace(/\.[^.]+$/, ".webp");
+        setSendStep(`Загружаем фото ${i + 1} из ${fileEntries.length}...`);
+        const b64 = await compressImage(file!);
+        const filename = `${now}_${phone}_${key}.webp`;
+        fileUrls[key] = await uploadFile(b64, filename, "applications");
       }
+
       setSendStep("Отправляем заявку...");
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, name: form.fullName, ...encodedFiles }),
+        body: JSON.stringify({ ...form, name: form.fullName, ...fileUrls }),
       });
       if (res.ok) {
         const data = await res.json();

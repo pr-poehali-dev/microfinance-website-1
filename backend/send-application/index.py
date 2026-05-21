@@ -1,12 +1,9 @@
 """Отправка заявки на займ: сохранение в БД + файлы в S3 + уведомление в Telegram."""
 import json
-import base64
 import os
 import urllib.request
 from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import psycopg2
-import boto3
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
 TELEGRAM_CHAT_ID = "8540431915"
@@ -32,27 +29,6 @@ DB_FILE_COLS = {
     "previousPassports": "file_previous_passports",
 }
 
-
-def s3_client():
-    return boto3.client(
-        "s3",
-        endpoint_url="https://bucket.poehali.dev",
-        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-        aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
-    )
-
-
-def upload_one(key, s3_suffix, b64, filename, phone, now_ts):
-    s3 = s3_client()
-    file_data = base64.b64decode(b64)
-    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "webp"
-    s3_key = f"applications/{now_ts}_{phone.replace('+','')}_{s3_suffix}.{ext}"
-    ct = "image/webp" if ext == "webp" else "image/jpeg" if ext in ("jpg", "jpeg") else f"image/{ext}"
-    s3.put_object(Bucket="files", Key=s3_key, Body=file_data, ContentType=ct)
-    access_key = os.environ["AWS_ACCESS_KEY_ID"]
-    url = f"https://cdn.poehali.dev/projects/{access_key}/bucket/{s3_key}"
-    print(f"[send-application] uploaded {key} -> {url}")
-    return key, url
 
 
 def send_telegram_message(token: str, chat_id: str, text: str):
@@ -132,28 +108,12 @@ def handler(event: dict, context) -> dict:
     except Exception:
         days = 0
 
-    # Параллельная загрузка всех фото в S3
-    now_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # Файлы уже загружены фронтендом в S3 — получаем готовые URL
     file_urls: dict[str, str] = {}
-    upload_tasks = []
-    for key, s3_suffix in FILE_KEYS.items():
-        b64 = body.get(key, "")
-        filename = body.get(f"{key}_name", f"{key}.webp")
-        if b64:
-            upload_tasks.append((key, s3_suffix, b64, filename))
-
-    if upload_tasks:
-        with ThreadPoolExecutor(max_workers=4) as pool:
-            futures = {
-                pool.submit(upload_one, key, s3_suffix, b64, filename, phone, now_ts): key
-                for key, s3_suffix, b64, filename in upload_tasks
-            }
-            for future in as_completed(futures):
-                try:
-                    k, url = future.result()
-                    file_urls[k] = url
-                except Exception as ex:
-                    print(f"[send-application] upload error: {ex}")
+    for key in FILE_KEYS:
+        val = body.get(key, "")
+        if val and val.startswith("http"):
+            file_urls[key] = val
 
     # Сохраняем в БД
     import hashlib as _h, secrets as _s, string as _str
