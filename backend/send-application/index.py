@@ -199,22 +199,28 @@ def handler(event: dict, context) -> dict:
         <tr><td style="padding:36px 40px;">
           <p style="color:rgba(255,255,255,0.8);font-size:16px;margin:0 0 16px;">Здравствуйте, <b style="color:#fff;">{full_name or phone}</b>!</p>
           <p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0 0 24px;line-height:1.6;">
-            Ваша заявка #{app_id} принята и находится на рассмотрении.<br>Мы свяжемся с вами в течение 15 минут.
+            Ваша заявка <b style="color:#fff;">#{app_id}</b> принята и находится на рассмотрении.<br>
+            Мы свяжемся с вами в течение 15 минут.<br><br>
+            Ниже — данные для входа в ваш личный кабинет, где можно отслеживать статус заявки.
           </p>
           <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(124,58,237,0.15);border-radius:12px;border:1px solid rgba(124,58,237,0.3);margin-bottom:24px;">
-            <tr><td style="padding:20px 24px;">
-              <p style="margin:0 0 10px;color:rgba(255,255,255,0.5);font-size:12px;">ТЕЛЕФОН</p>
-              <p style="margin:0 0 16px;color:#fff;font-size:18px;font-weight:bold;">{phone}</p>
-              <p style="margin:0 0 10px;color:rgba(255,255,255,0.5);font-size:12px;">ПАРОЛЬ</p>
-              <p style="margin:0;color:#c084fc;font-size:22px;font-weight:bold;letter-spacing:2px;">{plain_password}</p>
+            <tr><td style="padding:24px;">
+              <p style="margin:0 0 6px;color:rgba(255,255,255,0.5);font-size:11px;text-transform:uppercase;letter-spacing:1px;">Логин (телефон)</p>
+              <p style="margin:0 0 20px;color:#fff;font-size:18px;font-weight:bold;">{phone}</p>
+              <p style="margin:0 0 6px;color:rgba(255,255,255,0.5);font-size:11px;text-transform:uppercase;letter-spacing:1px;">Пароль</p>
+              <p style="margin:0 0 24px;color:#c084fc;font-size:24px;font-weight:bold;letter-spacing:3px;">{plain_password}</p>
+              <a href="https://parafinans24.poehali.dev/login" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:15px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:10px;">Войти в личный кабинет →</a>
             </td></tr>
           </table>
+          <p style="color:rgba(255,255,255,0.3);font-size:12px;margin:0;line-height:1.6;">
+            Сохраните этот пароль. Если возникнут вопросы — звоните: <b style="color:rgba(255,255,255,0.5);">+7 (495) 663-51-24</b>
+          </p>
         </td></tr>
       </table>
     </td></tr>
   </table>
 </body></html>"""
-        send_email(to=email, subject=f"Заявка #{app_id} принята — данные для входа", html=email_html)
+        send_email(to=email, subject=f"Заявка #{app_id} принята — данные для входа в личный кабинет", html=email_html)
 
     tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
     now = datetime.now().strftime("%d.%m.%Y в %H:%M")
