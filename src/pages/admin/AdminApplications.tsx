@@ -82,6 +82,7 @@ export default function AdminApplications({
   }
 
   const filtered = apps.filter(a => {
+    if (a.status !== appFilter) return false;
     const q = search.toLowerCase();
     return !q || a.phone.includes(q) || (a.fullName || "").toLowerCase().includes(q) || (a.email || "").toLowerCase().includes(q);
   });

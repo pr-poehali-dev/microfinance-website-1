@@ -46,12 +46,18 @@ export default function AdminPage() {
 
   const hdrs = (tok = token) => ({ "Content-Type": "application/json", "Authorization": `Bearer ${tok}` });
 
-  function loadApps(filter = appFilter, tok = token) {
+  function loadApps(_filter?: string, tok = token) {
     if (!tok) return;
     setAppsLoading(true);
-    fetch(`${ADMIN_URL}?sub=applications&status=${filter}`, { headers: hdrs(tok) })
-      .then(r => r.json()).then(d => setApps(d.applications || []))
-      .catch(() => {}).finally(() => setAppsLoading(false));
+    const statuses = ["pending", "postponed", "approved", "rejected"];
+    Promise.all(
+      statuses.map(s =>
+        fetch(`${ADMIN_URL}?sub=applications&status=${s}`, { headers: hdrs(tok) })
+          .then(r => r.json()).then(d => d.applications || []).catch(() => [])
+      )
+    ).then(results => {
+      setApps(results.flat());
+    }).finally(() => setAppsLoading(false));
   }
 
   function loadUsers(tok = token) {
@@ -70,7 +76,6 @@ export default function AdminPage() {
   }
 
   useEffect(() => { if (token) { loadApps(); loadUsers(); } }, []);
-  useEffect(() => { if (token) loadApps(appFilter); }, [appFilter]);
 
   async function login(e: React.FormEvent) {
     e.preventDefault();
@@ -189,9 +194,9 @@ export default function AdminPage() {
         <button onClick={() => setTab("apps")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14,
             background: tab === "apps" ? "linear-gradient(135deg,#7c3aed,#a855f7)" : "rgba(255,255,255,0.07)", color: tab === "apps" ? "white" : "rgba(255,255,255,0.5)" }}>
-          Заявки {apps.length > 0 && tab !== "apps" ? `(${apps.length})` : ""}
+          Заявки {apps.filter(a => a.status === "pending").length > 0 && tab !== "apps" ? `(${apps.filter(a => a.status === "pending").length})` : ""}
         </button>
-        <button onClick={() => { setTab("clients"); loadUsers(); }}
+        <button onClick={() => setTab("clients")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14,
             background: tab === "clients" ? "linear-gradient(135deg,#7c3aed,#a855f7)" : "rgba(255,255,255,0.07)", color: tab === "clients" ? "white" : "rgba(255,255,255,0.5)" }}>
           Клиенты
