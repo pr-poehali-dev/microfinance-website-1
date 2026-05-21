@@ -200,7 +200,7 @@ export default function LoanFormFields({
             <input
               type="range"
               min={5000}
-              max={200000}
+              max={100000}
               step={5000}
               value={formAmount}
               onChange={(e) => {
@@ -210,12 +210,12 @@ export default function LoanFormFields({
               }}
               className="slider-custom w-full"
               style={{
-                background: `linear-gradient(to right, #7C3AED ${((formAmount - 5000) / (200000 - 5000)) * 100}%, rgba(124,58,237,0.2) ${((formAmount - 5000) / (200000 - 5000)) * 100}%)`,
+                background: `linear-gradient(to right, #7C3AED ${((formAmount - 5000) / (100000 - 5000)) * 100}%, rgba(124,58,237,0.2) ${((formAmount - 5000) / (100000 - 5000)) * 100}%)`,
               }}
             />
             <div className="flex justify-between text-xs text-white/30 mt-1">
               <span>5 000 ₽</span>
-              <span>200 000 ₽</span>
+              <span>100 000 ₽</span>
             </div>
           </div>
           <div>
@@ -228,7 +228,7 @@ export default function LoanFormFields({
             <input
               type="range"
               min={5}
-              max={730}
+              max={365}
               step={1}
               value={formDays}
               onChange={(e) => {
@@ -238,12 +238,12 @@ export default function LoanFormFields({
               }}
               className="slider-custom w-full"
               style={{
-                background: `linear-gradient(to right, #7C3AED ${((formDays - 5) / (730 - 5)) * 100}%, rgba(124,58,237,0.2) ${((formDays - 5) / (730 - 5)) * 100}%)`,
+                background: `linear-gradient(to right, #7C3AED ${((formDays - 5) / (365 - 5)) * 100}%, rgba(124,58,237,0.2) ${((formDays - 5) / (365 - 5)) * 100}%)`,
               }}
             />
             <div className="flex justify-between text-xs text-white/30 mt-1">
               <span>5 дней</span>
-              <span>730 дней</span>
+              <span>365 дней</span>
             </div>
           </div>
           <div className="rounded-xl px-4 py-3 space-y-2" style={{ background: "rgba(0,0,0,0.25)" }}>

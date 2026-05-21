@@ -9,8 +9,8 @@ export default function LoanCalculator({ amount, days, onAmountChange, onDaysCha
   const rate = 0.008;
   const interest = Math.round(amount * rate * days);
   const total = amount + interest;
-  const amountPct = ((amount - 5000) / (200000 - 5000)) * 100;
-  const daysPct = ((days - 5) / (730 - 5)) * 100;
+  const amountPct = ((amount - 5000) / (100000 - 5000)) * 100;
+  const daysPct = ((days - 5) / (365 - 5)) * 100;
 
   return (
     <section id="calc" className="py-24">
@@ -38,7 +38,7 @@ export default function LoanCalculator({ amount, days, onAmountChange, onDaysCha
                   <input
                     type="range"
                     min={5000}
-                    max={200000}
+                    max={100000}
                     step={1000}
                     value={amount}
                     onChange={(e) => onAmountChange(Number(e.target.value))}
@@ -49,7 +49,7 @@ export default function LoanCalculator({ amount, days, onAmountChange, onDaysCha
                   />
                   <div className="flex justify-between text-xs text-white/30 mt-1">
                     <span>5 000 ₽</span>
-                    <span>200 000 ₽</span>
+                    <span>100 000 ₽</span>
                   </div>
                 </div>
 
@@ -61,7 +61,7 @@ export default function LoanCalculator({ amount, days, onAmountChange, onDaysCha
                   <input
                     type="range"
                     min={5}
-                    max={730}
+                    max={365}
                     step={1}
                     value={days}
                     onChange={(e) => onDaysChange(Number(e.target.value))}
@@ -72,7 +72,7 @@ export default function LoanCalculator({ amount, days, onAmountChange, onDaysCha
                   />
                   <div className="flex justify-between text-xs text-white/30 mt-1">
                     <span>5 дней</span>
-                    <span>730 дней</span>
+                    <span>365 дней</span>
                   </div>
                 </div>
               </div>
