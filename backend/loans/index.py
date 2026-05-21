@@ -18,11 +18,11 @@ def get_conn():
 
 
 def get_user_by_token(cur, token: str):
+    t = token.replace("'", "''")
     cur.execute(
         f"SELECT u.id, u.phone, u.full_name, u.email FROM {SCHEMA}.sessions s "
         f"JOIN {SCHEMA}.users u ON u.id = s.user_id "
-        f"WHERE s.token = %s AND s.expires_at > NOW()",
-        (token,)
+        f"WHERE s.token = '{t}' AND s.expires_at > NOW()"
     )
     return cur.fetchone()
 
