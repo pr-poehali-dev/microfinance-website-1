@@ -100,7 +100,7 @@ def generate_contract_html(app_data: dict, loan_num: int) -> str:
     today = datetime.now()
     date_str = today.strftime("%d.%m.%Y")
     due_date = (today + timedelta(days=days)).strftime("%d.%m.%Y")
-    contract_num = f"{loan_num:05d}/{today.strftime('%Y')}"
+    contract_num = f"{str(loan_num).zfill(12)}/{today.strftime('%Y')}"
 
     amount_words = num_to_words(int(amount))
     total_words = num_to_words(int(total))
