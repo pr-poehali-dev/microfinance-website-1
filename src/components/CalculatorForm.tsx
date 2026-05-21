@@ -392,11 +392,7 @@ export default function CalculatorForm() {
                         style={{ background: "rgba(255,255,255,0.05)" }}
                       />
                     </div>
-                    <p className="text-white/30 text-xs mt-1.5 flex items-center gap-1">
-                      <span>Напишите нашему боту</span>
-                      <a href="https://t.me/parafinans24bot" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 transition-colors">@parafinans24bot</a>
-                      <span>команду /start перед подачей заявки</span>
-                    </p>
+
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
