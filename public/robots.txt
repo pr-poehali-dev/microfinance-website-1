@@ -12,3 +12,7 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /dashboard
+
+Sitemap: https://parafinans24.ru/sitemap.xml
