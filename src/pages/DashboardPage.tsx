@@ -106,11 +106,11 @@ export default function DashboardPage() {
     if (!token) { navigate("/login"); return; }
     loadData(token, true);
 
-    // Автообновление каждые 10 секунд — чтобы статус одобрения появлялся без перезагрузки
+    // Автообновление каждые 30 секунд — чтобы статус одобрения появлялся без перезагрузки
     const interval = setInterval(() => {
       const t = localStorage.getItem("token");
       if (t) loadData(t, false);
-    }, 10000);
+    }, 30000);
     return () => clearInterval(interval);
   }, [navigate]);
 

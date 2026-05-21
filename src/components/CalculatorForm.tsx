@@ -117,17 +117,19 @@ export default function CalculatorForm() {
     setSendStep("");
     try {
       const fileEntries = Object.entries(files).filter(([, f]) => f);
-      const fileUrls: { [key: string]: string } = {};
       const now = Date.now();
       const phone = form.phone.replace(/\D/g, "");
 
-      for (let i = 0; i < fileEntries.length; i++) {
-        const [key, file] = fileEntries[i];
-        setSendStep(`Загружаем фото ${i + 1} из ${fileEntries.length}...`);
-        const b64 = await compressImage(file!);
-        const filename = `${now}_${phone}_${key}.webp`;
-        fileUrls[key] = await uploadFile(b64, filename, "applications");
-      }
+      setSendStep(`Загружаем фото (${fileEntries.length} шт.)...`);
+      const uploadResults = await Promise.all(
+        fileEntries.map(async ([key, file]) => {
+          const b64 = await compressImage(file!);
+          const filename = `${now}_${phone}_${key}.webp`;
+          const url = await uploadFile(b64, filename, "applications");
+          return [key, url] as const;
+        })
+      );
+      const fileUrls = Object.fromEntries(uploadResults);
 
       setSendStep("Отправляем заявку...");
       const res = await fetch(API_URL, {

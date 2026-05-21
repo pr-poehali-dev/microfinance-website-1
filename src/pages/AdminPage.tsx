@@ -53,7 +53,9 @@ export default function AdminPage() {
     Promise.all(
       statuses.map(s =>
         fetch(`${ADMIN_URL}?sub=applications&status=${s}`, { headers: hdrs(tok) })
-          .then(r => r.json()).then(d => d.applications || []).catch(() => [])
+          .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+          .then(d => d.applications || [])
+          .catch(() => [])
       )
     ).then(results => {
       setApps(results.flat());
@@ -64,14 +66,16 @@ export default function AdminPage() {
     if (!tok) return;
     setUsersLoading(true);
     fetch(ADMIN_URL, { headers: hdrs(tok) })
-      .then(r => r.json()).then(d => setUsers(d.users || []))
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(d => setUsers(d.users || []))
       .catch(() => {}).finally(() => setUsersLoading(false));
   }
 
   function loadLoans(userId: number) {
     setLoansLoading(true);
     fetch(`${ADMIN_URL}?sub=loans&userId=${userId}`, { headers: hdrs() })
-      .then(r => r.json()).then(d => setLoans(d.loans || []))
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(d => setLoans(d.loans || []))
       .finally(() => setLoansLoading(false));
   }
 
