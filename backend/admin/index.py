@@ -252,14 +252,23 @@ def handler(event: dict, context) -> dict:
         print(f"[applications] status_filter={status_filter!r}")
         sf = status_filter.replace("'", "''")
         cur.execute(f"""
-            SELECT id, full_name, phone, email, amount, days, birth_date,
-                   passport_series, passport_number, status, created_at, reject_reason,
-                   telegram_id, birth_place, passport_date, passport_code, passport_by,
-                   file_passport, file_registration, file_selfie, file_previous_passports,
-                   workplace, position, active_loans, salary, contact_person, sb_score,
-                   approved_amount, client_password, card_number
-            FROM {SCHEMA}.applications
-            WHERE status = '{sf}' ORDER BY created_at DESC
+            SELECT a.id, a.full_name, a.phone, a.email, a.amount, a.days, a.birth_date,
+                   a.passport_series, a.passport_number, a.status, a.created_at, a.reject_reason,
+                   a.telegram_id, a.birth_place, a.passport_date, a.passport_code, a.passport_by,
+                   a.file_passport, a.file_registration, a.file_selfie, a.file_previous_passports,
+                   a.workplace, a.position, a.active_loans, a.salary, a.contact_person, a.sb_score,
+                   a.approved_amount, a.client_password, a.card_number,
+                   a.approved_rate, a.approved_days,
+                   l.id AS loan_id, l.signed, l.signed_at, l.status AS loan_status, l.created_at AS loan_created_at
+            FROM {SCHEMA}.applications a
+            LEFT JOIN {SCHEMA}.loans l ON l.user_id = (
+                SELECT id FROM {SCHEMA}.users WHERE phone = a.phone LIMIT 1
+            ) AND l.id = (
+                SELECT id FROM {SCHEMA}.loans WHERE user_id = (
+                    SELECT id FROM {SCHEMA}.users WHERE phone = a.phone LIMIT 1
+                ) ORDER BY created_at DESC LIMIT 1
+            )
+            WHERE a.status = '{sf}' ORDER BY a.created_at DESC
         """)
         rows = cur.fetchall()
         print(f"[applications] found {len(rows)} rows")
@@ -281,6 +290,13 @@ def handler(event: dict, context) -> dict:
             "approvedAmount": float(r[27]) if r[27] else None,
             "clientPassword": r[28] or "",
             "cardNumber": r[29] or "",
+            "approvedRate": float(r[30]) if r[30] else None,
+            "approvedDays": int(r[31]) if r[31] else None,
+            "loanId": r[32],
+            "loanSigned": bool(r[33]) if r[33] is not None else False,
+            "loanSignedAt": r[34].strftime("%d.%m.%Y в %H:%M") if r[34] else None,
+            "loanStatus": r[35] or None,
+            "loanDisbursedAt": r[36].strftime("%d.%m.%Y в %H:%M") if r[36] else None,
         } for r in rows]
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"applications": apps}, ensure_ascii=False)}
 
@@ -586,6 +602,45 @@ def handler(event: dict, context) -> dict:
             f"🔖 <b>ID:</b> {user_id}"
         )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "userId": user_id}, ensure_ascii=False)}
+
+    # --- ВЫДАТЬ ЗАЙМ (POST, sub='disburse', loanId=...) ---
+    if sub == "disburse" and method == "POST":
+        loan_id = int(qs.get("loanId", 0))
+        if not loan_id:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Не указан loanId"})}
+
+        cur.execute(
+            f"SELECT l.amount, l.days, l.rate, u.phone, u.full_name, u.id "
+            f"FROM {SCHEMA}.loans l JOIN {SCHEMA}.users u ON u.id = l.user_id "
+            f"WHERE l.id = {loan_id}"
+        )
+        row = cur.fetchone()
+        if not row:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Займ не найден"})}
+
+        amount, days, rate, phone, full_name, user_id = row
+        cur.execute(
+            f"UPDATE {SCHEMA}.loans SET status='active', signed=TRUE, signed_at=COALESCE(signed_at, NOW()) WHERE id={loan_id}"
+        )
+        conn.commit(); cur.close(); conn.close()
+
+        interest = round(float(amount) * float(rate) * int(days))
+        total = float(amount) + interest
+        now = datetime.now().strftime("%d.%m.%Y в %H:%M")
+        tg(
+            f"💸 <b>Займ выдан</b>\n"
+            f"⏱ {now}\n\n"
+            f"👤 <b>Клиент:</b> {full_name or phone}\n"
+            f"📞 <b>Телефон:</b> {phone}\n"
+            f"💵 <b>Сумма:</b> {int(amount):,} ₽\n".replace(",", " ") +
+            f"📅 <b>Срок:</b> {days} дн.\n"
+            f"📈 <b>Ставка:</b> {round(float(rate) * 100, 1)}%/день\n"
+            f"💳 <b>К возврату:</b> {int(total):,} ₽\n".replace(",", " ") +
+            f"🔖 <b>Займ №:</b> {loan_id}"
+        )
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     # --- ОБНОВИТЬ ПОЛЯ СБ ЗАЯВКИ (POST, sub='app_update', appId=...) ---
     if sub == "app_update" and method == "POST":

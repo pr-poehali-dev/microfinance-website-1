@@ -7,7 +7,14 @@ export interface App {
   filePassport: string; fileRegistration: string; fileSelfie: string; filePreviousPassports: string;
   workplace: string; position: string; activeLoans: string; salary: number; contactPerson: string; sbScore: string; cardNumber: string;
   approvedAmount: number | null;
+  approvedRate: number | null;
+  approvedDays: number | null;
   clientPassword: string;
+  loanId: number | null;
+  loanSigned: boolean;
+  loanSignedAt: string | null;
+  loanStatus: string | null;
+  loanDisbursedAt: string | null;
 }
 export interface User { id: number; phone: string; fullName: string; email: string; createdAt: string; loanCount: number; debt: number; }
 export interface Loan { id: number; amount: number; days: number; ratePercent: number; status: string; createdAt: string; }

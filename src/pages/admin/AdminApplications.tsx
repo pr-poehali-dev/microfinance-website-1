@@ -45,6 +45,20 @@ export default function AdminApplications({
   const [sbEdits, setSbEdits] = useState<Record<number, SbFields>>({});
   const [sbSaving, setSbSaving] = useState<Record<number, boolean>>({});
   const [sbSaved, setSbSaved] = useState<Record<number, boolean>>({});
+  const [disbursing, setDisbursing] = useState<Record<number, boolean>>({});
+  const [disbursed, setDisbursed] = useState<Record<number, boolean>>({});
+
+  async function handleDisburse(app: App) {
+    if (!app.loanId) return;
+    if (!window.confirm(`Выдать займ клиенту ${app.fullName || app.phone} на сумму ${(app.approvedAmount ?? app.amount).toLocaleString("ru-RU")} ₽?`)) return;
+    setDisbursing(p => ({ ...p, [app.id]: true }));
+    await fetch(`${ADMIN_URL}?sub=disburse&loanId=${app.loanId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+    });
+    setDisbursing(p => ({ ...p, [app.id]: false }));
+    setDisbursed(p => ({ ...p, [app.id]: true }));
+  }
 
   const getSb = useCallback((app: App): SbFields => sbEdits[app.id] ?? {
     workplace: app.workplace || "", position: app.position || "",
@@ -136,6 +150,35 @@ export default function AdminApplications({
                   <div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Срок</div><div style={{ color: "white", fontWeight: 600 }}>{app.days} дн.</div></div>
                 </div>
 
+                {/* Блок активного займа — выдан */}
+                {app.status === "approved" && app.loanId && (app.loanStatus === "active" || disbursed[app.id]) && (
+                  <div style={{ background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.3)", borderRadius: 12, padding: "14px 16px", marginBottom: 12 }}>
+                    <div style={{ color: "#38bdf8", fontWeight: 700, fontSize: 13, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+                      <Icon name="Banknote" size={14} />Займ выдан
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: 8 }}>
+                      {[
+                        ["Сумма", `${(app.approvedAmount ?? app.amount).toLocaleString("ru-RU")} ₽`],
+                        ["Срок", `${app.approvedDays ?? app.days} дн.`],
+                        ["Ставка", `${app.approvedRate ? (app.approvedRate * 100).toFixed(1) : "0.8"}% / день`],
+                        ["К возврату", (() => {
+                          const amt = app.approvedAmount ?? app.amount;
+                          const rate = app.approvedRate ?? 0.008;
+                          const days = app.approvedDays ?? app.days;
+                          return `${Math.round(amt + amt * rate * days).toLocaleString("ru-RU")} ₽`;
+                        })()],
+                        ...(app.loanDisbursedAt ? [["Выдан", app.loanDisbursedAt]] : []),
+                        ...(app.cardNumber ? [["Карта/СБП", app.cardNumber]] : []),
+                      ].map(([label, value]) => (
+                        <div key={label}>
+                          <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>{label}</div>
+                          <div style={{ color: "white", fontSize: 13, fontWeight: 600 }}>{value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Данные для входа клиента */}
                 {app.clientPassword && (
                   <div style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.35)", borderRadius: 12, padding: "14px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
@@ -223,10 +266,63 @@ export default function AdminApplications({
 
               {/* Кнопки действий — Одобренные */}
               {app.status === "approved" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 140 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 160 }}>
+
+                  {/* Статус подписания договора */}
+                  {app.loanId && (
+                    <div style={{
+                      borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 600,
+                      display: "flex", alignItems: "center", gap: 8,
+                      background: app.loanSigned ? "rgba(74,222,128,0.12)" : "rgba(251,191,36,0.12)",
+                      border: `1px solid ${app.loanSigned ? "rgba(74,222,128,0.35)" : "rgba(251,191,36,0.35)"}`,
+                      color: app.loanSigned ? "#4ade80" : "#fbbf24",
+                    }}>
+                      <Icon name={app.loanSigned ? "FileCheck" : "FileClock"} size={15} />
+                      <div>
+                        <div>{app.loanSigned ? "Договор подписан" : "Ожидает подписи"}</div>
+                        {app.loanSignedAt && <div style={{ fontSize: 11, fontWeight: 400, opacity: 0.8 }}>{app.loanSignedAt}</div>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Статус займа — выдан */}
+                  {app.loanStatus === "active" && disbursed[app.id] || (app.loanStatus === "active" && app.loanDisbursedAt) ? (
+                    <div style={{
+                      borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 600,
+                      display: "flex", alignItems: "center", gap: 8,
+                      background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.35)", color: "#38bdf8",
+                    }}>
+                      <Icon name="BadgeCheck" size={15} />
+                      <div>
+                        <div>Займ выдан</div>
+                        {app.loanDisbursedAt && <div style={{ fontSize: 11, fontWeight: 400, opacity: 0.8 }}>{app.loanDisbursedAt}</div>}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {/* Кнопка "Выдать займ" — только если подписан и ещё не выдан */}
+                  {app.loanId && app.loanSigned && app.loanStatus !== "active" && !disbursed[app.id] && (
+                    <button
+                      onClick={() => handleDisburse(app)}
+                      disabled={disbursing[app.id]}
+                      style={{ background: "linear-gradient(135deg,#0ea5e9,#38bdf8)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6, opacity: disbursing[app.id] ? 0.7 : 1 }}>
+                      {disbursing[app.id]
+                        ? <><Icon name="Loader2" size={15} className="animate-spin" />Выдаём...</>
+                        : <><Icon name="Banknote" size={15} />Выдать займ</>
+                      }
+                    </button>
+                  )}
+
+                  {/* Если не подписан — подсказка */}
+                  {app.loanId && !app.loanSigned && (
+                    <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, lineHeight: 1.4 }}>
+                      Кнопка появится после подписания договора клиентом
+                    </div>
+                  )}
+
                   <button onClick={() => onRestore(app.id)}
-                    style={{ background: "linear-gradient(135deg,#d97706,#f59e0b)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
-                    <Icon name="RotateCcw" size={16} />Вернуть в ожидание
+                    style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+                    <Icon name="RotateCcw" size={14} />Вернуть в ожидание
                   </button>
                 </div>
               )}
