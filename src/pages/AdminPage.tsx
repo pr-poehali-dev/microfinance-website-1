@@ -181,6 +181,13 @@ export default function AdminPage() {
     }
   }
 
+  async function partnerRemind(appId: number) {
+    const r = await fetch(`${ADMIN_URL}?sub=partner_remind&appId=${appId}`, { method: "POST", headers: hdrs() });
+    const d = await r.json();
+    if (r.ok) setAppMsg("Напоминание отправлено в Telegram.");
+    else setAppMsg(d.error || "Ошибка отправки.");
+  }
+
   async function uploadDocs(userId: number, files: Record<string, string>) {
     const r = await fetch(`${ADMIN_URL}?sub=docs_upload&userId=${userId}`, { method: "POST", headers: hdrs(), body: JSON.stringify(files) });
     if (!r.ok) throw new Error("upload failed");
@@ -243,7 +250,7 @@ export default function AdminPage() {
             appRate={appRate} setAppRate={setAppRate}
             appAmount={appAmount} setAppAmount={setAppAmount}
             rejectReason={rejectReason} setRejectReason={setRejectReason}
-            onApprove={approveApp} onReject={rejectApp} onPostpone={postponeApp} onRestore={restoreApp} onPartnerApprove={partnerApprove}
+            onApprove={approveApp} onReject={rejectApp} onPostpone={postponeApp} onRestore={restoreApp} onPartnerApprove={partnerApprove} onPartnerRemind={partnerRemind}
             setLightbox={setLightbox}
             token={token}
           />

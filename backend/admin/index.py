@@ -564,6 +564,29 @@ def handler(event: dict, context) -> dict:
             )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
+    # --- НАПОМНИТЬ КЛИЕНТУ В TELEGRAM (POST, sub='partner_remind', appId=...) ---
+    if sub == "partner_remind" and method == "POST":
+        app_id = qs.get("appId", "")
+        app_id_e = str(app_id).replace("'", "''")
+        cur.execute(f"SELECT full_name, telegram_id, approved_amount, approved_days, approved_rate FROM {SCHEMA}.applications WHERE id='{app_id_e}' AND status='partner_card'")
+        app = cur.fetchone()
+        cur.close(); conn.close()
+        if not app:
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
+        full_name, tg_username, p_amount, p_days, p_rate = app
+        if not tg_username:
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "У клиента нет Telegram"})}
+        loan_info = ""
+        if p_amount and p_days and p_rate:
+            interest = round(float(p_amount) * float(p_rate) * int(p_days))
+            loan_info = f"\n\n💰 <b>Условия займа:</b>\nСумма: {int(float(p_amount)):,} ₽\nСрок: {p_days} дней\nСтавка: {round(float(p_rate)*100,1)}% в день\nК возврату: {int(float(p_amount)+interest):,} ₽"
+        tg_client(tg_username,
+            f"🔔 <b>Напоминание по вашей заявке</b>{loan_info}\n\n"
+            "Для получения займа необходимо оформить карту нашего партнёра.\n"
+            "Войдите в личный кабинет по номеру телефона и нажмите кнопку «Оформить карту партнёра»."
+        )
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     # --- ВЕРНУТЬ ЗАЯВКУ В ОЖИДАНИЕ (POST, sub='restore', appId=...) ---
     if sub == "restore" and method == "POST":
         app_id = qs.get("appId", "")

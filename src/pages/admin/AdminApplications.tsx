@@ -33,6 +33,7 @@ interface Props {
   onPostpone: (appId: number) => void;
   onRestore: (appId: number) => void;
   onPartnerApprove: (appId: number, conditions: { amount: number; days: number; rate: number }) => void;
+  onPartnerRemind: (appId: number) => void;
   setLightbox: (url: string) => void;
   token: string;
 }
@@ -42,7 +43,7 @@ export default function AdminApplications({
   appMsg, appErr2, appProcessing,
   selApp, setSelApp, appAction, setAppAction, setAppMsg, setAppErr2,
   appRate, setAppRate, appAmount, setAppAmount, rejectReason, setRejectReason,
-  onApprove, onReject, onPostpone, onRestore, onPartnerApprove, setLightbox, token,
+  onApprove, onReject, onPostpone, onRestore, onPartnerApprove, onPartnerRemind, setLightbox, token,
 }: Props) {
   const [search, setSearch] = useState("");
   const [sbEdits, setSbEdits] = useState<Record<number, SbFields>>({});
@@ -349,6 +350,12 @@ export default function AdminApplications({
                   <div style={{ padding: "8px 12px", borderRadius: 10, fontSize: 12, fontWeight: 600, textAlign: "center", background: "rgba(168,85,247,0.15)", color: "#c084fc", border: "1px solid rgba(168,85,247,0.3)" }}>
                     Ожидает карту партнёра
                   </div>
+                  {app.telegramId && (
+                    <button onClick={() => onPartnerRemind(app.id)}
+                      style={{ background: "linear-gradient(135deg,#0ea5e9,#38bdf8)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                      <Icon name="Send" size={16} />Напомнить в TG
+                    </button>
+                  )}
                   <button onClick={() => onRestore(app.id)}
                     style={{ background: "linear-gradient(135deg,#d97706,#f59e0b)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
                     <Icon name="RotateCcw" size={16} />Вернуть в ожидание
