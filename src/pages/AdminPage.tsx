@@ -16,7 +16,7 @@ export default function AdminPage() {
 
   const [tab, setTab]   = useState<"apps" | "clients">("apps");
   const [apps, setApps] = useState<App[]>([]);
-  const [appFilter, setAppFilter] = useState<"pending"|"approved"|"rejected"|"postponed">("pending");
+  const [appFilter, setAppFilter] = useState<"pending"|"approved"|"rejected"|"postponed"|"partner_card">("pending");
   const [appsLoading, setAppsLoading] = useState(false);
 
   const [users, setUsers]       = useState<User[]>([]);
@@ -49,7 +49,7 @@ export default function AdminPage() {
   function loadApps(_filter?: string, tok = token) {
     if (!tok) return;
     setAppsLoading(true);
-    const statuses = ["pending", "postponed", "approved", "rejected"];
+    const statuses = ["pending", "postponed", "approved", "rejected", "partner_card"];
     Promise.all(
       statuses.map(s =>
         fetch(`${ADMIN_URL}?sub=applications&status=${s}`, { headers: hdrs(tok) })

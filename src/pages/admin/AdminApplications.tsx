@@ -11,8 +11,8 @@ interface SbFields { workplace: string; position: string; activeLoans: string; s
 interface Props {
   apps: App[];
   appsLoading: boolean;
-  appFilter: "pending" | "approved" | "rejected" | "postponed";
-  setAppFilter: (f: "pending" | "approved" | "rejected" | "postponed") => void;
+  appFilter: "pending" | "approved" | "rejected" | "postponed" | "partner_card";
+  setAppFilter: (f: "pending" | "approved" | "rejected" | "postponed" | "partner_card") => void;
   appMsg: string;
   appErr2: string;
   appProcessing: boolean;
@@ -92,7 +92,7 @@ export default function AdminApplications({
     <div>
       {/* Фильтр + Поиск */}
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-        {([["pending","Ожидают","Clock","#f59e0b"],["postponed","Отложенные","PhoneMissed","#60a5fa"],["approved","Одобренные","CheckCircle","#22c55e"],["rejected","Отклонённые","XCircle","#ef4444"]] as const).map(([f, label, icon, color]) => (
+        {([["pending","Ожидают","Clock","#f59e0b"],["partner_card","Партнёр","CreditCard","#a855f7"],["postponed","Отложенные","PhoneMissed","#60a5fa"],["approved","Одобренные","CheckCircle","#22c55e"],["rejected","Отклонённые","XCircle","#ef4444"]] as const).map(([f, label, icon, color]) => (
           <button key={f} onClick={() => setAppFilter(f)}
             style={{ padding: "8px 18px", borderRadius: 12, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 8,
               background: appFilter === f ? color : "rgba(255,255,255,0.07)", color: appFilter === f ? "white" : "rgba(255,255,255,0.5)" }}>
