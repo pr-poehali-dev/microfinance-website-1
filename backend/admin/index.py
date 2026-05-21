@@ -657,6 +657,27 @@ def handler(event: dict, context) -> dict:
         )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
+    # --- ОБНОВИТЬ ДАННЫЕ КЛИЕНТА (POST, sub='user_update', userId=...) ---
+    if sub == "user_update" and method == "POST":
+        user_id = int(qs.get("userId", 0))
+        if not user_id:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Не указан userId"})}
+
+        full_name = (body.get("fullName") or "").replace("'", "''")
+        phone     = (body.get("phone") or "").replace("'", "''")
+        email     = (body.get("email") or "").replace("'", "''")
+        new_pass  = (body.get("password") or "").strip()
+
+        sets = [f"full_name = '{full_name}'", f"phone = '{phone}'", f"email = '{email}'"]
+        if new_pass:
+            pw_hash = hashlib.sha256(new_pass.encode()).hexdigest()
+            sets.append(f"password_hash = '{pw_hash}'")
+
+        cur.execute(f"UPDATE {SCHEMA}.users SET {', '.join(sets)} WHERE id = {user_id}")
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True}, ensure_ascii=False)}
+
     # --- ОБНОВИТЬ ПОЛЯ СБ ЗАЯВКИ (POST, sub='app_update', appId=...) ---
     if sub == "app_update" and method == "POST":
         app_id = qs.get("appId", "")

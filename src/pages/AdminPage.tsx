@@ -26,7 +26,7 @@ export default function AdminPage() {
   const [loans, setLoans]       = useState<Loan[]>([]);
   const [loansLoading, setLoansLoading] = useState(false);
 
-  const [clientView, setClientView] = useState<"loans"|"offer"|"addloan"|"addclient">("loans");
+  const [clientView, setClientView] = useState<"loans"|"offer"|"addloan"|"addclient"|"edit">("loans");
   const [offer, setOffer] = useState({ amount: "", days: "", rate: "0.8" });
   const [newLoan, setNewLoan] = useState({ amount: "", days: "", rate: "0.8" });
   const [newClient, setNewClient] = useState({ phone: "", fullName: "", password: "" });
@@ -164,6 +164,12 @@ export default function AdminPage() {
     loadUsers();
   }
 
+  async function updateUser(userId: number, data: { fullName: string; phone: string; email: string; password: string }) {
+    const r = await fetch(`${ADMIN_URL}?sub=user_update&userId=${userId}`, { method: "POST", headers: hdrs(), body: JSON.stringify(data) });
+    if (!r.ok) throw new Error("update failed");
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, fullName: data.fullName, phone: data.phone, email: data.email } : u));
+  }
+
   async function changeStatus(loanId: number, status: string) {
     await fetch(`${ADMIN_URL}?sub=loan&loanId=${loanId}`, { method: "PUT", headers: hdrs(), body: JSON.stringify({ status }) });
     if (selUser) loadLoans(selUser.id);
@@ -241,6 +247,7 @@ export default function AdminPage() {
             onLoadLoans={loadLoans}
             onSendOffer={sendOffer} onAddLoan={addLoan}
             onAddClient={addClient} onChangeStatus={changeStatus}
+            onUpdateUser={updateUser}
           />
         )}
       </div>
