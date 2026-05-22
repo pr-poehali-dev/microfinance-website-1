@@ -1,3 +1,4 @@
+import { memo } from "react";
 import Icon from "@/components/ui/icon";
 
 interface LoanSubmittedScreenProps {
@@ -6,7 +7,7 @@ interface LoanSubmittedScreenProps {
   fmtTime: (sec: number) => string;
 }
 
-export default function LoanSubmittedScreen({ timerSec, timerDone, fmtTime }: LoanSubmittedScreenProps) {
+function LoanSubmittedScreen({ timerSec, timerDone, fmtTime }: LoanSubmittedScreenProps) {
   return (
     <div className="text-center py-8">
       <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
@@ -49,3 +50,5 @@ export default function LoanSubmittedScreen({ timerSec, timerDone, fmtTime }: Lo
     </div>
   );
 }
+
+export default memo(LoanSubmittedScreen);

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 
@@ -47,11 +48,24 @@ const STEPS = [
   { num: "03", title: "Получите деньги", desc: "Переведём на карту или выдадим наличными в офисе" },
 ];
 
+const HERO_STATS = [
+  { v: "15 мин", l: "одобрение" },
+  { v: "0 ₽", l: "без комиссий" },
+  { v: "24/7", l: "поддержка" },
+];
+
+const ABOUT_FEATURES = [
+  { icon: "Award", text: "Лицензия ЦБ РФ" },
+  { icon: "Lock", text: "Защита данных" },
+  { icon: "HeartHandshake", text: "Ответственный займ" },
+  { icon: "BadgeCheck", text: "Прозрачные условия" },
+];
+
 interface HeroAboutServicesProps {
   scrollTo: (href: string) => void;
 }
 
-export default function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
+function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
   const navigate = useNavigate();
   return (
     <>
@@ -98,11 +112,7 @@ export default function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) 
             </div>
 
             <div className="flex flex-wrap gap-6 mt-12">
-              {[
-                { v: "15 мин", l: "одобрение" },
-                { v: "0 ₽", l: "без комиссий" },
-                { v: "24/7", l: "поддержка" },
-              ].map((s) => (
+              {HERO_STATS.map((s) => (
                 <div key={s.l}>
                   <div className="font-oswald text-2xl font-bold text-purple-300">{s.v}</div>
                   <div className="text-white/50 text-sm">{s.l}</div>
@@ -172,12 +182,7 @@ export default function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) 
                 Мы верим, что доступ к деньгам должен быть простым для каждого. Именно поэтому мы упростили процесс до минимума: заявка онлайн, решение за 15 минут, деньги на карте.
               </p>
               <div className="grid grid-cols-2 gap-4">
-                {[
-                  { icon: "Award", text: "Лицензия ЦБ РФ" },
-                  { icon: "Lock", text: "Защита данных" },
-                  { icon: "HeartHandshake", text: "Ответственный займ" },
-                  { icon: "BadgeCheck", text: "Прозрачные условия" },
-                ].map((f) => (
+                {ABOUT_FEATURES.map((f) => (
                   <div key={f.text} className="flex items-center gap-3 glass rounded-xl p-3">
                     <Icon name={f.icon} size={18} className="text-purple-400 shrink-0" />
                     <span className="text-white/80 text-sm">{f.text}</span>
@@ -259,3 +264,5 @@ export default function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) 
     </>
   );
 }
+
+export default memo(HeroAboutServices);

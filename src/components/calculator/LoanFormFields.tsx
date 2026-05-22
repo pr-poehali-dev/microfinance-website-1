@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import Icon from "@/components/ui/icon";
 
 interface FormState {
@@ -34,11 +35,26 @@ interface LoanFormFieldsProps {
 const inputCls = "w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors";
 const inputStyle = { background: "rgba(255,255,255,0.05)" };
 
+const FILE_FIELDS = [
+  { key: "passportMain", label: "Паспорт — главная страница" },
+  { key: "registration", label: "Прописка (страница регистрации)" },
+  { key: "selfie", label: "Селфи с паспортом" },
+  { key: "previousPassports", label: "О ранее выданных паспортах" },
+] as const;
+
 export default function LoanFormFields({
   form, setForm, files, onFileChange,
   formAmount, setFormAmount, formDays, setFormDays,
   sending, sendStep, sendError, onSubmit,
 }: LoanFormFieldsProps) {
+  const calc = useMemo(() => {
+    const interest = Math.round(formAmount * 0.008 * formDays);
+    const total = formAmount + interest;
+    const amountBg = `linear-gradient(to right, #7C3AED ${((formAmount - 5000) / (100000 - 5000)) * 100}%, rgba(124,58,237,0.2) ${((formAmount - 5000) / (100000 - 5000)) * 100}%)`;
+    const daysBg = `linear-gradient(to right, #7C3AED ${((formDays - 5) / (365 - 5)) * 100}%, rgba(124,58,237,0.2) ${((formDays - 5) / (365 - 5)) * 100}%)`;
+    return { interest, total, amountBg, daysBg };
+  }, [formAmount, formDays]);
+
   return (
     <form onSubmit={onSubmit} className="space-y-5">
       <div>
@@ -209,9 +225,7 @@ export default function LoanFormFields({
                 setForm({ ...form, amount: String(val) });
               }}
               className="slider-custom w-full"
-              style={{
-                background: `linear-gradient(to right, #7C3AED ${((formAmount - 5000) / (100000 - 5000)) * 100}%, rgba(124,58,237,0.2) ${((formAmount - 5000) / (100000 - 5000)) * 100}%)`,
-              }}
+              style={{ background: calc.amountBg }}
             />
             <div className="flex justify-between text-xs text-white/30 mt-1">
               <span>5 000 ₽</span>
@@ -237,9 +251,7 @@ export default function LoanFormFields({
                 setForm({ ...form, days: String(val) });
               }}
               className="slider-custom w-full"
-              style={{
-                background: `linear-gradient(to right, #7C3AED ${((formDays - 5) / (365 - 5)) * 100}%, rgba(124,58,237,0.2) ${((formDays - 5) / (365 - 5)) * 100}%)`,
-              }}
+              style={{ background: calc.daysBg }}
             />
             <div className="flex justify-between text-xs text-white/30 mt-1">
               <span>5 дней</span>
@@ -253,11 +265,11 @@ export default function LoanFormFields({
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-white/50">Проценты (0.8% × {formDays} дн.)</span>
-              <span className="text-white/80">{Math.round(formAmount * 0.008 * formDays).toLocaleString("ru-RU")} ₽</span>
+              <span className="text-white/80">{calc.interest.toLocaleString("ru-RU")} ₽</span>
             </div>
             <div className="border-t border-white/10 pt-2 flex justify-between items-center">
               <span className="text-white font-semibold">К возврату</span>
-              <span className="font-bold text-2xl gradient-text">{(formAmount + Math.round(formAmount * 0.008 * formDays)).toLocaleString("ru-RU")} ₽</span>
+              <span className="font-bold text-2xl gradient-text">{calc.total.toLocaleString("ru-RU")} ₽</span>
             </div>
           </div>
         </div>
@@ -267,12 +279,7 @@ export default function LoanFormFields({
       <div className="pt-2">
         <div className="text-white/70 text-sm mb-3 font-medium">Документы (фото или скан)</div>
         <div className="space-y-3">
-          {[
-            { key: "passportMain", label: "Паспорт — главная страница" },
-            { key: "registration", label: "Прописка (страница регистрации)" },
-            { key: "selfie", label: "Селфи с паспортом" },
-            { key: "previousPassports", label: "О ранее выданных паспортах" },
-          ].map(({ key, label }) => (
+          {FILE_FIELDS.map(({ key, label }) => (
             <label
               key={key}
               className="flex items-center gap-3 rounded-xl px-4 py-3 border border-white/10 cursor-pointer hover:border-purple-500 transition-colors"

@@ -1,6 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
+
+const FORM_FEATURES = [
+  { icon: "Shield", text: "Ваши данные надёжно защищены" },
+  { icon: "Clock", text: "Ответ в течение 15 минут" },
+  { icon: "CreditCard", text: "Перевод на любую карту" },
+] as const;
 import LoanCalculator from "./calculator/LoanCalculator";
 import LoanFormFields from "./calculator/LoanFormFields";
 import LoanSubmittedScreen from "./calculator/LoanSubmittedScreen";
@@ -60,11 +66,11 @@ export default function CalculatorForm() {
     return () => clearInterval(timerRef.current!);
   }, [submitted]);
 
-  const fmtTime = (sec: number) => {
+  const fmtTime = useCallback((sec: number) => {
     const m = Math.floor(sec / 60).toString().padStart(2, "0");
     const s = (sec % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
-  };
+  }, []);
 
   const handleFileChange = (key: string, file: File | null) => {
     setFiles((prev) => ({ ...prev, [key]: file }));
@@ -173,11 +179,7 @@ export default function CalculatorForm() {
                 Заполните короткую форму — и мы перезвоним вам в течение 15 минут. Без очередей, без лишних бумаг.
               </p>
               <div className="space-y-4">
-                {[
-                  { icon: "Shield", text: "Ваши данные надёжно защищены" },
-                  { icon: "Clock", text: "Ответ в течение 15 минут" },
-                  { icon: "CreditCard", text: "Перевод на любую карту" },
-                ].map((f) => (
+                {FORM_FEATURES.map((f) => (
                   <div key={f.text} className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-purple-600/20 flex items-center justify-center shrink-0">
                       <Icon name={f.icon} size={16} className="text-purple-400" />

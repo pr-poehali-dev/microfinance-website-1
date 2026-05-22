@@ -1,3 +1,5 @@
+import { useMemo, memo } from "react";
+
 interface LoanCalculatorProps {
   amount: number;
   days: number;
@@ -5,12 +7,18 @@ interface LoanCalculatorProps {
   onDaysChange: (v: number) => void;
 }
 
-export default function LoanCalculator({ amount, days, onAmountChange, onDaysChange }: LoanCalculatorProps) {
-  const rate = 0.008;
-  const interest = Math.round(amount * rate * days);
-  const total = amount + interest;
-  const amountPct = ((amount - 5000) / (100000 - 5000)) * 100;
-  const daysPct = ((days - 5) / (365 - 5)) * 100;
+const RATE = 0.008;
+
+function LoanCalculator({ amount, days, onAmountChange, onDaysChange }: LoanCalculatorProps) {
+  const { interest, total, amountPct, daysPct, amountBg, daysBg } = useMemo(() => {
+    const interest = Math.round(amount * RATE * days);
+    const total = amount + interest;
+    const amountPct = ((amount - 5000) / (100000 - 5000)) * 100;
+    const daysPct = ((days - 5) / (365 - 5)) * 100;
+    const amountBg = `linear-gradient(to right, #7C3AED ${amountPct}%, rgba(124,58,237,0.2) ${amountPct}%)`;
+    const daysBg = `linear-gradient(to right, #7C3AED ${daysPct}%, rgba(124,58,237,0.2) ${daysPct}%)`;
+    return { interest, total, amountPct, daysPct, amountBg, daysBg };
+  }, [amount, days]);
 
   return (
     <section id="calc" className="py-24">
@@ -43,9 +51,7 @@ export default function LoanCalculator({ amount, days, onAmountChange, onDaysCha
                     value={amount}
                     onChange={(e) => onAmountChange(Number(e.target.value))}
                     className="slider-custom w-full"
-                    style={{
-                      background: `linear-gradient(to right, #7C3AED ${amountPct}%, rgba(124,58,237,0.2) ${amountPct}%)`,
-                    }}
+                    style={{ background: amountBg }}
                   />
                   <div className="flex justify-between text-xs text-white/30 mt-1">
                     <span>5 000 ₽</span>
@@ -66,9 +72,7 @@ export default function LoanCalculator({ amount, days, onAmountChange, onDaysCha
                     value={days}
                     onChange={(e) => onDaysChange(Number(e.target.value))}
                     className="slider-custom w-full"
-                    style={{
-                      background: `linear-gradient(to right, #7C3AED ${daysPct}%, rgba(124,58,237,0.2) ${daysPct}%)`,
-                    }}
+                    style={{ background: daysBg }}
                   />
                   <div className="flex justify-between text-xs text-white/30 mt-1">
                     <span>5 дней</span>
@@ -117,3 +121,5 @@ export default function LoanCalculator({ amount, days, onAmountChange, onDaysCha
     </section>
   );
 }
+
+export default memo(LoanCalculator);

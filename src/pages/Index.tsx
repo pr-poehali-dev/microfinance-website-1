@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import HeroAboutServices from "@/components/HeroAboutServices";
-import CalculatorForm from "@/components/CalculatorForm";
-import FaqContactsFooter from "@/components/FaqContactsFooter";
+
+const CalculatorForm = lazy(() => import("@/components/CalculatorForm"));
+const FaqContactsFooter = lazy(() => import("@/components/FaqContactsFooter"));
 
 export default function Index() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -17,8 +18,10 @@ export default function Index() {
     <div className="min-h-screen font-golos" style={{ background: "#0F0A1E" }}>
       <Navbar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} scrollTo={scrollTo} />
       <HeroAboutServices scrollTo={scrollTo} />
-      <CalculatorForm />
-      <FaqContactsFooter />
+      <Suspense fallback={null}>
+        <CalculatorForm />
+        <FaqContactsFooter />
+      </Suspense>
     </div>
   );
 }
