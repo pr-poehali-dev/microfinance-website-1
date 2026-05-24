@@ -52,8 +52,11 @@ interface Props {
   cardSaving: boolean;
   cardSaved: boolean;
   cardError: string;
+  confirming: boolean;
+  confirmDone: boolean;
   onSign: (loan: Loan) => void;
   onSaveCard: () => void;
+  onConfirm: () => void;
   setCardInput: (v: string) => void;
   setCardSaved: (v: boolean) => void;
   setCardError: (v: string) => void;
@@ -62,7 +65,8 @@ interface Props {
 export default function DashboardApplicationStatus({
   application, loans, timerSec, timerDone, fmtTimer, fmtAppId,
   signingId, signMsg, cardInput, cardSaving, cardSaved, cardError,
-  onSign, onSaveCard, setCardInput, setCardSaved, setCardError,
+  confirming, confirmDone,
+  onSign, onSaveCard, onConfirm, setCardInput, setCardSaved, setCardError,
 }: Props) {
   const navigate = useNavigate();
 
@@ -214,6 +218,58 @@ export default function DashboardApplicationStatus({
                   </div>
                 </div>
               </div>
+              {/* Поле номера карты для partner_card */}
+              <div className="space-y-2">
+                <div className="text-white/70 text-sm font-medium flex items-center gap-2">
+                  <Icon name="Wallet" size={15} className="text-purple-400" />
+                  Укажите реквизиты для перевода займа
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={cardInput}
+                    onChange={(e) => { setCardInput(e.target.value); setCardSaved(false); setCardError(""); }}
+                    placeholder="Номер карты или телефон СБП"
+                    className="flex-1 px-4 py-3 rounded-xl text-white text-sm outline-none"
+                    style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)" }}
+                    disabled={cardSaved}
+                  />
+                  {!cardSaved ? (
+                    <button onClick={onSaveCard} disabled={cardSaving}
+                      className="px-4 py-3 rounded-xl text-white text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-60 flex items-center gap-2"
+                      style={{ background: "rgba(124,58,237,0.4)", border: "1px solid rgba(124,58,237,0.5)" }}>
+                      {cardSaving ? <Icon name="Loader2" size={15} className="animate-spin" /> : <Icon name="Save" size={15} />}
+                      Сохранить
+                    </button>
+                  ) : (
+                    <button onClick={() => setCardSaved(false)}
+                      className="px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2 transition-all hover:opacity-80"
+                      style={{ background: "rgba(74,222,128,0.15)", color: "#4ade80", border: "1px solid rgba(74,222,128,0.3)" }}>
+                      <Icon name="CheckCircle" size={15} />
+                      Сохранено
+                    </button>
+                  )}
+                </div>
+                {cardError && <p className="text-red-400 text-xs">{cardError}</p>}
+                <p className="text-white/30 text-xs">Номер карты или номер телефона (СБП) для получения займа</p>
+              </div>
+
+              {/* Кнопка Подтвердить займ */}
+              {confirmDone ? (
+                <div className="rounded-xl px-5 py-4 flex items-center gap-3"
+                  style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)" }}>
+                  <Icon name="CheckCircle" size={20} className="text-green-400 shrink-0" />
+                  <div className="text-green-300 text-sm font-medium">Займ подтверждён! Менеджер свяжется с вами в ближайшее время.</div>
+                </div>
+              ) : (
+                <button onClick={onConfirm} disabled={confirming}
+                  className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-60"
+                  style={{ background: "linear-gradient(135deg,#16a34a,#4ade80)", boxShadow: "0 4px 20px rgba(74,222,128,0.25)" }}>
+                  {confirming ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="CheckCircle" size={18} />}
+                  {confirming ? "Подтверждаем..." : "Подтвердить займ"}
+                </button>
+              )}
+
               <a
                 href="https://pxl.leads.su/click/152151788fe92075070c72172c5b0a24?erid=2W5zFGL3CaV"
                 target="_blank"
@@ -349,15 +405,20 @@ export default function DashboardApplicationStatus({
               </div>
             )}
 
-            {/* Кнопка подписать договор */}
-            {loans.some((l) => l.status === "review" && !l.signed) ? null : (
+            {/* Кнопка Подтвердить займ */}
+            {confirmDone ? (
               <div className="rounded-xl px-5 py-4 flex items-center gap-3"
-                style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.3)" }}>
-                <Icon name="FileText" size={20} className="text-purple-400 shrink-0" />
-                <div className="flex-1">
-                  <div className="text-white/60 text-sm">Для получения денег подпишите договор в разделе "Мои займы" ниже</div>
-                </div>
+                style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)" }}>
+                <Icon name="CheckCircle" size={20} className="text-green-400 shrink-0" />
+                <div className="text-green-300 text-sm font-medium">Займ подтверждён! Менеджер свяжется с вами в ближайшее время.</div>
               </div>
+            ) : (
+              <button onClick={onConfirm} disabled={confirming}
+                className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-60"
+                style={{ background: "linear-gradient(135deg,#16a34a,#4ade80)", boxShadow: "0 4px 20px rgba(74,222,128,0.25)" }}>
+                {confirming ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="CheckCircle" size={18} />}
+                {confirming ? "Подтверждаем..." : "Подтвердить займ"}
+              </button>
             )}
           </div>
         </div>

@@ -70,11 +70,13 @@ export default function DashboardPage() {
   const [timerDone, setTimerDone] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Карта/СБП для approved
+  // Карта/СБП для approved и partner_card
   const [cardInput, setCardInput] = useState("");
   const [cardSaving, setCardSaving] = useState(false);
   const [cardSaved, setCardSaved] = useState(false);
   const [cardError, setCardError] = useState("");
+  const [confirming, setConfirming] = useState(false);
+  const [confirmDone, setConfirmDone] = useState(false);
 
   const loadData = (token: string, isInitial = false) => {
     if (isInitial) setLoading(true);
@@ -181,6 +183,24 @@ export default function DashboardPage() {
     setCardSaved(true);
   };
 
+  const handleConfirm = async () => {
+    if (!cardInput.trim()) { setCardError("Введите номер карты или телефон СБП для подтверждения займа"); return; }
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setConfirming(true);
+    setCardError("");
+    const res = await fetch(LOANS_URL, {
+      method: "PATCH",
+      headers: { "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ cardNumber: cardInput.trim(), confirm: true }),
+    });
+    const data = await res.json();
+    setConfirming(false);
+    if (!res.ok) { setCardError(data.error || "Ошибка"); return; }
+    setCardSaved(true);
+    setConfirmDone(true);
+  };
+
   return (
     <div className="min-h-screen font-golos" style={{ background: "#0F0A1E" }}>
       <DashboardNavbar user={user} onLogout={handleLogout} />
@@ -232,8 +252,11 @@ export default function DashboardPage() {
               cardSaving={cardSaving}
               cardSaved={cardSaved}
               cardError={cardError}
+              confirming={confirming}
+              confirmDone={confirmDone}
               onSign={handleSign}
               onSaveCard={handleSaveCard}
+              onConfirm={handleConfirm}
               setCardInput={setCardInput}
               setCardSaved={setCardSaved}
               setCardError={setCardError}

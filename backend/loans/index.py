@@ -53,16 +53,56 @@ def handler(event: dict, context) -> dict:
         raw_b = event.get("body") or "{}"
         b = json.loads(raw_b) if isinstance(raw_b, str) else raw_b
         card_number = (b.get("cardNumber") or "").strip()
+        confirm = b.get("confirm", False)
         if not card_number:
             cur.close(); conn.close()
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите номер карты или телефон СБП"})}
         ph_e = phone.replace("'", "''")
         card_e = card_number.replace("'", "''")
+        # Сохраняем карту для approved и partner_card
         cur.execute(
             f"UPDATE {SCHEMA}.applications SET card_number='{card_e}' "
-            f"WHERE id = (SELECT id FROM {SCHEMA}.applications WHERE phone='{ph_e}' AND status='approved' ORDER BY created_at DESC LIMIT 1)"
+            f"WHERE id = (SELECT id FROM {SCHEMA}.applications WHERE phone='{ph_e}' AND status IN ('approved','partner_card') ORDER BY created_at DESC LIMIT 1)"
         )
-        conn.commit(); cur.close(); conn.close()
+        conn.commit()
+        # Если клиент нажал "Подтвердить займ" — отправляем уведомление администратору
+        if confirm:
+            import urllib.request
+            tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+            chat_id = "8540431915"
+            cur.execute(
+                f"SELECT id, full_name, amount, approved_amount, approved_days, approved_rate, status FROM {SCHEMA}.applications "
+                f"WHERE phone='{ph_e}' AND status IN ('approved','partner_card') ORDER BY created_at DESC LIMIT 1"
+            )
+            app_row = cur.fetchone()
+            if tg_token and app_row:
+                app_id, full_name, amount, appr_amount, appr_days, appr_rate, status = app_row
+                eff = float(appr_amount) if appr_amount else float(amount)
+                rate_v = float(appr_rate) if appr_rate else 0.008
+                days_v = int(appr_days) if appr_days else 0
+                interest = round(eff * rate_v * days_v)
+                status_label = "партнёр" if status == "partner_card" else "одобрен"
+                text = (
+                    f"✅ <b>Клиент подтвердил займ ({status_label})</b>\n\n"
+                    f"👤 <b>ФИО:</b> {full_name or phone}\n"
+                    f"📞 <b>Телефон:</b> {phone}\n"
+                    f"💳 <b>Карта/СБП:</b> {card_number}\n"
+                    f"💰 <b>Сумма:</b> {int(eff):,} ₽\n".replace(",", " ") +
+                    f"📅 <b>Срок:</b> {days_v} дн.\n"
+                    f"📈 <b>Ставка:</b> {round(rate_v * 100, 1)}%/день\n"
+                    f"💵 <b>К возврату:</b> {int(eff + interest):,} ₽\n".replace(",", " ") +
+                    f"🔖 <b>Заявка №:</b> {app_id}"
+                )
+                data = json.dumps({"chat_id": chat_id, "text": text, "parse_mode": "HTML"}).encode()
+                req = urllib.request.Request(
+                    f"https://api.telegram.org/bot{tg_token}/sendMessage",
+                    data=data, headers={"Content-Type": "application/json"}
+                )
+                try:
+                    urllib.request.urlopen(req, timeout=5)
+                except Exception:
+                    pass
+        cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     # --- ПОДПИСАТЬ ОФФЕР (PUT, loanId=...) ---
