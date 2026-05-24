@@ -214,7 +214,15 @@ export default function DashboardApplicationStatus({
                   </div>
                 </div>
               </div>
-              <div className="grid sm:grid-cols-2 gap-3 pt-1">
+              <button
+                onClick={() => navigate("/card")}
+                className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90"
+                style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", boxShadow: "0 4px 20px rgba(124,58,237,0.35)" }}
+              >
+                <Icon name="CreditCard" size={18} />
+                Оформить карту партнёра
+              </button>
+              <div className="grid sm:grid-cols-2 gap-3">
                 <a href="tel:+74956635124"
                   className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:opacity-90"
                   style={{ background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.4)" }}>
