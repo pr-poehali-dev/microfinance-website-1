@@ -214,14 +214,16 @@ export default function DashboardApplicationStatus({
                   </div>
                 </div>
               </div>
-              <button
-                onClick={() => navigate("/card")}
+              <a
+                href="https://pxl.leads.su/click/152151788fe92075070c72172c5b0a24?erid=2W5zFGL3CaV"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90"
-                style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", boxShadow: "0 4px 20px rgba(124,58,237,0.35)" }}
+                style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", boxShadow: "0 4px 20px rgba(124,58,237,0.35)", textDecoration: "none" }}
               >
                 <Icon name="CreditCard" size={18} />
                 Оформить карту партнёра
-              </button>
+              </a>
               <div className="grid sm:grid-cols-2 gap-3">
                 <a href="tel:+74956635124"
                   className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:opacity-90"
