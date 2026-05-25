@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import CookieBanner from "./components/CookieBanner";
 
@@ -16,6 +16,25 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
+function MaintenanceBanner() {
+  const { pathname } = useLocation();
+  if (pathname === "/admin") return null;
+  return (
+    <div style={{
+      background: "#b91c1c",
+      color: "white",
+      textAlign: "center",
+      padding: "12px 16px",
+      fontSize: 15,
+      fontWeight: 600,
+      lineHeight: 1.5,
+      zIndex: 9999,
+      position: "relative",
+    }}>
+      ⚠️ В связи с техническими работами компания приостановила обработку заявок до 01.06.2026. Приносим свои извинения. Все одобренные займы будут выданы после получения новой лицензии компании.
+    </div>
+  );
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -23,6 +42,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <MaintenanceBanner />
         <CookieBanner />
         <Suspense fallback={null}>
           <Routes>
