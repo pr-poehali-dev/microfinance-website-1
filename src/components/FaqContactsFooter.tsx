@@ -82,7 +82,7 @@ export default function FaqContactsFooter() {
           <div className="grid md:grid-cols-3 gap-6 mb-10">
             {[
               { icon: "Phone", title: "Телефон", value: "+7 (495) 663-51-24", sub: "Бесплатно, круглосуточно", href: "tel:+74956635124" },
-              { icon: "Mail", title: "Email", value: "PARAFINANS24@ya.ru", sub: "Ответим в течение часа", href: "mailto:PARAFINANS24@ya.ru" },
+              { icon: "Mail", title: "Email", value: "investorparafinans@ya.ru", sub: "Ответим в течение часа", href: "mailto:investorparafinans@ya.ru" },
               { icon: "Clock", title: "Режим работы", value: "Круглосуточно", sub: "Онлайн: 24/7", href: null },
             ].map((c) => (
               <div key={c.title} className="glass card-hover rounded-2xl p-6 text-center">
@@ -122,6 +122,19 @@ export default function FaqContactsFooter() {
               {" "}· метро Алексеевская / Рижская
             </span>
           </div>
+        </div>
+      </section>
+
+      {/* ДИСКЛЕЙМЕР ЧАСТНЫЙ ИНВЕСТОР */}
+      <section className="border-t border-purple-900/30" style={{ background: "rgba(124,58,237,0.04)" }}>
+        <div className="max-w-4xl mx-auto px-4 py-8 text-center space-y-3">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest mb-1"
+            style={{ background: "rgba(168,85,247,0.15)", color: "#c084fc", border: "1px solid rgba(168,85,247,0.25)" }}>
+            Частный инвестор
+          </div>
+          <p className="text-white/50 text-sm leading-relaxed">
+            Займы выдаются частными инвесторами, которые самостоятельно принимают решение о выдаче суммы займа, сроке и процентной ставке. Перед подписанием договора внимательно ознакомьтесь с условиями займа. Займы выдаются на банковскую карту партнёра.
+          </p>
         </div>
       </section>
 

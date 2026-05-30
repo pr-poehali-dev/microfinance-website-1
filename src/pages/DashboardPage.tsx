@@ -147,7 +147,7 @@ export default function DashboardPage() {
   };
 
   const handlePay = (loan: Loan) => {
-    alert(`Оплата займа №${fmtAppId(loan.id)} на сумму ${loan.total.toLocaleString("ru-RU")} ₽\n\nДля оплаты свяжитесь с нами:\n📞 +7 (495) 663-51-24\n📧 PARAFINANS24@ya.ru`);
+    alert(`Оплата займа №${fmtAppId(loan.id)} на сумму ${loan.total.toLocaleString("ru-RU")} ₽\n\nДля оплаты свяжитесь с нами:\n📞 +7 (495) 663-51-24\n📧 investorparafinans@ya.ru`);
   };
 
   const handleSign = async (loan: Loan) => {

@@ -17,7 +17,7 @@ export default function DashboardSupport() {
               <div className="text-white/50 text-xs">+7 (495) 663-51-24</div>
             </div>
           </a>
-          <a href="mailto:PARAFINANS24@ya.ru"
+          <a href="mailto:investorparafinans@ya.ru"
             className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:scale-[1.02]"
             style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)" }}>
             <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center shrink-0">
@@ -25,7 +25,7 @@ export default function DashboardSupport() {
             </div>
             <div>
               <div className="text-white font-semibold text-sm">Написать email</div>
-              <div className="text-white/50 text-xs">PARAFINANS24@ya.ru</div>
+              <div className="text-white/50 text-xs">investorparafinans@ya.ru</div>
             </div>
           </a>
           <a href="https://t.me/PARAFINANS24" target="_blank" rel="noopener noreferrer"
