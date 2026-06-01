@@ -53,9 +53,29 @@ export default function AdminApplications({
   const [disbursed, setDisbursed] = useState<Record<number, boolean>>({});
   const [partnerForm, setPartnerForm] = useState<Record<number, { amount: string; days: string; rate: string }>>({});
   const [partnerOpen, setPartnerOpen] = useState<number | null>(null);
+  const [cardForm, setCardForm] = useState<Record<number, { limit: string; rate: string }>>({});
+  const [cardOpen, setCardOpen] = useState<number | null>(null);
+  const [cardIssuing, setCardIssuing] = useState<Record<number, boolean>>({});
+  const [cardIssued, setCardIssued] = useState<Record<number, boolean>>({});
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "month" | "custom">("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+
+  async function handleIssueCard(app: App) {
+    const f = cardForm[app.id] || {};
+    const limit = parseFloat(f.limit || "0");
+    const rate = parseFloat(f.rate || "0");
+    if (!limit || !rate) return;
+    setCardIssuing(p => ({ ...p, [app.id]: true }));
+    await fetch(`${ADMIN_URL}?sub=issue_card&appId=${app.id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify({ limit, rate }),
+    });
+    setCardIssuing(p => ({ ...p, [app.id]: false }));
+    setCardIssued(p => ({ ...p, [app.id]: true }));
+    setCardOpen(null);
+  }
 
   async function handleDisburse(app: App) {
     if (!app.loanId) return;
@@ -421,10 +441,43 @@ export default function AdminApplications({
 
               {/* Кнопки действий — Партнёр */}
               {app.status === "partner_card" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 140 }}>
-                  <div style={{ padding: "8px 12px", borderRadius: 10, fontSize: 12, fontWeight: 600, textAlign: "center", background: "rgba(168,85,247,0.15)", color: "#c084fc", border: "1px solid rgba(168,85,247,0.3)" }}>
-                    Ожидает карту партнёра
-                  </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 160 }}>
+                  {cardIssued[app.id] ? (
+                    <div style={{ padding: "10px 12px", borderRadius: 10, fontSize: 13, fontWeight: 600, textAlign: "center", background: "rgba(74,222,128,0.15)", color: "#4ade80", border: "1px solid rgba(74,222,128,0.3)" }}>
+                      <Icon name="CheckCircle" size={14} style={{ marginRight: 6 }} />Карта выдана!
+                    </div>
+                  ) : cardOpen === app.id ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      <div style={{ color: "#c084fc", fontSize: 12, fontWeight: 700, marginBottom: 2 }}>Карта PARAFINANS</div>
+                      <input
+                        type="number" placeholder="Лимит, ₽"
+                        value={cardForm[app.id]?.limit ?? ""}
+                        onChange={e => setCardForm(p => ({ ...p, [app.id]: { ...p[app.id], limit: e.target.value } }))}
+                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(168,85,247,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                      />
+                      <input
+                        type="number" placeholder="Ставка %/день" step="0.1"
+                        value={cardForm[app.id]?.rate ?? ""}
+                        onChange={e => setCardForm(p => ({ ...p, [app.id]: { ...p[app.id], rate: e.target.value } }))}
+                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(168,85,247,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                      />
+                      <button
+                        onClick={() => handleIssueCard(app)}
+                        disabled={cardIssuing[app.id]}
+                        style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white", border: "none", borderRadius: 8, padding: "9px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                        {cardIssuing[app.id] ? <><Icon name="Loader2" size={14} className="animate-spin" />Выдаём...</> : <><Icon name="CreditCard" size={14} />Выдать карту</>}
+                      </button>
+                      <button onClick={() => setCardOpen(null)}
+                        style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "none", borderRadius: 8, padding: "7px", cursor: "pointer", fontSize: 12 }}>
+                        Отмена
+                      </button>
+                    </div>
+                  ) : (
+                    <button onClick={() => { setCardOpen(app.id); setCardForm(p => ({ ...p, [app.id]: { limit: String(app.approvedAmount ?? app.amount ?? ""), rate: "" } })); }}
+                      style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                      <Icon name="CreditCard" size={16} />Выдать карту PARAFINANS
+                    </button>
+                  )}
                   {app.telegramId && (
                     <button onClick={() => onPartnerRemind(app.id)}
                       style={{ background: "linear-gradient(135deg,#0ea5e9,#38bdf8)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
@@ -432,8 +485,8 @@ export default function AdminApplications({
                     </button>
                   )}
                   <button onClick={() => onRestore(app.id)}
-                    style={{ background: "linear-gradient(135deg,#d97706,#f59e0b)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
-                    <Icon name="RotateCcw" size={16} />Вернуть в ожидание
+                    style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+                    <Icon name="RotateCcw" size={14} />Вернуть в ожидание
                   </button>
                 </div>
               )}

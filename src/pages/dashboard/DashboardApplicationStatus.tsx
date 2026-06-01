@@ -23,6 +23,16 @@ interface Loan {
   offer?: LoanOffer;
 }
 
+interface VirtualCard {
+  number: string;
+  expiry: string;
+  cvv: string;
+  holder: string;
+  limit: number;
+  rate: number;
+  status: string;
+}
+
 interface Application {
   id: number;
   amount: number;
@@ -37,6 +47,7 @@ interface Application {
   rejectReason: string;
   cardNumber: string;
   contractUrl: string;
+  virtualCard: VirtualCard | null;
 }
 
 interface Props {
@@ -54,9 +65,14 @@ interface Props {
   cardError: string;
   confirming: boolean;
   confirmDone: boolean;
+  cardActivating: boolean;
+  cardActivated: boolean;
+  cvvVisible: boolean;
+  setCvvVisible: (v: boolean) => void;
   onSign: (loan: Loan) => void;
   onSaveCard: () => void;
   onConfirm: () => void;
+  onActivateCard: () => void;
   setCardInput: (v: string) => void;
   setCardSaved: (v: boolean) => void;
   setCardError: (v: string) => void;
@@ -65,8 +81,8 @@ interface Props {
 export default function DashboardApplicationStatus({
   application, loans, timerSec, timerDone, fmtTimer, fmtAppId,
   signingId, signMsg, cardInput, cardSaving, cardSaved, cardError,
-  confirming, confirmDone,
-  onSign, onSaveCard, onConfirm, setCardInput, setCardSaved, setCardError,
+  confirming, confirmDone, cardActivating, cardActivated, cvvVisible, setCvvVisible,
+  onSign, onSaveCard, onConfirm, onActivateCard, setCardInput, setCardSaved, setCardError,
 }: Props) {
   const navigate = useNavigate();
 
@@ -458,6 +474,156 @@ export default function DashboardApplicationStatus({
               Подать новую заявку
             </button>
           </div>
+        </div>
+      )}
+
+      {/* ВИРТУАЛЬНАЯ КАРТА PARAFINANS */}
+      {application?.virtualCard && application.virtualCard.status !== "none" && (
+        <div className="mb-6">
+          {/* Ожидает подтверждения */}
+          {application.virtualCard.status === "pending" && !cardActivated && (
+            <div className="glass rounded-2xl overflow-hidden"
+              style={{ border: "1px solid rgba(168,85,247,0.5)", background: "rgba(124,58,237,0.04)" }}>
+              <div className="px-6 py-4 flex items-center gap-3"
+                style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.3),rgba(168,85,247,0.1))" }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: "rgba(168,85,247,0.25)" }}>
+                  <Icon name="CreditCard" size={20} className="text-purple-300" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-white font-bold">Карта PARAFINANS одобрена!</div>
+                  <div className="text-purple-300 text-xs mt-0.5">Ознакомьтесь с условиями и подтвердите</div>
+                </div>
+                <span className="text-xs px-3 py-1 rounded-full font-semibold animate-pulse"
+                  style={{ background: "rgba(168,85,247,0.2)", color: "#c084fc" }}>Одобрено</span>
+              </div>
+              <div className="px-6 py-5 space-y-4">
+                {/* Карта-превью */}
+                <div className="rounded-2xl p-5 relative overflow-hidden"
+                  style={{ background: "linear-gradient(135deg,#4c1d95,#7c3aed,#a855f7)", boxShadow: "0 8px 32px rgba(124,58,237,0.4)" }}>
+                  <div className="absolute top-0 right-0 w-40 h-40 rounded-full opacity-10"
+                    style={{ background: "white", transform: "translate(30%,-30%)" }} />
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <div className="text-purple-200 text-xs font-semibold uppercase tracking-wider">PARAFINANS</div>
+                      <div className="text-white text-xs opacity-60 mt-0.5">Виртуальная карта</div>
+                    </div>
+                    <Icon name="CreditCard" size={28} className="text-purple-200 opacity-70" />
+                  </div>
+                  <div className="text-white font-mono text-xl font-bold tracking-widest mb-4">
+                    •••• •••• •••• {application.virtualCard.number.slice(-4)}
+                  </div>
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <div className="text-purple-200 text-xs opacity-60 mb-0.5">Держатель</div>
+                      <div className="text-white text-sm font-semibold">{application.virtualCard.holder}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-purple-200 text-xs opacity-60 mb-0.5">Действует до</div>
+                      <div className="text-white text-sm font-semibold">{application.virtualCard.expiry}</div>
+                    </div>
+                  </div>
+                </div>
+                {/* Условия */}
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: "Лимит", value: `${application.virtualCard.limit.toLocaleString("ru-RU")} ₽`, color: "#c084fc" },
+                    { label: "Ставка", value: `${application.virtualCard.rate}% / день`, color: "white" },
+                  ].map(({ label, value, color }) => (
+                    <div key={label} className="rounded-xl px-4 py-3 text-center"
+                      style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.3)" }}>
+                      <div className="text-white/40 text-xs mb-1">{label}</div>
+                      <div className="font-bold text-base" style={{ color }}>{value}</div>
+                    </div>
+                  ))}
+                </div>
+                <button onClick={onActivateCard} disabled={cardActivating}
+                  className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-60"
+                  style={{ background: "linear-gradient(135deg,#16a34a,#4ade80)", boxShadow: "0 4px 20px rgba(74,222,128,0.25)" }}>
+                  {cardActivating ? <><Icon name="Loader2" size={18} className="animate-spin" />Подтверждаем...</> : <><Icon name="CheckCircle" size={18} />Подтвердить карту</>}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Карта активна */}
+          {(application.virtualCard.status === "active" || cardActivated) && (
+            <div className="glass rounded-2xl overflow-hidden"
+              style={{ border: "1px solid rgba(74,222,128,0.4)", background: "rgba(74,222,128,0.03)" }}>
+              <div className="px-6 py-4 flex items-center gap-3"
+                style={{ background: "linear-gradient(135deg,rgba(22,163,74,0.25),rgba(74,222,128,0.08))" }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: "rgba(74,222,128,0.2)" }}>
+                  <Icon name="CreditCard" size={20} className="text-green-400" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-white font-bold">Карта PARAFINANS активна</div>
+                  <div className="text-green-300 text-xs mt-0.5">Виртуальная карта готова к использованию</div>
+                </div>
+                <span className="text-xs px-3 py-1 rounded-full font-semibold"
+                  style={{ background: "rgba(74,222,128,0.2)", color: "#4ade80" }}>Активна</span>
+              </div>
+              <div className="px-6 py-5 space-y-4">
+                {/* Карта с данными */}
+                <div className="rounded-2xl p-5 relative overflow-hidden select-none"
+                  style={{ background: "linear-gradient(135deg,#14532d,#15803d,#16a34a)", boxShadow: "0 8px 32px rgba(22,163,74,0.35)" }}>
+                  <div className="absolute top-0 right-0 w-40 h-40 rounded-full opacity-10"
+                    style={{ background: "white", transform: "translate(30%,-30%)" }} />
+                  <div className="flex justify-between items-start mb-5">
+                    <div>
+                      <div className="text-green-200 text-xs font-semibold uppercase tracking-wider">PARAFINANS</div>
+                      <div className="text-white text-xs opacity-60 mt-0.5">Виртуальная карта</div>
+                    </div>
+                    <Icon name="Wifi" size={22} className="text-green-200 opacity-70 rotate-90" />
+                  </div>
+                  <div className="text-white font-mono text-lg font-bold tracking-widest mb-1">
+                    {application.virtualCard.number}
+                  </div>
+                  <div className="flex justify-between items-end mt-4">
+                    <div>
+                      <div className="text-green-200 text-xs opacity-60 mb-0.5">Держатель</div>
+                      <div className="text-white text-sm font-semibold">{application.virtualCard.holder}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-green-200 text-xs opacity-60 mb-0.5">Срок</div>
+                      <div className="text-white text-sm font-semibold">{application.virtualCard.expiry}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-green-200 text-xs opacity-60 mb-0.5">CVV</div>
+                      <div className="text-white text-sm font-semibold flex items-center gap-1">
+                        {cvvVisible ? application.virtualCard.cvv : "•••"}
+                        <button onClick={() => setCvvVisible(!cvvVisible)}
+                          className="ml-1 opacity-60 hover:opacity-100 transition-opacity">
+                          <Icon name={cvvVisible ? "EyeOff" : "Eye"} size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* Лимит и ставка */}
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: "Лимит карты", value: `${application.virtualCard.limit.toLocaleString("ru-RU")} ₽`, color: "#4ade80" },
+                    { label: "Ставка", value: `${application.virtualCard.rate}% / день`, color: "white" },
+                  ].map(({ label, value, color }) => (
+                    <div key={label} className="rounded-xl px-4 py-3 text-center"
+                      style={{ background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.2)" }}>
+                      <div className="text-white/40 text-xs mb-1">{label}</div>
+                      <div className="font-bold text-base" style={{ color }}>{value}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* Кнопка Оплатить */}
+                <button
+                  onClick={() => alert(`Оплата картой PARAFINANS\nЛимит: ${application.virtualCard!.limit.toLocaleString("ru-RU")} ₽\n\nДля совершения платежа свяжитесь с нами:\n📞 +7 (495) 663-51-24\n📧 investorparafinans@ya.ru`)}
+                  className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90"
+                  style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", boxShadow: "0 4px 20px rgba(124,58,237,0.35)" }}>
+                  <Icon name="Wallet" size={18} />
+                  Оплатить
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>

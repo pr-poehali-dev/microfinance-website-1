@@ -814,5 +814,78 @@ def handler(event: dict, context) -> dict:
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
+    # --- ВЫДАТЬ ВИРТУАЛЬНУЮ КАРТУ PARAFINANS (POST, sub='issue_card', appId=...) ---
+    if sub == "issue_card" and method == "POST":
+        import random, string
+        app_id = qs.get("appId", "")
+        app_id_e = str(app_id).replace("'", "''")
+        card_limit = float(body.get("limit", 0))
+        card_rate = float(body.get("rate", 0))
+
+        if not card_limit or not card_rate:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите лимит и ставку"})}
+
+        cur.execute(f"SELECT full_name, phone FROM {SCHEMA}.applications WHERE id='{app_id_e}'")
+        app = cur.fetchone()
+        if not app:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
+
+        full_name, phone = app
+
+        # Генерация данных карты
+        card_number = "4276 " + " ".join("".join([str(random.randint(0,9)) for _ in range(4)]) for _ in range(3))
+        now_dt = datetime.now()
+        expiry_month = str(now_dt.month).zfill(2)
+        expiry_year = str((now_dt.year + 3) % 100).zfill(2)
+        expiry = f"{expiry_month}/{expiry_year}"
+        cvv = "".join([str(random.randint(0,9)) for _ in range(3)])
+        holder = (full_name or "CARD HOLDER").upper()[:26]
+
+        cur.execute(f"""
+            UPDATE {SCHEMA}.applications SET
+                virtual_card_number = '{card_number}',
+                virtual_card_expiry = '{expiry}',
+                virtual_card_cvv = '{cvv}',
+                virtual_card_holder = '{holder.replace("'","''")}',
+                virtual_card_limit = {card_limit},
+                virtual_card_rate = {card_rate},
+                virtual_card_status = 'pending',
+                virtual_card_issued_at = NOW()
+            WHERE id = '{app_id_e}'
+        """)
+        conn.commit()
+
+        tg(
+            f"💳 <b>Виртуальная карта PARAFINANS выдана</b>\n\n"
+            f"👤 <b>Клиент:</b> {full_name or phone}\n"
+            f"📞 <b>Телефон:</b> {phone}\n"
+            f"💰 <b>Лимит:</b> {int(card_limit):,} ₽\n".replace(",", " ") +
+            f"📈 <b>Ставка:</b> {card_rate}%/день\n"
+            f"🔖 <b>Заявка №:</b> {app_id}"
+        )
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    # --- ПОДТВЕРДИТЬ/АКТИВИРОВАТЬ КАРТУ (POST, sub='activate_card', appId=...) ---
+    if sub == "activate_card" and method == "POST":
+        app_id = qs.get("appId", "")
+        app_id_e = str(app_id).replace("'", "''")
+        cur.execute(f"SELECT full_name, phone, virtual_card_status FROM {SCHEMA}.applications WHERE id='{app_id_e}'")
+        app = cur.fetchone()
+        if not app:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
+        full_name, phone, vc_status = app
+        if vc_status not in ("pending", "active"):
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Карта не выдана или уже активна"})}
+        cur.execute(f"UPDATE {SCHEMA}.applications SET virtual_card_status='active' WHERE id='{app_id_e}'")
+        conn.commit()
+        tg(f"✅ <b>Карта PARAFINANS активирована</b>\n\n👤 {full_name or phone}\n📞 {phone}")
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     cur.close(); conn.close()
     return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Маршрут не найден"})}

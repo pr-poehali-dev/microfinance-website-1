@@ -66,6 +66,45 @@ def handler(event: dict, context) -> dict:
         )
         conn.commit()
         # Если клиент нажал "Подтвердить займ" — отправляем уведомление администратору
+        confirm_card = b.get("confirm_card", False)
+
+        if confirm_card:
+            # Клиент подтвердил виртуальную карту PARAFINANS — активируем
+            cur.execute(
+                f"UPDATE {SCHEMA}.applications SET virtual_card_status='active' "
+                f"WHERE phone='{ph_e}' AND virtual_card_status='pending' AND virtual_card_number IS NOT NULL"
+            )
+            conn.commit()
+            import urllib.request
+            tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+            chat_id = "8540431915"
+            cur.execute(
+                f"SELECT id, full_name, virtual_card_limit, virtual_card_rate FROM {SCHEMA}.applications "
+                f"WHERE phone='{ph_e}' AND virtual_card_number IS NOT NULL ORDER BY created_at DESC LIMIT 1"
+            )
+            vc_row = cur.fetchone()
+            if tg_token and vc_row:
+                vc_id, vc_name, vc_limit, vc_rate = vc_row
+                text = (
+                    f"✅ <b>Клиент активировал карту PARAFINANS</b>\n\n"
+                    f"👤 <b>ФИО:</b> {vc_name or phone}\n"
+                    f"📞 <b>Телефон:</b> {phone}\n"
+                    f"💰 <b>Лимит:</b> {int(float(vc_limit)):,} ₽\n".replace(",", " ") +
+                    f"📈 <b>Ставка:</b> {float(vc_rate)}%/день\n"
+                    f"🔖 <b>Заявка №:</b> {vc_id}"
+                )
+                data = json.dumps({"chat_id": chat_id, "text": text, "parse_mode": "HTML"}).encode()
+                req = urllib.request.Request(
+                    f"https://api.telegram.org/bot{tg_token}/sendMessage",
+                    data=data, headers={"Content-Type": "application/json"}
+                )
+                try:
+                    urllib.request.urlopen(req, timeout=5)
+                except Exception:
+                    pass
+            cur.close(); conn.close()
+            return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
         if confirm:
             import urllib.request
             tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
@@ -134,7 +173,8 @@ def handler(event: dict, context) -> dict:
 
     # Получаем последнюю заявку пользователя
     cur.execute(
-        f"SELECT id, amount, days, status, created_at, approved_amount, approved_rate, approved_days, reject_reason, card_number, contract_url "
+        f"SELECT id, amount, days, status, created_at, approved_amount, approved_rate, approved_days, reject_reason, card_number, contract_url, "
+        f"virtual_card_number, virtual_card_expiry, virtual_card_cvv, virtual_card_holder, virtual_card_limit, virtual_card_rate, virtual_card_status "
         f"FROM {SCHEMA}.applications "
         f"WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1"
     )
@@ -163,6 +203,15 @@ def handler(event: dict, context) -> dict:
             "rejectReason": app_row[8] or "",
             "cardNumber": app_row[9] or "",
             "contractUrl": app_row[10] or "",
+            "virtualCard": {
+                "number": app_row[11] or "",
+                "expiry": app_row[12] or "",
+                "cvv": app_row[13] or "",
+                "holder": app_row[14] or "",
+                "limit": float(app_row[15]) if app_row[15] else 0,
+                "rate": float(app_row[16]) if app_row[16] else 0,
+                "status": app_row[17] or "none",
+            } if app_row[11] else None,
         }
 
     cur.close(); conn.close()

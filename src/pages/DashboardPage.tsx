@@ -39,6 +39,16 @@ interface User {
   email: string;
 }
 
+interface VirtualCard {
+  number: string;
+  expiry: string;
+  cvv: string;
+  holder: string;
+  limit: number;
+  rate: number;
+  status: string;
+}
+
 interface Application {
   id: number;
   amount: number;
@@ -53,6 +63,7 @@ interface Application {
   rejectReason: string;
   cardNumber: string;
   contractUrl: string;
+  virtualCard: VirtualCard | null;
 }
 
 export default function DashboardPage() {
@@ -77,6 +88,9 @@ export default function DashboardPage() {
   const [cardError, setCardError] = useState("");
   const [confirming, setConfirming] = useState(false);
   const [confirmDone, setConfirmDone] = useState(false);
+  const [cardActivating, setCardActivating] = useState(false);
+  const [cardActivated, setCardActivated] = useState(false);
+  const [cvvVisible, setCvvVisible] = useState(false);
 
   const loadData = (token: string, isInitial = false) => {
     if (isInitial) setLoading(true);
@@ -183,6 +197,19 @@ export default function DashboardPage() {
     setCardSaved(true);
   };
 
+  const handleActivateCard = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setCardActivating(true);
+    const res = await fetch(LOANS_URL, {
+      method: "PATCH",
+      headers: { "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ cardNumber: "", confirm_card: true }),
+    });
+    setCardActivating(false);
+    if (res.ok) { setCardActivated(true); const t = localStorage.getItem("token"); if (t) loadData(t, false); }
+  };
+
   const handleConfirm = async () => {
     if (!cardInput.trim()) { setCardError("Введите номер карты или телефон СБП для подтверждения займа"); return; }
     const token = localStorage.getItem("token");
@@ -254,9 +281,14 @@ export default function DashboardPage() {
               cardError={cardError}
               confirming={confirming}
               confirmDone={confirmDone}
+              cardActivating={cardActivating}
+              cardActivated={cardActivated}
+              cvvVisible={cvvVisible}
+              setCvvVisible={setCvvVisible}
               onSign={handleSign}
               onSaveCard={handleSaveCard}
               onConfirm={handleConfirm}
+              onActivateCard={handleActivateCard}
               setCardInput={setCardInput}
               setCardSaved={setCardSaved}
               setCardError={setCardError}
