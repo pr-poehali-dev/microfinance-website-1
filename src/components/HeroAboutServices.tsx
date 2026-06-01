@@ -55,7 +55,7 @@ const HERO_STATS = [
 ];
 
 const ABOUT_FEATURES = [
-  { icon: "Award", text: "Лицензия ЦБ РФ" },
+  { icon: "Award", text: "Частный инвестор" },
   { icon: "Lock", text: "Защита данных" },
   { icon: "HeartHandshake", text: "Ответственный займ" },
   { icon: "BadgeCheck", text: "Прозрачные условия" },
