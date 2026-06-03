@@ -300,6 +300,7 @@ export default function AdminApplications({
                   ))}
                   {app.passportBy && <div style={{ gridColumn: "1/-1" }}><div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>Кем выдан</div><div style={{ color: "white", fontSize: 13 }}>{app.passportBy}</div></div>}
                   {app.birthPlace && <div style={{ gridColumn: "1/-1" }}><div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>Место рождения</div><div style={{ color: "white", fontSize: 13 }}>{app.birthPlace}</div></div>}
+                  {app.snils && <div><div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>СНИЛС</div><div style={{ color: "#fbbf24", fontSize: 13, fontWeight: 600, letterSpacing: 1 }}>{app.snils}</div></div>}
                 </div>
 
                 {/* Документы */}
@@ -314,6 +315,29 @@ export default function AdminApplications({
                     ) : null;
                   })}
                 </div>
+
+                {/* Данные из анкеты: работа и контакты */}
+                {(app.workPhone || app.cardNumberTransfer) && (
+                  <div style={{ background: "rgba(6,182,212,0.06)", border: "1px solid rgba(6,182,212,0.25)", borderRadius: 12, padding: "12px 14px", marginBottom: 12 }}>
+                    <div style={{ color: "#38bdf8", fontWeight: 700, fontSize: 12, marginBottom: 10, display: "flex", alignItems: "center", gap: 5 }}>
+                      <Icon name="ClipboardList" size={13} />Данные из анкеты клиента
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px,1fr))", gap: 8 }}>
+                      {app.workPhone && (
+                        <div>
+                          <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>Рабочий телефон</div>
+                          <div style={{ color: "white", fontSize: 13, fontWeight: 600 }}>{app.workPhone}</div>
+                        </div>
+                      )}
+                      {app.cardNumberTransfer && (
+                        <div style={{ gridColumn: app.workPhone ? "auto" : "1/-1" }}>
+                          <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>Карта / СБП для перевода</div>
+                          <div style={{ color: "#4ade80", fontSize: 13, fontWeight: 700, letterSpacing: 0.5 }}>{app.cardNumberTransfer}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Блок СБ */}
                 {(() => {

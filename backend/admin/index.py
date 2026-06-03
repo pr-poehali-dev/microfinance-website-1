@@ -259,7 +259,8 @@ def handler(event: dict, context) -> dict:
                    a.workplace, a.position, a.active_loans, a.salary, a.contact_person, a.sb_score,
                    a.approved_amount, a.client_password, a.card_number,
                    a.approved_rate, a.approved_days,
-                   l.id AS loan_id, l.signed, l.signed_at, l.status AS loan_status, l.created_at AS loan_created_at
+                   l.id AS loan_id, l.signed, l.signed_at, l.status AS loan_status, l.created_at AS loan_created_at,
+                   a.snils, a.work_phone, a.card_number_transfer
             FROM {SCHEMA}.applications a
             LEFT JOIN {SCHEMA}.loans l ON l.user_id = (
                 SELECT id FROM {SCHEMA}.users WHERE phone = a.phone LIMIT 1
@@ -297,6 +298,9 @@ def handler(event: dict, context) -> dict:
             "loanSignedAt": r[34].strftime("%d.%m.%Y в %H:%M") if r[34] else None,
             "loanStatus": r[35] or None,
             "loanDisbursedAt": r[36].strftime("%d.%m.%Y в %H:%M") if r[36] else None,
+            "snils": r[37] or "",
+            "workPhone": r[38] or "",
+            "cardNumberTransfer": r[39] or "",
         } for r in rows]
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"applications": apps}, ensure_ascii=False)}
 
