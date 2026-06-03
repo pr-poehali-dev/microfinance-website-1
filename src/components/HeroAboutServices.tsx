@@ -48,7 +48,7 @@ const SERVICES = [
 const ADVANTAGES = [
   { icon: "Clock", value: "15 мин", label: "время одобрения" },
   { icon: "Users", value: "50 000+", label: "клиентов доверяют нам" },
-  { icon: "Percent", value: "98%", label: "одобрение заявок" },
+  { icon: "Percent", value: "100%", label: "одобрение заявок" },
   { icon: "Star", value: "4.9", label: "рейтинг на картах" },
 ];
 
@@ -94,7 +94,24 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
           <div>
             <div className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full text-sm text-purple-300 mb-6">
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              Одобряем 98% заявок · Онлайн 24/7
+              Онлайн 24/7 · Без отказов
+            </div>
+
+            {/* Одобрение 100% — крупный баннер */}
+            <div className="mb-6 inline-flex items-center gap-3 px-6 py-3 rounded-2xl"
+              style={{
+                background: "linear-gradient(135deg, rgba(34,197,94,0.2), rgba(74,222,128,0.1))",
+                border: "1px solid rgba(74,222,128,0.5)",
+                boxShadow: "0 0 30px rgba(74,222,128,0.15)"
+              }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: "rgba(74,222,128,0.2)" }}>
+                <Icon name="CheckCircle" size={22} className="text-green-400" />
+              </div>
+              <div>
+                <div className="font-oswald text-3xl font-bold text-green-400 leading-none">ОДОБРЕНИЕ 100%</div>
+                <div className="text-green-300/70 text-xs mt-0.5">Без отказов · Любая кредитная история</div>
+              </div>
             </div>
 
             <h1 className="font-oswald text-5xl md:text-7xl font-bold leading-tight text-white mb-6">
