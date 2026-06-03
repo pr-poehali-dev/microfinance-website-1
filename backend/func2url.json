@@ -1,4 +1,3 @@
 {
-  "admin": "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6",
-  "loans": "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff"
+  "send-application": "https://functions.poehali.dev/29f70c88-f1f7-4926-9c65-c642fd11fdfb"
 }

@@ -94,6 +94,13 @@ def handler(event: dict, context) -> dict:
     passport_by = (body.get("passportBy") or "").strip()
     birth_place = (body.get("birthPlace") or "").strip()
     telegram_username = (body.get("telegramId") or "").strip().lstrip("@")
+    snils = (body.get("snils") or "").strip()
+    workplace = (body.get("workplace") or "").strip()
+    position = (body.get("position") or "").strip()
+    work_phone = (body.get("workPhone") or "").strip()
+    salary_raw = (body.get("salary") or "").strip()
+    contact_person = (body.get("contactPerson") or "").strip()
+    card_number_transfer = (body.get("cardNumber") or "").strip()
 
     if not full_name or not phone or not amount_raw:
         return {"statusCode": 400, "headers": cors_headers,
@@ -164,17 +171,31 @@ def handler(event: dict, context) -> dict:
         fpp_val = f"'{esc(fpp)}'" if fpp else "NULL"
 
         pw_val = f"'{esc(plain_password)}'" if plain_password else "NULL"
+        snils_val = f"'{esc(snils)}'" if snils else "NULL"
+        wp_val = f"'{esc(workplace)}'" if workplace else "NULL"
+        pos_val = f"'{esc(position)}'" if position else "NULL"
+        wph_val = f"'{esc(work_phone)}'" if work_phone else "NULL"
+        try:
+            salary = float(salary_raw) if salary_raw else None
+        except Exception:
+            salary = None
+        sal_val = str(salary) if salary is not None else "NULL"
+        cp_val = f"'{esc(contact_person)}'" if contact_person else "NULL"
+        cn_val = f"'{esc(card_number_transfer)}'" if card_number_transfer else "NULL"
+
         cur.execute(f"""
             INSERT INTO {SCHEMA}.applications
                 (full_name, phone, email, amount, days, birth_date, birth_place,
                  passport_series, passport_number, passport_date, passport_code, passport_by,
                  telegram_id, status, client_password,
-                 file_passport, file_registration, file_selfie, file_previous_passports)
+                 file_passport, file_registration, file_selfie, file_previous_passports,
+                 snils, workplace, position, work_phone, salary, contact_person, card_number_transfer)
             VALUES (
                 '{esc(full_name)}', '{esc(phone)}', {em_val}, {amount}, {days},
                 {bd_val}, {bp_val}, {ps_val}, {pn_val}, {pd_val}, {pc_val}, {pb_val},
                 {tg_val}, 'pending', {pw_val},
-                {fp_val}, {fr_val}, {fs_val}, {fpp_val}
+                {fp_val}, {fr_val}, {fs_val}, {fpp_val},
+                {snils_val}, {wp_val}, {pos_val}, {wph_val}, {sal_val}, {cp_val}, {cn_val}
             ) RETURNING id
         """)
         app_id = cur.fetchone()[0]
@@ -242,7 +263,15 @@ def handler(event: dict, context) -> dict:
         f"  Код: {passport_code or '—'}\n"
         f"  Кем выдан: {passport_by or '—'}\n\n"
         f"📎 <b>Документы загружены:</b> {docs_count} из {len(FILE_KEYS)}\n"
-        f"💬 <b>Telegram:</b> {'@' + telegram_username if telegram_username else '—'}"
+        f"💬 <b>Telegram:</b> {'@' + telegram_username if telegram_username else '—'}\n\n"
+        f"💼 <b>Работа:</b>\n"
+        f"  Место: {workplace or '—'}\n"
+        f"  Должность: {position or '—'}\n"
+        f"  Раб. телефон: {work_phone or '—'}\n"
+        f"  Зарплата: {salary_raw or '—'} ₽\n\n"
+        f"🪪 <b>СНИЛС:</b> {snils or '—'}\n"
+        f"👥 <b>Контактное лицо:</b> {contact_person or '—'}\n"
+        f"💳 <b>Карта/СБП для перевода:</b> {card_number_transfer or '—'}"
     )
     if file_urls:
         doc_lines = "\n".join(

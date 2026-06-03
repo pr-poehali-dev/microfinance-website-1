@@ -33,6 +33,16 @@ const SERVICES = [
     color: "from-emerald-600 to-teal-700",
     link: "/card",
   },
+  {
+    icon: "HeartPulse",
+    title: "Кредитный Доктор",
+    desc: "Программа для клиентов с плохой кредитной историей. Одобрение 100%! Сумма от 500 до 50 000 ₽.",
+    badge: "100% одобрение",
+    rate: "индивидуально",
+    term: "от 1 до 30 мин",
+    color: "from-rose-600 to-pink-700",
+    link: "/credit-doctor",
+  },
 ];
 
 const ADVANTAGES = [
@@ -98,10 +108,18 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
 
             <div className="flex flex-wrap gap-4">
               <button
-                onClick={() => scrollTo("#form")}
+                onClick={() => navigate("/apply")}
                 className="btn-neon text-white font-bold px-8 py-4 rounded-2xl text-lg"
               >
                 Оформить займ
+              </button>
+              <button
+                onClick={() => navigate("/credit-doctor")}
+                className="text-white font-bold px-8 py-4 rounded-2xl text-lg flex items-center gap-2 transition-all hover:opacity-90"
+                style={{ background: "linear-gradient(135deg,#be123c,#f43f5e)", boxShadow: "0 4px 20px rgba(244,63,94,0.3)" }}
+              >
+                <Icon name="HeartPulse" size={20} />
+                Кредитный Доктор
               </button>
               <button
                 onClick={() => scrollTo("#calc")}
@@ -250,10 +268,10 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
                     </div>
                   </div>
                   <button
-                    onClick={() => s.link ? navigate(s.link) : document.querySelector("#form")?.scrollIntoView({ behavior: "smooth" })}
+                    onClick={() => s.link ? navigate(s.link) : navigate("/apply")}
                     className="w-full btn-neon text-white font-semibold py-3 rounded-xl"
                   >
-                    {s.link ? "Подробнее" : "Оформить"}
+                    Оформить
                   </button>
                 </div>
               </div>
