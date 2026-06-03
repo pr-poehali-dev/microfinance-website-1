@@ -6,6 +6,7 @@ const STAGES = [
     num: "01",
     title: "1 этап",
     amount: "500 — 5 000 ₽",
+    term: "от 15 до 365 дней",
     desc: "Оформление карты партнёра. Первый шаг к восстановлению кредитной истории.",
     color: "#a855f7",
     bg: "rgba(168,85,247,0.12)",
@@ -15,6 +16,7 @@ const STAGES = [
     num: "02",
     title: "2 этап",
     amount: "1 000 — 15 000 ₽",
+    term: "от 15 до 365 дней",
     desc: "Успешное прохождение первого этапа открывает увеличенный лимит.",
     color: "#06b6d4",
     bg: "rgba(6,182,212,0.1)",
@@ -24,6 +26,7 @@ const STAGES = [
     num: "03",
     title: "3 этап",
     amount: "1 000 — 30 000 ₽",
+    term: "от 15 до 365 дней",
     desc: "Ваш кредитный рейтинг растёт — и вместе с ним доступный лимит.",
     color: "#22c55e",
     bg: "rgba(34,197,94,0.1)",
@@ -33,6 +36,7 @@ const STAGES = [
     num: "04",
     title: "4 этап",
     amount: "1 000 — 50 000 ₽",
+    term: "от 15 до 365 дней",
     desc: "Максимальный лимит программы. Ваша история полностью восстановлена.",
     color: "#f59e0b",
     bg: "rgba(245,158,11,0.1)",
@@ -138,6 +142,18 @@ export default function CreditDoctorPage() {
                   <div>
                     <div className="font-bold text-white text-lg mb-1">{s.title}</div>
                     <div className="font-oswald text-2xl font-bold mb-2" style={{ color: s.color }}>{s.amount}</div>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold"
+                        style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.6)" }}>
+                        <Icon name="Clock" size={11} />
+                        Срок: {s.term}
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold"
+                        style={{ background: "rgba(239,68,68,0.12)", color: "#f87171", border: "1px solid rgba(239,68,68,0.25)" }}>
+                        <Icon name="Lock" size={11} />
+                        Без досрочного погашения
+                      </span>
+                    </div>
                     <p className="text-white/50 text-sm leading-relaxed">{s.desc}</p>
                   </div>
                 </div>
