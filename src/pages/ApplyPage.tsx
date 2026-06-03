@@ -38,8 +38,8 @@ export default function ApplyPage() {
     contactPerson: "", cardNumber: "",
     amount: "10000", days: "30",
   });
-  const [formAmount, setFormAmount] = useState(10000);
-  const [formDays, setFormDays] = useState(30);
+  const [formAmount, setFormAmount] = useState(5000);
+  const [formDays, setFormDays] = useState(15);
   const [files, setFiles] = useState<{ [key: string]: File | null }>({
     passportMain: null, registration: null, selfie: null, previousPassports: null,
   });
@@ -136,8 +136,9 @@ export default function ApplyPage() {
     }
   };
 
-  const amountBg = `linear-gradient(to right, #7C3AED ${((formAmount - 500) / (200000 - 500)) * 100}%, rgba(124,58,237,0.2) ${((formAmount - 500) / (200000 - 500)) * 100}%)`;
-  const daysBg = `linear-gradient(to right, #7C3AED ${((formDays - 5) / (365 - 5)) * 100}%, rgba(124,58,237,0.2) ${((formDays - 5) / (365 - 5)) * 100}%)`;
+  const RATE = 0.005;
+  const amountBg = `linear-gradient(to right, #7C3AED ${((formAmount - 500) / (50000 - 500)) * 100}%, rgba(124,58,237,0.2) ${((formAmount - 500) / (50000 - 500)) * 100}%)`;
+  const daysBg = `linear-gradient(to right, #7C3AED ${((formDays - 15) / (365 - 15)) * 100}%, rgba(124,58,237,0.2) ${((formDays - 15) / (365 - 15)) * 100}%)`;
 
   const setF = (key: string, val: string) => setForm(p => ({ ...p, [key]: val }));
 
@@ -403,11 +404,11 @@ export default function ApplyPage() {
                     <span className="text-white/60 text-sm">Сумма займа</span>
                     <span className="font-bold gradient-text text-base">{formAmount.toLocaleString("ru-RU")} ₽</span>
                   </div>
-                  <input type="range" min={500} max={200000} step={500} value={formAmount}
+                  <input type="range" min={500} max={50000} step={500} value={formAmount}
                     onChange={e => { const v = Number(e.target.value); setFormAmount(v); setF("amount", String(v)); }}
                     className="slider-custom w-full" style={{ background: amountBg }} />
                   <div className="flex justify-between text-white/30 text-xs mt-1">
-                    <span>500 ₽</span><span>200 000 ₽</span>
+                    <span>500 ₽</span><span>50 000 ₽</span>
                   </div>
                 </div>
                 <div>
@@ -415,15 +416,15 @@ export default function ApplyPage() {
                     <span className="text-white/60 text-sm">Срок займа</span>
                     <span className="font-bold gradient-text text-base">{formDays} дней</span>
                   </div>
-                  <input type="range" min={5} max={365} step={5} value={formDays}
+                  <input type="range" min={15} max={365} step={5} value={formDays}
                     onChange={e => { const v = Number(e.target.value); setFormDays(v); setF("days", String(v)); }}
                     className="slider-custom w-full" style={{ background: daysBg }} />
                   <div className="flex justify-between text-white/30 text-xs mt-1">
-                    <span>5 дней</span><span>365 дней</span>
+                    <span>15 дней</span><span>365 дней</span>
                   </div>
                 </div>
                 <div className="rounded-xl p-4" style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.3)" }}>
-                  <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="grid grid-cols-2 gap-3 text-center mb-3">
                     <div>
                       <div className="text-white/40 text-xs mb-1">Сумма</div>
                       <div className="text-white font-bold">{formAmount.toLocaleString("ru-RU")} ₽</div>
@@ -432,9 +433,15 @@ export default function ApplyPage() {
                       <div className="text-white/40 text-xs mb-1">Срок</div>
                       <div className="text-white font-bold">{formDays} дн.</div>
                     </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-center pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+                    <div>
+                      <div className="text-white/40 text-xs mb-1">Ставка</div>
+                      <div className="text-yellow-300 font-bold">0.5% / день</div>
+                    </div>
                     <div>
                       <div className="text-white/40 text-xs mb-1">К возврату</div>
-                      <div className="text-purple-300 font-bold">{Math.round(formAmount * (1 + 0.008 * formDays)).toLocaleString("ru-RU")} ₽</div>
+                      <div className="text-purple-300 font-bold">{Math.round(formAmount * (1 + RATE * formDays)).toLocaleString("ru-RU")} ₽</div>
                     </div>
                   </div>
                 </div>
