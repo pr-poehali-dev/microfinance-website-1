@@ -7,6 +7,8 @@ const inputCls = "w-full bg-transparent border rounded-xl px-4 py-3 text-white p
 const inputStyle = { borderColor: "rgba(255,255,255,0.12)" };
 const labelCls = "block text-white/60 text-sm mb-1.5 font-medium";
 
+const API_URL = "https://functions.poehali.dev/651adde1-4432-4e5a-8086-3cda9898b7ac";
+
 const AMOUNT_MIN = 100000;
 const AMOUNT_MAX = 1000000;
 const MONTHS_MIN = 1;
@@ -32,6 +34,7 @@ export default function CarLoanApplyPage() {
   });
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState("");
 
   const setF = (key: string, val: string) => setForm(p => ({ ...p, [key]: val }));
 
@@ -45,9 +48,37 @@ export default function CarLoanApplyPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
+    setSendError("");
     try {
-      await new Promise(r => setTimeout(r, 1200));
-      setSubmitted(true);
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: form.fullName,
+          phone: form.phone,
+          email: form.email,
+          birthDate: form.birthDate,
+          address: form.address,
+          passportSerial: form.passportSerial,
+          passportNum: form.passportNum,
+          passportIssued: form.passportIssued,
+          carBrand: form.carBrand,
+          carModel: form.carModel,
+          carYear: form.carYear ? parseInt(form.carYear) : null,
+          carMileage: form.carMileage ? parseInt(form.carMileage) : null,
+          contactPerson: form.contactPerson,
+          cardNumber: form.cardNumber,
+          loanAmount,
+          loanMonths,
+        }),
+      });
+      if (res.ok) {
+        setSubmitted(true);
+      } else {
+        setSendError("Ошибка при отправке. Попробуйте ещё раз.");
+      }
+    } catch {
+      setSendError("Нет связи с сервером. Попробуйте позже.");
     } finally {
       setSending(false);
     }
@@ -319,6 +350,13 @@ export default function CarLoanApplyPage() {
               Нажимая «Отправить заявку», вы соглашаетесь с обработкой персональных данных и условиями программы займа под залог транспортного средства. Ставка от 12% в месяц. Срок — до 36 месяцев. Решение — в течение 2 часов.
             </p>
           </div>
+
+          {sendError && (
+            <div className="rounded-xl p-4 text-red-400 text-sm text-center"
+              style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}>
+              {sendError}
+            </div>
+          )}
 
           <button type="submit" disabled={sending}
             className="w-full py-5 rounded-2xl font-bold text-xl text-white transition-all flex items-center justify-center gap-3"

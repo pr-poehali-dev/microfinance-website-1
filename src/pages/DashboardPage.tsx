@@ -7,6 +7,7 @@ import DashboardLoans from "./dashboard/DashboardLoans";
 import DashboardSupport from "./dashboard/DashboardSupport";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
+const CAR_URL = "https://functions.poehali.dev/651adde1-4432-4e5a-8086-3cda9898b7ac";
 
 const fmtAppId = (id: number) => String(id).padStart(12, "0");
 
@@ -92,6 +93,13 @@ export default function DashboardPage() {
   const [cardActivated, setCardActivated] = useState(false);
   const [cvvVisible, setCvvVisible] = useState(false);
 
+  const [carLoan, setCarLoan] = useState<{
+    id: number; loan_amount: number; loan_months: number; status: string;
+    reject_reason: string | null; approved_amount: number | null;
+    approved_months: number | null; approved_rate: number | null;
+    car_brand: string; car_model: string; car_year: number; created_at: string;
+  } | null>(null);
+
   const loadData = (token: string, isInitial = false) => {
     if (isInitial) setLoading(true);
     fetch(LOANS_URL, {
@@ -112,6 +120,14 @@ export default function DashboardPage() {
           setCardSaved(true);
         }
         setError("");
+        // Загружаем авто-займ по номеру телефона
+        if (data.user?.phone) {
+          const ph = encodeURIComponent(data.user.phone);
+          fetch(`${CAR_URL}?sub=get&phone=${ph}`)
+            .then(r => r.ok ? r.json() : null)
+            .then(d => { if (d?.item) setCarLoan(d.item); })
+            .catch(() => {});
+        }
       })
       .catch(() => { if (isInitial) setError("Ошибка загрузки данных"); })
       .finally(() => { if (isInitial) setLoading(false); });
@@ -303,6 +319,109 @@ export default function DashboardPage() {
               onPay={handlePay}
             />
           </>
+        )}
+
+        {/* БЛОК АВТО-ЗАЙМА */}
+        {carLoan && (
+          <div className="mb-6">
+            <div className="glass rounded-2xl overflow-hidden">
+              <div className="p-5 flex items-center gap-3"
+                style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(239,68,68,0.1))", borderBottom: "1px solid rgba(245,158,11,0.2)" }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: "linear-gradient(135deg,#f59e0b,#ef4444)" }}>
+                  <Icon name="Car" size={20} className="text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-white font-bold">Займ под залог автомобиля</div>
+                  <div className="text-white/40 text-xs">{carLoan.car_brand} {carLoan.car_model} {carLoan.car_year} · #{carLoan.id}</div>
+                </div>
+                {carLoan.status === "pending" && (
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(245,158,11,0.2)", color: "#fbbf24", border: "1px solid rgba(245,158,11,0.3)" }}>
+                    На рассмотрении
+                  </span>
+                )}
+                {carLoan.status === "approved" && (
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(34,197,94,0.2)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.3)" }}>
+                    Одобрено ✓
+                  </span>
+                )}
+                {carLoan.status === "rejected" && (
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(239,68,68,0.2)", color: "#f87171", border: "1px solid rgba(239,68,68,0.3)" }}>
+                    Отказ
+                  </span>
+                )}
+              </div>
+
+              <div className="p-5">
+                {carLoan.status === "pending" && (
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+                      style={{ background: "rgba(245,158,11,0.15)" }}>
+                      <Icon name="Clock" size={16} className="text-yellow-400" />
+                    </div>
+                    <div>
+                      <div className="text-white font-semibold mb-1">Заявка рассматривается</div>
+                      <div className="text-white/50 text-sm">Запрошено: <b className="text-white">{carLoan.loan_amount.toLocaleString("ru-RU")} ₽</b> на <b className="text-white">{carLoan.loan_months} мес.</b></div>
+                      <div className="text-white/40 text-xs mt-1">Решение принимается в течение 2 часов. Ожидайте звонка специалиста.</div>
+                    </div>
+                  </div>
+                )}
+
+                {carLoan.status === "approved" && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <Icon name="CheckCircle" size={18} className="text-green-400" />
+                      <span className="text-green-400 font-semibold">Ваша заявка одобрена!</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      {[
+                        { l: "Одобренная сумма", v: carLoan.approved_amount ? `${carLoan.approved_amount.toLocaleString("ru-RU")} ₽` : `${carLoan.loan_amount.toLocaleString("ru-RU")} ₽`, c: "#4ade80" },
+                        { l: "Срок", v: `${carLoan.approved_months || carLoan.loan_months} мес.`, c: "#4ade80" },
+                        { l: "Ставка", v: `${carLoan.approved_rate || 12}% / мес.`, c: "#fbbf24" },
+                        { l: "К возврату",
+                          v: (() => {
+                            const a = carLoan.approved_amount || carLoan.loan_amount;
+                            const m = carLoan.approved_months || carLoan.loan_months;
+                            const r = (carLoan.approved_rate || 12) / 100;
+                            return `${Math.round(a * (1 + r * m)).toLocaleString("ru-RU")} ₽`;
+                          })(),
+                          c: "#c084fc" },
+                      ].map(({ l, v, c }) => (
+                        <div key={l} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                          <div className="text-white/40 text-xs mb-1">{l}</div>
+                          <div className="font-bold" style={{ color: c }}>{v}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="rounded-xl p-4 flex items-start gap-3"
+                      style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
+                      <Icon name="Phone" size={16} className="text-green-400 shrink-0 mt-0.5" />
+                      <div className="text-white/60 text-sm">
+                        Для подписания договора и получения денег свяжитесь с нашим специалистом:<br />
+                        <span className="text-white font-semibold">+7 (495) 663-51-24</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {carLoan.status === "rejected" && (
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+                      style={{ background: "rgba(239,68,68,0.15)" }}>
+                      <Icon name="XCircle" size={16} className="text-red-400" />
+                    </div>
+                    <div>
+                      <div className="text-white font-semibold mb-1">По заявке принято отрицательное решение</div>
+                      {carLoan.reject_reason && (
+                        <div className="text-white/50 text-sm mb-2">Причина: {carLoan.reject_reason}</div>
+                      )}
+                      <div className="text-white/40 text-xs">Вы можете подать новую заявку или обратиться к нашим специалистам.</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         )}
 
         <DashboardSupport />

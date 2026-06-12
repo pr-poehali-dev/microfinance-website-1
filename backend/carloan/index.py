@@ -1,0 +1,223 @@
+"""Приём и управление заявками на займ под залог автомобиля. v2"""
+import json
+import os
+import urllib.request
+import psycopg2
+
+SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
+TELEGRAM_CHAT_ID = "8540431915"
+
+CORS = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Authorization",
+}
+
+
+def get_conn():
+    return psycopg2.connect(os.environ["DATABASE_URL"])
+
+
+def tg(text: str):
+    tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+    if not tg_token:
+        return
+    data = json.dumps({"chat_id": TELEGRAM_CHAT_ID, "text": text, "parse_mode": "HTML"}).encode()
+    req = urllib.request.Request(
+        f"https://api.telegram.org/bot{tg_token}/sendMessage",
+        data=data, headers={"Content-Type": "application/json"},
+    )
+    try:
+        urllib.request.urlopen(req, timeout=5)
+    except Exception:
+        pass
+
+
+def check_admin(cur, raw_token: str) -> bool:
+    t = raw_token.replace("'", "''")
+    cur.execute(f"SELECT id FROM {SCHEMA}.admin_sessions WHERE token = '{t}' AND expires_at > NOW()")
+    return cur.fetchone() is not None
+
+
+def handler(event: dict, context) -> dict:
+    """Заявки на займ под залог автомобиля: приём от клиентов, управление из админки."""
+    method = event.get("httpMethod", "GET")
+
+    if method == "OPTIONS":
+        return {"statusCode": 200, "headers": CORS, "body": ""}
+
+    qs = event.get("queryStringParameters") or {}
+    sub = qs.get("sub", "")
+
+    hdrs = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
+    raw_token = hdrs.get("x-authorization") or hdrs.get("authorization") or ""
+    token = raw_token.replace("Bearer ", "").replace("bearer ", "").strip()
+
+    conn = get_conn()
+    cur = conn.cursor()
+
+    # --- POST / — принять новую заявку (публичный) ---
+    if method == "POST" and not sub:
+        raw_b = event.get("body") or "{}"
+        b = json.loads(raw_b) if isinstance(raw_b, str) else raw_b
+
+        def s(k): return (b.get(k) or "").replace("'", "''")
+
+        full_name       = s("fullName")
+        phone           = s("phone")
+        email           = s("email")
+        birth_date      = s("birthDate")
+        address         = s("address")
+        passport_serial = s("passportSerial")
+        passport_num    = s("passportNum")
+        passport_issued = s("passportIssued")
+        car_brand       = s("carBrand")
+        car_model       = s("carModel")
+        contact_person  = s("contactPerson")
+        card_number     = s("cardNumber")
+
+        car_year    = int(b["carYear"])    if b.get("carYear")    else 0
+        car_mileage = int(b["carMileage"]) if b.get("carMileage") else 0
+        loan_amount = float(b["loanAmount"]) if b.get("loanAmount") else 0
+        loan_months = int(b["loanMonths"])   if b.get("loanMonths")  else 0
+        bd_val = f"'{birth_date}'" if birth_date else "NULL"
+
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.car_loan_applications "
+            f"(full_name, phone, email, birth_date, address, passport_serial, passport_num, passport_issued, "
+            f" car_brand, car_model, car_year, car_mileage, contact_person, card_number, loan_amount, loan_months, "
+            f" status, created_at, updated_at) "
+            f"VALUES ('{full_name}','{phone}','{email}',{bd_val},'{address}','{passport_serial}','{passport_num}',"
+            f"'{passport_issued}','{car_brand}','{car_model}',{car_year},{car_mileage},'{contact_person}',"
+            f"'{card_number}',{loan_amount},{loan_months},'pending',NOW(),NOW()) RETURNING id"
+        )
+        new_id = cur.fetchone()[0]
+        conn.commit()
+
+        tg(
+            f"🚗 <b>Новая заявка на автозайм #{new_id}</b>\n\n"
+            f"👤 <b>ФИО:</b> {b.get('fullName','')}\n"
+            f"📞 <b>Телефон:</b> {b.get('phone','')}\n"
+            f"🚘 <b>Авто:</b> {b.get('carBrand','')} {b.get('carModel','')} {b.get('carYear','')}\n"
+            f"💰 <b>Сумма:</b> {int(loan_amount):,} ₽\n".replace(",", " ") +
+            f"📅 <b>Срок:</b> {loan_months} мес."
+        )
+
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "id": new_id})}
+
+    # --- GET /?sub=list&status=pending — список для админа ---
+    if method == "GET" and sub == "list":
+        if not check_admin(cur, token):
+            cur.close(); conn.close()
+            return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
+
+        sf = (qs.get("status", "pending") or "pending").replace("'", "''")
+        if sf not in ("pending", "approved", "rejected"):
+            sf = "pending"
+
+        cur.execute(
+            f"SELECT id, full_name, phone, email, birth_date, address, passport_serial, passport_num, "
+            f"passport_issued, car_brand, car_model, car_year, car_mileage, contact_person, card_number, "
+            f"loan_amount, loan_months, status, reject_reason, approved_amount, approved_months, "
+            f"approved_rate, notes, created_at, updated_at "
+            f"FROM {SCHEMA}.car_loan_applications WHERE status = '{sf}' ORDER BY created_at DESC"
+        )
+        cols = [d[0] for d in cur.description]
+        rows = cur.fetchall()
+        result = []
+        for row in rows:
+            item = {}
+            for col, val in zip(cols, row):
+                if hasattr(val, "isoformat"):
+                    item[col] = val.isoformat()
+                else:
+                    item[col] = val
+            result.append(item)
+
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "items": result}, ensure_ascii=False)}
+
+    # --- GET /?sub=get&id=N — одна заявка для клиента по телефону ---
+    if method == "GET" and sub == "get":
+        phone_q = (qs.get("phone") or "").replace("'", "''")
+        if not phone_q:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "phone required"})}
+
+        cur.execute(
+            f"SELECT id, loan_amount, loan_months, status, reject_reason, approved_amount, approved_months, "
+            f"approved_rate, notes, car_brand, car_model, car_year, created_at "
+            f"FROM {SCHEMA}.car_loan_applications WHERE phone = '{phone_q}' ORDER BY created_at DESC LIMIT 1"
+        )
+        row = cur.fetchone()
+        cur.close(); conn.close()
+        if not row:
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "not found"})}
+        keys = ["id","loan_amount","loan_months","status","reject_reason","approved_amount","approved_months",
+                "approved_rate","notes","car_brand","car_model","car_year","created_at"]
+        item = {}
+        for k, v in zip(keys, row):
+            item[k] = v.isoformat() if hasattr(v, "isoformat") else v
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "item": item}, ensure_ascii=False)}
+
+    # --- PUT /?sub=update&id=N — обновить заявку (админ) ---
+    if method == "PUT" and sub == "update":
+        if not check_admin(cur, token):
+            cur.close(); conn.close()
+            return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
+
+        app_id = int(qs.get("id", 0) or 0)
+        if not app_id:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "id required"})}
+
+        raw_b = event.get("body") or "{}"
+        b = json.loads(raw_b) if isinstance(raw_b, str) else raw_b
+
+        parts = ["updated_at = NOW()"]
+
+        if "status" in b:
+            v = str(b["status"]).replace("'", "''")
+            parts.append(f"status = '{v}'")
+        if "reject_reason" in b:
+            v = str(b["reject_reason"]).replace("'", "''")
+            parts.append(f"reject_reason = '{v}'")
+        if "approved_amount" in b and b["approved_amount"] is not None:
+            parts.append(f"approved_amount = {float(b['approved_amount'])}")
+        if "approved_months" in b and b["approved_months"] is not None:
+            parts.append(f"approved_months = {int(b['approved_months'])}")
+        if "approved_rate" in b and b["approved_rate"] is not None:
+            parts.append(f"approved_rate = {float(b['approved_rate'])}")
+        if "notes" in b:
+            v = str(b["notes"]).replace("'", "''")
+            parts.append(f"notes = '{v}'")
+
+        cur.execute(f"UPDATE {SCHEMA}.car_loan_applications SET {', '.join(parts)} WHERE id = {app_id} RETURNING phone, full_name, loan_amount")
+        row = cur.fetchone()
+        conn.commit()
+
+        if row and b.get("status") == "approved":
+            phone_n, fname, amt = row
+            aa = b.get("approved_amount") or amt
+            am = b.get("approved_months", 12)
+            ar = b.get("approved_rate", 12)
+            tg(
+                f"✅ <b>Автозайм #{app_id} одобрен</b>\n"
+                f"👤 {fname} | 📞 {phone_n}\n"
+                f"💰 Одобрено: {int(float(aa)):,} ₽, {am} мес., {ar}%/мес.".replace(",", " ")
+            )
+        if row and b.get("status") == "rejected":
+            phone_n, fname, amt = row
+            reason = b.get("reject_reason", "")
+            tg(
+                f"❌ <b>Автозайм #{app_id} отклонён</b>\n"
+                f"👤 {fname} | 📞 {phone_n}\n" +
+                (f"📝 Причина: {reason}" if reason else "")
+            )
+
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    cur.close(); conn.close()
+    return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Unknown request"})}
