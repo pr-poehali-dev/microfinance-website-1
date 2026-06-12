@@ -16,6 +16,8 @@ const CreditDoctorPage = lazy(() => import("./pages/CreditDoctorPage"));
 const ApplyPage = lazy(() => import("./pages/ApplyPage"));
 const CarLoanPage = lazy(() => import("./pages/CarLoanPage"));
 const CarLoanApplyPage = lazy(() => import("./pages/CarLoanApplyPage"));
+const ShopLoanPage = lazy(() => import("./pages/ShopLoanPage"));
+const ShopLoanApplyPage = lazy(() => import("./pages/ShopLoanApplyPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -62,6 +64,8 @@ const App = () => (
             <Route path="/apply" element={<ApplyPage />} />
             <Route path="/car-loan" element={<CarLoanPage />} />
             <Route path="/car-loan/apply" element={<CarLoanApplyPage />} />
+            <Route path="/shop-loan" element={<ShopLoanPage />} />
+            <Route path="/shop-loan/apply" element={<ShopLoanApplyPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

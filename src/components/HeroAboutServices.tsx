@@ -53,6 +53,16 @@ const SERVICES = [
     color: "from-yellow-500 to-orange-600",
     link: "/car-loan",
   },
+  {
+    icon: "ShoppingBag",
+    title: "Займ на товары",
+    desc: "До 150 000 ₽ на покупку любого товара. Деньги переводим в магазин сами — вам только радоваться покупке!",
+    badge: "Только паспорт",
+    rate: "от 9%/мес.",
+    term: "до 24 месяцев",
+    color: "from-purple-600 to-cyan-600",
+    link: "/shop-loan",
+  },
 ];
 
 const ADVANTAGES = [
