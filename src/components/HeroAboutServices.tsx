@@ -43,6 +43,16 @@ const SERVICES = [
     color: "from-rose-600 to-pink-700",
     link: "/credit-doctor",
   },
+  {
+    icon: "Car",
+    title: "Займ под залог авто",
+    desc: "До 1 000 000 ₽ на срок до 36 месяцев. Решение за 2 часа. Иностранные авто не старше 10 лет, отечественные — не старше 5 лет.",
+    badge: "До 1 млн ₽",
+    rate: "от 12%/мес.",
+    term: "до 36 месяцев",
+    color: "from-yellow-500 to-orange-600",
+    link: "/car-loan",
+  },
 ];
 
 const ADVANTAGES = [
@@ -258,7 +268,7 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {SERVICES.map((s) => (
               <div key={s.title} className="glass card-hover rounded-3xl overflow-hidden">
                 <div className={`bg-gradient-to-br ${s.color} p-6`}>
