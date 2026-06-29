@@ -204,6 +204,18 @@ export default function AdminPage() {
     if (selUser) loadLoans(selUser.id);
   }
 
+  async function creditDoctor(userId: number, data: { amount: number; days: number; rate: number }) {
+    const r = await fetch(`${ADMIN_URL}?sub=loans`, { method: "POST", headers: hdrs(), body: JSON.stringify({
+      phone: users.find(u => u.id === userId)?.phone,
+      amount: data.amount, days: data.days, rate: data.rate,
+      isCreditDoctor: true,
+    })});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || "Ошибка");
+    setActionMsg("Займ по Кредитному Доктору создан!");
+    loadLoans(userId);
+  }
+
   if (!token) return <AdminLogin pwd={pwd} setPwd={setPwd} err={err} loading={loading} onSubmit={login} />;
 
   const filtered = users.filter(u => u.phone.includes(search) || (u.fullName || "").toLowerCase().includes(search.toLowerCase()));
@@ -293,6 +305,7 @@ export default function AdminPage() {
             onSendOffer={sendOffer} onAddLoan={addLoan}
             onAddClient={addClient} onChangeStatus={changeStatus}
             onUpdateUser={updateUser} onUploadDocs={uploadDocs}
+            onCreditDoctor={creditDoctor}
           />
         )}
       </div>

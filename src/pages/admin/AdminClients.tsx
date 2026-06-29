@@ -31,6 +31,7 @@ interface Props {
   onChangeStatus: (loanId: number, status: string) => void;
   onUpdateUser: (userId: number, data: { fullName: string; phone: string; email: string; password: string }) => Promise<void>;
   onUploadDocs: (userId: number, files: Record<string, string>) => Promise<void>;
+  onCreditDoctor: (userId: number, data: { amount: number; days: number; rate: number }) => Promise<void>;
 }
 
 const INPUT = { background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: "100%", boxSizing: "border-box" as const, outline: "none" };
@@ -41,10 +42,13 @@ export default function AdminClients({
   clientView, setClientView,
   offer, setOffer, newLoan, setNewLoan, newClient, setNewClient,
   actionMsg, actionErr, setActionMsg, setActionErr,
-  onLoadLoans, onSendOffer, onAddLoan, onAddClient, onChangeStatus, onUpdateUser, onUploadDocs,
+  onLoadLoans, onSendOffer, onAddLoan, onAddClient, onChangeStatus, onUpdateUser, onUploadDocs, onCreditDoctor,
 }: Props) {
   const [editForm, setEditForm] = useState({ fullName: "", phone: "", email: "", password: "" });
   const [editSaving, setEditSaving] = useState(false);
+
+  const [cdForm, setCdForm] = useState({ amount: "5000", days: "30", rate: "1.0" });
+  const [cdSaving, setCdSaving] = useState(false);
 
   const [docFiles, setDocFiles] = useState<Record<string, File | null>>({ passportMain: null, registration: null, selfie: null, previousPassports: null });
   const [docUploading, setDocUploading] = useState(false);
@@ -194,6 +198,16 @@ export default function AdminClients({
                   <Icon name={icon} size={13} />{label}
                 </button>
               ))}
+              {selUser && (
+                <button onClick={() => { setClientView("creditdoctor" as typeof clientView); setActionMsg(""); setActionErr(""); }}
+                  style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 6,
+                    background: clientView === ("creditdoctor" as typeof clientView) ? "linear-gradient(135deg,#a855f7,#ec4899)" : "rgba(168,85,247,0.15)",
+                    color: clientView === ("creditdoctor" as typeof clientView) ? "white" : "#d8b4fe",
+                    border: "1px solid rgba(168,85,247,0.35)",
+                    boxShadow: clientView === ("creditdoctor" as typeof clientView) ? "0 0 14px rgba(168,85,247,0.4)" : "none" }}>
+                  💊 Кредитный Доктор
+                </button>
+              )}
               <button onClick={() => { setSelUser(null); setClientView("addclient"); setActionMsg(""); setActionErr(""); }}
                 style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13, display: "flex", alignItems: "center", gap: 6,
                   background: clientView === "addclient" ? "linear-gradient(135deg,#7c3aed,#a855f7)" : "rgba(255,255,255,0.07)",
@@ -229,6 +243,77 @@ export default function AdminClients({
                     style={{ background: "linear-gradient(135deg,#059669,#10b981)", color: "white", border: "none", borderRadius: 12, padding: "14px", cursor: docUploading ? "not-allowed" : "pointer", fontWeight: 700, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, opacity: docUploading ? 0.7 : 1 }}>
                     {docUploading ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="Upload" size={18} />}
                     {docUploading ? "Загружаем..." : "Загрузить документы"}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* Кредитный Доктор */}
+            {(clientView as string) === "creditdoctor" && selUser && (
+              <div style={{ ...GLASS, padding: 24, border: "1px solid rgba(168,85,247,0.4)", background: "rgba(168,85,247,0.04)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg,#a855f7,#ec4899)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>💊</div>
+                  <div>
+                    <h3 style={{ color: "white", fontWeight: 700, margin: 0, fontSize: 18 }}>Кредитный Доктор</h3>
+                    <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, margin: 0 }}>Одобрить займ по программе восстановления кредитной истории</p>
+                  </div>
+                </div>
+
+                <div style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.2)", borderRadius: 12, padding: "12px 16px", marginBottom: 20, marginTop: 12 }}>
+                  <div style={{ color: "#d8b4fe", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>💡 Программа Кредитный Доктор</div>
+                  <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, lineHeight: 1.6 }}>
+                    Займ выдаётся через карту партнёра. Клиент восстанавливает кредитную историю поэтапно:<br/>
+                    Этап 1: 500–5 000 ₽ · Этап 2: до 15 000 ₽ · Этап 3: до 30 000 ₽ · Этап 4: до 50 000 ₽
+                  </div>
+                </div>
+
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  setCdSaving(true); setActionMsg(""); setActionErr("");
+                  try {
+                    await onCreditDoctor(selUser.id, { amount: +cdForm.amount, days: +cdForm.days, rate: +cdForm.rate / 100 });
+                    setActionMsg("Займ по программе «Кредитный Доктор» одобрен и создан!");
+                    setCdForm({ amount: "5000", days: "30", rate: "1.0" });
+                  } catch {
+                    setActionErr("Ошибка при создании займа");
+                  } finally {
+                    setCdSaving(false);
+                  }
+                }} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                    {[
+                      { label: "Сумма (₽)", key: "amount" as const, placeholder: "5000" },
+                      { label: "Срок (дней)", key: "days" as const, placeholder: "30" },
+                      { label: "Ставка (%/день)", key: "rate" as const, placeholder: "1.0" },
+                    ].map(({ label, key, placeholder }) => (
+                      <div key={key}>
+                        <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 6 }}>{label}</div>
+                        <input type="number" step="any" placeholder={placeholder} value={cdForm[key]}
+                          onChange={e => setCdForm(p => ({ ...p, [key]: e.target.value }))} required
+                          style={{ ...INPUT, border: "1px solid rgba(168,85,247,0.35)" }} />
+                      </div>
+                    ))}
+                  </div>
+
+                  {cdForm.amount && cdForm.days && cdForm.rate && (
+                    <div style={{ background: "rgba(0,0,0,0.2)", borderRadius: 10, padding: "12px 16px", display: "flex", gap: 24, flexWrap: "wrap" }}>
+                      {[
+                        { l: "Сумма", v: `${(+cdForm.amount).toLocaleString("ru-RU")} ₽` },
+                        { l: "Срок", v: `${cdForm.days} дн.` },
+                        { l: "Ставка", v: `${cdForm.rate}%/день` },
+                        { l: "К возврату", v: `${Math.round(+cdForm.amount * (1 + +cdForm.rate / 100 * +cdForm.days)).toLocaleString("ru-RU")} ₽` },
+                      ].map(({ l, v }) => (
+                        <div key={l}>
+                          <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>{l}</div>
+                          <div style={{ color: "#e879f9", fontWeight: 700, fontSize: 14 }}>{v}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <button type="submit" disabled={cdSaving}
+                    style={{ background: "linear-gradient(135deg,#a855f7,#ec4899)", color: "white", border: "none", borderRadius: 12, padding: "14px", cursor: cdSaving ? "not-allowed" : "pointer", fontWeight: 700, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, opacity: cdSaving ? 0.7 : 1, boxShadow: "0 0 20px rgba(168,85,247,0.3)" }}>
+                    {cdSaving ? <><Icon name="Loader2" size={18} className="animate-spin" />Создаём займ...</> : <>💊 Одобрить по Кредитному Доктору</>}
                   </button>
                 </form>
               </div>
