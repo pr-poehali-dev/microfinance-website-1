@@ -51,17 +51,11 @@ export default function AdminPage() {
   function loadApps(_filter?: string, tok = token) {
     if (!tok) return;
     setAppsLoading(true);
-    const statuses = ["pending", "postponed", "approved", "rejected", "partner_card"];
-    Promise.all(
-      statuses.map(s =>
-        fetch(`${ADMIN_URL}?sub=applications&status=${s}`, { headers: hdrs(tok) })
-          .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-          .then(d => d.applications || [])
-          .catch(() => [])
-      )
-    ).then(results => {
-      setApps(results.flat());
-    }).finally(() => setAppsLoading(false));
+    fetch(`${ADMIN_URL}?sub=applications&status=all`, { headers: hdrs(tok) })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(d => setApps(d.applications || []))
+      .catch(() => {})
+      .finally(() => setAppsLoading(false));
   }
 
   function loadUsers(tok = token) {

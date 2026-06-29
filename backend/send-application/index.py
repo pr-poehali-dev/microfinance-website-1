@@ -3,6 +3,7 @@ import json
 import os
 import urllib.request
 from datetime import datetime
+import threading
 import psycopg2
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
@@ -210,8 +211,10 @@ def handler(event: dict, context) -> dict:
     finally:
         cur.close(); conn.close()
 
-    if plain_password and email:
-        email_html = f"""<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"></head>
+    # Email и Telegram — в фоне, не блокируем ответ клиенту
+    def send_notifications():
+        if plain_password and email:
+            email_html = f"""<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#0F0A1E;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#0F0A1E;padding:40px 20px;">
     <tr><td align="center">
@@ -244,46 +247,47 @@ def handler(event: dict, context) -> dict:
     </td></tr>
   </table>
 </body></html>"""
-        send_email(to=email, subject=f"Заявка #{app_id} принята — данные для входа в личный кабинет", html=email_html)
+            send_email(to=email, subject=f"Заявка #{app_id} принята — данные для входа в личный кабинет", html=email_html)
 
-    tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-    now = datetime.now().strftime("%d.%m.%Y в %H:%M")
-    docs_count = len(file_urls)
-    app_label = f" (#{app_id})" if app_id else ""
-    text = (
-        f"🚀 <b>Новая заявка — PARAFINANS24{app_label}</b>\n"
-        f"⏱ {now}\n\n"
-        f"👤 <b>ФИО:</b> {full_name}\n"
-        f"🎂 <b>Дата рождения:</b> {birth_date or '—'}\n"
-        f"📍 <b>Место рождения:</b> {birth_place or '—'}\n"
-        f"📞 <b>Телефон:</b> {phone}\n"
-        f"📧 <b>Email:</b> {email or '—'}\n"
-        f"💰 <b>Сумма:</b> {int(amount):,} ₽\n".replace(",", " ") +
-        f"📅 <b>Срок:</b> {days} дн.\n\n"
-        f"📋 <b>Паспортные данные:</b>\n"
-        f"  Серия/Номер: {passport_series} {passport_number}\n"
-        f"  Дата выдачи: {passport_date or '—'}\n"
-        f"  Код: {passport_code or '—'}\n"
-        f"  Кем выдан: {passport_by or '—'}\n\n"
-        f"📎 <b>Документы загружены:</b> {docs_count} из {len(FILE_KEYS)}\n"
-        f"💬 <b>Telegram:</b> {'@' + telegram_username if telegram_username else '—'}\n\n"
-        f"💼 <b>Работа:</b>\n"
-        f"  Место: {workplace or '—'}\n"
-        f"  Должность: {position or '—'}\n"
-        f"  Раб. телефон: {work_phone or '—'}\n"
-        f"  Зарплата: {salary_raw or '—'} ₽\n\n"
-        f"🪪 <b>СНИЛС:</b> {snils or '—'}\n"
-        f"👥 <b>Контактное лицо:</b> {contact_person or '—'}\n"
-        f"💳 <b>Карта/СБП для перевода:</b> {card_number_transfer or '—'}"
-    )
-    if file_urls:
-        doc_lines = "\n".join(
-            f'📄 <a href="{url}">{FILE_LABELS[key]}</a>'
-            for key, url in file_urls.items()
+        tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+        now = datetime.now().strftime("%d.%m.%Y в %H:%M")
+        docs_count = len(file_urls)
+        app_label = f" (#{app_id})" if app_id else ""
+        text = (
+            f"🚀 <b>Новая заявка — PARAFINANS24{app_label}</b>\n"
+            f"⏱ {now}\n\n"
+            f"👤 <b>ФИО:</b> {full_name}\n"
+            f"🎂 <b>Дата рождения:</b> {birth_date or '—'}\n"
+            f"📍 <b>Место рождения:</b> {birth_place or '—'}\n"
+            f"📞 <b>Телефон:</b> {phone}\n"
+            f"📧 <b>Email:</b> {email or '—'}\n"
+            f"💰 <b>Сумма:</b> {int(amount):,} ₽\n".replace(",", " ") +
+            f"📅 <b>Срок:</b> {days} дн.\n\n"
+            f"📋 <b>Паспортные данные:</b>\n"
+            f"  Серия/Номер: {passport_series} {passport_number}\n"
+            f"  Дата выдачи: {passport_date or '—'}\n"
+            f"  Код: {passport_code or '—'}\n"
+            f"  Кем выдан: {passport_by or '—'}\n\n"
+            f"📎 <b>Документы загружены:</b> {docs_count} из {len(FILE_KEYS)}\n"
+            f"💬 <b>Telegram:</b> {'@' + telegram_username if telegram_username else '—'}\n\n"
+            f"💼 <b>Работа:</b>\n"
+            f"  Место: {workplace or '—'}\n"
+            f"  Должность: {position or '—'}\n"
+            f"  Раб. телефон: {work_phone or '—'}\n"
+            f"  Зарплата: {salary_raw or '—'} ₽\n\n"
+            f"🪪 <b>СНИЛС:</b> {snils or '—'}\n"
+            f"👥 <b>Контактное лицо:</b> {contact_person or '—'}\n"
+            f"💳 <b>Карта/СБП для перевода:</b> {card_number_transfer or '—'}"
         )
-        text += f"\n\n🔗 <b>Документы:</b>\n{doc_lines}"
+        if file_urls:
+            doc_lines = "\n".join(
+                f'📄 <a href="{url}">{FILE_LABELS[key]}</a>'
+                for key, url in file_urls.items()
+            )
+            text += f"\n\n🔗 <b>Документы:</b>\n{doc_lines}"
+        send_telegram_message(tg_token, TELEGRAM_CHAT_ID, text)
 
-    send_telegram_message(tg_token, TELEGRAM_CHAT_ID, text)
+    threading.Thread(target=send_notifications, daemon=True).start()
 
     # Создаём сессию для автоматического входа клиента в ЛК
     session_token = None

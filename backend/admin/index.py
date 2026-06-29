@@ -246,11 +246,11 @@ def handler(event: dict, context) -> dict:
         )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "userId": uid})}
 
-    # --- СПИСОК ЗАЯВОК (GET, sub='applications') ---
+    # --- СПИСОК ЗАЯВОК (GET, sub='applications') — все статусы за один запрос ---
     if sub == "applications" and method == "GET":
-        status_filter = qs.get("status", "pending")
+        status_filter = qs.get("status", "all")
         print(f"[applications] status_filter={status_filter!r}")
-        sf = status_filter.replace("'", "''")
+        where_clause = "" if status_filter == "all" else f"WHERE a.status = '{status_filter.replace(chr(39), chr(39)*2)}'"
         cur.execute(f"""
             SELECT a.id, a.full_name, a.phone, a.email, a.amount, a.days, a.birth_date,
                    a.passport_series, a.passport_number, a.status, a.created_at, a.reject_reason,
@@ -259,17 +259,17 @@ def handler(event: dict, context) -> dict:
                    a.workplace, a.position, a.active_loans, a.salary, a.contact_person, a.sb_score,
                    a.approved_amount, a.client_password, a.card_number,
                    a.approved_rate, a.approved_days,
-                   l.id AS loan_id, l.signed, l.signed_at, l.status AS loan_status, l.created_at AS loan_created_at,
+                   l.id AS loan_id, l.signed, l.signed_at, l.status AS loan_status, l.disbursed_at,
                    a.snils, a.work_phone, a.card_number_transfer, a.is_credit_doctor
             FROM {SCHEMA}.applications a
-            LEFT JOIN {SCHEMA}.loans l ON l.user_id = (
-                SELECT id FROM {SCHEMA}.users WHERE phone = a.phone LIMIT 1
-            ) AND l.id = (
-                SELECT id FROM {SCHEMA}.loans WHERE user_id = (
-                    SELECT id FROM {SCHEMA}.users WHERE phone = a.phone LIMIT 1
-                ) ORDER BY created_at DESC LIMIT 1
-            )
-            WHERE a.status = '{sf}' ORDER BY a.created_at DESC
+            LEFT JOIN LATERAL (
+                SELECT lo.id, lo.signed, lo.signed_at, lo.status, lo.disbursed_at
+                FROM {SCHEMA}.loans lo
+                JOIN {SCHEMA}.users u ON u.id = lo.user_id
+                WHERE u.phone = a.phone
+                ORDER BY lo.created_at DESC LIMIT 1
+            ) l ON true
+            {where_clause} ORDER BY a.created_at DESC
         """)
         rows = cur.fetchall()
         print(f"[applications] found {len(rows)} rows")
