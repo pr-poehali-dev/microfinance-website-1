@@ -11,8 +11,8 @@ interface SbFields { workplace: string; position: string; activeLoans: string; s
 interface Props {
   apps: App[];
   appsLoading: boolean;
-  appFilter: "pending" | "approved" | "rejected" | "postponed" | "partner_card";
-  setAppFilter: (f: "pending" | "approved" | "rejected" | "postponed" | "partner_card") => void;
+  appFilter: "pending" | "approved" | "rejected" | "postponed" | "partner_card" | "creditdoctor";
+  setAppFilter: (f: "pending" | "approved" | "rejected" | "postponed" | "partner_card" | "creditdoctor") => void;
   appMsg: string;
   appErr2: string;
   appProcessing: boolean;
@@ -60,7 +60,7 @@ export default function AdminApplications({
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "month" | "custom">("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [cdOnly, setCdOnly] = useState(false);
+
 
   async function handleIssueCard(app: App) {
     const f = cardForm[app.id] || {};
@@ -110,8 +110,14 @@ export default function AdminApplications({
   }
 
   const filtered = apps.filter(a => {
-    if (a.status !== appFilter) return false;
-    if (cdOnly && !a.isCreditDoctor) return false;
+    if (appFilter === "creditdoctor") {
+      if (!a.isCreditDoctor) return false;
+    } else if (appFilter === "partner_card") {
+      if (a.status !== "partner_card" || a.isCreditDoctor) return false;
+    } else {
+      if (a.status !== appFilter) return false;
+      if (a.isCreditDoctor) return false;
+    }
     const q = search.toLowerCase();
     if (q && !a.phone.includes(q) && !(a.fullName || "").toLowerCase().includes(q) && !(a.email || "").toLowerCase().includes(q)) return false;
     if (dateFilter !== "all") {
@@ -138,20 +144,21 @@ export default function AdminApplications({
     <div>
       {/* Фильтр + Поиск */}
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-        {([["pending","Ожидают","Clock","#f59e0b"],["partner_card","Партнёр","CreditCard","#a855f7"],["postponed","Отложенные","PhoneMissed","#60a5fa"],["approved","Одобренные","CheckCircle","#22c55e"],["rejected","Отклонённые","XCircle","#ef4444"]] as const).map(([f, label, icon, color]) => (
+        {([
+          ["pending","Ожидают","Clock","#f59e0b"],
+          ["partner_card","Партнёр","CreditCard","#a855f7"],
+          ["creditdoctor","💊 Кред. Доктор","HeartPulse","linear-gradient(135deg,#a855f7,#ec4899)"],
+          ["postponed","Отложенные","PhoneMissed","#60a5fa"],
+          ["approved","Одобренные","CheckCircle","#22c55e"],
+          ["rejected","Отклонённые","XCircle","#ef4444"],
+        ] as const).map(([f, label, icon, color]) => (
           <button key={f} onClick={() => setAppFilter(f)}
             style={{ padding: "8px 18px", borderRadius: 12, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 8,
-              background: appFilter === f ? color : "rgba(255,255,255,0.07)", color: appFilter === f ? "white" : "rgba(255,255,255,0.5)" }}>
+              background: appFilter === f ? color : "rgba(255,255,255,0.07)", color: appFilter === f ? "white" : "rgba(255,255,255,0.5)",
+              boxShadow: appFilter === f && f === "creditdoctor" ? "0 0 14px rgba(168,85,247,0.4)" : "none" }}>
             <Icon name={icon} size={14} />{label}
           </button>
         ))}
-        <button onClick={() => setCdOnly(v => !v)}
-          style={{ padding: "8px 16px", borderRadius: 12, border: "none", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 7,
-            background: cdOnly ? "linear-gradient(135deg,#a855f7,#ec4899)" : "rgba(255,255,255,0.07)",
-            color: cdOnly ? "white" : "rgba(255,255,255,0.5)",
-            boxShadow: cdOnly ? "0 0 16px rgba(168,85,247,0.4)" : "none" }}>
-          <Icon name="HeartPulse" size={14} />Кредитный Доктор
-        </button>
         <input
           placeholder="Поиск по имени, телефону, email..."
           value={search}
