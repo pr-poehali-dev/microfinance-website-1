@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 
 const API_URL = "https://functions.poehali.dev/29f70c88-f1f7-4926-9c65-c642fd11fdfb";
@@ -29,6 +29,8 @@ type SectionId = typeof SECTIONS[number]["id"];
 
 export default function ApplyPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isCreditDoctor = !!(location.state as { isCreditDoctor?: boolean } | null)?.isCreditDoctor;
   const [activeSection, setActiveSection] = useState<SectionId>("personal");
   const [form, setForm] = useState({
     fullName: "", phone: "", email: "", birthDate: "", birthPlace: "", telegramId: "",
@@ -120,6 +122,7 @@ export default function ApplyPage() {
           ...form, name: form.fullName,
           amount: String(formAmount), days: String(formDays),
           ...fileUrls,
+          isCreditDoctor,
         }),
       });
       if (res.ok) {
@@ -187,11 +190,20 @@ export default function ApplyPage() {
 
       <div className="max-w-4xl mx-auto px-4 pt-28 pb-16">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-4"
-            style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.35)", color: "#c084fc" }}>
-            <Icon name="FileText" size={14} />
-            Анкета заёмщика
-          </div>
+          {isCreditDoctor && (
+            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold mb-4"
+              style={{ background: "linear-gradient(135deg,rgba(168,85,247,0.25),rgba(236,72,153,0.2))", border: "1px solid rgba(168,85,247,0.5)", color: "#e879f9" }}>
+              <Icon name="HeartPulse" size={15} />
+              Программа «Кредитный Доктор»
+            </div>
+          )}
+          {!isCreditDoctor && (
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-4"
+              style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.35)", color: "#c084fc" }}>
+              <Icon name="FileText" size={14} />
+              Анкета заёмщика
+            </div>
+          )}
           <h1 className="font-oswald text-4xl md:text-5xl font-bold text-white mb-3">
             ОФОРМИТЬ <span className="gradient-text">ЗАЙМ</span>
           </h1>

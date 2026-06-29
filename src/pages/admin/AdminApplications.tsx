@@ -60,6 +60,7 @@ export default function AdminApplications({
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "month" | "custom">("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [cdOnly, setCdOnly] = useState(false);
 
   async function handleIssueCard(app: App) {
     const f = cardForm[app.id] || {};
@@ -110,6 +111,7 @@ export default function AdminApplications({
 
   const filtered = apps.filter(a => {
     if (a.status !== appFilter) return false;
+    if (cdOnly && !a.isCreditDoctor) return false;
     const q = search.toLowerCase();
     if (q && !a.phone.includes(q) && !(a.fullName || "").toLowerCase().includes(q) && !(a.email || "").toLowerCase().includes(q)) return false;
     if (dateFilter !== "all") {
@@ -143,6 +145,13 @@ export default function AdminApplications({
             <Icon name={icon} size={14} />{label}
           </button>
         ))}
+        <button onClick={() => setCdOnly(v => !v)}
+          style={{ padding: "8px 16px", borderRadius: 12, border: "none", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 7,
+            background: cdOnly ? "linear-gradient(135deg,#a855f7,#ec4899)" : "rgba(255,255,255,0.07)",
+            color: cdOnly ? "white" : "rgba(255,255,255,0.5)",
+            boxShadow: cdOnly ? "0 0 16px rgba(168,85,247,0.4)" : "none" }}>
+          <Icon name="HeartPulse" size={14} />Кредитный Доктор
+        </button>
         <input
           placeholder="Поиск по имени, телефону, email..."
           value={search}
@@ -200,6 +209,11 @@ export default function AdminApplications({
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
                   <span style={{ color: "white", fontWeight: 700, fontSize: 18 }}>{app.fullName || app.phone}</span>
+                  {app.isCreditDoctor && (
+                    <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,rgba(168,85,247,0.3),rgba(236,72,153,0.25))", color: "#e879f9", border: "1px solid rgba(168,85,247,0.5)", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                      💊 Кредитный Доктор
+                    </span>
+                  )}
                   <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>№{fmtAppId(app.id)} · {app.createdAt}</span>
                   {app.telegramId && <span style={{ color: "#a78bfa", fontSize: 13 }}>@{app.telegramId}</span>}
                 </div>

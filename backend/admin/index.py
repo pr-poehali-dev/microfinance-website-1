@@ -260,7 +260,7 @@ def handler(event: dict, context) -> dict:
                    a.approved_amount, a.client_password, a.card_number,
                    a.approved_rate, a.approved_days,
                    l.id AS loan_id, l.signed, l.signed_at, l.status AS loan_status, l.created_at AS loan_created_at,
-                   a.snils, a.work_phone, a.card_number_transfer
+                   a.snils, a.work_phone, a.card_number_transfer, a.is_credit_doctor
             FROM {SCHEMA}.applications a
             LEFT JOIN {SCHEMA}.loans l ON l.user_id = (
                 SELECT id FROM {SCHEMA}.users WHERE phone = a.phone LIMIT 1
@@ -301,6 +301,7 @@ def handler(event: dict, context) -> dict:
             "snils": r[37] or "",
             "workPhone": r[38] or "",
             "cardNumberTransfer": r[39] or "",
+            "isCreditDoctor": bool(r[40]) if r[40] is not None else False,
         } for r in rows]
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"applications": apps}, ensure_ascii=False)}
 

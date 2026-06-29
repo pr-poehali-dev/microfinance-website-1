@@ -109,7 +109,7 @@ export default function CreditDoctorPage() {
           </p>
 
           <button
-            onClick={() => navigate("/apply")}
+            onClick={() => navigate("/apply", { state: { isCreditDoctor: true } })}
             className="btn-neon text-white font-bold px-10 py-5 rounded-2xl text-lg inline-flex items-center gap-3"
           >
             <Icon name="HeartPulse" size={22} />
@@ -221,7 +221,7 @@ export default function CreditDoctorPage() {
           </h2>
           <p className="text-white/50 mb-8">Одобряем 100% заявок. Срок рассмотрения от 1 до 30 минут.</p>
           <button
-            onClick={() => navigate("/apply")}
+            onClick={() => navigate("/apply", { state: { isCreditDoctor: true } })}
             className="btn-neon text-white font-bold px-10 py-5 rounded-2xl text-lg inline-flex items-center gap-3"
           >
             <Icon name="HeartPulse" size={22} />

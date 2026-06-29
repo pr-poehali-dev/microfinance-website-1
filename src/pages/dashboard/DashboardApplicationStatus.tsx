@@ -48,6 +48,7 @@ interface Application {
   cardNumber: string;
   contractUrl: string;
   virtualCard: VirtualCard | null;
+  isCreditDoctor?: boolean;
 }
 
 interface Props {
@@ -151,7 +152,15 @@ export default function DashboardApplicationStatus({
               <Icon name="Clock" size={20} className="text-yellow-400" />
             </div>
             <div className="flex-1">
-              <div className="text-white font-semibold">Заявка №{fmtAppId(application.id)} принята</div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="text-white font-semibold">Заявка №{fmtAppId(application.id)} принята</div>
+                {application.isCreditDoctor && (
+                  <span className="text-xs px-2.5 py-1 rounded-full font-bold inline-flex items-center gap-1"
+                    style={{ background: "linear-gradient(135deg,rgba(168,85,247,0.35),rgba(236,72,153,0.25))", color: "#e879f9", border: "1px solid rgba(168,85,247,0.5)" }}>
+                    💊 Кредитный Доктор
+                  </span>
+                )}
+              </div>
               <div className="text-white/50 text-xs mt-0.5">
                 {application.amount.toLocaleString("ru-RU")} ₽ · {application.days} дн. · подана {application.createdAt}
               </div>
@@ -193,7 +202,15 @@ export default function DashboardApplicationStatus({
               <Icon name="CheckCircle" size={20} className="text-purple-400" />
             </div>
             <div className="flex-1">
-              <div className="text-white font-bold">Ваша заявка одобрена!</div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="text-white font-bold">Ваша заявка одобрена!</div>
+                {application.isCreditDoctor && (
+                  <span className="text-xs px-2.5 py-1 rounded-full font-bold inline-flex items-center gap-1"
+                    style={{ background: "linear-gradient(135deg,rgba(168,85,247,0.35),rgba(236,72,153,0.25))", color: "#e879f9", border: "1px solid rgba(168,85,247,0.5)" }}>
+                    💊 Кредитный Доктор
+                  </span>
+                )}
+              </div>
               <div className="text-purple-300 text-xs mt-0.5">Подана {application.createdAt}</div>
             </div>
             <span className="text-xs px-3 py-1 rounded-full font-semibold"
@@ -332,7 +349,15 @@ export default function DashboardApplicationStatus({
               <Icon name="CheckCircle" size={20} className="text-green-400" />
             </div>
             <div className="flex-1">
-              <div className="text-white font-bold">Заявка №{fmtAppId(application.id)} одобрена!</div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="text-white font-bold">Заявка №{fmtAppId(application.id)} одобрена!</div>
+                {application.isCreditDoctor && (
+                  <span className="text-xs px-2.5 py-1 rounded-full font-bold inline-flex items-center gap-1"
+                    style={{ background: "linear-gradient(135deg,rgba(168,85,247,0.35),rgba(236,72,153,0.25))", color: "#e879f9", border: "1px solid rgba(168,85,247,0.5)" }}>
+                    💊 Кредитный Доктор
+                  </span>
+                )}
+              </div>
               <div className="text-green-400 text-xs mt-0.5">Подана {application.createdAt}</div>
             </div>
             <span className="text-xs px-3 py-1 rounded-full font-semibold"
@@ -451,7 +476,15 @@ export default function DashboardApplicationStatus({
               <Icon name="XCircle" size={20} className="text-red-400" />
             </div>
             <div className="flex-1">
-              <div className="text-white font-bold">По заявке #{application.id} отказано</div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="text-white font-bold">По заявке #{application.id} отказано</div>
+                {application.isCreditDoctor && (
+                  <span className="text-xs px-2.5 py-1 rounded-full font-bold inline-flex items-center gap-1"
+                    style={{ background: "linear-gradient(135deg,rgba(168,85,247,0.35),rgba(236,72,153,0.25))", color: "#e879f9", border: "1px solid rgba(168,85,247,0.5)" }}>
+                    💊 Кредитный Доктор
+                  </span>
+                )}
+              </div>
               <div className="text-red-400 text-xs mt-0.5">Подана {application.createdAt}</div>
             </div>
             <span className="text-xs px-3 py-1 rounded-full font-semibold"

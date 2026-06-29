@@ -101,6 +101,7 @@ def handler(event: dict, context) -> dict:
     salary_raw = (body.get("salary") or "").strip()
     contact_person = (body.get("contactPerson") or "").strip()
     card_number_transfer = (body.get("cardNumber") or "").strip()
+    is_credit_doctor = bool(body.get("isCreditDoctor", False))
 
     if not full_name or not phone or not amount_raw:
         return {"statusCode": 400, "headers": cors_headers,
@@ -189,13 +190,15 @@ def handler(event: dict, context) -> dict:
                  passport_series, passport_number, passport_date, passport_code, passport_by,
                  telegram_id, status, client_password,
                  file_passport, file_registration, file_selfie, file_previous_passports,
-                 snils, workplace, position, work_phone, salary, contact_person, card_number_transfer)
+                 snils, workplace, position, work_phone, salary, contact_person, card_number_transfer,
+                 is_credit_doctor)
             VALUES (
                 '{esc(full_name)}', '{esc(phone)}', {em_val}, {amount}, {days},
                 {bd_val}, {bp_val}, {ps_val}, {pn_val}, {pd_val}, {pc_val}, {pb_val},
                 {tg_val}, 'pending', {pw_val},
                 {fp_val}, {fr_val}, {fs_val}, {fpp_val},
-                {snils_val}, {wp_val}, {pos_val}, {wph_val}, {sal_val}, {cp_val}, {cn_val}
+                {snils_val}, {wp_val}, {pos_val}, {wph_val}, {sal_val}, {cp_val}, {cn_val},
+                {str(is_credit_doctor).upper()}
             ) RETURNING id
         """)
         app_id = cur.fetchone()[0]

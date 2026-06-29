@@ -16,6 +16,7 @@ export interface App {
   loanSignedAt: string | null;
   loanStatus: string | null;
   loanDisbursedAt: string | null;
+  isCreditDoctor: boolean;
 }
 export interface User { id: number; phone: string; fullName: string; email: string; createdAt: string; loanCount: number; debt: number; }
 export interface Loan { id: number; amount: number; days: number; ratePercent: number; status: string; createdAt: string; }

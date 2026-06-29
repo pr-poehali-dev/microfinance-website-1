@@ -174,7 +174,8 @@ def handler(event: dict, context) -> dict:
     # Получаем последнюю заявку пользователя
     cur.execute(
         f"SELECT id, amount, days, status, created_at, approved_amount, approved_rate, approved_days, reject_reason, card_number, contract_url, "
-        f"virtual_card_number, virtual_card_expiry, virtual_card_cvv, virtual_card_holder, virtual_card_limit, virtual_card_rate, virtual_card_status "
+        f"virtual_card_number, virtual_card_expiry, virtual_card_cvv, virtual_card_holder, virtual_card_limit, virtual_card_rate, virtual_card_status, "
+        f"is_credit_doctor "
         f"FROM {SCHEMA}.applications "
         f"WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1"
     )
@@ -212,6 +213,7 @@ def handler(event: dict, context) -> dict:
                 "rate": float(app_row[16]) if app_row[16] else 0,
                 "status": app_row[17] or "none",
             } if app_row[11] else None,
+            "isCreditDoctor": bool(app_row[18]) if app_row[18] is not None else False,
         }
 
     cur.close(); conn.close()
