@@ -187,6 +187,17 @@ export default function AdminPage() {
     }
   }
 
+  async function creditDoctorApprove(appId: number, conditions: { amount: number; days: number; rate: number }) {
+    const r = await fetch(`${ADMIN_URL}?sub=creditdoctor_approve&appId=${appId}`, {
+      method: "POST", headers: hdrs(),
+      body: JSON.stringify(conditions)
+    });
+    if (r.ok) {
+      setAppMsg("Заявка одобрена как «Кредитный Доктор».");
+      setApps(prev => prev.filter(a => a.id !== appId));
+    }
+  }
+
   async function partnerRemind(appId: number) {
     const r = await fetch(`${ADMIN_URL}?sub=partner_remind&appId=${appId}`, { method: "POST", headers: hdrs() });
     const d = await r.json();
@@ -278,7 +289,7 @@ export default function AdminPage() {
             appRate={appRate} setAppRate={setAppRate}
             appAmount={appAmount} setAppAmount={setAppAmount}
             rejectReason={rejectReason} setRejectReason={setRejectReason}
-            onApprove={approveApp} onReject={rejectApp} onPostpone={postponeApp} onRestore={restoreApp} onPartnerApprove={partnerApprove} onPartnerRemind={partnerRemind}
+            onApprove={approveApp} onReject={rejectApp} onPostpone={postponeApp} onRestore={restoreApp} onPartnerApprove={partnerApprove} onPartnerRemind={partnerRemind} onCreditDoctorApprove={creditDoctorApprove}
             setLightbox={setLightbox}
             token={token}
           />

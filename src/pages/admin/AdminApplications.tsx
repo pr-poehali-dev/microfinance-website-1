@@ -34,6 +34,7 @@ interface Props {
   onRestore: (appId: number) => void;
   onPartnerApprove: (appId: number, conditions: { amount: number; days: number; rate: number }) => void;
   onPartnerRemind: (appId: number) => void;
+  onCreditDoctorApprove: (appId: number, conditions: { amount: number; days: number; rate: number }) => void;
   setLightbox: (url: string) => void;
   token: string;
 }
@@ -43,7 +44,7 @@ export default function AdminApplications({
   appMsg, appErr2, appProcessing,
   selApp, setSelApp, appAction, setAppAction, setAppMsg, setAppErr2,
   appRate, setAppRate, appAmount, setAppAmount, rejectReason, setRejectReason,
-  onApprove, onReject, onPostpone, onRestore, onPartnerApprove, onPartnerRemind, setLightbox, token,
+  onApprove, onReject, onPostpone, onRestore, onPartnerApprove, onPartnerRemind, onCreditDoctorApprove, setLightbox, token,
 }: Props) {
   const [search, setSearch] = useState("");
   const [sbEdits, setSbEdits] = useState<Record<number, SbFields>>({});
@@ -53,6 +54,8 @@ export default function AdminApplications({
   const [disbursed, setDisbursed] = useState<Record<number, boolean>>({});
   const [partnerForm, setPartnerForm] = useState<Record<number, { amount: string; days: string; rate: string }>>({});
   const [partnerOpen, setPartnerOpen] = useState<number | null>(null);
+  const [cdForm, setCdForm] = useState<Record<number, { amount: string; days: string; rate: string }>>({});
+  const [cdOpen, setCdOpen] = useState<number | null>(null);
   const [cardForm, setCardForm] = useState<Record<number, { limit: string; rate: string }>>({});
   const [cardOpen, setCardOpen] = useState<number | null>(null);
   const [cardIssuing, setCardIssuing] = useState<Record<number, boolean>>({});
@@ -625,6 +628,55 @@ export default function AdminApplications({
                         }}
                           style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
                           <Icon name="CreditCard" size={16} />Партнёр
+                        </button>
+                      )}
+                      {cdOpen === app.id ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 140 }}>
+                          <div style={{ color: "#e879f9", fontSize: 12, fontWeight: 700, marginBottom: 2 }}>💊 Кредитный Доктор</div>
+                          <input
+                            type="number" placeholder="Сумма, ₽"
+                            value={cdForm[app.id]?.amount ?? ""}
+                            onChange={e => setCdForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], amount: e.target.value } }))}
+                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(168,85,247,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                          />
+                          <input
+                            type="number" placeholder="Срок, дней"
+                            value={cdForm[app.id]?.days ?? ""}
+                            onChange={e => setCdForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], days: e.target.value } }))}
+                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(168,85,247,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                          />
+                          <input
+                            type="number" placeholder="Ставка %/день" step="0.1"
+                            value={cdForm[app.id]?.rate ?? ""}
+                            onChange={e => setCdForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], rate: e.target.value } }))}
+                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(168,85,247,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                          />
+                          <button
+                            onClick={() => {
+                              const f = cdForm[app.id] || {};
+                              const amount = parseFloat(f.amount || "0");
+                              const days = parseInt(f.days || "0");
+                              const rate = parseFloat(f.rate || "0") / 100;
+                              if (!amount || !days || !rate) return;
+                              onCreditDoctorApprove(app.id, { amount, days, rate });
+                              setCdOpen(null);
+                            }}
+                            disabled={appProcessing}
+                            style={{ background: "linear-gradient(135deg,#a855f7,#ec4899)", color: "white", border: "none", borderRadius: 8, padding: "9px 10px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                            <Icon name="Send" size={14} />{appProcessing ? "..." : "Одобрить"}
+                          </button>
+                          <button onClick={() => setCdOpen(null)}
+                            style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "none", borderRadius: 8, padding: "7px", cursor: "pointer", fontSize: 12 }}>
+                            Отмена
+                          </button>
+                        </div>
+                      ) : (
+                        <button onClick={() => {
+                          setCdOpen(app.id);
+                          setCdForm(prev => ({ ...prev, [app.id]: { amount: String(app.approvedAmount ?? app.amount ?? ""), days: String(app.approvedDays ?? app.days ?? ""), rate: String(app.approvedRate ? app.approvedRate * 100 : "1") } }));
+                        }}
+                          style={{ background: "linear-gradient(135deg,#a855f7,#ec4899)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6, boxShadow: "0 0 12px rgba(168,85,247,0.3)" }}>
+                          💊 Кред. Доктор
                         </button>
                       )}
                       <button onClick={() => onPostpone(app.id)}
