@@ -73,7 +73,13 @@ export default function CarLoanApplyPage() {
         }),
       });
       if (res.ok) {
-        setSubmitted(true);
+        const data = await res.json();
+        if (data.token) {
+          localStorage.setItem("token", data.token);
+          navigate("/dashboard");
+        } else {
+          setSubmitted(true);
+        }
       } else {
         setSendError("Ошибка при отправке. Попробуйте ещё раз.");
       }

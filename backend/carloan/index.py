@@ -1,8 +1,11 @@
-"""Приём и управление заявками на займ под залог автомобиля. v2"""
+"""Приём и управление заявками на займ под залог автомобиля. v3"""
 import json
 import os
+import secrets
+import hashlib
 import urllib.request
 import psycopg2
+from datetime import datetime, timedelta
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
 TELEGRAM_CHAT_ID = "8540431915"
@@ -92,6 +95,30 @@ def handler(event: dict, context) -> dict:
             f"'{card_number}',{loan_amount},{loan_months},'pending',NOW(),NOW()) RETURNING id"
         )
         new_id = cur.fetchone()[0]
+
+        # Создаём/обновляем пользователя и сессию для ЛК
+        plain_pw = secrets.token_hex(6)
+        pw_hash = hashlib.sha256(plain_pw.encode()).hexdigest()
+        ph_e = phone.replace("'", "''")
+        fn_e = full_name.replace("'", "''")
+        em_e = email.replace("'", "''")
+        cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = '{ph_e}'")
+        u = cur.fetchone()
+        if not u:
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email) "
+                f"VALUES ('{ph_e}', '{pw_hash}', '{fn_e}', '{em_e}') RETURNING id"
+            )
+            user_id = cur.fetchone()[0]
+        else:
+            user_id = u[0]
+
+        sess_token = secrets.token_hex(32)
+        expires_at = datetime.now() + timedelta(days=30)
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.sessions (user_id, token, expires_at) "
+            f"VALUES ({user_id}, '{sess_token}', '{expires_at}')"
+        )
         conn.commit()
 
         tg(
@@ -104,7 +131,7 @@ def handler(event: dict, context) -> dict:
         )
 
         cur.close(); conn.close()
-        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "id": new_id})}
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "id": new_id, "token": sess_token})}
 
     # --- GET /?sub=list&status=pending — список для админа ---
     if method == "GET" and sub == "list":

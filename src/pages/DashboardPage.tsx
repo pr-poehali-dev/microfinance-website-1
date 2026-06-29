@@ -111,6 +111,14 @@ export default function DashboardPage() {
   const [shopSigning, setShopSigning] = useState(false);
   const [shopSignMsg, setShopSignMsg] = useState("");
 
+  // Таймеры для авто и товарных заявок
+  const [carTimer, setCarTimer] = useState(5 * 60);
+  const [carTimerDone, setCarTimerDone] = useState(false);
+  const [shopTimer, setShopTimer] = useState(5 * 60);
+  const [shopTimerDone, setShopTimerDone] = useState(false);
+  const carTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const shopTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const loadData = (token: string, isInitial = false) => {
     if (isInitial) setLoading(true);
     fetch(LOANS_URL, {
@@ -160,6 +168,32 @@ export default function DashboardPage() {
     }, 30000);
     return () => clearInterval(interval);
   }, [navigate]);
+
+  // Таймер для авто-займа (pending)
+  useEffect(() => {
+    if (!carLoan || carLoan.status !== "pending") return;
+    setCarTimer(5 * 60); setCarTimerDone(false);
+    carTimerRef.current = setInterval(() => {
+      setCarTimer(prev => {
+        if (prev <= 1) { clearInterval(carTimerRef.current!); setCarTimerDone(true); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => { if (carTimerRef.current) clearInterval(carTimerRef.current); };
+  }, [carLoan?.id, carLoan?.status]);
+
+  // Таймер для товарного займа (pending)
+  useEffect(() => {
+    if (!shopLoan || shopLoan.status !== "pending") return;
+    setShopTimer(5 * 60); setShopTimerDone(false);
+    shopTimerRef.current = setInterval(() => {
+      setShopTimer(prev => {
+        if (prev <= 1) { clearInterval(shopTimerRef.current!); setShopTimerDone(true); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => { if (shopTimerRef.current) clearInterval(shopTimerRef.current); };
+  }, [shopLoan?.id, shopLoan?.status]);
 
   // Запускаем таймер только когда заявка pending
   useEffect(() => {
@@ -379,15 +413,34 @@ export default function DashboardPage() {
 
               <div className="p-5">
                 {shopLoan.status === "pending" && (
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
-                      style={{ background: "rgba(168,85,247,0.15)" }}>
-                      <Icon name="Clock" size={16} className="text-purple-400" />
+                  <div>
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+                        style={{ background: "rgba(168,85,247,0.15)" }}>
+                        <Icon name="Clock" size={16} className="text-purple-400" />
+                      </div>
+                      <div>
+                        <div className="text-white font-semibold mb-1">Заявка рассматривается</div>
+                        <div className="text-white/50 text-sm">Запрошено: <b className="text-white">{shopLoan.loan_amount.toLocaleString("ru-RU")} ₽</b> на <b className="text-white">{shopLoan.loan_months} мес.</b></div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-white font-semibold mb-1">Заявка рассматривается</div>
-                      <div className="text-white/50 text-sm">Запрошено: <b className="text-white">{shopLoan.loan_amount.toLocaleString("ru-RU")} ₽</b> на <b className="text-white">{shopLoan.loan_months} мес.</b></div>
-                      <div className="text-white/40 text-xs mt-1">Решение — от 1 минуты до 1 часа.</div>
+                    <div className="rounded-2xl p-5 text-center"
+                      style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.25)" }}>
+                      {!shopTimerDone ? (
+                        <>
+                          <div className="font-oswald text-5xl font-bold mb-2"
+                            style={{ color: "#d8b4fe", textShadow: "0 0 24px rgba(168,85,247,0.5)" }}>
+                            {`${Math.floor(shopTimer/60).toString().padStart(2,"0")}:${(shopTimer%60).toString().padStart(2,"0")}`}
+                          </div>
+                          <div className="text-white/40 text-sm">Примерное время до ответа</div>
+                        </>
+                      ) : (
+                        <>
+                          <Icon name="FileSearch" size={28} className="text-purple-400 mx-auto mb-2" />
+                          <div className="text-white font-semibold mb-1">Заявка на рассмотрении</div>
+                          <div className="text-white/40 text-sm">Специалист свяжется с вами в ближайшее время</div>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
@@ -504,15 +557,34 @@ export default function DashboardPage() {
 
               <div className="p-5">
                 {carLoan.status === "pending" && (
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
-                      style={{ background: "rgba(245,158,11,0.15)" }}>
-                      <Icon name="Clock" size={16} className="text-yellow-400" />
+                  <div>
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+                        style={{ background: "rgba(245,158,11,0.15)" }}>
+                        <Icon name="Clock" size={16} className="text-yellow-400" />
+                      </div>
+                      <div>
+                        <div className="text-white font-semibold mb-1">Заявка рассматривается</div>
+                        <div className="text-white/50 text-sm">Запрошено: <b className="text-white">{carLoan.loan_amount.toLocaleString("ru-RU")} ₽</b> на <b className="text-white">{carLoan.loan_months} мес.</b></div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-white font-semibold mb-1">Заявка рассматривается</div>
-                      <div className="text-white/50 text-sm">Запрошено: <b className="text-white">{carLoan.loan_amount.toLocaleString("ru-RU")} ₽</b> на <b className="text-white">{carLoan.loan_months} мес.</b></div>
-                      <div className="text-white/40 text-xs mt-1">Решение принимается в течение 2 часов. Ожидайте звонка специалиста.</div>
+                    <div className="rounded-2xl p-5 text-center"
+                      style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)" }}>
+                      {!carTimerDone ? (
+                        <>
+                          <div className="font-oswald text-5xl font-bold mb-2"
+                            style={{ color: "#fbbf24", textShadow: "0 0 24px rgba(245,158,11,0.5)" }}>
+                            {`${Math.floor(carTimer/60).toString().padStart(2,"0")}:${(carTimer%60).toString().padStart(2,"0")}`}
+                          </div>
+                          <div className="text-white/40 text-sm">Примерное время до ответа</div>
+                        </>
+                      ) : (
+                        <>
+                          <Icon name="FileSearch" size={28} className="text-yellow-400 mx-auto mb-2" />
+                          <div className="text-white font-semibold mb-1">Заявка на рассмотрении</div>
+                          <div className="text-white/40 text-sm">Специалист свяжется с вами в ближайшее время</div>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
