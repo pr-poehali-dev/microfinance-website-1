@@ -38,6 +38,7 @@ interface ShopApp {
 
 const ST: Record<string, { label: string; color: string; bg: string; border: string }> = {
   pending:  { label: "На рассмотрении", color: "#a78bfa", bg: "rgba(168,85,247,0.12)", border: "rgba(168,85,247,0.3)" },
+  signing:  { label: "На подписании",   color: "#60a5fa", bg: "rgba(96,165,250,0.12)", border: "rgba(96,165,250,0.3)" },
   approved: { label: "Одобрено",        color: "#4ade80", bg: "rgba(34,197,94,0.12)",  border: "rgba(34,197,94,0.3)" },
   rejected: { label: "Отказ",           color: "#f87171", bg: "rgba(239,68,68,0.12)",  border: "rgba(239,68,68,0.3)" },
 };
@@ -51,7 +52,7 @@ interface Props { token: string; }
 export default function AdminShopLoans({ token }: Props) {
   const [items, setItems]         = useState<ShopApp[]>([]);
   const [loading, setLoading]     = useState(false);
-  const [filter, setFilter]       = useState<"pending"|"approved"|"rejected">("pending");
+  const [filter, setFilter]       = useState<"pending"|"signing"|"approved"|"rejected">("pending");
   const [selected, setSelected]   = useState<ShopApp | null>(null);
   const [saving, setSaving]       = useState(false);
   const [msg, setMsg]             = useState("");
@@ -120,7 +121,7 @@ export default function AdminShopLoans({ token }: Props) {
 
       {/* Фильтры */}
       <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
-        {(["pending","approved","rejected"] as const).map(s => (
+        {(["pending","signing","approved","rejected"] as const).map(s => (
           <button key={s} onClick={() => setFilter(s)}
             style={{ padding: "8px 18px", borderRadius: 10, border: `1px solid ${filter === s ? ST[s].border : "transparent"}`, cursor: "pointer", fontWeight: 600, fontSize: 13,
               background: filter === s ? ST[s].bg : "rgba(255,255,255,0.07)", color: filter === s ? ST[s].color : "rgba(255,255,255,0.5)" }}>
@@ -182,12 +183,12 @@ export default function AdminShopLoans({ token }: Props) {
                       ))}
                     </div>
 
-                    {/* Одобренные условия */}
-                    {app.status === "approved" && (
-                      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", padding: "10px 14px", borderRadius: 10, background: ST.approved.bg, border: `1px solid ${ST.approved.border}`, marginBottom: 8 }}>
-                        <div><span style={LBL}>Одобрено</span><b style={{ color: "#4ade80" }}>{fmt(app.approved_amount)}</b></div>
-                        <div><span style={LBL}>Срок</span><b style={{ color: "#4ade80" }}>{app.approved_months || "—"} мес.</b></div>
-                        <div><span style={LBL}>Ставка</span><b style={{ color: "#4ade80" }}>{app.approved_rate || "—"}%/мес.</b></div>
+                    {/* Условия займа при одобрении или подписании */}
+                    {(app.status === "approved" || app.status === "signing") && (app.approved_amount || app.approved_months || app.approved_rate) && (
+                      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", padding: "10px 14px", borderRadius: 10, background: ST[app.status].bg, border: `1px solid ${ST[app.status].border}`, marginBottom: 8 }}>
+                        {app.approved_amount && <div><span style={LBL}>Одобрено</span><b style={{ color: ST[app.status].color }}>{fmt(app.approved_amount)}</b></div>}
+                        {app.approved_months && <div><span style={LBL}>Срок</span><b style={{ color: ST[app.status].color }}>{app.approved_months} мес.</b></div>}
+                        {app.approved_rate && <div><span style={LBL}>Ставка</span><b style={{ color: ST[app.status].color }}>{app.approved_rate}%/мес.</b></div>}
                       </div>
                     )}
                     {app.status === "rejected" && app.reject_reason && (
@@ -256,9 +257,9 @@ export default function AdminShopLoans({ token }: Props) {
               <div>
                 <label style={LBL}>СТАТУС ЗАЯВКИ</label>
                 <div style={{ display: "flex", gap: 8 }}>
-                  {(["pending","approved","rejected"] as const).map(s => (
+                  {(["pending","signing","approved","rejected"] as const).map(s => (
                     <button key={s} onClick={() => setEf(p => ({ ...p, status: s }))}
-                      style={{ flex: 1, padding: "9px 4px", borderRadius: 9, border: `1px solid ${ef.status === s ? ST[s].border : "transparent"}`, cursor: "pointer", fontWeight: 600, fontSize: 12,
+                      style={{ flex: 1, padding: "9px 4px", borderRadius: 9, border: `1px solid ${ef.status === s ? ST[s].border : "transparent"}`, cursor: "pointer", fontWeight: 600, fontSize: 11,
                         background: ef.status === s ? ST[s].bg : "rgba(255,255,255,0.06)",
                         color: ef.status === s ? ST[s].color : "rgba(255,255,255,0.4)" }}>
                       {ST[s].label}
@@ -267,7 +268,7 @@ export default function AdminShopLoans({ token }: Props) {
                 </div>
               </div>
 
-              {ef.status === "approved" && (
+              {(ef.status === "approved" || ef.status === "signing") && (
                 <>
                   <div>
                     <label style={LBL}>ОДОБРЕННАЯ СУММА (₽)</label>

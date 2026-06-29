@@ -32,6 +32,7 @@ interface CarApp {
 
 const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
   pending:  { label: "На рассмотрении", color: "#fbbf24", bg: "rgba(245,158,11,0.15)" },
+  signing:  { label: "На подписании",   color: "#60a5fa", bg: "rgba(96,165,250,0.15)" },
   approved: { label: "Одобрено",        color: "#4ade80", bg: "rgba(34,197,94,0.15)" },
   rejected: { label: "Отказ",           color: "#f87171", bg: "rgba(239,68,68,0.15)" },
 };
@@ -44,7 +45,7 @@ interface Props { token: string; }
 export default function AdminCarLoans({ token }: Props) {
   const [items, setItems] = useState<CarApp[]>([]);
   const [loading, setLoading] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<"pending"|"approved"|"rejected">("pending");
+  const [statusFilter, setStatusFilter] = useState<"pending"|"signing"|"approved"|"rejected">("pending");
   const [selected, setSelected] = useState<CarApp | null>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -118,12 +119,12 @@ export default function AdminCarLoans({ token }: Props) {
     <div>
       {/* Фильтры */}
       <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
-        {(["pending","approved","rejected"] as const).map(s => (
+        {(["pending","signing","approved","rejected"] as const).map(s => (
           <button key={s} onClick={() => setStatusFilter(s)}
             style={{
-              padding: "8px 18px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13,
-              background: statusFilter === s ? "linear-gradient(135deg,#f59e0b,#ef4444)" : "rgba(255,255,255,0.07)",
-              color: statusFilter === s ? "white" : "rgba(255,255,255,0.5)",
+              padding: "8px 18px", borderRadius: 10, border: `1px solid ${statusFilter === s ? STATUS_LABELS[s].bg : "transparent"}`, cursor: "pointer", fontWeight: 600, fontSize: 13,
+              background: statusFilter === s ? STATUS_LABELS[s].bg : "rgba(255,255,255,0.07)",
+              color: statusFilter === s ? STATUS_LABELS[s].color : "rgba(255,255,255,0.5)",
             }}>
             {STATUS_LABELS[s].label}
           </button>
@@ -174,11 +175,11 @@ export default function AdminCarLoans({ token }: Props) {
                       ))}
                     </div>
 
-                    {app.status === "approved" && (
-                      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", padding: "10px 14px", borderRadius: 10, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", marginBottom: 8 }}>
-                        <div><span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Одобрено</span><br /><b style={{ color: "#4ade80" }}>{fmt(app.approved_amount || 0)}</b></div>
-                        <div><span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Срок</span><br /><b style={{ color: "#4ade80" }}>{app.approved_months || "—"} мес.</b></div>
-                        <div><span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Ставка</span><br /><b style={{ color: "#4ade80" }}>{app.approved_rate || "—"}%/мес.</b></div>
+                    {(app.status === "approved" || app.status === "signing") && (app.approved_amount || app.approved_months || app.approved_rate) && (
+                      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", padding: "10px 14px", borderRadius: 10, background: app.status === "approved" ? "rgba(34,197,94,0.08)" : "rgba(96,165,250,0.08)", border: `1px solid ${app.status === "approved" ? "rgba(34,197,94,0.2)" : "rgba(96,165,250,0.2)"}`, marginBottom: 8 }}>
+                        {app.approved_amount && <div><span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Одобрено</span><br /><b style={{ color: app.status === "approved" ? "#4ade80" : "#60a5fa" }}>{fmt(app.approved_amount)}</b></div>}
+                        {app.approved_months && <div><span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Срок</span><br /><b style={{ color: app.status === "approved" ? "#4ade80" : "#60a5fa" }}>{app.approved_months} мес.</b></div>}
+                        {app.approved_rate && <div><span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Ставка</span><br /><b style={{ color: app.status === "approved" ? "#4ade80" : "#60a5fa" }}>{app.approved_rate}%/мес.</b></div>}
                       </div>
                     )}
                     {app.status === "rejected" && app.reject_reason && (
@@ -230,12 +231,11 @@ export default function AdminCarLoans({ token }: Props) {
               <div>
                 <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Статус заявки</label>
                 <div style={{ display: "flex", gap: 8 }}>
-                  {(["pending","approved","rejected"] as const).map(s => (
+                  {(["pending","signing","approved","rejected"] as const).map(s => (
                     <button key={s} onClick={() => setEditForm(p => ({ ...p, status: s }))}
-                      style={{ flex: 1, padding: "9px 4px", borderRadius: 9, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 12,
-                        background: editForm.status === s ? (s === "approved" ? "rgba(34,197,94,0.3)" : s === "rejected" ? "rgba(239,68,68,0.3)" : "rgba(245,158,11,0.3)") : "rgba(255,255,255,0.06)",
-                        color: editForm.status === s ? (s === "approved" ? "#4ade80" : s === "rejected" ? "#f87171" : "#fbbf24") : "rgba(255,255,255,0.4)",
-                        border: editForm.status === s ? `1px solid ${s === "approved" ? "rgba(34,197,94,0.4)" : s === "rejected" ? "rgba(239,68,68,0.4)" : "rgba(245,158,11,0.4)"}` : "1px solid transparent",
+                      style={{ flex: 1, padding: "9px 4px", borderRadius: 9, border: editForm.status === s ? `1px solid ${STATUS_LABELS[s].bg}` : "1px solid transparent", cursor: "pointer", fontWeight: 600, fontSize: 11,
+                        background: editForm.status === s ? STATUS_LABELS[s].bg : "rgba(255,255,255,0.06)",
+                        color: editForm.status === s ? STATUS_LABELS[s].color : "rgba(255,255,255,0.4)",
                       }}>
                       {STATUS_LABELS[s].label}
                     </button>
@@ -244,7 +244,7 @@ export default function AdminCarLoans({ token }: Props) {
               </div>
 
               {/* Одобренные условия */}
-              {editForm.status === "approved" && (
+              {(editForm.status === "approved" || editForm.status === "signing") && (
                 <>
                   <div>
                     <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Одобренная сумма (₽)</label>

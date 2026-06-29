@@ -156,7 +156,7 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
 
         sf = (qs.get("status", "pending") or "pending").replace("'", "''")
-        if sf not in ("pending", "approved", "rejected"):
+        if sf not in ("pending", "signing", "approved", "rejected"):
             sf = "pending"
 
         cur.execute(
@@ -254,6 +254,15 @@ def handler(event: dict, context) -> dict:
                     f"✅ <b>Товарный займ #{app_id} одобрен</b>\n"
                     f"👤 {fname} | 📞 {phone_n}\n"
                     f"💰 Одобрено: {int(aa):,} ₽, {am} мес., {ar}%/мес.".replace(",", " ")
+                )
+            elif new_status == "signing":
+                aa = b.get("approved_amount") or amt
+                am = b.get("approved_months", 12)
+                ar = b.get("approved_rate", 9)
+                tg(
+                    f"✍️ <b>Товарный займ #{app_id} — на подписании</b>\n"
+                    f"👤 {fname} | 📞 {phone_n}\n"
+                    f"💰 Условия: {int(aa):,} ₽, {am} мес., {ar}%/мес.".replace(",", " ")
                 )
             elif new_status == "rejected":
                 reason = b.get("reject_reason", "")

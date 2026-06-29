@@ -140,7 +140,7 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
 
         sf = (qs.get("status", "pending") or "pending").replace("'", "''")
-        if sf not in ("pending", "approved", "rejected"):
+        if sf not in ("pending", "signing", "approved", "rejected"):
             sf = "pending"
 
         cur.execute(
@@ -224,24 +224,34 @@ def handler(event: dict, context) -> dict:
         row = cur.fetchone()
         conn.commit()
 
-        if row and b.get("status") == "approved":
+        if row:
             phone_n, fname, amt = row
-            aa = b.get("approved_amount") or amt
-            am = b.get("approved_months", 12)
-            ar = b.get("approved_rate", 12)
-            tg(
-                f"✅ <b>Автозайм #{app_id} одобрен</b>\n"
-                f"👤 {fname} | 📞 {phone_n}\n"
-                f"💰 Одобрено: {int(float(aa)):,} ₽, {am} мес., {ar}%/мес.".replace(",", " ")
-            )
-        if row and b.get("status") == "rejected":
-            phone_n, fname, amt = row
-            reason = b.get("reject_reason", "")
-            tg(
-                f"❌ <b>Автозайм #{app_id} отклонён</b>\n"
-                f"👤 {fname} | 📞 {phone_n}\n" +
-                (f"📝 Причина: {reason}" if reason else "")
-            )
+            new_status = b.get("status", "")
+            if new_status == "approved":
+                aa = b.get("approved_amount") or amt
+                am = b.get("approved_months", 12)
+                ar = b.get("approved_rate", 12)
+                tg(
+                    f"✅ <b>Автозайм #{app_id} одобрен</b>\n"
+                    f"👤 {fname} | 📞 {phone_n}\n"
+                    f"💰 Одобрено: {int(float(aa)):,} ₽, {am} мес., {ar}%/мес.".replace(",", " ")
+                )
+            elif new_status == "signing":
+                aa = b.get("approved_amount") or amt
+                am = b.get("approved_months", 12)
+                ar = b.get("approved_rate", 12)
+                tg(
+                    f"✍️ <b>Автозайм #{app_id} — на подписании</b>\n"
+                    f"👤 {fname} | 📞 {phone_n}\n"
+                    f"💰 Условия: {int(float(aa)):,} ₽, {am} мес., {ar}%/мес.".replace(",", " ")
+                )
+            elif new_status == "rejected":
+                reason = b.get("reject_reason", "")
+                tg(
+                    f"❌ <b>Автозайм #{app_id} отклонён</b>\n"
+                    f"👤 {fname} | 📞 {phone_n}\n" +
+                    (f"📝 Причина: {reason}" if reason else "")
+                )
 
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}

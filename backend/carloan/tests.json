@@ -1,12 +1,11 @@
 {
   "tests": [
     {
-      "name": "Health check",
-      "method": "GET",
+      "name": "CORS preflight",
+      "method": "OPTIONS",
       "path": "/",
-      "expectedStatus": 401,
-      "bodyMatcher": "partial",
-      "expectedBody": {}
+      "expectedStatus": 200,
+      "bodyMatcher": "none"
     }
   ]
 }
