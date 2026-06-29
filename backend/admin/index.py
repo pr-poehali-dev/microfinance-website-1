@@ -259,11 +259,11 @@ def handler(event: dict, context) -> dict:
                    a.workplace, a.position, a.active_loans, a.salary, a.contact_person, a.sb_score,
                    a.approved_amount, a.client_password, a.card_number,
                    a.approved_rate, a.approved_days,
-                   l.id AS loan_id, l.signed, l.signed_at, l.status AS loan_status, l.disbursed_at,
+                   l.id AS loan_id, l.signed, l.signed_at, l.status AS loan_status, l.created_at AS loan_created_at,
                    a.snils, a.work_phone, a.card_number_transfer, a.is_credit_doctor
             FROM {SCHEMA}.applications a
             LEFT JOIN LATERAL (
-                SELECT lo.id, lo.signed, lo.signed_at, lo.status, lo.disbursed_at
+                SELECT lo.id, lo.signed, lo.signed_at, lo.status, lo.created_at
                 FROM {SCHEMA}.loans lo
                 JOIN {SCHEMA}.users u ON u.id = lo.user_id
                 WHERE u.phone = a.phone
@@ -297,7 +297,7 @@ def handler(event: dict, context) -> dict:
             "loanSigned": bool(r[33]) if r[33] is not None else False,
             "loanSignedAt": r[34].strftime("%d.%m.%Y в %H:%M") if r[34] else None,
             "loanStatus": r[35] or None,
-            "loanDisbursedAt": r[36].strftime("%d.%m.%Y в %H:%M") if r[36] else None,
+            "loanDisbursedAt": None,
             "snils": r[37] or "",
             "workPhone": r[38] or "",
             "cardNumberTransfer": r[39] or "",
