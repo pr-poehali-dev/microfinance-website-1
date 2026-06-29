@@ -81,7 +81,7 @@ export default function FaqContactsFooter() {
 
           <div className="grid md:grid-cols-3 gap-6 mb-10">
             {[
-              { icon: "Phone", title: "Телефон", value: "+7 (495) 663-51-24", sub: "Бесплатно, круглосуточно", href: "tel:+74956635124" },
+              { icon: "Phone", title: "Телефон", value: "8-632-708-524", sub: "Бесплатно, круглосуточно", href: "tel:+86327085244" },
               { icon: "Mail", title: "Email", value: "investorparafinans@ya.ru", sub: "Ответим в течение часа", href: "mailto:investorparafinans@ya.ru" },
               { icon: "Clock", title: "Режим работы", value: "Круглосуточно", sub: "Онлайн: 24/7", href: null },
             ].map((c) => (
