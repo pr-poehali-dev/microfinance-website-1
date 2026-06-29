@@ -490,6 +490,19 @@ export default function AdminApplications({
               {/* Кнопки действий — Партнёр */}
               {app.status === "partner_card" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 160 }}>
+                  <div style={{
+                    borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 600,
+                    display: "flex", alignItems: "center", gap: 8,
+                    background: app.loanSigned ? "rgba(74,222,128,0.12)" : "rgba(251,191,36,0.12)",
+                    border: `1px solid ${app.loanSigned ? "rgba(74,222,128,0.35)" : "rgba(251,191,36,0.35)"}`,
+                    color: app.loanSigned ? "#4ade80" : "#fbbf24",
+                  }}>
+                    <Icon name={app.loanSigned ? "FileCheck" : "FileClock"} size={15} />
+                    <div>
+                      <div>{app.loanSigned ? "Договор подписан" : "Ожидает подписи"}</div>
+                      {app.loanSignedAt && <div style={{ fontSize: 11, fontWeight: 400, opacity: 0.8 }}>{app.loanSignedAt}</div>}
+                    </div>
+                  </div>
                   {cardIssued[app.id] ? (
                     <div style={{ padding: "10px 12px", borderRadius: 10, fontSize: 13, fontWeight: 600, textAlign: "center", background: "rgba(74,222,128,0.15)", color: "#4ade80", border: "1px solid rgba(74,222,128,0.3)" }}>
                       <Icon name="CheckCircle" size={14} style={{ marginRight: 6 }} />Карта выдана!
