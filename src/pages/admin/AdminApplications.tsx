@@ -435,8 +435,8 @@ export default function AdminApplications({
                     </div>
                   )}
 
-                  {/* Статус займа — выдан */}
-                  {app.loanStatus === "active" && disbursed[app.id] || (app.loanStatus === "active" && app.loanDisbursedAt) ? (
+                  {/* Статус займа — уже выдан */}
+                  {app.loanId && (disbursed[app.id] || app.loanDisbursedAt) && (
                     <div style={{
                       borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 600,
                       display: "flex", alignItems: "center", gap: 8,
@@ -448,26 +448,19 @@ export default function AdminApplications({
                         {app.loanDisbursedAt && <div style={{ fontSize: 11, fontWeight: 400, opacity: 0.8 }}>{app.loanDisbursedAt}</div>}
                       </div>
                     </div>
-                  ) : null}
+                  )}
 
-                  {/* Кнопка "Выдать займ" — только если подписан и ещё не выдан */}
-                  {app.loanId && app.loanSigned && app.loanStatus !== "active" && !disbursed[app.id] && (
+                  {/* Кнопка "Займ выдан" — для всех у кого есть займ и ещё не отмечен как выданный */}
+                  {app.loanId && !disbursed[app.id] && !app.loanDisbursedAt && (
                     <button
                       onClick={() => handleDisburse(app)}
                       disabled={disbursing[app.id]}
                       style={{ background: "linear-gradient(135deg,#0ea5e9,#38bdf8)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6, opacity: disbursing[app.id] ? 0.7 : 1 }}>
                       {disbursing[app.id]
                         ? <><Icon name="Loader2" size={15} className="animate-spin" />Выдаём...</>
-                        : <><Icon name="Banknote" size={15} />Выдать займ</>
+                        : <><Icon name="Banknote" size={15} />Займ выдан</>
                       }
                     </button>
-                  )}
-
-                  {/* Если не подписан — подсказка */}
-                  {app.loanId && !app.loanSigned && (
-                    <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, lineHeight: 1.4 }}>
-                      Кнопка появится после подписания договора клиентом
-                    </div>
                   )}
 
                   <button onClick={() => onRestore(app.id)}

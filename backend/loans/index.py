@@ -167,7 +167,7 @@ def handler(event: dict, context) -> dict:
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     cur.execute(
-        f"SELECT id, amount, days, rate, status, created_at, signed, offer_amount, offer_days, offer_rate FROM {SCHEMA}.loans WHERE user_id = {user_id} ORDER BY created_at DESC"
+        f"SELECT id, amount, days, rate, status, created_at, signed, offer_amount, offer_days, offer_rate, disbursed_at FROM {SCHEMA}.loans WHERE user_id = {user_id} ORDER BY created_at DESC"
     )
     rows = cur.fetchall()
 
@@ -220,7 +220,7 @@ def handler(event: dict, context) -> dict:
 
     loans = []
     for row in rows:
-        loan_id, amount, days, rate, status, created_at, signed, offer_amount, offer_days, offer_rate = row
+        loan_id, amount, days, rate, status, created_at, signed, offer_amount, offer_days, offer_rate, disbursed_at = row
         interest = round(float(amount) * float(rate) * days)
         loan_data = {
             "id": loan_id,
@@ -233,6 +233,7 @@ def handler(event: dict, context) -> dict:
             "status": status,
             "createdAt": created_at.strftime("%d.%m.%Y"),
             "signed": signed,
+            "disbursedAt": disbursed_at.strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
         }
         if status == "review" and not signed and offer_amount:
             oa = float(offer_amount)

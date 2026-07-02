@@ -304,7 +304,7 @@ export default function DashboardApplicationStatus({
               )}
 
               <a
-                href="https://pxl.leads.su/click/152151788fe92075070c72172c5b0a24?erid=2W5zFGL3CaV"
+                href="https://pxl.leads.su/click/d43f54caff32604b0fc6d561bd35176b?erid=2W5zFG59ffo"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90"

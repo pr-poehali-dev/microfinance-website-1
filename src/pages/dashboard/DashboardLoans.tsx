@@ -20,6 +20,7 @@ interface Loan {
   status: string;
   createdAt: string;
   signed: boolean;
+  disbursedAt?: string | null;
   offer?: LoanOffer;
 }
 
@@ -40,7 +41,7 @@ interface Application {
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
-  active:   { label: "Активен",         color: "#4ade80", bg: "rgba(74,222,128,0.15)" },
+  active:   { label: "Займ выдан",      color: "#4ade80", bg: "rgba(74,222,128,0.15)" },
   paid:     { label: "Погашен",         color: "#a78bfa", bg: "rgba(167,139,250,0.15)" },
   overdue:  { label: "Просрочен",       color: "#f87171", bg: "rgba(248,113,113,0.15)" },
   review:   { label: "На рассмотрении", color: "#fbbf24", bg: "rgba(251,191,36,0.15)" },
@@ -164,6 +165,18 @@ export default function DashboardLoans({ loans, application, signingId, signMsg,
                     </div>
                   )}
 
+                  {/* Блок: Займ выдан */}
+                  {loan.status === "active" && loan.disbursedAt && (
+                    <div className="mb-4 rounded-xl px-5 py-4 flex items-center gap-3"
+                      style={{ background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.3)" }}>
+                      <Icon name="BadgeCheck" size={22} className="text-green-400 shrink-0" />
+                      <div>
+                        <div className="text-green-300 font-bold text-sm">Деньги переведены на ваши реквизиты</div>
+                        <div className="text-white/40 text-xs mt-0.5">Выдан {loan.disbursedAt}</div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between rounded-xl px-5 py-4"
                     style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.3)" }}>
                     <div>
@@ -171,13 +184,23 @@ export default function DashboardLoans({ loans, application, signingId, signMsg,
                       <div className="font-bold text-2xl gradient-text">{loan.total.toLocaleString("ru-RU")} ₽</div>
                       <div className="text-white/30 text-xs">включая {loan.interest.toLocaleString("ru-RU")} ₽ процентов</div>
                     </div>
-                    {loan.status !== "paid" && loan.status !== "review" && (
+                    {loan.status === "active" && (
                       <button
                         onClick={() => onPay(loan)}
                         className="btn-neon text-white font-semibold px-6 py-3 rounded-xl flex items-center gap-2"
                       >
-                        <Icon name="CreditCard" size={16} />
-                        Оплатить
+                        <Icon name="Banknote" size={16} />
+                        Погасить займ
+                      </button>
+                    )}
+                    {loan.status === "overdue" && (
+                      <button
+                        onClick={() => onPay(loan)}
+                        className="text-white font-semibold px-6 py-3 rounded-xl flex items-center gap-2"
+                        style={{ background: "linear-gradient(135deg,#dc2626,#f87171)" }}
+                      >
+                        <Icon name="AlertCircle" size={16} />
+                        Погасить займ
                       </button>
                     )}
                     {loan.status === "paid" && (
