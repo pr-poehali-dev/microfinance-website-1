@@ -749,6 +749,70 @@ def handler(event: dict, context) -> dict:
         )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
+    # --- СПИСОК ВСЕХ ВЫДАННЫХ ЗАЙМОВ (GET, sub='disbursed') ---
+    if sub == "disbursed" and method == "GET":
+        # Основные займы (loans)
+        cur.execute(f"""
+            SELECT 'loan' AS type, l.id, u.full_name, u.phone, u.email,
+                   l.amount AS loan_amount, l.days AS loan_months, l.rate,
+                   NULL AS approved_amount, NULL AS car_info, NULL AS item_info,
+                   l.disbursed_at, l.created_at
+            FROM {SCHEMA}.loans l
+            JOIN {SCHEMA}.users u ON u.id = l.user_id
+            WHERE l.disbursed_at IS NOT NULL
+            ORDER BY l.disbursed_at DESC
+        """)
+        loan_rows = cur.fetchall()
+
+        # Авто займы
+        cur.execute(f"""
+            SELECT 'carloan' AS type, id, full_name, phone, email,
+                   loan_amount, loan_months, NULL AS rate,
+                   approved_amount,
+                   CONCAT(car_brand, ' ', car_model, ' ', COALESCE(car_year::text, '')) AS car_info,
+                   NULL AS item_info,
+                   disbursed_at, created_at
+            FROM {SCHEMA}.car_loan_applications
+            WHERE disbursed_at IS NOT NULL
+            ORDER BY disbursed_at DESC
+        """)
+        car_rows = cur.fetchall()
+
+        # Товарные займы
+        cur.execute(f"""
+            SELECT 'shoploan' AS type, id, full_name, phone, email,
+                   loan_amount, loan_months, NULL AS rate,
+                   approved_amount,
+                   NULL AS car_info,
+                   CONCAT(COALESCE(shop_name,''), ' — ', COALESCE(item_name,'')) AS item_info,
+                   disbursed_at, created_at
+            FROM {SCHEMA}.shopping_loan_applications
+            WHERE disbursed_at IS NOT NULL
+            ORDER BY disbursed_at DESC
+        """)
+        shop_rows = cur.fetchall()
+
+        cur.close(); conn.close()
+
+        def fmt_row(r):
+            return {
+                "type": r[0], "id": r[1],
+                "fullName": r[2] or "", "phone": r[3], "email": r[4] or "",
+                "loanAmount": float(r[5]) if r[5] else 0,
+                "loanMonths": r[6] or 0,
+                "rate": float(r[7]) if r[7] else None,
+                "approvedAmount": float(r[8]) if r[8] else None,
+                "carInfo": r[9] or "",
+                "itemInfo": r[10] or "",
+                "disbursedAt": r[11].strftime("%d.%m.%Y в %H:%M") if r[11] else None,
+                "createdAt": r[12].strftime("%d.%m.%Y") if r[12] else "",
+            }
+
+        all_items = [fmt_row(r) for r in loan_rows] + [fmt_row(r) for r in car_rows] + [fmt_row(r) for r in shop_rows]
+        all_items.sort(key=lambda x: x["disbursedAt"] or "", reverse=True)
+
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"items": all_items, "total": len(all_items)}, ensure_ascii=False)}
+
     # --- ОБНОВИТЬ ДАННЫЕ КЛИЕНТА (POST, sub='user_update', userId=...) ---
     if sub == "user_update" and method == "POST":
         user_id = int(qs.get("userId", 0))

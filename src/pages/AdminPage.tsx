@@ -5,6 +5,7 @@ import AdminApplications from "./admin/AdminApplications";
 import AdminClients from "./admin/AdminClients";
 import AdminCarLoans from "./admin/AdminCarLoans";
 import AdminShopLoans from "./admin/AdminShopLoans";
+import AdminDisbursed from "./admin/AdminDisbursed";
 import { App, User, Loan, PURPLE } from "./admin/adminTypes";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
@@ -16,7 +17,7 @@ export default function AdminPage() {
   const [err, setErr]     = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [tab, setTab]   = useState<"apps" | "clients" | "carloan" | "shoploan">("apps");
+  const [tab, setTab]   = useState<"apps" | "clients" | "carloan" | "shoploan" | "disbursed">("apps");
   const [apps, setApps] = useState<App[]>([]);
   const [appFilter, setAppFilter] = useState<"pending"|"approved"|"rejected"|"postponed"|"partner_card"|"creditdoctor">("pending");
   const [appsLoading, setAppsLoading] = useState(false);
@@ -263,6 +264,11 @@ export default function AdminPage() {
             background: tab === "shoploan" ? "linear-gradient(135deg,#a855f7,#06b6d4)" : "rgba(255,255,255,0.07)", color: tab === "shoploan" ? "white" : "rgba(255,255,255,0.5)" }}>
           🛒 Товарные займы
         </button>
+        <button onClick={() => setTab("disbursed")}
+          style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
+            background: tab === "disbursed" ? "linear-gradient(135deg,#0ea5e9,#38bdf8)" : "rgba(255,255,255,0.07)", color: tab === "disbursed" ? "white" : "rgba(255,255,255,0.5)" }}>
+          💸 Выданные займы
+        </button>
         <button onClick={() => { loadApps(); loadUsers(); }} style={{ background: "rgba(255,255,255,0.07)", border: "none", borderRadius: 10, padding: 8, cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
           <Icon name="RefreshCw" size={16} />
         </button>
@@ -293,6 +299,9 @@ export default function AdminPage() {
         )}
         {tab === "shoploan" && (
           <AdminShopLoans token={token} />
+        )}
+        {tab === "disbursed" && (
+          <AdminDisbursed token={token} />
         )}
         {tab === "clients" && (
           <AdminClients

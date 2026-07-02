@@ -34,6 +34,7 @@ interface ShopApp {
   notes: string | null;
   contract_signed: boolean;
   created_at: string;
+  disbursed_at: string | null;
 }
 
 const ST: Record<string, { label: string; color: string; bg: string; border: string }> = {
@@ -57,6 +58,8 @@ export default function AdminShopLoans({ token }: Props) {
   const [saving, setSaving]       = useState(false);
   const [msg, setMsg]             = useState("");
   const [lightbox, setLightbox]   = useState("");
+  const [disbursing, setDisbursing] = useState<Record<number, boolean>>({});
+  const [disbursed, setDisbursed]   = useState<Record<number, boolean>>({});
 
   const [ef, setEf] = useState({
     status: "pending", approved_amount: "", approved_months: "",
@@ -75,6 +78,17 @@ export default function AdminShopLoans({ token }: Props) {
   }, [filter, token]);
 
   useEffect(() => { load(); }, [load]);
+
+  async function handleDisburse(app: ShopApp) {
+    if (!window.confirm(`Подтвердить выдачу займа клиенту ${app.full_name || app.phone}?`)) return;
+    setDisbursing(p => ({ ...p, [app.id]: true }));
+    await fetch(`${SHOP_URL}?sub=disburse&id=${app.id}`, {
+      method: "POST",
+      headers: hdrs,
+    });
+    setDisbursing(p => ({ ...p, [app.id]: false }));
+    setDisbursed(p => ({ ...p, [app.id]: true }));
+  }
 
   function openEdit(app: ShopApp) {
     setSelected(app); setMsg("");
@@ -216,10 +230,23 @@ export default function AdminShopLoans({ token }: Props) {
                     )}
                   </div>
 
-                  <button onClick={() => openEdit(app)}
-                    style={{ padding: "8px 18px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13, background: "linear-gradient(135deg,#a855f7,#06b6d4)", color: "white", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
-                    <Icon name="Pencil" size={14} /> Редактировать
-                  </button>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
+                    {(disbursed[app.id] || app.disbursed_at) ? (
+                      <div style={{ padding: "8px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6, background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.35)", color: "#38bdf8", whiteSpace: "nowrap" }}>
+                        <Icon name="BadgeCheck" size={14} /> Займ выдан
+                        {app.disbursed_at && <span style={{ fontSize: 11, opacity: 0.7 }}>{new Date(app.disbursed_at).toLocaleDateString("ru-RU")}</span>}
+                      </div>
+                    ) : (
+                      <button onClick={() => handleDisburse(app)} disabled={disbursing[app.id]}
+                        style={{ padding: "8px 14px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 700, fontSize: 13, background: "linear-gradient(135deg,#0ea5e9,#38bdf8)", color: "white", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6, opacity: disbursing[app.id] ? 0.7 : 1 }}>
+                        {disbursing[app.id] ? <><Icon name="Loader2" size={14} className="animate-spin" />Выдаём...</> : <><Icon name="Banknote" size={14} />Займ выдан</>}
+                      </button>
+                    )}
+                    <button onClick={() => openEdit(app)}
+                      style={{ padding: "8px 18px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13, background: "linear-gradient(135deg,#a855f7,#06b6d4)", color: "white", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
+                      <Icon name="Pencil" size={14} /> Редактировать
+                    </button>
+                  </div>
                 </div>
               </div>
             );

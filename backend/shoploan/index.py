@@ -156,8 +156,13 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
 
         sf = (qs.get("status", "pending") or "pending").replace("'", "''")
-        if sf not in ("pending", "signing", "approved", "rejected"):
+        if sf not in ("pending", "signing", "approved", "rejected", "disbursed"):
             sf = "pending"
+
+        if sf == "disbursed":
+            where = "disbursed_at IS NOT NULL"
+        else:
+            where = f"status = '{sf}'"
 
         cur.execute(
             f"SELECT id, full_name, phone, email, birth_date, address, passport_series, passport_number, "
@@ -165,8 +170,8 @@ def handler(event: dict, context) -> dict:
             f"loan_amount, loan_months, contact_person, card_number, "
             f"file_passport, file_registration, file_selfie, file_snils, "
             f"status, reject_reason, approved_amount, approved_months, approved_rate, "
-            f"notes, contract_signed, contract_signed_at, created_at, updated_at "
-            f"FROM {SCHEMA}.shopping_loan_applications WHERE status = '{sf}' ORDER BY created_at DESC"
+            f"notes, contract_signed, contract_signed_at, created_at, updated_at, disbursed_at "
+            f"FROM {SCHEMA}.shopping_loan_applications WHERE {where} ORDER BY created_at DESC"
         )
         cols = [d[0] for d in cur.description]
         rows = cur.fetchall()
@@ -295,6 +300,38 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена или не одобрена"})}
 
         tg(f"✍️ <b>Договор подписан #{row[0]}</b>\n👤 {row[1]} | 📞 {row[2]}")
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    # ── POST /?sub=disburse&id=N ── выдать займ (отметить деньги переведены) ──
+    if method == "POST" and sub == "disburse":
+        if not check_admin(cur, token):
+            cur.close(); conn.close()
+            return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
+
+        app_id = int(qs.get("id", 0) or 0)
+        if not app_id:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "id required"})}
+
+        cur.execute(
+            f"UPDATE {SCHEMA}.shopping_loan_applications "
+            f"SET disbursed_at = NOW(), updated_at = NOW() "
+            f"WHERE id = {app_id} RETURNING full_name, phone, approved_amount, loan_amount"
+        )
+        row = cur.fetchone()
+        conn.commit()
+        cur.close(); conn.close()
+
+        if not row:
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
+
+        fname, phone_n, aa, la = row
+        amt = aa or la
+        tg(
+            f"💸 <b>Товарный займ #{app_id} выдан</b>\n"
+            f"👤 {fname or '—'} | 📞 {phone_n}\n"
+            f"💰 Сумма: {int(float(amt)):,} ₽".replace(",", " ")
+        )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     cur.close(); conn.close()
