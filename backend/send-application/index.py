@@ -56,7 +56,7 @@ def send_email(to: str, subject: str, html: str):
         return
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
-    msg["From"] = f"PARAFINANS24 <{smtp_user}>"
+    msg["From"] = f"FINANS 24 <{smtp_user}>"
     msg["To"] = to
     msg.attach(MIMEText(html, "html", "utf-8"))
     try:
@@ -220,7 +220,7 @@ def handler(event: dict, context) -> dict:
     <tr><td align="center">
       <table width="560" cellpadding="0" cellspacing="0" style="background:#1a1030;border-radius:16px;overflow:hidden;border:1px solid rgba(124,58,237,0.3);">
         <tr><td style="background:linear-gradient(135deg,#7c3aed,#a855f7);padding:32px 40px;text-align:center;">
-          <h1 style="margin:0;color:#fff;font-size:24px;font-weight:bold;">PARAFINANS24</h1>
+          <h1 style="margin:0;color:#fff;font-size:24px;font-weight:bold;">FINANS 24</h1>
           <p style="margin:8px 0 0;color:rgba(255,255,255,0.8);font-size:14px;">Ваша заявка принята</p>
         </td></tr>
         <tr><td style="padding:36px 40px;">
@@ -254,7 +254,7 @@ def handler(event: dict, context) -> dict:
         docs_count = len(file_urls)
         app_label = f" (#{app_id})" if app_id else ""
         text = (
-            f"🚀 <b>Новая заявка — PARAFINANS24{app_label}</b>\n"
+            f"🚀 <b>Новая заявка — FINANS 24{app_label}</b>\n"
             f"⏱ {now}\n\n"
             f"👤 <b>ФИО:</b> {full_name}\n"
             f"🎂 <b>Дата рождения:</b> {birth_date or '—'}\n"

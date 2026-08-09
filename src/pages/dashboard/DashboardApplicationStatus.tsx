@@ -510,7 +510,7 @@ export default function DashboardApplicationStatus({
         </div>
       )}
 
-      {/* ВИРТУАЛЬНАЯ КАРТА PARAFINANS */}
+      {/* ВИРТУАЛЬНАЯ КАРТА FINANS 24 */}
       {application?.virtualCard && application.virtualCard.status !== "none" && (
         <div className="mb-6">
           {/* Ожидает подтверждения */}
@@ -524,7 +524,7 @@ export default function DashboardApplicationStatus({
                   <Icon name="CreditCard" size={20} className="text-purple-300" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-white font-bold">Карта PARAFINANS одобрена!</div>
+                  <div className="text-white font-bold">Карта FINANS 24 одобрена!</div>
                   <div className="text-purple-300 text-xs mt-0.5">Ознакомьтесь с условиями и подтвердите</div>
                 </div>
                 <span className="text-xs px-3 py-1 rounded-full font-semibold animate-pulse"
@@ -538,7 +538,7 @@ export default function DashboardApplicationStatus({
                     style={{ background: "white", transform: "translate(30%,-30%)" }} />
                   <div className="flex justify-between items-start mb-6">
                     <div>
-                      <div className="text-purple-200 text-xs font-semibold uppercase tracking-wider">PARAFINANS</div>
+                      <div className="text-purple-200 text-xs font-semibold uppercase tracking-wider">FINANS 24</div>
                       <div className="text-white text-xs opacity-60 mt-0.5">Виртуальная карта</div>
                     </div>
                     <Icon name="CreditCard" size={28} className="text-purple-200 opacity-70" />
@@ -590,7 +590,7 @@ export default function DashboardApplicationStatus({
                   <Icon name="CreditCard" size={20} className="text-green-400" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-white font-bold">Карта PARAFINANS активна</div>
+                  <div className="text-white font-bold">Карта FINANS 24 активна</div>
                   <div className="text-green-300 text-xs mt-0.5">Виртуальная карта готова к использованию</div>
                 </div>
                 <span className="text-xs px-3 py-1 rounded-full font-semibold"
@@ -604,7 +604,7 @@ export default function DashboardApplicationStatus({
                     style={{ background: "white", transform: "translate(30%,-30%)" }} />
                   <div className="flex justify-between items-start mb-5">
                     <div>
-                      <div className="text-green-200 text-xs font-semibold uppercase tracking-wider">PARAFINANS</div>
+                      <div className="text-green-200 text-xs font-semibold uppercase tracking-wider">FINANS 24</div>
                       <div className="text-white text-xs opacity-60 mt-0.5">Виртуальная карта</div>
                     </div>
                     <Icon name="Wifi" size={22} className="text-green-200 opacity-70 rotate-90" />
@@ -648,7 +648,7 @@ export default function DashboardApplicationStatus({
                 </div>
                 {/* Кнопка Оплатить */}
                 <button
-                  onClick={() => alert(`Оплата картой PARAFINANS\nЛимит: ${application.virtualCard!.limit.toLocaleString("ru-RU")} ₽\n\nДля совершения платежа свяжитесь с нами:\n📞 +7 (495) 663-51-24\n📧 investorparafinans@ya.ru`)}
+                  onClick={() => alert(`Оплата картой FINANS 24\nЛимит: ${application.virtualCard!.limit.toLocaleString("ru-RU")} ₽\n\nДля совершения платежа свяжитесь с нами:\n📞 +7 (495) 663-51-24\n📧 investorparafinans@ya.ru`)}
                   className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90"
                   style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", boxShadow: "0 4px 20px rgba(124,58,237,0.35)" }}>
                   <Icon name="Wallet" size={18} />

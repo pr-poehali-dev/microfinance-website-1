@@ -243,7 +243,7 @@ export default function AdminPage() {
         <div style={{ width: 36, height: 36, ...PURPLE, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Icon name="ShieldCheck" size={18} className="text-white" />
         </div>
-        <span style={{ color: "white", fontWeight: 700, fontSize: 18, flex: 1 }}>PARAFINANS24 Admin</span>
+        <span style={{ color: "white", fontWeight: 700, fontSize: 18, flex: 1 }}>FINANS 24 Admin</span>
         <button onClick={() => setTab("apps")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14,
             background: tab === "apps" ? "linear-gradient(135deg,#7c3aed,#a855f7)" : "rgba(255,255,255,0.07)", color: tab === "apps" ? "white" : "rgba(255,255,255,0.5)" }}>

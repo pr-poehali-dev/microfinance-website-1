@@ -59,7 +59,7 @@ def send_email(to: str, subject: str, html: str):
         return
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
-    msg["From"] = f"PARAFINANS24 <{smtp_user}>"
+    msg["From"] = f"FINANS 24 <{smtp_user}>"
     msg["To"] = to
     msg.attach(MIMEText(html, "html", "utf-8"))
     try:
@@ -412,14 +412,14 @@ def handler(event: dict, context) -> dict:
             total_fmt = f"{int(total):,}".replace(",", " ")
             send_email(
                 to=client_email,
-                subject=f"Ваш займ #{loan_id} одобрен — PARAFINANS24",
+                subject=f"Ваш займ #{loan_id} одобрен — FINANS 24",
                 html=f"""<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#0F0A1E;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#0F0A1E;padding:40px 20px;">
     <tr><td align="center">
       <table width="560" cellpadding="0" cellspacing="0" style="background:#1a1030;border-radius:16px;overflow:hidden;border:1px solid rgba(74,222,128,0.3);">
         <tr><td style="background:linear-gradient(135deg,#16a34a,#22c55e);padding:32px 40px;text-align:center;">
-          <h1 style="margin:0;color:#fff;font-size:24px;font-weight:bold;">PARAFINANS24</h1>
+          <h1 style="margin:0;color:#fff;font-size:24px;font-weight:bold;">FINANS 24</h1>
           <p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:16px;">✅ Займ одобрен!</p>
         </td></tr>
         <tr><td style="padding:36px 40px;">
@@ -456,7 +456,7 @@ def handler(event: dict, context) -> dict:
               <p style="margin:0;color:#c084fc;font-size:22px;font-weight:bold;letter-spacing:2px;">{plain_password}</p>
             </td></tr>
           </table>
-          <p style="color:rgba(255,255,255,0.3);font-size:11px;margin:0;text-align:center;">© PARAFINANS24 · Это письмо отправлено автоматически</p>
+          <p style="color:rgba(255,255,255,0.3);font-size:11px;margin:0;text-align:center;">© FINANS 24 · Это письмо отправлено автоматически</p>
         </td></tr>
       </table>
     </td></tr>
@@ -505,14 +505,14 @@ def handler(event: dict, context) -> dict:
             reason_block = f'<p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0 0 16px;"><b style="color:#f87171;">Причина:</b> {reason}</p>' if reason else ""
             send_email(
                 to=client_email,
-                subject="По вашей заявке принято решение — PARAFINANS24",
+                subject="По вашей заявке принято решение — FINANS 24",
                 html=f"""<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#0F0A1E;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#0F0A1E;padding:40px 20px;">
     <tr><td align="center">
       <table width="560" cellpadding="0" cellspacing="0" style="background:#1a1030;border-radius:16px;overflow:hidden;border:1px solid rgba(239,68,68,0.3);">
         <tr><td style="background:linear-gradient(135deg,#dc2626,#ef4444);padding:32px 40px;text-align:center;">
-          <h1 style="margin:0;color:#fff;font-size:24px;font-weight:bold;">PARAFINANS24</h1>
+          <h1 style="margin:0;color:#fff;font-size:24px;font-weight:bold;">FINANS 24</h1>
           <p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:16px;">По заявке принято решение</p>
         </td></tr>
         <tr><td style="padding:36px 40px;">
@@ -520,7 +520,7 @@ def handler(event: dict, context) -> dict:
           <p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0 0 16px;line-height:1.6;">К сожалению, по вашей заявке на займ принято <b style="color:#f87171;">отрицательное решение</b>.</p>
           {reason_block}
           <p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0 0 24px;line-height:1.6;">Вы можете подать новую заявку позже или связаться с нами для уточнения деталей.</p>
-          <p style="color:rgba(255,255,255,0.3);font-size:11px;margin:0;text-align:center;">© PARAFINANS24 · Это письмо отправлено автоматически</p>
+          <p style="color:rgba(255,255,255,0.3);font-size:11px;margin:0;text-align:center;">© FINANS 24 · Это письмо отправлено автоматически</p>
         </td></tr>
       </table>
     </td></tr>
@@ -915,7 +915,7 @@ def handler(event: dict, context) -> dict:
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
-    # --- ВЫДАТЬ ВИРТУАЛЬНУЮ КАРТУ PARAFINANS (POST, sub='issue_card', appId=...) ---
+    # --- ВЫДАТЬ ВИРТУАЛЬНУЮ КАРТУ FINANS 24 (POST, sub='issue_card', appId=...) ---
     if sub == "issue_card" and method == "POST":
         import random, string
         app_id = qs.get("appId", "")
@@ -959,7 +959,7 @@ def handler(event: dict, context) -> dict:
         conn.commit()
 
         tg(
-            f"💳 <b>Виртуальная карта PARAFINANS выдана</b>\n\n"
+            f"💳 <b>Виртуальная карта FINANS 24 выдана</b>\n\n"
             f"👤 <b>Клиент:</b> {full_name or phone}\n"
             f"📞 <b>Телефон:</b> {phone}\n"
             f"💰 <b>Лимит:</b> {int(card_limit):,} ₽\n".replace(",", " ") +
@@ -984,7 +984,7 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Карта не выдана или уже активна"})}
         cur.execute(f"UPDATE {SCHEMA}.applications SET virtual_card_status='active' WHERE id='{app_id_e}'")
         conn.commit()
-        tg(f"✅ <b>Карта PARAFINANS активирована</b>\n\n👤 {full_name or phone}\n📞 {phone}")
+        tg(f"✅ <b>Карта FINANS 24 активирована</b>\n\n👤 {full_name or phone}\n📞 {phone}")
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 

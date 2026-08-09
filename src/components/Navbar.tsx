@@ -89,7 +89,7 @@ export default function Navbar({ mobileOpen, setMobileOpen, scrollTo }: NavbarPr
             className="text-left gradient-text font-semibold py-2 flex items-center gap-2"
           >
             <Icon name="CreditCard" size={16} />
-            Карта PARAFINANS
+            Карта FINANS 24
           </button>
           <button
             onClick={() => { setMobileOpen(false); navigate(localStorage.getItem("token") ? "/dashboard" : "/login"); }}

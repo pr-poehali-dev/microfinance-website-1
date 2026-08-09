@@ -142,7 +142,7 @@ export default function CarLoanPage() {
                   </div>
                   <div>
                     <div className="text-white font-bold text-lg">Займ под залог авто</div>
-                    <div className="text-white/40 text-sm">PARAFINANS</div>
+                    <div className="text-white/40 text-sm">FINANS 24</div>
                   </div>
                 </div>
 

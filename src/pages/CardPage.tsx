@@ -82,7 +82,7 @@ export default function CardPage() {
             Новый продукт
           </div>
           <h1 className="font-oswald text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-            КАРТА <span className="gradient-text">PARAFINANS</span>
+            КАРТА <span className="gradient-text">FINANS 24</span>
           </h1>
           <p className="text-white/60 text-lg mb-10 max-w-xl mx-auto">
             Кредитная карта с лимитом до 200 000 ₽, кэшбэком 1% и бесплатным обслуживанием. Оформление онлайн за 15 минут.
@@ -255,7 +255,7 @@ export default function CardPage() {
 
       {/* FOOTER */}
       <footer className="py-8 px-4 text-center border-t" style={{ borderColor: "rgba(168,85,247,0.15)" }}>
-        <p className="text-white/30 text-sm">© 2024 PARAFINANS24 · Лицензия ЦБ РФ · Все права защищены</p>
+        <p className="text-white/30 text-sm">© 2024 FINANS 24 · Лицензия ЦБ РФ · Все права защищены</p>
       </footer>
     </div>
   );

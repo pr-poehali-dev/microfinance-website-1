@@ -502,7 +502,7 @@ export default function AdminApplications({
                     </div>
                   ) : cardOpen === app.id ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      <div style={{ color: "#c084fc", fontSize: 12, fontWeight: 700, marginBottom: 2 }}>Карта PARAFINANS</div>
+                      <div style={{ color: "#c084fc", fontSize: 12, fontWeight: 700, marginBottom: 2 }}>Карта FINANS 24</div>
                       <input
                         type="number" placeholder="Лимит, ₽"
                         value={cardForm[app.id]?.limit ?? ""}
@@ -529,7 +529,7 @@ export default function AdminApplications({
                   ) : (
                     <button onClick={() => { setCardOpen(app.id); setCardForm(p => ({ ...p, [app.id]: { limit: String(app.approvedAmount ?? app.amount ?? ""), rate: "" } })); }}
                       style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
-                      <Icon name="CreditCard" size={16} />Выдать карту PARAFINANS
+                      <Icon name="CreditCard" size={16} />Выдать карту FINANS 24
                     </button>
                   )}
                   {app.telegramId && (

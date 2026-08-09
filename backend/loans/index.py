@@ -69,7 +69,7 @@ def handler(event: dict, context) -> dict:
         confirm_card = b.get("confirm_card", False)
 
         if confirm_card:
-            # Клиент подтвердил виртуальную карту PARAFINANS — активируем
+            # Клиент подтвердил виртуальную карту FINANS 24 — активируем
             cur.execute(
                 f"UPDATE {SCHEMA}.applications SET virtual_card_status='active' "
                 f"WHERE phone='{ph_e}' AND virtual_card_status='pending' AND virtual_card_number IS NOT NULL"
@@ -86,7 +86,7 @@ def handler(event: dict, context) -> dict:
             if tg_token and vc_row:
                 vc_id, vc_name, vc_limit, vc_rate = vc_row
                 text = (
-                    f"✅ <b>Клиент активировал карту PARAFINANS</b>\n\n"
+                    f"✅ <b>Клиент активировал карту FINANS 24</b>\n\n"
                     f"👤 <b>ФИО:</b> {vc_name or phone}\n"
                     f"📞 <b>Телефон:</b> {phone}\n"
                     f"💰 <b>Лимит:</b> {int(float(vc_limit)):,} ₽\n".replace(",", " ") +
