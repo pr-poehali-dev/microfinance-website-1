@@ -63,7 +63,7 @@ def send_email(to: str, subject: str, html: str):
     msg["To"] = to
     msg.attach(MIMEText(html, "html", "utf-8"))
     try:
-        with smtplib.SMTP_SSL("smtp.yandex.ru", 465, timeout=10) as server:
+        with smtplib.SMTP_SSL("smtp.yandex.ru", 465, timeout=4) as server:
             server.login(smtp_user, smtp_pass)
             server.sendmail(smtp_user, to, msg.as_string())
         print(f"[send-email] sent to {to}")
@@ -369,7 +369,8 @@ def handler(event: dict, context) -> dict:
         )
         conn.commit(); cur.close(); conn.close()
 
-        # Генерируем PDF договора асинхронно (не блокируем ответ)
+        # Запускаем генерацию PDF договора — не ждём её завершения (короткий таймаут,
+        # сама генерация продолжится на стороне generate-contract независимо от ответа здесь)
         try:
             import urllib.request as _ur
             contract_payload = json.dumps({"appId": int(app_id), "loanId": loan_id}).encode()
@@ -379,10 +380,10 @@ def handler(event: dict, context) -> dict:
                 headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"},
                 method="POST"
             )
-            _ur.urlopen(contract_req, timeout=60)
+            _ur.urlopen(contract_req, timeout=3)
             print(f"[admin] contract generated for app_id={app_id}")
         except Exception as ex:
-            print(f"[admin] contract generation error: {ex}")
+            print(f"[admin] contract generation error (non-blocking): {ex}")
 
         interest = round(float(amount) * rate * int(days))
         total = float(amount) + interest

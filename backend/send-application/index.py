@@ -60,7 +60,7 @@ def send_email(to: str, subject: str, html: str):
     msg["To"] = to
     msg.attach(MIMEText(html, "html", "utf-8"))
     try:
-        with smtplib.SMTP_SSL("smtp.yandex.ru", 465, timeout=10) as server:
+        with smtplib.SMTP_SSL("smtp.yandex.ru", 465, timeout=4) as server:
             server.login(smtp_user, smtp_pass)
             server.sendmail(smtp_user, to, msg.as_string())
         print(f"[send-email] sent to {to}")
