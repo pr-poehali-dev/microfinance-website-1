@@ -63,6 +63,14 @@ interface User {
   email: string;
 }
 
+interface VcScheduleItem {
+  month: number;
+  dueDate: string;
+  amount: number;
+  principal: number;
+  interest: number;
+}
+
 interface VirtualCard {
   number: string;
   expiry: string;
@@ -71,6 +79,8 @@ interface VirtualCard {
   limit: number;
   rate: number;
   status: string;
+  days?: number | null;
+  schedule?: VcScheduleItem[];
 }
 
 interface ClientProfile {
@@ -107,6 +117,9 @@ interface Application {
   contractUrl: string;
   virtualCard: VirtualCard | null;
   profile?: ClientProfile;
+  isCreditDoctor?: boolean;
+  reapplyDaysLeft?: number | null;
+  videoCallRequested?: boolean;
 }
 
 export default function DashboardPage() {

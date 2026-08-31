@@ -39,6 +39,7 @@ export default function AdminPage() {
   const [selApp, setSelApp]     = useState<App | null>(null);
   const [appRate, setAppRate]   = useState("0.8");
   const [appAmount, setAppAmount] = useState("");
+  const [appDays, setAppDays]   = useState("");
   const [rejectReason, setRejectReason] = useState("");
   const [appAction, setAppAction] = useState<"approve"|"reject"|null>(null);
   const [appProcessing, setAppProcessing] = useState(false);
@@ -102,13 +103,41 @@ export default function AdminPage() {
     if (!selApp) return;
     setAppProcessing(true); setAppMsg(""); setAppErr2("");
     const amount = appAmount ? parseFloat(appAmount) : selApp.amount;
-    const r = await fetch(`${ADMIN_URL}?sub=approve&appId=${selApp.id}`, { method: "POST", headers: hdrs(), body: JSON.stringify({ rate: parseFloat(appRate) / 100, amount }) });
+    const days = appDays ? parseInt(appDays) : selApp.days;
+    const r = await fetch(`${ADMIN_URL}?sub=approve&appId=${selApp.id}`, { method: "POST", headers: hdrs(), body: JSON.stringify({ rate: parseFloat(appRate) / 100, amount, days }) });
     const d = await r.json();
     if (!r.ok) { setAppErr2(d.error); setAppProcessing(false); return; }
     setAppMsg(`Займ #${d.loanId} создан!`);
     setApps(prev => prev.filter(a => a.id !== selApp.id));
-    setSelApp(null); setAppAction(null); setAppProcessing(false);
+    setSelApp(null); setAppAction(null); setAppProcessing(false); setAppDays("");
     loadUsers();
+  }
+
+  async function deleteApplication(appId: number) {
+    if (!window.confirm("Удалить анкету клиента безвозвратно?")) return;
+    const r = await fetch(`${ADMIN_URL}?sub=delete_application&appId=${appId}`, { method: "POST", headers: hdrs() });
+    if (r.ok) {
+      setAppMsg("Анкета удалена.");
+      setApps(prev => prev.filter(a => a.id !== appId));
+    }
+  }
+
+  async function blockClient(phone: string, days: number) {
+    const r = await fetch(`${ADMIN_URL}?sub=block_client&phone=${encodeURIComponent(phone)}`, { method: "POST", headers: hdrs(), body: JSON.stringify({ days }) });
+    if (r.ok) { setAppMsg(`Клиент заблокирован на ${days} дн.`); loadApps(); }
+  }
+
+  async function unblockClient(phone: string) {
+    const r = await fetch(`${ADMIN_URL}?sub=unblock_client&phone=${encodeURIComponent(phone)}`, { method: "POST", headers: hdrs() });
+    if (r.ok) { setAppMsg("Клиент разблокирован."); loadApps(); }
+  }
+
+  async function requestVideoCall(appId: number) {
+    const r = await fetch(`${ADMIN_URL}?sub=request_video_call&appId=${appId}`, { method: "POST", headers: hdrs() });
+    if (r.ok) {
+      setAppMsg("Клиенту отправлено уведомление об ожидании видеозвонка.");
+      setApps(prev => prev.map(a => a.id === appId ? { ...a, videoCallRequested: true } : a));
+    }
   }
 
   async function postponeApp(appId: number) {
@@ -288,8 +317,10 @@ export default function AdminPage() {
             setAppMsg={setAppMsg} setAppErr2={setAppErr2}
             appRate={appRate} setAppRate={setAppRate}
             appAmount={appAmount} setAppAmount={setAppAmount}
+            appDays={appDays} setAppDays={setAppDays}
             rejectReason={rejectReason} setRejectReason={setRejectReason}
             onApprove={approveApp} onReject={rejectApp} onPostpone={postponeApp} onRestore={restoreApp} onPartnerApprove={partnerApprove} onPartnerRemind={partnerRemind} onCreditDoctorApprove={creditDoctorApprove}
+            onDeleteApplication={deleteApplication} onBlockClient={blockClient} onUnblockClient={unblockClient} onRequestVideoCall={requestVideoCall}
             setLightbox={setLightbox}
             token={token}
           />

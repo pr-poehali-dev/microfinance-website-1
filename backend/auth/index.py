@@ -44,11 +44,16 @@ def handler(event: dict, context) -> dict:
 
     # --- ВХОД ПО НОМЕРУ ТЕЛЕФОНА (для клиентов с одобренной заявкой) ---
     if action == "phone_login":
-        cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = '{phone}'")
+        cur.execute(f"SELECT id, blocked_until FROM {SCHEMA}.users WHERE phone = '{phone}'")
         user_row = cur.fetchone()
         if not user_row:
             cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Аккаунт не найден. Сначала подайте заявку на займ."})}
+
+        if user_row[1] and user_row[1] > datetime.now():
+            cur.close(); conn.close()
+            until_str = user_row[1].strftime("%d.%m.%Y %H:%M")
+            return {"statusCode": 403, "headers": CORS, "body": json.dumps({"error": f"Доступ временно заблокирован до {until_str}"})}
 
         cur.execute(f"SELECT id FROM {SCHEMA}.applications WHERE phone = '{phone}' AND status IN ('approved', 'partner_card') LIMIT 1")
         if not cur.fetchone():
@@ -88,11 +93,15 @@ def handler(event: dict, context) -> dict:
 
     elif action == "login":
         pw_hash = hash_password(password)
-        cur.execute(f"SELECT id, full_name FROM {SCHEMA}.users WHERE phone = '{phone}' AND password_hash = '{pw_hash}'")
+        cur.execute(f"SELECT id, full_name, blocked_until FROM {SCHEMA}.users WHERE phone = '{phone}' AND password_hash = '{pw_hash}'")
         row = cur.fetchone()
         if not row:
             cur.close(); conn.close()
             return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Неверный номер телефона или пароль"})}
+        if row[2] and row[2] > datetime.now():
+            cur.close(); conn.close()
+            until_str = row[2].strftime("%d.%m.%Y %H:%M")
+            return {"statusCode": 403, "headers": CORS, "body": json.dumps({"error": f"Доступ временно заблокирован до {until_str}"})}
         user_id = row[0]
     else:
         cur.close(); conn.close()

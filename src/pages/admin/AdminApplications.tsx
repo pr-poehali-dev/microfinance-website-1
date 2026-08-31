@@ -27,6 +27,8 @@ interface Props {
   setAppRate: (v: string) => void;
   appAmount: string;
   setAppAmount: (v: string) => void;
+  appDays: string;
+  setAppDays: (v: string) => void;
   rejectReason: string;
   setRejectReason: (v: string) => void;
   onApprove: () => void;
@@ -36,6 +38,10 @@ interface Props {
   onPartnerApprove: (appId: number, conditions: { amount: number; days: number; rate: number }) => void;
   onPartnerRemind: (appId: number) => void;
   onCreditDoctorApprove: (appId: number, conditions: { amount: number; days: number; rate: number }) => void;
+  onDeleteApplication: (appId: number) => void;
+  onBlockClient: (phone: string, days: number) => void;
+  onUnblockClient: (phone: string) => void;
+  onRequestVideoCall: (appId: number) => void;
   setLightbox: (url: string) => void;
   token: string;
 }
@@ -44,9 +50,12 @@ export default function AdminApplications({
   apps, appsLoading, appFilter, setAppFilter,
   appMsg, appErr2, appProcessing,
   selApp, setSelApp, appAction, setAppAction, setAppMsg, setAppErr2,
-  appRate, setAppRate, appAmount, setAppAmount, rejectReason, setRejectReason,
-  onApprove, onReject, onPostpone, onRestore, onPartnerApprove, onPartnerRemind, onCreditDoctorApprove, setLightbox, token,
+  appRate, setAppRate, appAmount, setAppAmount, appDays, setAppDays, rejectReason, setRejectReason,
+  onApprove, onReject, onPostpone, onRestore, onPartnerApprove, onPartnerRemind, onCreditDoctorApprove,
+  onDeleteApplication, onBlockClient, onUnblockClient, onRequestVideoCall, setLightbox, token,
 }: Props) {
+  const [blockOpen, setBlockOpen] = useState<number | null>(null);
+  const [blockDays, setBlockDays] = useState("30");
   const [search, setSearch] = useState("");
   const [sbEdits, setSbEdits] = useState<Record<number, SbFields>>({});
   const [sbSaving, setSbSaving] = useState<Record<number, boolean>>({});
@@ -57,7 +66,7 @@ export default function AdminApplications({
   const [partnerOpen, setPartnerOpen] = useState<number | null>(null);
   const [cdForm, setCdForm] = useState<Record<number, { amount: string; days: string; rate: string }>>({});
   const [cdOpen, setCdOpen] = useState<number | null>(null);
-  const [cardForm, setCardForm] = useState<Record<number, { limit: string; rate: string }>>({});
+  const [cardForm, setCardForm] = useState<Record<number, { limit: string; rate: string; days: string }>>({});
   const [cardOpen, setCardOpen] = useState<number | null>(null);
   const [cardIssuing, setCardIssuing] = useState<Record<number, boolean>>({});
   const [cardIssued, setCardIssued] = useState<Record<number, boolean>>({});
@@ -72,12 +81,13 @@ export default function AdminApplications({
     const f = cardForm[app.id] || {};
     const limit = parseFloat(f.limit || "0");
     const rate = parseFloat(f.rate || "0");
+    const days = parseInt(f.days || "0");
     if (!limit || !rate) return;
     setCardIssuing(p => ({ ...p, [app.id]: true }));
     await fetch(`${ADMIN_URL}?sub=issue_card&appId=${app.id}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-      body: JSON.stringify({ limit, rate }),
+      body: JSON.stringify({ limit, rate, days }),
     });
     setCardIssuing(p => ({ ...p, [app.id]: false }));
     setCardIssued(p => ({ ...p, [app.id]: true }));
@@ -183,7 +193,7 @@ export default function AdminApplications({
         <Icon name="CalendarDays" size={15} style={{ color: "rgba(255,255,255,0.35)" }} />
         {([["all","Все время"],["today","Сегодня"],["week","7 дней"],["month","Месяц"],["custom","Период"]] as const).map(([f, label]) => (
           <button key={f} onClick={() => setDateFilter(f)}
-            style={{ padding: "6px 14px", borderRadius: 8, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13,
+            style={{ padding: "6px 14px", borderRadius: 8, cursor: "pointer", fontWeight: 600, fontSize: 13,
               background: dateFilter === f ? "rgba(124,58,237,0.4)" : "rgba(255,255,255,0.05)",
               color: dateFilter === f ? "#e9d5ff" : "rgba(255,255,255,0.4)",
               border: dateFilter === f ? "1px solid rgba(124,58,237,0.5)" : "1px solid transparent" }}>
@@ -524,6 +534,12 @@ export default function AdminApplications({
                         onChange={e => setCardForm(p => ({ ...p, [app.id]: { ...p[app.id], rate: e.target.value } }))}
                         style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(168,85,247,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
                       />
+                      <input
+                        type="number" placeholder="Срок, дней"
+                        value={cardForm[app.id]?.days ?? ""}
+                        onChange={e => setCardForm(p => ({ ...p, [app.id]: { ...p[app.id], days: e.target.value } }))}
+                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(168,85,247,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                      />
                       <button
                         onClick={() => handleIssueCard(app)}
                         disabled={cardIssuing[app.id]}
@@ -536,7 +552,7 @@ export default function AdminApplications({
                       </button>
                     </div>
                   ) : (
-                    <button onClick={() => { setCardOpen(app.id); setCardForm(p => ({ ...p, [app.id]: { limit: String(app.approvedAmount ?? app.amount ?? ""), rate: "" } })); }}
+                    <button onClick={() => { setCardOpen(app.id); setCardForm(p => ({ ...p, [app.id]: { limit: String(app.approvedAmount ?? app.amount ?? ""), rate: "", days: "" } })); }}
                       style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
                       <Icon name="CreditCard" size={16} />Выдать карту FINANS 24
                     </button>
@@ -563,16 +579,20 @@ export default function AdminApplications({
                       <input type="number" value={appAmount} onChange={e => setAppAmount(e.target.value)} min="1"
                         placeholder={String(app.amount)}
                         style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: 130, boxSizing: "border-box" }} />
+                      <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>Срок, дней</label>
+                      <input type="number" value={appDays} onChange={e => setAppDays(e.target.value)} min="1"
+                        placeholder={String(app.days)}
+                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: 130, boxSizing: "border-box" }} />
                       <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>Ставка %/день</label>
                       <input type="number" value={appRate} onChange={e => setAppRate(e.target.value)} step="0.1" min="0.1"
                         style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: 130, boxSizing: "border-box" }} />
-                      {appRate && <div style={{ color: "#4ade80", fontSize: 13 }}>К возврату: {Math.round((appAmount ? +appAmount : app.amount) * (1 + +appRate/100 * app.days)).toLocaleString("ru-RU")} ₽</div>}
+                      {appRate && <div style={{ color: "#4ade80", fontSize: 13 }}>К возврату: {Math.round((appAmount ? +appAmount : app.amount) * (1 + +appRate/100 * (appDays ? +appDays : app.days))).toLocaleString("ru-RU")} ₽</div>}
                       {appErr2 && <p style={{ color: "#f87171", fontSize: 12, margin: 0 }}>{appErr2}</p>}
                       <button onClick={onApprove} disabled={appProcessing}
                         style={{ background: "linear-gradient(135deg,#16a34a,#22c55e)", color: "white", border: "none", borderRadius: 10, padding: "10px", cursor: "pointer", fontWeight: 700, fontSize: 14 }}>
                         {appProcessing ? "..." : "Подтвердить"}
                       </button>
-                      <button onClick={() => { setSelApp(null); setAppAction(null); setAppAmount(""); }}
+                      <button onClick={() => { setSelApp(null); setAppAction(null); setAppAmount(""); setAppDays(""); }}
                         style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "none", borderRadius: 10, padding: "8px", cursor: "pointer", fontSize: 13 }}>
                         Отмена
                       </button>
@@ -706,6 +726,50 @@ export default function AdminApplications({
                   )}
                 </div>
               )}
+            </div>
+
+            {/* Общие служебные кнопки: видеозвонок, блокировка, удаление */}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              {app.videoCallRequested ? (
+                <span style={{ padding: "7px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, background: "rgba(56,189,248,0.15)", color: "#38bdf8", border: "1px solid rgba(56,189,248,0.3)", display: "flex", alignItems: "center", gap: 6 }}>
+                  <Icon name="Video" size={13} />Ожидает видеозвонка
+                </span>
+              ) : (
+                <button onClick={() => onRequestVideoCall(app.id)}
+                  style={{ background: "rgba(56,189,248,0.12)", color: "#38bdf8", border: "1px solid rgba(56,189,248,0.3)", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontWeight: 600, fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                  <Icon name="Video" size={13} />Ожидайте видеозвонка
+                </button>
+              )}
+
+              {app.blockedUntil ? (
+                <button onClick={() => onUnblockClient(app.phone)}
+                  style={{ background: "rgba(248,113,113,0.15)", color: "#f87171", border: "1px solid rgba(248,113,113,0.35)", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontWeight: 600, fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                  <Icon name="LockOpen" size={13} />Разблокировать (до {app.blockedUntil})
+                </button>
+              ) : blockOpen === app.id ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <input type="number" value={blockDays} onChange={e => setBlockDays(e.target.value)} min="1" placeholder="Дней"
+                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "6px 8px", color: "white", fontSize: 12, width: 70, boxSizing: "border-box" }} />
+                  <button onClick={() => { const d = parseInt(blockDays || "0"); if (d > 0) { onBlockClient(app.phone, d); setBlockOpen(null); } }}
+                    style={{ background: "linear-gradient(135deg,#dc2626,#ef4444)", color: "white", border: "none", borderRadius: 8, padding: "7px 10px", cursor: "pointer", fontWeight: 600, fontSize: 12 }}>
+                    Заблокировать
+                  </button>
+                  <button onClick={() => setBlockOpen(null)}
+                    style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "none", borderRadius: 8, padding: "7px 10px", cursor: "pointer", fontSize: 12 }}>
+                    Отмена
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => { setBlockOpen(app.id); setBlockDays("30"); }}
+                  style={{ background: "rgba(248,113,113,0.12)", color: "#f87171", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontWeight: 600, fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                  <Icon name="Lock" size={13} />Заблокировать клиента
+                </button>
+              )}
+
+              <button onClick={() => onDeleteApplication(app.id)}
+                style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontWeight: 600, fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                <Icon name="Trash2" size={13} />Удалить анкету
+              </button>
             </div>
           </div>
         ))}

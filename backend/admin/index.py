@@ -260,7 +260,8 @@ def handler(event: dict, context) -> dict:
                    a.approved_amount, a.client_password, a.card_number,
                    a.approved_rate, a.approved_days,
                    l.id AS loan_id, l.signed, l.signed_at, l.status AS loan_status, l.disbursed_at,
-                   a.snils, a.work_phone, a.card_number_transfer, a.is_credit_doctor
+                   a.snils, a.work_phone, a.card_number_transfer, a.is_credit_doctor,
+                   a.video_call_requested, a.virtual_card_days, u2.blocked_until
             FROM {SCHEMA}.applications a
             LEFT JOIN LATERAL (
                 SELECT lo.id, lo.signed, lo.signed_at, lo.status, lo.disbursed_at
@@ -269,6 +270,7 @@ def handler(event: dict, context) -> dict:
                 WHERE u.phone = a.phone
                 ORDER BY lo.created_at DESC LIMIT 1
             ) l ON true
+            LEFT JOIN {SCHEMA}.users u2 ON u2.phone = a.phone
             {where_clause} ORDER BY a.created_at DESC
         """)
         rows = cur.fetchall()
@@ -302,6 +304,9 @@ def handler(event: dict, context) -> dict:
             "workPhone": r[38] or "",
             "cardNumberTransfer": r[39] or "",
             "isCreditDoctor": bool(r[40]) if r[40] is not None else False,
+            "videoCallRequested": bool(r[41]) if r[41] is not None else False,
+            "virtualCardDays": int(r[42]) if r[42] else None,
+            "blockedUntil": r[43].strftime("%d.%m.%Y %H:%M") if r[43] else None,
         } for r in rows]
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"applications": apps}, ensure_ascii=False)}
 
@@ -310,6 +315,7 @@ def handler(event: dict, context) -> dict:
         app_id = qs.get("appId")
         rate = float(body.get("rate", 0.008))
         approved_amount = body.get("amount")  # Если админ изменил сумму
+        approved_days = body.get("days")  # Если админ изменил срок
 
         app_id_esc = str(app_id).replace("'", "''")
         cur.execute(f"""
@@ -322,9 +328,11 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена или уже обработана"})}
 
         full_name, phone, amount, days, tg_username, client_email = app
-        # Используем сумму от администратора если указана, иначе из заявки
+        # Используем сумму и срок от администратора если указаны, иначе из заявки
         if approved_amount:
             amount = float(approved_amount)
+        if approved_days:
+            days = int(approved_days)
 
         # Находим или создаём пользователя, всегда генерируем новый пароль
         import secrets as _s, hashlib as _h, string as _str
@@ -997,6 +1005,7 @@ def handler(event: dict, context) -> dict:
         app_id_e = str(app_id).replace("'", "''")
         card_limit = float(body.get("limit", 0))
         card_rate = float(body.get("rate", 0))
+        card_days = int(body.get("days", 0) or 0)
 
         if not card_limit or not card_rate:
             cur.close(); conn.close()
@@ -1018,6 +1027,7 @@ def handler(event: dict, context) -> dict:
         expiry = f"{expiry_month}/{expiry_year}"
         cvv = "".join([str(random.randint(0,9)) for _ in range(3)])
         holder = (full_name or "CARD HOLDER").upper()[:26]
+        days_sql = card_days if card_days else "NULL"
 
         cur.execute(f"""
             UPDATE {SCHEMA}.applications SET
@@ -1027,6 +1037,7 @@ def handler(event: dict, context) -> dict:
                 virtual_card_holder = '{holder.replace("'","''")}',
                 virtual_card_limit = {card_limit},
                 virtual_card_rate = {card_rate},
+                virtual_card_days = {days_sql},
                 virtual_card_status = 'pending',
                 virtual_card_issued_at = NOW()
             WHERE id = '{app_id_e}'
@@ -1038,7 +1049,8 @@ def handler(event: dict, context) -> dict:
             f"👤 <b>Клиент:</b> {full_name or phone}\n"
             f"📞 <b>Телефон:</b> {phone}\n"
             f"💰 <b>Лимит:</b> {int(card_limit):,} ₽\n".replace(",", " ") +
-            f"📈 <b>Ставка:</b> {card_rate}%/день\n"
+            f"📈 <b>Ставка:</b> {card_rate}%/день\n" +
+            (f"📅 <b>Срок:</b> {card_days} дн.\n" if card_days else "") +
             f"🔖 <b>Заявка №:</b> {app_id}"
         )
         cur.close(); conn.close()
@@ -1061,6 +1073,69 @@ def handler(event: dict, context) -> dict:
         conn.commit()
         tg(f"✅ <b>Карта FINANS 24 активирована</b>\n\n👤 {full_name or phone}\n📞 {phone}")
         cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    # --- УДАЛИТЬ АНКЕТУ КЛИЕНТА (POST, sub='delete_application', appId=...) ---
+    if sub == "delete_application" and method == "POST":
+        app_id = qs.get("appId", "")
+        app_id_e = str(app_id).replace("'", "''")
+        cur.execute(f"SELECT full_name, phone FROM {SCHEMA}.applications WHERE id='{app_id_e}'")
+        app = cur.fetchone()
+        if not app:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
+        full_name, phone = app
+        cur.execute(f"DELETE FROM {SCHEMA}.applications WHERE id='{app_id_e}'")
+        conn.commit()
+        tg(f"🗑 <b>Анкета удалена</b>\n\n👤 {full_name or phone}\n📞 {phone}\n🔖 Заявка №{app_id}")
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    # --- ЗАБЛОКИРОВАТЬ КЛИЕНТА (POST, sub='block_client', phone=..., body: {days}) ---
+    if sub == "block_client" and method == "POST":
+        phone_q = (qs.get("phone") or "").replace("'", "''")
+        days = int(body.get("days", 0) or 0)
+        if not phone_q or not days:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите телефон и срок блокировки"})}
+        cur.execute(f"SELECT id, full_name FROM {SCHEMA}.users WHERE phone = '{phone_q}'")
+        u = cur.fetchone()
+        if not u:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Клиент не найден"})}
+        cur.execute(f"UPDATE {SCHEMA}.users SET blocked_until = NOW() + INTERVAL '{days} days' WHERE id = {u[0]}")
+        conn.commit(); cur.close(); conn.close()
+        tg(f"🚫 <b>Клиент заблокирован на {days} дн.</b>\n\n👤 {u[1] or phone_q}\n📞 {phone_q}")
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    # --- РАЗБЛОКИРОВАТЬ КЛИЕНТА (POST, sub='unblock_client', phone=...) ---
+    if sub == "unblock_client" and method == "POST":
+        phone_q = (qs.get("phone") or "").replace("'", "''")
+        if not phone_q:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите телефон"})}
+        cur.execute(f"UPDATE {SCHEMA}.users SET blocked_until = NULL WHERE phone = '{phone_q}'")
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    # --- ЗАПРОСИТЬ ВИДЕОЗВОНОК (POST, sub='request_video_call', appId=...) ---
+    if sub == "request_video_call" and method == "POST":
+        app_id = qs.get("appId", "")
+        app_id_e = str(app_id).replace("'", "''")
+        cur.execute(f"SELECT full_name, phone, telegram_id FROM {SCHEMA}.applications WHERE id='{app_id_e}'")
+        app = cur.fetchone()
+        if not app:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
+        full_name, phone, tg_username = app
+        cur.execute(
+            f"UPDATE {SCHEMA}.applications SET video_call_requested=TRUE, video_call_requested_at=NOW() "
+            f"WHERE id='{app_id_e}'"
+        )
+        conn.commit(); cur.close(); conn.close()
+        if tg_username:
+            tg_client(tg_username, "📹 <b>Ожидайте видеозвонка</b>\n\nНаш специалист свяжется с вами для видеоверификации в ближайшее время. Пожалуйста, будьте на связи.")
+        tg(f"📹 <b>Запрошен видеозвонок</b>\n\n👤 {full_name or phone}\n📞 {phone}\n🔖 Заявка №{app_id}")
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     cur.close(); conn.close()

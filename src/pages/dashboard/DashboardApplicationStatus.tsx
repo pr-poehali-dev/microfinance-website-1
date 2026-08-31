@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
+import PaymentHistory from "./PaymentHistory";
 
 interface LoanOffer {
   amount: number;
@@ -23,6 +24,14 @@ interface Loan {
   offer?: LoanOffer;
 }
 
+interface VcScheduleItem {
+  month: number;
+  dueDate: string;
+  amount: number;
+  principal: number;
+  interest: number;
+}
+
 interface VirtualCard {
   number: string;
   expiry: string;
@@ -31,6 +40,8 @@ interface VirtualCard {
   limit: number;
   rate: number;
   status: string;
+  days?: number | null;
+  schedule?: VcScheduleItem[];
 }
 
 interface Application {
@@ -49,6 +60,8 @@ interface Application {
   contractUrl: string;
   virtualCard: VirtualCard | null;
   isCreditDoctor?: boolean;
+  reapplyDaysLeft?: number | null;
+  videoCallRequested?: boolean;
 }
 
 interface Props {
@@ -138,6 +151,23 @@ export default function DashboardApplicationStatus({
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* БЛОК: ОЖИДАЙТЕ ВИДЕОЗВОНКА */}
+      {application?.videoCallRequested && (application.status === "pending" || application.status === "approved") && (
+        <div className="glass rounded-2xl overflow-hidden mb-6"
+          style={{ border: "1px solid rgba(56,189,248,0.4)", background: "rgba(56,189,248,0.04)" }}>
+          <div className="px-6 py-5 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+              style={{ background: "rgba(56,189,248,0.2)" }}>
+              <Icon name="Video" size={22} className="text-sky-400" />
+            </div>
+            <div className="flex-1">
+              <div className="text-white font-bold">Ожидайте видеозвонка</div>
+              <div className="text-sky-300 text-sm mt-0.5">Наш специалист свяжется с вами для видеоверификации. Пожалуйста, будьте на связи.</div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -508,14 +538,26 @@ export default function DashboardApplicationStatus({
                 <div className="text-white/80 text-sm">{application.rejectReason}</div>
               </div>
             )}
-            <p className="text-white/40 text-sm">Вы можете подать повторную заявку или связаться с нами для уточнения деталей.</p>
-            <button
-              onClick={() => navigate("/")}
-              className="btn-neon text-white font-semibold px-6 py-3 rounded-xl flex items-center gap-2 w-full justify-center"
-            >
-              <Icon name="RefreshCw" size={16} />
-              Подать новую заявку
-            </button>
+            {application.reapplyDaysLeft !== undefined && application.reapplyDaysLeft !== null && application.reapplyDaysLeft > 0 ? (
+              <div className="rounded-xl px-4 py-3 flex items-center gap-3"
+                style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.25)" }}>
+                <Icon name="Clock" size={18} className="text-yellow-400 shrink-0" />
+                <div className="text-white/70 text-sm">
+                  Повторная заявка возможна через <b className="text-yellow-400">{application.reapplyDaysLeft} {application.reapplyDaysLeft === 1 ? "день" : application.reapplyDaysLeft < 5 ? "дня" : "дней"}</b>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="text-white/40 text-sm">Вы можете подать повторную заявку или связаться с нами для уточнения деталей.</p>
+                <button
+                  onClick={() => navigate("/")}
+                  className="btn-neon text-white font-semibold px-6 py-3 rounded-xl flex items-center gap-2 w-full justify-center"
+                >
+                  <Icon name="RefreshCw" size={16} />
+                  Подать новую заявку
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -643,11 +685,12 @@ export default function DashboardApplicationStatus({
                     </div>
                   </div>
                 </div>
-                {/* Лимит и ставка */}
-                <div className="grid grid-cols-2 gap-3">
+                {/* Лимит, ставка и срок */}
+                <div className={`grid ${application.virtualCard.days ? "grid-cols-3" : "grid-cols-2"} gap-3`}>
                   {[
                     { label: "Лимит карты", value: `${application.virtualCard.limit.toLocaleString("ru-RU")} ₽`, color: "#4ade80" },
                     { label: "Ставка", value: `${application.virtualCard.rate}% / день`, color: "white" },
+                    ...(application.virtualCard.days ? [{ label: "Срок", value: `${application.virtualCard.days} дн.`, color: "white" }] : []),
                   ].map(({ label, value, color }) => (
                     <div key={label} className="rounded-xl px-4 py-3 text-center"
                       style={{ background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.2)" }}>
@@ -656,6 +699,17 @@ export default function DashboardApplicationStatus({
                     </div>
                   ))}
                 </div>
+
+                {/* Помесячный график погашения лимита */}
+                {application.virtualCard.schedule && application.virtualCard.schedule.length > 0 && (
+                  <PaymentHistory
+                    schedule={application.virtualCard.schedule}
+                    payments={[]}
+                    paidTotal={0}
+                    totalDue={application.virtualCard.schedule.reduce((s, i) => s + i.amount, 0)}
+                  />
+                )}
+
                 {/* Кнопка Оплатить */}
                 <button
                   onClick={() => alert(`Оплата картой FINANS 24\nЛимит: ${application.virtualCard!.limit.toLocaleString("ru-RU")} ₽\n\nДля совершения платежа свяжитесь с нами:\n📞 +7 (495) 663-51-24\n📧 investorfinans24@ya.ru`)}

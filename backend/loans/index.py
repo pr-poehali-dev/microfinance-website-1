@@ -184,7 +184,7 @@ def handler(event: dict, context) -> dict:
         f"SELECT id, amount, days, status, created_at, approved_amount, approved_rate, approved_days, reject_reason, card_number, contract_url, "
         f"virtual_card_number, virtual_card_expiry, virtual_card_cvv, virtual_card_holder, virtual_card_limit, virtual_card_rate, virtual_card_status, "
         f"is_credit_doctor, full_name, email, birth_date, birth_place, passport_series, passport_number, passport_date, passport_code, passport_by, "
-        f"workplace, position, work_phone, salary, contact_person, snils "
+        f"workplace, position, work_phone, salary, contact_person, snils, reviewed_at, video_call_requested, virtual_card_days "
         f"FROM {SCHEMA}.applications "
         f"WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1"
     )
@@ -199,6 +199,31 @@ def handler(event: dict, context) -> dict:
         eff_amount = approved_amount if approved_amount else app_amount
         approved_interest = round(eff_amount * approved_rate * approved_days)
         approved_total = eff_amount + approved_interest
+        reviewed_at = app_row[34]
+        reapply_days_left = None
+        if app_row[3] == "rejected" and reviewed_at:
+            days_passed = (datetime.now() - reviewed_at).days
+            reapply_days_left = max(0, 30 - days_passed)
+        vc_days = int(app_row[36]) if app_row[36] else None
+        vc_schedule = []
+        if app_row[11] and app_row[17] == "active" and vc_days and app_row[15] and app_row[16]:
+            vc_limit = float(app_row[15])
+            vc_rate = float(app_row[16])
+            monthly = vc_limit / max(1, round(vc_days / 30))
+            months = max(1, round(vc_days / 30))
+            remaining = vc_limit
+            issued_from = datetime.now()
+            for m in range(1, months + 1):
+                interest_m = round(remaining * vc_rate / 100 * 30)
+                payment_m = round(monthly + interest_m)
+                vc_schedule.append({
+                    "month": m,
+                    "dueDate": (issued_from + timedelta(days=30 * m)).strftime("%d.%m.%Y"),
+                    "amount": payment_m,
+                    "principal": round(monthly),
+                    "interest": interest_m,
+                })
+                remaining -= monthly
         application = {
             "id": app_row[0],
             "amount": app_amount,
@@ -221,8 +246,12 @@ def handler(event: dict, context) -> dict:
                 "limit": float(app_row[15]) if app_row[15] else 0,
                 "rate": float(app_row[16]) if app_row[16] else 0,
                 "status": app_row[17] or "none",
+                "days": vc_days,
+                "schedule": vc_schedule,
             } if app_row[11] else None,
             "isCreditDoctor": bool(app_row[18]) if app_row[18] is not None else False,
+            "reapplyDaysLeft": reapply_days_left,
+            "videoCallRequested": bool(app_row[35]) if app_row[35] is not None else False,
         }
         # Полная анкета клиента
         profile = {
@@ -261,6 +290,8 @@ def handler(event: dict, context) -> dict:
 
     cur.close(); conn.close()
 
+    is_cd = bool(application and application.get("isCreditDoctor"))
+
     loans = []
     for row in rows:
         loan_id, amount, days, rate, status, created_at, signed, offer_amount, offer_days, offer_rate, disbursed_at = row
@@ -268,6 +299,33 @@ def handler(event: dict, context) -> dict:
         total = float(amount) + interest
         loan_payments = payments_by_loan.get(loan_id, [])
         paid_total = sum(p["amount"] for p in loan_payments)
+
+        schedule = []
+        if status in ("active", "overdue", "paid"):
+            start = disbursed_at or created_at
+            if is_cd and days > 30:
+                # Помесячный график для Кредитного доктора
+                months = max(1, round(days / 30))
+                monthly_principal = float(amount) / months
+                remaining_p = float(amount)
+                for m in range(1, months + 1):
+                    interest_m = round(remaining_p * float(rate) * 30)
+                    payment_m = round(monthly_principal + interest_m)
+                    schedule.append({
+                        "month": m,
+                        "dueDate": (start + timedelta(days=30 * m)).strftime("%d.%m.%Y"),
+                        "amount": payment_m,
+                        "principal": round(monthly_principal),
+                        "interest": interest_m,
+                    })
+                    remaining_p -= monthly_principal
+            else:
+                schedule = [{
+                    "dueDate": (start + timedelta(days=days)).strftime("%d.%m.%Y"),
+                    "amount": total,
+                    "label": "Погашение полной суммы",
+                }]
+
         loan_data = {
             "id": loan_id,
             "amount": float(amount),
@@ -283,12 +341,7 @@ def handler(event: dict, context) -> dict:
             "payments": loan_payments,
             "paidTotal": paid_total,
             "remaining": max(0, total - paid_total),
-            # Расчётный график: одна выплата в конце срока
-            "schedule": [{
-                "dueDate": ((disbursed_at or created_at) + timedelta(days=days)).strftime("%d.%m.%Y"),
-                "amount": total,
-                "label": "Погашение полной суммы",
-            }] if status in ("active", "overdue", "paid") else [],
+            "schedule": schedule,
         }
         if status == "review" and not signed and offer_amount:
             oa = float(offer_amount)
