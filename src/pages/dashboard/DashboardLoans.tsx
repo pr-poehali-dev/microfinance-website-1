@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
+import PaymentHistory, { ScheduleItem, PaymentItem } from "./PaymentHistory";
 
 interface LoanOffer {
   amount: number;
@@ -22,6 +23,10 @@ interface Loan {
   signed: boolean;
   disbursedAt?: string | null;
   offer?: LoanOffer;
+  schedule?: ScheduleItem[];
+  payments?: PaymentItem[];
+  paidTotal?: number;
+  remaining?: number;
 }
 
 interface Application {
@@ -177,11 +182,19 @@ export default function DashboardLoans({ loans, application, signingId, signMsg,
                     </div>
                   )}
 
+                  {/* График погашения и история платежей */}
+                  <PaymentHistory
+                    schedule={loan.schedule || []}
+                    payments={loan.payments || []}
+                    paidTotal={loan.paidTotal || 0}
+                    totalDue={loan.total}
+                  />
+
                   <div className="flex items-center justify-between rounded-xl px-5 py-4"
                     style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.3)" }}>
                     <div>
-                      <div className="text-white/50 text-sm">К возврату</div>
-                      <div className="font-bold text-2xl gradient-text">{loan.total.toLocaleString("ru-RU")} ₽</div>
+                      <div className="text-white/50 text-sm">{loan.paidTotal ? "Остаток к возврату" : "К возврату"}</div>
+                      <div className="font-bold text-2xl gradient-text">{(loan.remaining ?? loan.total).toLocaleString("ru-RU")} ₽</div>
                       <div className="text-white/30 text-xs">включая {loan.interest.toLocaleString("ru-RU")} ₽ процентов</div>
                     </div>
                     {loan.status === "active" && (

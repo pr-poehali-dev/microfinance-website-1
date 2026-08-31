@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
+import AddPaymentModal from "./AddPaymentModal";
 
 const CAR_URL = "https://functions.poehali.dev/651adde1-4432-4e5a-8086-3cda9898b7ac";
 
@@ -53,6 +54,8 @@ export default function AdminCarLoans({ token }: Props) {
   const [msg, setMsg] = useState("");
   const [disbursing, setDisbursing] = useState<Record<number, boolean>>({});
   const [disbursed, setDisbursed] = useState<Record<number, boolean>>({});
+  const [paymentModalApp, setPaymentModalApp] = useState<CarApp | null>(null);
+  const [paymentAdded, setPaymentAdded] = useState<Record<number, number>>({});
 
   const [editForm, setEditForm] = useState({
     status: "pending",
@@ -208,10 +211,16 @@ export default function AdminCarLoans({ token }: Props) {
 
                   <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
                     {(disbursed[app.id] || app.disbursed_at) ? (
-                      <div style={{ padding: "8px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6, background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.35)", color: "#38bdf8", whiteSpace: "nowrap" }}>
-                        <Icon name="BadgeCheck" size={14} /> Займ выдан
-                        {app.disbursed_at && <span style={{ fontSize: 11, opacity: 0.7 }}>{new Date(app.disbursed_at).toLocaleDateString("ru-RU")}</span>}
-                      </div>
+                      <>
+                        <div style={{ padding: "8px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6, background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.35)", color: "#38bdf8", whiteSpace: "nowrap" }}>
+                          <Icon name="BadgeCheck" size={14} /> Займ выдан
+                          {app.disbursed_at && <span style={{ fontSize: 11, opacity: 0.7 }}>{new Date(app.disbursed_at).toLocaleDateString("ru-RU")}</span>}
+                        </div>
+                        <button onClick={() => setPaymentModalApp(app)}
+                          style={{ padding: "8px 14px", borderRadius: 10, border: "1px solid rgba(34,197,94,0.35)", cursor: "pointer", fontWeight: 700, fontSize: 13, background: "rgba(34,197,94,0.12)", color: "#4ade80", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
+                          <Icon name="Plus" size={14} /> Внести платёж{paymentAdded[app.id] ? ` (${paymentAdded[app.id]})` : ""}
+                        </button>
+                      </>
                     ) : (
                       <button onClick={() => handleDisburse(app)} disabled={disbursing[app.id]}
                         style={{ padding: "8px 14px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 700, fontSize: 13, background: "linear-gradient(135deg,#0ea5e9,#38bdf8)", color: "white", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6, opacity: disbursing[app.id] ? 0.7 : 1 }}>
@@ -324,6 +333,17 @@ export default function AdminCarLoans({ token }: Props) {
             </div>
           </div>
         </div>
+      )}
+
+      {paymentModalApp && (
+        <AddPaymentModal
+          token={token}
+          loanType="carloan"
+          loanId={paymentModalApp.id}
+          clientName={paymentModalApp.full_name || paymentModalApp.phone}
+          onClose={() => setPaymentModalApp(null)}
+          onSuccess={() => setPaymentAdded(p => ({ ...p, [paymentModalApp.id]: (p[paymentModalApp.id] || 0) + 1 }))}
+        />
       )}
     </div>
   );

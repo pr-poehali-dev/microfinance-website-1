@@ -813,6 +813,80 @@ def handler(event: dict, context) -> dict:
 
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"items": all_items, "total": len(all_items)}, ensure_ascii=False)}
 
+    # --- ВНЕСТИ ПЛАТЁЖ (POST, sub='add_payment', loanType=loan|carloan|shoploan, loanId=...) ---
+    if sub == "add_payment" and method == "POST":
+        loan_type = (qs.get("loanType") or "").strip()
+        loan_id = int(qs.get("loanId", 0) or 0)
+        if loan_type not in ("loan", "carloan", "shoploan") or not loan_id:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Некорректные параметры"})}
+
+        amount = body.get("amount")
+        note = (body.get("note") or "").replace("'", "''")
+        if not amount or float(amount) <= 0:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите сумму платежа"})}
+
+        # Проверяем существование займа и получаем контакты клиента
+        if loan_type == "loan":
+            cur.execute(f"""
+                SELECT u.phone, u.full_name, l.amount, l.days, l.rate
+                FROM {SCHEMA}.loans l JOIN {SCHEMA}.users u ON u.id = l.user_id
+                WHERE l.id = {loan_id}
+            """)
+        elif loan_type == "carloan":
+            cur.execute(f"""
+                SELECT phone, full_name, loan_amount, loan_months, approved_rate
+                FROM {SCHEMA}.car_loan_applications WHERE id = {loan_id}
+            """)
+        else:
+            cur.execute(f"""
+                SELECT phone, full_name, loan_amount, loan_months, approved_rate
+                FROM {SCHEMA}.shopping_loan_applications WHERE id = {loan_id}
+            """)
+        row = cur.fetchone()
+        if not row:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Займ не найден"})}
+
+        phone_n, fname = row[0], row[1]
+        note_sql = f"'{note}'" if note else "NULL"
+
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.payments (loan_type, loan_id, amount, note) "
+            f"VALUES ('{loan_type}', {loan_id}, {float(amount)}, {note_sql}) RETURNING id"
+        )
+        payment_id = cur.fetchone()[0]
+        conn.commit()
+        cur.close(); conn.close()
+
+        type_label = {"loan": "Займ", "carloan": "Автозайм", "shoploan": "Товарный займ"}[loan_type]
+        tg(
+            f"💰 <b>Внесён платёж — {type_label} #{loan_id}</b>\n"
+            f"👤 {fname or phone_n} | 📞 {phone_n}\n"
+            f"💵 Сумма: {int(float(amount)):,} ₽".replace(",", " ")
+        )
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "paymentId": payment_id})}
+
+    # --- ИСТОРИЯ ПЛАТЕЖЕЙ (GET, sub='payments', loanType=..., loanId=...) ---
+    if sub == "payments" and method == "GET":
+        loan_type = (qs.get("loanType") or "").strip()
+        loan_id = int(qs.get("loanId", 0) or 0)
+        if loan_type not in ("loan", "carloan", "shoploan") or not loan_id:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Некорректные параметры"})}
+
+        cur.execute(
+            f"SELECT id, amount, paid_at, note FROM {SCHEMA}.payments "
+            f"WHERE loan_type = '{loan_type}' AND loan_id = {loan_id} ORDER BY paid_at DESC"
+        )
+        items = [
+            {"id": r[0], "amount": float(r[1]), "paidAt": r[2].strftime("%d.%m.%Y в %H:%M"), "note": r[3] or ""}
+            for r in cur.fetchall()
+        ]
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"items": items}, ensure_ascii=False)}
+
     # --- ОБНОВИТЬ ДАННЫЕ КЛИЕНТА (POST, sub='user_update', userId=...) ---
     if sub == "user_update" and method == "POST":
         user_id = int(qs.get("userId", 0))

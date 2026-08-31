@@ -180,18 +180,59 @@ def handler(event: dict, context) -> dict:
 
         cur.execute(
             f"SELECT id, loan_amount, loan_months, status, reject_reason, approved_amount, approved_months, "
-            f"approved_rate, notes, car_brand, car_model, car_year, created_at "
+            f"approved_rate, notes, car_brand, car_model, car_year, created_at, disbursed_at, "
+            f"full_name, email, birth_date, address, passport_serial, passport_num, passport_issued, "
+            f"car_mileage, contact_person, card_number "
             f"FROM {SCHEMA}.car_loan_applications WHERE phone = '{phone_q}' ORDER BY created_at DESC LIMIT 1"
         )
         row = cur.fetchone()
-        cur.close(); conn.close()
         if not row:
+            cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "not found"})}
         keys = ["id","loan_amount","loan_months","status","reject_reason","approved_amount","approved_months",
-                "approved_rate","notes","car_brand","car_model","car_year","created_at"]
+                "approved_rate","notes","car_brand","car_model","car_year","created_at","disbursed_at",
+                "full_name","email","birth_date","address","passport_serial","passport_num","passport_issued",
+                "car_mileage","contact_person","card_number"]
         item = {}
         for k, v in zip(keys, row):
             item[k] = v.isoformat() if hasattr(v, "isoformat") else v
+
+        # История платежей
+        cur.execute(
+            f"SELECT amount, paid_at, note FROM {SCHEMA}.payments "
+            f"WHERE loan_type = 'carloan' AND loan_id = {item['id']} ORDER BY paid_at DESC"
+        )
+        payments = [
+            {"amount": float(r[0]), "paidAt": r[1].strftime("%d.%m.%Y в %H:%M"), "note": r[2] or ""}
+            for r in cur.fetchall()
+        ]
+        item["payments"] = payments
+        item["paidTotal"] = sum(p["amount"] for p in payments)
+
+        # Расчётный ежемесячный график погашения (если одобрен/выдан)
+        item["schedule"] = []
+        eff_amount = item.get("approved_amount") or item.get("loan_amount")
+        eff_months = item.get("approved_months") or item.get("loan_months")
+        eff_rate = item.get("approved_rate")
+        if item["status"] in ("approved", "signing") and eff_amount and eff_months and eff_rate:
+            monthly_principal = float(eff_amount) / int(eff_months)
+            remaining = float(eff_amount)
+            start = None
+            if item.get("disbursed_at"):
+                start = datetime.fromisoformat(item["disbursed_at"])
+            elif item.get("created_at"):
+                start = datetime.fromisoformat(item["created_at"])
+            for m in range(1, int(eff_months) + 1):
+                interest_m = round(remaining * float(eff_rate) / 100)
+                payment_m = round(monthly_principal + interest_m)
+                due = (start + timedelta(days=30 * m)).strftime("%d.%m.%Y") if start else None
+                item["schedule"].append({
+                    "month": m, "dueDate": due, "amount": payment_m,
+                    "principal": round(monthly_principal), "interest": interest_m,
+                })
+                remaining -= monthly_principal
+
+        cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "item": item}, ensure_ascii=False)}
 
     # --- PUT /?sub=update&id=N — обновить заявку (админ) ---

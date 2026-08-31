@@ -5,6 +5,8 @@ import DashboardNavbar from "./dashboard/DashboardNavbar";
 import DashboardApplicationStatus from "./dashboard/DashboardApplicationStatus";
 import DashboardLoans from "./dashboard/DashboardLoans";
 import DashboardSupport from "./dashboard/DashboardSupport";
+import PaymentHistory from "./dashboard/PaymentHistory";
+import ClientProfileCard from "./dashboard/ClientProfileCard";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 const CAR_URL  = "https://functions.poehali.dev/651adde1-4432-4e5a-8086-3cda9898b7ac";
@@ -20,6 +22,21 @@ interface LoanOffer {
   total: number;
 }
 
+interface ScheduleItem {
+  dueDate: string | null;
+  amount: number;
+  label?: string;
+  month?: number;
+  principal?: number;
+  interest?: number;
+}
+
+interface PaymentItem {
+  amount: number;
+  paidAt: string;
+  note?: string;
+}
+
 interface Loan {
   id: number;
   amount: number;
@@ -31,7 +48,12 @@ interface Loan {
   status: string;
   createdAt: string;
   signed: boolean;
+  disbursedAt?: string | null;
   offer?: LoanOffer;
+  schedule?: ScheduleItem[];
+  payments?: PaymentItem[];
+  paidTotal?: number;
+  remaining?: number;
 }
 
 interface User {
@@ -51,6 +73,24 @@ interface VirtualCard {
   status: string;
 }
 
+interface ClientProfile {
+  fullName: string;
+  email: string;
+  birthDate: string;
+  birthPlace: string;
+  passportSeries: string;
+  passportNumber: string;
+  passportDate: string;
+  passportCode: string;
+  passportBy: string;
+  workplace: string;
+  position: string;
+  workPhone: string;
+  salary: number | null;
+  contactPerson: string;
+  snils: string;
+}
+
 interface Application {
   id: number;
   amount: number;
@@ -66,6 +106,7 @@ interface Application {
   cardNumber: string;
   contractUrl: string;
   virtualCard: VirtualCard | null;
+  profile?: ClientProfile;
 }
 
 export default function DashboardPage() {
@@ -99,6 +140,11 @@ export default function DashboardPage() {
     reject_reason: string | null; approved_amount: number | null;
     approved_months: number | null; approved_rate: number | null;
     car_brand: string; car_model: string; car_year: number; created_at: string;
+    disbursed_at?: string | null;
+    full_name?: string; email?: string; birth_date?: string; address?: string;
+    passport_serial?: string; passport_num?: string; passport_issued?: string;
+    car_mileage?: number; contact_person?: string; card_number?: string;
+    payments?: PaymentItem[]; paidTotal?: number; schedule?: ScheduleItem[];
   } | null>(null);
 
   const [shopLoan, setShopLoan] = useState<{
@@ -107,6 +153,11 @@ export default function DashboardPage() {
     approved_months: number | null; approved_rate: number | null;
     notes: string | null; shop_name: string; item_name: string; item_price: number;
     contract_signed: boolean; created_at: string;
+    disbursed_at?: string | null;
+    full_name?: string; email?: string; birth_date?: string; address?: string;
+    passport_series?: string; passport_number?: string; passport_date?: string;
+    passport_by?: string; snils?: string; contact_person?: string; card_number?: string;
+    payments?: PaymentItem[]; paidTotal?: number; schedule?: ScheduleItem[];
   } | null>(null);
   const [shopSigning, setShopSigning] = useState(false);
   const [shopSignMsg, setShopSignMsg] = useState("");
@@ -342,6 +393,33 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* АНКЕТА КЛИЕНТА */}
+        {!loading && !error && user && application?.profile && (
+          <ClientProfileCard profile={application.profile} phone={user.phone} />
+        )}
+        {!loading && !error && user && !application?.profile && carLoan?.full_name && (
+          <ClientProfileCard
+            phone={user.phone}
+            profile={{
+              fullName: carLoan.full_name || "",
+              email: carLoan.email || "",
+              birthDate: carLoan.birth_date || "",
+              birthPlace: "",
+              passportSeries: carLoan.passport_serial || "",
+              passportNumber: carLoan.passport_num || "",
+              passportDate: "",
+              passportCode: "",
+              passportBy: carLoan.passport_issued || "",
+              workplace: "",
+              position: "",
+              workPhone: "",
+              salary: null,
+              contactPerson: carLoan.contact_person || "",
+              snils: "",
+            }}
+          />
+        )}
+
         {!loading && !error && (
           <>
             <DashboardApplicationStatus
@@ -474,6 +552,20 @@ export default function DashboardPage() {
                       <div className="rounded-xl p-3 mb-4 text-white/50 text-sm" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
                         📝 {shopLoan.notes}
                       </div>
+                    )}
+
+                    {shopLoan.contract_signed && (
+                      <PaymentHistory
+                        schedule={shopLoan.schedule || []}
+                        payments={shopLoan.payments || []}
+                        paidTotal={shopLoan.paidTotal || 0}
+                        totalDue={(() => {
+                          const a = shopLoan.approved_amount || shopLoan.loan_amount;
+                          const m = shopLoan.approved_months || shopLoan.loan_months;
+                          const r = (shopLoan.approved_rate || 9) / 100;
+                          return Math.round(a * (1 + r * m));
+                        })()}
+                      />
                     )}
 
                     {!shopLoan.contract_signed ? (
@@ -615,14 +707,28 @@ export default function DashboardPage() {
                         </div>
                       ))}
                     </div>
-                    <div className="rounded-xl p-4 flex items-start gap-3"
-                      style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
-                      <Icon name="Phone" size={16} className="text-green-400 shrink-0 mt-0.5" />
-                      <div className="text-white/60 text-sm">
-                        Для подписания договора и получения денег свяжитесь с нашим специалистом:<br />
-                        <span className="text-white font-semibold">+7 (495) 663-51-24</span>
+                    {carLoan.disbursed_at ? (
+                      <PaymentHistory
+                        schedule={carLoan.schedule || []}
+                        payments={carLoan.payments || []}
+                        paidTotal={carLoan.paidTotal || 0}
+                        totalDue={(() => {
+                          const a = carLoan.approved_amount || carLoan.loan_amount;
+                          const m = carLoan.approved_months || carLoan.loan_months;
+                          const r = (carLoan.approved_rate || 12) / 100;
+                          return Math.round(a * (1 + r * m));
+                        })()}
+                      />
+                    ) : (
+                      <div className="rounded-xl p-4 flex items-start gap-3"
+                        style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
+                        <Icon name="Phone" size={16} className="text-green-400 shrink-0 mt-0.5" />
+                        <div className="text-white/60 text-sm">
+                          Для подписания договора и получения денег свяжитесь с нашим специалистом:<br />
+                          <span className="text-white font-semibold">+7 (495) 663-51-24</span>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
 

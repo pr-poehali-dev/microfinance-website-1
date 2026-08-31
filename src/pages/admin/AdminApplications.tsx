@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 import { App, GLASS } from "./adminTypes";
+import AddPaymentModal from "./AddPaymentModal";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
 
@@ -63,6 +64,8 @@ export default function AdminApplications({
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "month" | "custom">("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [paymentModalApp, setPaymentModalApp] = useState<App | null>(null);
+  const [paymentAdded, setPaymentAdded] = useState<Record<number, number>>({});
 
 
   async function handleIssueCard(app: App) {
@@ -437,17 +440,23 @@ export default function AdminApplications({
 
                   {/* Статус займа — уже выдан */}
                   {app.loanId && (disbursed[app.id] || app.loanDisbursedAt) && (
-                    <div style={{
-                      borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 600,
-                      display: "flex", alignItems: "center", gap: 8,
-                      background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.35)", color: "#38bdf8",
-                    }}>
-                      <Icon name="BadgeCheck" size={15} />
-                      <div>
-                        <div>Займ выдан</div>
-                        {app.loanDisbursedAt && <div style={{ fontSize: 11, fontWeight: 400, opacity: 0.8 }}>{app.loanDisbursedAt}</div>}
+                    <>
+                      <div style={{
+                        borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 600,
+                        display: "flex", alignItems: "center", gap: 8,
+                        background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.35)", color: "#38bdf8",
+                      }}>
+                        <Icon name="BadgeCheck" size={15} />
+                        <div>
+                          <div>Займ выдан</div>
+                          {app.loanDisbursedAt && <div style={{ fontSize: 11, fontWeight: 400, opacity: 0.8 }}>{app.loanDisbursedAt}</div>}
+                        </div>
                       </div>
-                    </div>
+                      <button onClick={() => setPaymentModalApp(app)}
+                        style={{ background: "rgba(34,197,94,0.12)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.35)", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                        <Icon name="Plus" size={15} />Внести платёж{paymentAdded[app.id] ? ` (${paymentAdded[app.id]})` : ""}
+                      </button>
+                    </>
                   )}
 
                   {/* Кнопка "Займ выдан" — для всех у кого есть займ и ещё не отмечен как выданный */}
@@ -701,6 +710,17 @@ export default function AdminApplications({
           </div>
         ))}
       </div>
+
+      {paymentModalApp && paymentModalApp.loanId && (
+        <AddPaymentModal
+          token={token}
+          loanType="loan"
+          loanId={paymentModalApp.loanId}
+          clientName={paymentModalApp.fullName || paymentModalApp.phone}
+          onClose={() => setPaymentModalApp(null)}
+          onSuccess={() => setPaymentAdded(p => ({ ...p, [paymentModalApp.id]: (p[paymentModalApp.id] || 0) + 1 }))}
+        />
+      )}
     </div>
   );
 }

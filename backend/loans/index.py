@@ -1,7 +1,7 @@
 """Получение займов пользователя по токену сессии."""
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import psycopg2
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
@@ -171,11 +171,12 @@ def handler(event: dict, context) -> dict:
     )
     rows = cur.fetchall()
 
-    # Получаем последнюю заявку пользователя
+    # Получаем последнюю заявку пользователя (+ вся анкета)
     cur.execute(
         f"SELECT id, amount, days, status, created_at, approved_amount, approved_rate, approved_days, reject_reason, card_number, contract_url, "
         f"virtual_card_number, virtual_card_expiry, virtual_card_cvv, virtual_card_holder, virtual_card_limit, virtual_card_rate, virtual_card_status, "
-        f"is_credit_doctor "
+        f"is_credit_doctor, full_name, email, birth_date, birth_place, passport_series, passport_number, passport_date, passport_code, passport_by, "
+        f"workplace, position, work_phone, salary, contact_person, snils "
         f"FROM {SCHEMA}.applications "
         f"WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1"
     )
@@ -215,6 +216,40 @@ def handler(event: dict, context) -> dict:
             } if app_row[11] else None,
             "isCreditDoctor": bool(app_row[18]) if app_row[18] is not None else False,
         }
+        # Полная анкета клиента
+        profile = {
+            "fullName": app_row[19] or "",
+            "email": app_row[20] or "",
+            "birthDate": app_row[21] or "",
+            "birthPlace": app_row[22] or "",
+            "passportSeries": app_row[23] or "",
+            "passportNumber": app_row[24] or "",
+            "passportDate": app_row[25] or "",
+            "passportCode": app_row[26] or "",
+            "passportBy": app_row[27] or "",
+            "workplace": app_row[28] or "",
+            "position": app_row[29] or "",
+            "workPhone": app_row[30] or "",
+            "salary": float(app_row[31]) if app_row[31] else None,
+            "contactPerson": app_row[32] or "",
+            "snils": app_row[33] or "",
+        }
+        application["profile"] = profile
+
+    # Платежи по всем основным займам пользователя
+    loan_ids = [str(r[0]) for r in rows]
+    payments_by_loan: dict = {}
+    if loan_ids:
+        cur.execute(
+            f"SELECT loan_id, amount, paid_at, note FROM {SCHEMA}.payments "
+            f"WHERE loan_type = 'loan' AND loan_id IN ({','.join(loan_ids)}) ORDER BY paid_at DESC"
+        )
+        for p_loan_id, p_amount, p_paid_at, p_note in cur.fetchall():
+            payments_by_loan.setdefault(p_loan_id, []).append({
+                "amount": float(p_amount),
+                "paidAt": p_paid_at.strftime("%d.%m.%Y в %H:%M"),
+                "note": p_note or "",
+            })
 
     cur.close(); conn.close()
 
@@ -222,6 +257,9 @@ def handler(event: dict, context) -> dict:
     for row in rows:
         loan_id, amount, days, rate, status, created_at, signed, offer_amount, offer_days, offer_rate, disbursed_at = row
         interest = round(float(amount) * float(rate) * days)
+        total = float(amount) + interest
+        loan_payments = payments_by_loan.get(loan_id, [])
+        paid_total = sum(p["amount"] for p in loan_payments)
         loan_data = {
             "id": loan_id,
             "amount": float(amount),
@@ -229,11 +267,20 @@ def handler(event: dict, context) -> dict:
             "rate": float(rate),
             "ratePercent": round(float(rate) * 100, 1),
             "interest": interest,
-            "total": float(amount) + interest,
+            "total": total,
             "status": status,
             "createdAt": created_at.strftime("%d.%m.%Y"),
             "signed": signed,
             "disbursedAt": disbursed_at.strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
+            "payments": loan_payments,
+            "paidTotal": paid_total,
+            "remaining": max(0, total - paid_total),
+            # Расчётный график: одна выплата в конце срока
+            "schedule": [{
+                "dueDate": ((disbursed_at or created_at) + timedelta(days=days)).strftime("%d.%m.%Y"),
+                "amount": total,
+                "label": "Погашение полной суммы",
+            }] if status in ("active", "overdue", "paid") else [],
         }
         if status == "review" and not signed and offer_amount:
             oa = float(offer_amount)
