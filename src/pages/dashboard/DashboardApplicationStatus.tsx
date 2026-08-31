@@ -448,10 +448,20 @@ export default function DashboardApplicationStatus({
 
             {/* Кнопка Подтвердить займ */}
             {confirmDone ? (
-              <div className="rounded-xl px-5 py-4 flex items-center gap-3"
+              <div className="rounded-xl px-5 py-4 flex flex-col gap-3"
                 style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)" }}>
-                <Icon name="CheckCircle" size={20} className="text-green-400 shrink-0" />
-                <div className="text-green-300 text-sm font-medium">Займ подтверждён! Менеджер свяжется с вами в ближайшее время.</div>
+                <div className="flex items-center gap-3">
+                  <Icon name="CheckCircle" size={20} className="text-green-400 shrink-0" />
+                  <div className="text-green-300 text-sm font-medium">Займ подтверждён! Ваш график погашения уже доступен ниже.</div>
+                </div>
+                <button
+                  onClick={() => document.getElementById("my-loans")?.scrollIntoView({ behavior: "smooth" })}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-white transition-all hover:opacity-90"
+                  style={{ background: "rgba(74,222,128,0.2)", border: "1px solid rgba(74,222,128,0.4)" }}
+                >
+                  <Icon name="ArrowDown" size={16} />
+                  Смотреть график погашения
+                </button>
               </div>
             ) : (
               <button onClick={onConfirm} disabled={confirming}

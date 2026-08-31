@@ -355,6 +355,8 @@ export default function DashboardPage() {
     if (!res.ok) { setCardError(data.error || "Ошибка"); return; }
     setCardSaved(true);
     setConfirmDone(true);
+    // Сразу подгружаем свежие данные — чтобы график погашения и кнопка "Погасить" появились без ожидания
+    loadData(token, false);
   };
 
   return (

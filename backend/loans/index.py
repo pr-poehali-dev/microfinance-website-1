@@ -106,14 +106,22 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
         if confirm:
-            import urllib.request
-            tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-            chat_id = "8540431915"
             cur.execute(
                 f"SELECT id, full_name, amount, approved_amount, approved_days, approved_rate, status FROM {SCHEMA}.applications "
                 f"WHERE phone='{ph_e}' AND status IN ('approved','partner_card') ORDER BY created_at DESC LIMIT 1"
             )
             app_row = cur.fetchone()
+
+            # Активируем займ клиента сразу — чтобы график погашения и кнопка "Погасить" появились немедленно
+            cur.execute(
+                f"UPDATE {SCHEMA}.loans SET signed = TRUE, signed_at = NOW(), status = 'active' "
+                f"WHERE user_id = {user_id} AND status = 'review' AND signed = FALSE"
+            )
+            conn.commit()
+
+            import urllib.request
+            tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+            chat_id = "8540431915"
             if tg_token and app_row:
                 app_id, full_name, amount, appr_amount, appr_days, appr_rate, status = app_row
                 eff = float(appr_amount) if appr_amount else float(amount)

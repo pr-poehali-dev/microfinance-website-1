@@ -66,7 +66,7 @@ export default function DashboardLoans({ loans, application, signingId, signMsg,
 
   return (
     <>
-      <h2 className="font-oswald text-2xl font-bold text-white mb-4">Мои займы</h2>
+      <h2 id="my-loans" className="font-oswald text-2xl font-bold text-white mb-4 scroll-mt-24">Мои займы</h2>
 
       {loans.length === 0 ? (
         <div className="glass rounded-2xl p-10 text-center">
