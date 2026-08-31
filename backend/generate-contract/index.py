@@ -27,7 +27,7 @@ MKK = {
     "ks": "30101810400000000225",
     "bik": "044525225",
     "phone": "+7-863-270-85-24",
-    "email": "PARAFINANS24@ya.ru",
+    "email": "investorfinans24@ya.ru",
     "site": "finans24.online",
     "director": "Иванов Иван Иванович",
 }
