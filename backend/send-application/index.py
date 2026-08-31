@@ -236,7 +236,7 @@ def handler(event: dict, context) -> dict:
               <p style="margin:0 0 20px;color:#fff;font-size:18px;font-weight:bold;">{phone}</p>
               <p style="margin:0 0 6px;color:rgba(255,255,255,0.5);font-size:11px;text-transform:uppercase;letter-spacing:1px;">Пароль</p>
               <p style="margin:0 0 24px;color:#c084fc;font-size:24px;font-weight:bold;letter-spacing:3px;">{plain_password}</p>
-              <a href="https://parafinans24.poehali.dev/login" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:15px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:10px;">Войти в личный кабинет →</a>
+              <a href="https://finans24.online/login" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:15px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:10px;">Войти в личный кабинет →</a>
             </td></tr>
           </table>
           <p style="color:rgba(255,255,255,0.3);font-size:12px;margin:0;line-height:1.6;">

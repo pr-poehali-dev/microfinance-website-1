@@ -15,4 +15,4 @@ Allow: /
 Disallow: /admin
 Disallow: /dashboard
 
-Sitemap: https://parafinans24.ru/sitemap.xml
+Sitemap: https://finans24.online/sitemap.xml
