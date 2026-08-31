@@ -59,7 +59,7 @@ export default function LoginPage() {
               <Icon name="Wallet" size={20} className="text-white" />
             </div>
             <span className="font-oswald text-xl font-bold tracking-wide text-white">
-              PARA<span className="gradient-text">FINANS24</span>
+              <span className="gradient-text">FINANS24</span>
             </span>
           </button>
           <button onClick={() => navigate("/")} className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm">

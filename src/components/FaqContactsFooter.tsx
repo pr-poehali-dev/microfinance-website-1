@@ -146,7 +146,7 @@ export default function FaqContactsFooter() {
               <Icon name="Wallet" size={16} className="text-white" />
             </div>
             <span className="font-oswald text-lg font-bold text-white">
-              PARA<span className="gradient-text">FINANS24</span>
+              <span className="gradient-text">FINANS24</span>
             </span>
           </div>
           <div className="text-white/30 text-sm text-center">

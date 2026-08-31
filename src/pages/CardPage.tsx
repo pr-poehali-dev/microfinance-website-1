@@ -61,7 +61,7 @@ export default function CardPage() {
               <Icon name="Wallet" size={20} className="text-white" />
             </div>
             <span className="font-oswald text-xl font-bold tracking-wide text-white">
-              PARA<span className="gradient-text">FINANS24</span>
+              <span className="gradient-text">FINANS24</span>
             </span>
           </button>
           <button
