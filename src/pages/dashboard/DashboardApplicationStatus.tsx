@@ -276,9 +276,9 @@ export default function DashboardApplicationStatus({
                   <Icon name="CreditCard" size={16} className="text-purple-400" />
                 </div>
                 <div>
-                  <div className="text-white font-semibold mb-1">Оформление карты партнёра</div>
+                  <div className="text-white font-semibold mb-1">Для получения займа необходима карта партнёра</div>
                   <div className="text-white/50 text-sm leading-relaxed">
-                    Для получения займа вам необходимо оформить карту нашего партнёра. Менеджер свяжется с вами в ближайшее время для уточнения деталей.
+                    Менеджер свяжется с вами в ближайшее время для уточнения деталей.
                   </div>
                 </div>
               </div>
