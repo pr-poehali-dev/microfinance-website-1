@@ -6,6 +6,7 @@ import hashlib
 import urllib.request
 import psycopg2
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
 TELEGRAM_CHAT_ID = "8540431915"
@@ -181,6 +182,8 @@ def handler(event: dict, context) -> dict:
             for col, val in zip(cols, row):
                 if hasattr(val, "isoformat"):
                     item[col] = val.isoformat()
+                elif isinstance(val, Decimal):
+                    item[col] = float(val)
                 else:
                     item[col] = val
             result.append(item)
@@ -214,7 +217,12 @@ def handler(event: dict, context) -> dict:
                 "passport_by","snils","contact_person","card_number"]
         item = {}
         for k, v in zip(keys, row):
-            item[k] = v.isoformat() if hasattr(v, "isoformat") else v
+            if hasattr(v, "isoformat"):
+                item[k] = v.isoformat()
+            elif isinstance(v, Decimal):
+                item[k] = float(v)
+            else:
+                item[k] = v
 
         # История платежей
         cur.execute(
