@@ -50,6 +50,7 @@ const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> =
   paid:     { label: "Погашен",         color: "#a78bfa", bg: "rgba(167,139,250,0.15)" },
   overdue:  { label: "Просрочен",       color: "#f87171", bg: "rgba(248,113,113,0.15)" },
   review:   { label: "На рассмотрении", color: "#fbbf24", bg: "rgba(251,191,36,0.15)" },
+  signed:   { label: "Ожидает выдачи",  color: "#fbbf24", bg: "rgba(251,191,36,0.15)" },
 };
 
 interface Props {
@@ -95,7 +96,8 @@ export default function DashboardLoans({ loans, application, signingId, signMsg,
       ) : (
         <div className="space-y-4">
           {loans.map((loan) => {
-            const st = STATUS_MAP[loan.status] || STATUS_MAP.active;
+            const effectiveStatus = loan.status === "review" && loan.signed ? "signed" : loan.status;
+            const st = STATUS_MAP[effectiveStatus] || STATUS_MAP.active;
             return (
               <div key={loan.id} className="glass rounded-2xl overflow-hidden">
                 <div className="px-6 py-4 flex items-center justify-between border-b border-white/10"
@@ -167,6 +169,18 @@ export default function DashboardLoans({ loans, application, signingId, signMsg,
                           : <><Icon name="PenLine" size={16} />Подписать договор</>
                         }
                       </button>
+                    </div>
+                  )}
+
+                  {/* Блок: Договор подписан, ожидайте выдачу */}
+                  {loan.status === "review" && loan.signed && !loan.disbursedAt && (
+                    <div className="mb-4 rounded-xl px-5 py-4 flex items-center gap-3"
+                      style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.3)" }}>
+                      <Icon name="Clock" size={22} className="text-yellow-400 shrink-0 animate-pulse" />
+                      <div>
+                        <div className="text-yellow-300 font-bold text-sm">Договор подписан! Ожидайте выдачу займа</div>
+                        <div className="text-white/40 text-xs mt-0.5">Деньги скоро поступят на ваши реквизиты</div>
+                      </div>
                     </div>
                   )}
 

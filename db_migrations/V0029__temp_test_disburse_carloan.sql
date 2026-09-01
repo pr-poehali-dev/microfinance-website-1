@@ -1,0 +1,1 @@
+UPDATE t_p30184577_microfinance_website.car_loan_applications SET disbursed_at = NOW() WHERE id = 2;

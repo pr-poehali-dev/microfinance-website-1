@@ -22,6 +22,7 @@ interface Loan {
   status: string;
   createdAt: string;
   signed: boolean;
+  disbursedAt?: string | null;
   offer?: LoanOffer;
 }
 
@@ -64,6 +65,10 @@ interface Application {
   reapplyDaysLeft?: number | null;
   videoCallRequested?: boolean;
 }
+
+// Займы приходят отсортированными по дате создания (новые первыми) —
+// самый свежий займ соответствует текущей одобренной заявке.
+const mainLoan = (loans: Loan[]) => loans[0] || null;
 
 interface Props {
   application: Application | null;
@@ -318,21 +323,44 @@ export default function DashboardApplicationStatus({
                 <p className="text-white/30 text-xs">Номер карты или номер телефона (СБП) для получения займа</p>
               </div>
 
-              {/* Кнопка Подтвердить займ */}
-              {confirmDone ? (
-                <div className="rounded-xl px-5 py-4 flex items-center gap-3"
-                  style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)" }}>
-                  <Icon name="CheckCircle" size={20} className="text-green-400 shrink-0" />
-                  <div className="text-green-300 text-sm font-medium">Займ подтверждён! Менеджер свяжется с вами в ближайшее время.</div>
-                </div>
-              ) : (
-                <button onClick={onConfirm} disabled={confirming}
-                  className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-60"
-                  style={{ background: "linear-gradient(135deg,#16a34a,#4ade80)", boxShadow: "0 4px 20px rgba(74,222,128,0.25)" }}>
-                  {confirming ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="CheckCircle" size={18} />}
-                  {confirming ? "Подтверждаем..." : "Подтвердить займ"}
-                </button>
-              )}
+              {/* Подписать договор → Ожидайте выдачу → Займ выдан */}
+              {(() => {
+                const loan = mainLoan(loans);
+                const isSigned = loan?.signed || confirmDone;
+                const isDisbursed = !!loan?.disbursedAt;
+
+                if (isDisbursed) {
+                  return (
+                    <div className="rounded-xl px-5 py-4 flex items-center gap-3"
+                      style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)" }}>
+                      <Icon name="BadgeCheck" size={20} className="text-green-400 shrink-0" />
+                      <div>
+                        <div className="text-green-300 text-sm font-medium">Займ выдан! Деньги переведены на ваши реквизиты.</div>
+                        <div className="text-white/40 text-xs mt-0.5">{loan?.disbursedAt}</div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (isSigned) {
+                  return (
+                    <div className="rounded-xl px-5 py-4 flex items-center gap-3"
+                      style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)" }}>
+                      <Icon name="Clock" size={20} className="text-yellow-400 shrink-0 animate-pulse" />
+                      <div className="text-yellow-300 text-sm font-medium">Договор подписан! Ожидайте выдачу займа — деньги скоро поступят на ваши реквизиты.</div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <button onClick={onConfirm} disabled={confirming}
+                    className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-60"
+                    style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", boxShadow: "0 4px 20px rgba(124,58,237,0.35)" }}>
+                    {confirming ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="PenLine" size={18} />}
+                    {confirming ? "Подписываем..." : "Подписать договор"}
+                  </button>
+                );
+              })()}
 
               <PartnerCardLinks />
 
@@ -472,31 +500,54 @@ export default function DashboardApplicationStatus({
               </div>
             )}
 
-            {/* Кнопка Подтвердить займ */}
-            {confirmDone ? (
-              <div className="rounded-xl px-5 py-4 flex flex-col gap-3"
-                style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)" }}>
-                <div className="flex items-center gap-3">
-                  <Icon name="CheckCircle" size={20} className="text-green-400 shrink-0" />
-                  <div className="text-green-300 text-sm font-medium">Займ подтверждён! Ваш график погашения уже доступен ниже.</div>
-                </div>
-                <button
-                  onClick={() => document.getElementById("my-loans")?.scrollIntoView({ behavior: "smooth" })}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-white transition-all hover:opacity-90"
-                  style={{ background: "rgba(74,222,128,0.2)", border: "1px solid rgba(74,222,128,0.4)" }}
-                >
-                  <Icon name="ArrowDown" size={16} />
-                  Смотреть график погашения
+            {/* Подписать договор → Ожидайте выдачу → Займ выдан */}
+            {(() => {
+              const loan = mainLoan(loans);
+              const isSigned = loan?.signed || confirmDone;
+              const isDisbursed = !!loan?.disbursedAt;
+
+              if (isDisbursed) {
+                return (
+                  <div className="rounded-xl px-5 py-4 flex flex-col gap-3"
+                    style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)" }}>
+                    <div className="flex items-center gap-3">
+                      <Icon name="BadgeCheck" size={20} className="text-green-400 shrink-0" />
+                      <div>
+                        <div className="text-green-300 text-sm font-medium">Займ выдан! Деньги переведены на ваши реквизиты.</div>
+                        <div className="text-white/40 text-xs mt-0.5">{loan?.disbursedAt}</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => document.getElementById("my-loans")?.scrollIntoView({ behavior: "smooth" })}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-white transition-all hover:opacity-90"
+                      style={{ background: "rgba(74,222,128,0.2)", border: "1px solid rgba(74,222,128,0.4)" }}
+                    >
+                      <Icon name="ArrowDown" size={16} />
+                      Смотреть график погашения
+                    </button>
+                  </div>
+                );
+              }
+
+              if (isSigned) {
+                return (
+                  <div className="rounded-xl px-5 py-4 flex items-center gap-3"
+                    style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)" }}>
+                    <Icon name="Clock" size={20} className="text-yellow-400 shrink-0 animate-pulse" />
+                    <div className="text-yellow-300 text-sm font-medium">Договор подписан! Ожидайте выдачу займа — деньги скоро поступят на ваши реквизиты.</div>
+                  </div>
+                );
+              }
+
+              return (
+                <button onClick={onConfirm} disabled={confirming}
+                  className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-60"
+                  style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", boxShadow: "0 4px 20px rgba(124,58,237,0.35)" }}>
+                  {confirming ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="PenLine" size={18} />}
+                  {confirming ? "Подписываем..." : "Подписать договор"}
                 </button>
-              </div>
-            ) : (
-              <button onClick={onConfirm} disabled={confirming}
-                className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-60"
-                style={{ background: "linear-gradient(135deg,#16a34a,#4ade80)", boxShadow: "0 4px 20px rgba(74,222,128,0.25)" }}>
-                {confirming ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="CheckCircle" size={18} />}
-                {confirming ? "Подтверждаем..." : "Подтвердить займ"}
-              </button>
-            )}
+              );
+            })()}
           </div>
         </div>
       )}

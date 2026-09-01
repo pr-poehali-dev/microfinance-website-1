@@ -30,6 +30,7 @@ interface CarApp {
   notes: string | null;
   created_at: string;
   disbursed_at: string | null;
+  contract_signed: boolean;
 }
 
 const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
@@ -171,6 +172,9 @@ export default function AdminCarLoans({ token }: Props) {
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
                       <span style={{ color: "white", fontWeight: 700, fontSize: 16 }}>{app.full_name}</span>
                       <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: st.bg, color: st.color }}>{st.label}</span>
+                      {app.status === "approved" && app.contract_signed && (
+                        <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "rgba(34,197,94,0.15)", color: "#4ade80" }}>✍️ Подписан</span>
+                      )}
                       <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>#{app.id} · {new Date(app.created_at).toLocaleDateString("ru-RU")}</span>
                     </div>
 

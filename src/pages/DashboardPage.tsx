@@ -154,12 +154,15 @@ export default function DashboardPage() {
     reject_reason: string | null; approved_amount: number | null;
     approved_months: number | null; approved_rate: number | null;
     car_brand: string; car_model: string; car_year: number; created_at: string;
+    contract_signed: boolean;
     disbursed_at?: string | null;
     full_name?: string; email?: string; birth_date?: string; address?: string;
     passport_serial?: string; passport_num?: string; passport_issued?: string;
     car_mileage?: number; contact_person?: string; card_number?: string;
     payments?: PaymentItem[]; paidTotal?: number; schedule?: ScheduleItem[];
   } | null>(null);
+  const [carSigning, setCarSigning] = useState(false);
+  const [carSignMsg, setCarSignMsg] = useState("");
 
   const [shopLoan, setShopLoan] = useState<{
     id: number; loan_amount: number; loan_months: number; status: string;
@@ -306,8 +309,10 @@ export default function DashboardPage() {
     const data = await res.json();
     setSigningId(null);
     if (!res.ok) { setSignMsg(data.error || "Ошибка"); return; }
-    setSignMsg("Договор подписан! Ожидайте перевода средств.");
-    setLoans((prev) => prev.map((l) => l.id === loan.id ? { ...l, signed: true, status: "active", offer: undefined } : l));
+    setSignMsg("Договор подписан! Ожидайте выдачу займа.");
+    setLoans((prev) => prev.map((l) => l.id === loan.id ? { ...l, signed: true, offer: undefined } : l));
+    // Подгружаем свежие данные, чтобы карточка одобренной заявки сразу увидела signed=true
+    loadData(token, false);
   };
 
   const handleSaveCard = async () => {
@@ -350,6 +355,19 @@ export default function DashboardPage() {
       setShopLoan(prev => prev ? { ...prev, contract_signed: true } : prev);
     } else {
       setShopSignMsg("Ошибка подписания. Попробуйте позже.");
+    }
+  };
+
+  const handleCarSign = async () => {
+    if (!carLoan) return;
+    setCarSigning(true); setCarSignMsg("");
+    const r = await fetch(`${CAR_URL}?sub=sign&id=${carLoan.id}`, { method: "PUT", headers: { "Content-Type": "application/json" } });
+    setCarSigning(false);
+    if (r.ok) {
+      setCarSignMsg("Договор подписан! Ожидайте выдачу займа.");
+      setCarLoan(prev => prev ? { ...prev, contract_signed: true } : prev);
+    } else {
+      setCarSignMsg("Ошибка подписания. Попробуйте позже.");
     }
   };
 
@@ -497,8 +515,11 @@ export default function DashboardPage() {
                 {shopLoan.status === "approved" && !shopLoan.contract_signed && (
                   <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(34,197,94,0.2)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.3)" }}>Одобрено ✓</span>
                 )}
-                {shopLoan.status === "approved" && shopLoan.contract_signed && (
-                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(34,197,94,0.2)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.3)" }}>✍️ Договор подписан</span>
+                {shopLoan.status === "approved" && shopLoan.contract_signed && !shopLoan.disbursed_at && (
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(251,191,36,0.2)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)" }}>Ожидает выдачи</span>
+                )}
+                {shopLoan.status === "approved" && shopLoan.disbursed_at && (
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(14,165,233,0.2)", color: "#38bdf8", border: "1px solid rgba(14,165,233,0.3)" }}>Займ выдан</span>
                 )}
                 {shopLoan.status === "rejected" && (
                   <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(239,68,68,0.2)", color: "#f87171", border: "1px solid rgba(239,68,68,0.3)" }}>Отказ</span>
@@ -609,10 +630,18 @@ export default function DashboardPage() {
                           }
                         </button>
                       </div>
+                    ) : shopLoan.disbursed_at ? (
+                      <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.3)" }}>
+                        <Icon name="BadgeCheck" size={18} className="text-sky-400" />
+                        <div>
+                          <div className="text-sky-300 text-sm font-semibold">Займ выдан! Деньги переведены в магазин.</div>
+                          <div className="text-white/40 text-xs mt-0.5">{new Date(shopLoan.disbursed_at).toLocaleString("ru-RU")}</div>
+                        </div>
+                      </div>
                     ) : (
-                      <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
-                        <Icon name="CheckCircle" size={18} className="text-green-400" />
-                        <div className="text-green-300 text-sm font-semibold">Договор подписан! Деньги переводятся в магазин.</div>
+                      <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.3)" }}>
+                        <Icon name="Clock" size={18} className="text-yellow-400 animate-pulse" />
+                        <div className="text-yellow-300 text-sm font-semibold">Договор подписан! Ожидайте выдачу — деньги скоро переведутся в магазин.</div>
                       </div>
                     )}
                   </div>
@@ -655,9 +684,19 @@ export default function DashboardPage() {
                     На рассмотрении
                   </span>
                 )}
-                {carLoan.status === "approved" && (
+                {carLoan.status === "approved" && !carLoan.contract_signed && (
                   <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(34,197,94,0.2)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.3)" }}>
                     Одобрено ✓
+                  </span>
+                )}
+                {carLoan.status === "approved" && carLoan.contract_signed && !carLoan.disbursed_at && (
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(251,191,36,0.2)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)" }}>
+                    Ожидает выдачи
+                  </span>
+                )}
+                {carLoan.status === "approved" && carLoan.disbursed_at && (
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(14,165,233,0.2)", color: "#38bdf8", border: "1px solid rgba(14,165,233,0.3)" }}>
+                    Займ выдан
                   </span>
                 )}
                 {carLoan.status === "rejected" && (
@@ -744,14 +783,32 @@ export default function DashboardPage() {
                           return Math.round(a * (1 + r * m));
                         })()}
                       />
-                    ) : (
-                      <div className="rounded-xl p-4 flex items-start gap-3"
-                        style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
-                        <Icon name="Phone" size={16} className="text-green-400 shrink-0 mt-0.5" />
-                        <div className="text-white/60 text-sm">
-                          Для подписания договора и получения денег свяжитесь с нашим специалистом:<br />
-                          <span className="text-white font-semibold">+7 (495) 663-51-24</span>
+                    ) : !carLoan.contract_signed ? (
+                      <div>
+                        <div className="rounded-xl p-4 mb-4 flex items-start gap-3"
+                          style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}>
+                          <Icon name="FileText" size={16} className="text-yellow-400 shrink-0 mt-0.5" />
+                          <div className="text-white/60 text-sm">
+                            Нажмите кнопку ниже для подписания договора. Деньги будут переведены на ваши реквизиты сразу после подписания.
+                          </div>
                         </div>
+                        {carSignMsg && (
+                          <div className="rounded-xl p-3 mb-3 text-sm text-center" style={{ background: "rgba(34,197,94,0.1)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.2)" }}>{carSignMsg}</div>
+                        )}
+                        <button onClick={handleCarSign} disabled={carSigning}
+                          className="w-full py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2"
+                          style={{ background: "linear-gradient(135deg,#f59e0b,#ef4444)", opacity: carSigning ? 0.7 : 1 }}>
+                          {carSigning
+                            ? <><Icon name="Loader" size={18} className="animate-spin" /> Подписываем...</>
+                            : <><Icon name="PenLine" size={18} /> Подписать договор</>
+                          }
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="rounded-xl p-4 flex items-center gap-3"
+                        style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.3)" }}>
+                        <Icon name="Clock" size={18} className="text-yellow-400 animate-pulse" />
+                        <div className="text-yellow-300 text-sm font-semibold">Договор подписан! Ожидайте выдачу — деньги скоро поступят на ваши реквизиты.</div>
                       </div>
                     )}
                   </div>

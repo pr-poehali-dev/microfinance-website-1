@@ -112,9 +112,9 @@ def handler(event: dict, context) -> dict:
             )
             app_row = cur.fetchone()
 
-            # Активируем займ клиента сразу — чтобы график погашения и кнопка "Погасить" появились немедленно
+            # Клиент подписал договор — займ остаётся в review до выдачи денег администратором
             cur.execute(
-                f"UPDATE {SCHEMA}.loans SET signed = TRUE, signed_at = NOW(), status = 'active' "
+                f"UPDATE {SCHEMA}.loans SET signed = TRUE, signed_at = NOW() "
                 f"WHERE user_id = {user_id} AND status = 'review' AND signed = FALSE"
             )
             conn.commit()
@@ -168,7 +168,7 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Оффер не найден или уже подписан"})}
 
         cur.execute(
-            f"UPDATE {SCHEMA}.loans SET signed = TRUE, signed_at = NOW(), status = 'active' WHERE id = {loan_id}"
+            f"UPDATE {SCHEMA}.loans SET signed = TRUE, signed_at = NOW() WHERE id = {loan_id}"
         )
         conn.commit()
         cur.close(); conn.close()

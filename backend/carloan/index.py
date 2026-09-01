@@ -154,7 +154,7 @@ def handler(event: dict, context) -> dict:
             f"SELECT id, full_name, phone, email, birth_date, address, passport_serial, passport_num, "
             f"passport_issued, car_brand, car_model, car_year, car_mileage, contact_person, card_number, "
             f"loan_amount, loan_months, status, reject_reason, approved_amount, approved_months, "
-            f"approved_rate, notes, created_at, updated_at, disbursed_at "
+            f"approved_rate, notes, created_at, updated_at, disbursed_at, contract_signed, contract_signed_at "
             f"FROM {SCHEMA}.car_loan_applications WHERE {where} ORDER BY created_at DESC"
         )
         cols = [d[0] for d in cur.description]
@@ -185,7 +185,7 @@ def handler(event: dict, context) -> dict:
             f"SELECT id, loan_amount, loan_months, status, reject_reason, approved_amount, approved_months, "
             f"approved_rate, notes, car_brand, car_model, car_year, created_at, disbursed_at, "
             f"full_name, email, birth_date, address, passport_serial, passport_num, passport_issued, "
-            f"car_mileage, contact_person, card_number "
+            f"car_mileage, contact_person, card_number, contract_signed, contract_signed_at "
             f"FROM {SCHEMA}.car_loan_applications WHERE phone = '{phone_q}' ORDER BY created_at DESC LIMIT 1"
         )
         row = cur.fetchone()
@@ -195,7 +195,7 @@ def handler(event: dict, context) -> dict:
         keys = ["id","loan_amount","loan_months","status","reject_reason","approved_amount","approved_months",
                 "approved_rate","notes","car_brand","car_model","car_year","created_at","disbursed_at",
                 "full_name","email","birth_date","address","passport_serial","passport_num","passport_issued",
-                "car_mileage","contact_person","card_number"]
+                "car_mileage","contact_person","card_number","contract_signed","contract_signed_at"]
         item = {}
         for k, v in zip(keys, row):
             if hasattr(v, "isoformat"):
@@ -309,6 +309,28 @@ def handler(event: dict, context) -> dict:
                 )
 
         cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    # --- PUT /?sub=sign&id=N — подписать договор (клиент) ---
+    if method == "PUT" and sub == "sign":
+        app_id = int(qs.get("id", 0) or 0)
+        if not app_id:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "id required"})}
+
+        cur.execute(
+            f"UPDATE {SCHEMA}.car_loan_applications "
+            f"SET contract_signed = TRUE, contract_signed_at = NOW(), updated_at = NOW() "
+            f"WHERE id = {app_id} AND status = 'approved' RETURNING id, full_name, phone"
+        )
+        row = cur.fetchone()
+        conn.commit()
+        cur.close(); conn.close()
+
+        if not row:
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена или не одобрена"})}
+
+        tg(f"✍️ <b>Автозайм — договор подписан #{row[0]}</b>\n👤 {row[1]} | 📞 {row[2]}")
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     # --- POST /?sub=disburse&id=N — выдать займ (отметить деньги переведены) ---
