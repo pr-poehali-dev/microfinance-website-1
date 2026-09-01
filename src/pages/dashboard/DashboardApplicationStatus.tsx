@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import PaymentHistory from "./PaymentHistory";
+import PartnerCardLinks from "./PartnerCardLinks";
 
 interface LoanOffer {
   amount: number;
@@ -333,16 +334,8 @@ export default function DashboardApplicationStatus({
                 </button>
               )}
 
-              <a
-                href="https://pxl.leads.su/click/d43f54caff32604b0fc6d561bd35176b?erid=2W5zFG59ffo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90"
-                style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", boxShadow: "0 4px 20px rgba(124,58,237,0.35)", textDecoration: "none" }}
-              >
-                <Icon name="CreditCard" size={18} />
-                Оформить карту партнёра
-              </a>
+              <PartnerCardLinks />
+
               <div className="grid sm:grid-cols-2 gap-3">
                 <a href="tel:+74956635124"
                   className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:opacity-90"
@@ -454,6 +447,9 @@ export default function DashboardApplicationStatus({
               {cardError && <p className="text-red-400 text-xs">{cardError}</p>}
               <p className="text-white/30 text-xs">Введите номер карты или номер телефона (СБП) для получения займа</p>
             </div>
+
+            {/* Партнёрские ссылки на оформление карты для идентификации */}
+            <PartnerCardLinks />
 
             {/* Скачать договор PDF */}
             {application.contractUrl ? (

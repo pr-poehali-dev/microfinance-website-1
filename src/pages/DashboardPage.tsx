@@ -7,6 +7,7 @@ import DashboardLoans from "./dashboard/DashboardLoans";
 import DashboardSupport from "./dashboard/DashboardSupport";
 import PaymentHistory from "./dashboard/PaymentHistory";
 import ClientProfileCard from "./dashboard/ClientProfileCard";
+import PartnerCardLinks from "./dashboard/PartnerCardLinks";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 const CAR_URL  = "https://functions.poehali.dev/651adde1-4432-4e5a-8086-3cda9898b7ac";
@@ -569,6 +570,10 @@ export default function DashboardPage() {
                       </div>
                     )}
 
+                    <div className="mb-4">
+                      <PartnerCardLinks />
+                    </div>
+
                     {shopLoan.contract_signed && (
                       <PaymentHistory
                         schedule={shopLoan.schedule || []}
@@ -722,6 +727,11 @@ export default function DashboardPage() {
                         </div>
                       ))}
                     </div>
+
+                    <div className="mb-4">
+                      <PartnerCardLinks />
+                    </div>
+
                     {carLoan.disbursed_at ? (
                       <PaymentHistory
                         schedule={carLoan.schedule || []}
