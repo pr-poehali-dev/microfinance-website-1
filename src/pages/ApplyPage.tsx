@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Icon from "@/components/ui/icon";
+import ConsentDocuments, { ConsentState, DEFAULT_CONSENTS, REQUIRED_CONSENT_KEYS } from "@/components/apply/ConsentDocuments";
 
 const API_URL = "https://functions.poehali.dev/29f70c88-f1f7-4926-9c65-c642fd11fdfb";
 const UPLOAD_URL = "https://functions.poehali.dev/45733e38-49ca-4566-9ae3-b5323aec9a63";
@@ -48,6 +49,7 @@ export default function ApplyPage() {
   const [sending, setSending] = useState(false);
   const [sendStep, setSendStep] = useState("");
   const [sendError, setSendError] = useState("");
+  const [consents, setConsents] = useState<ConsentState>(DEFAULT_CONSENTS);
   const [submitted, setSubmitted] = useState(false);
   const [timerSec, setTimerSec] = useState(15 * 60);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -101,6 +103,11 @@ export default function ApplyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const allRequiredChecked = REQUIRED_CONSENT_KEYS.every((k) => consents[k]);
+    if (!allRequiredChecked) {
+      setSendError("Отметьте все обязательные согласия перед отправкой заявки");
+      return;
+    }
     setSending(true); setSendError(""); setSendStep("");
     try {
       const fileEntries = Object.entries(files).filter(([, f]) => f);
@@ -499,6 +506,11 @@ export default function ApplyPage() {
                   ))}
                 </div>
 
+                <ConsentDocuments
+                  consents={consents}
+                  onChange={(key, value) => setConsents((p) => ({ ...p, [key]: value }))}
+                />
+
                 {sendError && (
                   <div className="rounded-xl px-4 py-3 flex items-center gap-2"
                     style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}>
@@ -520,9 +532,6 @@ export default function ApplyPage() {
                     }
                   </button>
                 </div>
-                <p className="text-white/20 text-xs text-center">
-                  Нажимая «Отправить», вы соглашаетесь с условиями обработки персональных данных
-                </p>
               </div>
             )}
 
