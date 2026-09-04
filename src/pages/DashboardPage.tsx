@@ -591,9 +591,11 @@ export default function DashboardPage() {
                       </div>
                     )}
 
-                    <div className="mb-4">
-                      <PartnerCardLinks />
-                    </div>
+                    {!shopLoan.contract_signed && (
+                      <div className="mb-4">
+                        <PartnerCardLinks />
+                      </div>
+                    )}
 
                     {shopLoan.contract_signed && (
                       <PaymentHistory
@@ -767,9 +769,11 @@ export default function DashboardPage() {
                       ))}
                     </div>
 
-                    <div className="mb-4">
-                      <PartnerCardLinks />
-                    </div>
+                    {!carLoan.contract_signed && (
+                      <div className="mb-4">
+                        <PartnerCardLinks />
+                      </div>
+                    )}
 
                     {carLoan.disbursed_at ? (
                       <PaymentHistory

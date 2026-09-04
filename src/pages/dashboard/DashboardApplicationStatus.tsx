@@ -323,6 +323,9 @@ export default function DashboardApplicationStatus({
                 <p className="text-white/30 text-xs">Номер карты или номер телефона (СБП) для получения займа</p>
               </div>
 
+              {/* Ссылка на оформление партнёрской карты — показываем ДО подписания договора */}
+              {!(mainLoan(loans)?.signed || confirmDone) && <PartnerCardLinks />}
+
               {/* Подписать договор → Ожидайте выдачу → Займ выдан */}
               {(() => {
                 const loan = mainLoan(loans);
@@ -361,8 +364,6 @@ export default function DashboardApplicationStatus({
                   </button>
                 );
               })()}
-
-              <PartnerCardLinks />
 
               <div className="grid sm:grid-cols-2 gap-3">
                 <a href="tel:+74956635124"
@@ -476,8 +477,8 @@ export default function DashboardApplicationStatus({
               <p className="text-white/30 text-xs">Введите номер карты или номер телефона (СБП) для получения займа</p>
             </div>
 
-            {/* Партнёрские ссылки на оформление карты для идентификации */}
-            <PartnerCardLinks />
+            {/* Партнёрские ссылки на оформление карты — показываем ДО подписания договора */}
+            {!(mainLoan(loans)?.signed || confirmDone) && <PartnerCardLinks />}
 
             {/* Скачать договор PDF */}
             {application.contractUrl ? (
