@@ -557,17 +557,54 @@ def handler(event: dict, context) -> dict:
         p_amount = float(body.get("amount", 0)) if body.get("amount") else None
         p_days = int(body.get("days", 0)) if body.get("days") else None
         p_rate = float(body.get("rate", 0)) if body.get("rate") else None
-        cur.execute(f"SELECT full_name, phone, telegram_id FROM {SCHEMA}.applications WHERE id='{app_id_e}' AND status='pending'")
+        cur.execute(f"SELECT full_name, phone, telegram_id, email FROM {SCHEMA}.applications WHERE id='{app_id_e}' AND status='pending'")
         app = cur.fetchone()
         if not app:
             cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
-        full_name, phone, tg_username = app
+        full_name, phone, tg_username, client_email = app
         set_parts = ["status='partner_card'", "reviewed_at=NOW()"]
         if p_amount: set_parts.append(f"approved_amount={p_amount}")
         if p_days: set_parts.append(f"approved_days={p_days}")
         if p_rate: set_parts.append(f"approved_rate={p_rate}")
         cur.execute(f"UPDATE {SCHEMA}.applications SET {', '.join(set_parts)} WHERE id='{app_id_e}'")
+
+        # Находим или создаём пользователя и создаём займ в статусе review —
+        # чтобы клиент мог подписать договор, а факт подписи сохранялся в БД (loans.signed)
+        if p_amount and p_days and p_rate:
+            import secrets as _s, hashlib as _h, string as _str
+            phone_esc = phone.replace("'", "''")
+            fn_esc = (full_name or "").replace("'", "''")
+            em_esc = (client_email or "").replace("'", "''")
+            cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = '{phone_esc}'")
+            existing_user = cur.fetchone()
+            if not existing_user:
+                alphabet = _str.ascii_letters + _str.digits
+                plain_password = (
+                    _s.choice(_str.ascii_uppercase) +
+                    "".join(_s.choice(_str.ascii_lowercase) for _ in range(4)) +
+                    "".join(_s.choice(_str.digits) for _ in range(3)) +
+                    _s.choice("!@#$") +
+                    "".join(_s.choice(alphabet) for _ in range(3))
+                )
+                pw_hash = _h.sha256(plain_password.encode()).hexdigest()
+                pw_esc = plain_password.replace("'", "''")
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email) "
+                    f"VALUES ('{phone_esc}', '{pw_hash}', '{fn_esc}', '{em_esc}') RETURNING id"
+                )
+                user_id = cur.fetchone()[0]
+                cur.execute(f"UPDATE {SCHEMA}.applications SET client_password='{pw_esc}' WHERE id='{app_id_e}'")
+            else:
+                user_id = existing_user[0]
+            cur.execute(
+                f"SELECT id FROM {SCHEMA}.loans WHERE user_id={user_id} AND status='review'"
+            )
+            if not cur.fetchone():
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.loans (user_id, amount, days, rate, status) "
+                    f"VALUES ({user_id}, {p_amount}, {p_days}, {p_rate}, 'review')"
+                )
         conn.commit(); cur.close(); conn.close()
         loan_info = ""
         if p_amount and p_days and p_rate:
@@ -589,17 +626,54 @@ def handler(event: dict, context) -> dict:
         p_amount = float(body.get("amount", 0)) if body.get("amount") else None
         p_days = int(body.get("days", 0)) if body.get("days") else None
         p_rate = float(body.get("rate", 0)) if body.get("rate") else None
-        cur.execute(f"SELECT full_name, phone, telegram_id FROM {SCHEMA}.applications WHERE id='{app_id_e}' AND status='pending'")
+        cur.execute(f"SELECT full_name, phone, telegram_id, email FROM {SCHEMA}.applications WHERE id='{app_id_e}' AND status='pending'")
         app = cur.fetchone()
         if not app:
             cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
-        full_name, phone, tg_username = app
+        full_name, phone, tg_username, client_email = app
         set_parts = ["status='partner_card'", "is_credit_doctor=true", "reviewed_at=NOW()"]
         if p_amount: set_parts.append(f"approved_amount={p_amount}")
         if p_days: set_parts.append(f"approved_days={p_days}")
         if p_rate: set_parts.append(f"approved_rate={p_rate}")
         cur.execute(f"UPDATE {SCHEMA}.applications SET {', '.join(set_parts)} WHERE id='{app_id_e}'")
+
+        # Находим или создаём пользователя и создаём займ в статусе review —
+        # чтобы клиент мог подписать договор, а факт подписи сохранялся в БД (loans.signed)
+        if p_amount and p_days and p_rate:
+            import secrets as _s, hashlib as _h, string as _str
+            phone_esc = phone.replace("'", "''")
+            fn_esc = (full_name or "").replace("'", "''")
+            em_esc = (client_email or "").replace("'", "''")
+            cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = '{phone_esc}'")
+            existing_user = cur.fetchone()
+            if not existing_user:
+                alphabet = _str.ascii_letters + _str.digits
+                plain_password = (
+                    _s.choice(_str.ascii_uppercase) +
+                    "".join(_s.choice(_str.ascii_lowercase) for _ in range(4)) +
+                    "".join(_s.choice(_str.digits) for _ in range(3)) +
+                    _s.choice("!@#$") +
+                    "".join(_s.choice(alphabet) for _ in range(3))
+                )
+                pw_hash = _h.sha256(plain_password.encode()).hexdigest()
+                pw_esc = plain_password.replace("'", "''")
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email) "
+                    f"VALUES ('{phone_esc}', '{pw_hash}', '{fn_esc}', '{em_esc}') RETURNING id"
+                )
+                user_id = cur.fetchone()[0]
+                cur.execute(f"UPDATE {SCHEMA}.applications SET client_password='{pw_esc}' WHERE id='{app_id_e}'")
+            else:
+                user_id = existing_user[0]
+            cur.execute(
+                f"SELECT id FROM {SCHEMA}.loans WHERE user_id={user_id} AND status='review'"
+            )
+            if not cur.fetchone():
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.loans (user_id, amount, days, rate, status) "
+                    f"VALUES ({user_id}, {p_amount}, {p_days}, {p_rate}, 'review')"
+                )
         conn.commit(); cur.close(); conn.close()
         loan_info = ""
         if p_amount and p_days and p_rate:

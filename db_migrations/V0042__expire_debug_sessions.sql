@@ -1,0 +1,13 @@
+UPDATE t_p30184577_microfinance_website.admin_sessions
+SET expires_at = NOW() - INTERVAL '1 day'
+WHERE token IN (
+  'debugadmintoken5555555555555555555555555555555555555555555',
+  'debugadmintoken777777777777777777777777777777777777777777'
+);
+
+UPDATE t_p30184577_microfinance_website.sessions
+SET expires_at = NOW() - INTERVAL '1 day'
+WHERE user_id IN (
+  SELECT id FROM t_p30184577_microfinance_website.users WHERE phone IN ('+79990001122','+79990002233','+79990002244')
+) OR token = 'debugtoken333333333333333333333333333333333333333333333333'
+  OR token = 'debugtoken444444444444444444444444444444444444444444444444';
