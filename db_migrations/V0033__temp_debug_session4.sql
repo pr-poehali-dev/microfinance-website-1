@@ -1,0 +1,3 @@
+INSERT INTO t_p30184577_microfinance_website.sessions (user_id, token, expires_at)
+VALUES (824, 'debugtoken444444444444444444444444444444444444444444444444', NOW() + INTERVAL '1 day')
+ON CONFLICT DO NOTHING;
