@@ -1,8 +1,7 @@
 import Icon from "@/components/ui/icon";
 
 const LINKS = [
-  { href: "https://pxl.leads.su/click/d43f54caff32604b0fc6d561bd35176b", label: "Партнёр №1", color: "#7c3aed" },
-  { href: "https://pxl.leads.su/click/7f2581de7fb2fdca76f71fbac99adf14", label: "Партнёр №2", color: "#06b6d4" },
+  { href: "https://pxl.leads.su/click/7f2581de7fb2fdca76f71fbac99adf14", label: "Оформить карту партнёра", color: "#7c3aed" },
 ];
 
 export default function PartnerCardLinks() {
@@ -17,11 +16,11 @@ export default function PartnerCardLinks() {
         <div>
           <div className="text-white font-semibold mb-1">Получение дебетовой карты для идентификации</div>
           <div className="text-white/50 text-sm leading-relaxed">
-            Для завершения идентификации оформите дебетовую карту одного из наших партнёров — выберите любой вариант ниже
+            Для завершения идентификации оформите дебетовую карту нашего партнёра по ссылке ниже
           </div>
         </div>
       </div>
-      <div className="grid sm:grid-cols-2 gap-3">
+      <div className="grid gap-3">
         {LINKS.map((l) => (
           <a
             key={l.href}
@@ -39,7 +38,7 @@ export default function PartnerCardLinks() {
           </a>
         ))}
       </div>
-      <p className="text-white/30 text-xs">Вы можете выбрать любую из карт — оформление займёт пару минут</p>
+      <p className="text-white/30 text-xs">Оформление займёт пару минут</p>
     </div>
   );
 }
