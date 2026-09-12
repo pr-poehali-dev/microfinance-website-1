@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 import { App, GLASS } from "./adminTypes";
 import AddPaymentModal from "./AddPaymentModal";
+import AdminAppTimeline from "./AdminAppTimeline";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
 
@@ -336,6 +337,9 @@ export default function AdminApplications({
                     </div>
                   </div>
                 )}
+
+                <AdminAppTimeline app={app} />
+
                 <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 12, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px,1fr))", gap: 10, marginBottom: 12 }}>
                   {[["Серия/Номер", `${app.passportSeries} ${app.passportNumber}`], ["Дата выдачи", app.passportDate||"—"], ["Код", app.passportCode||"—"], ["Дата рождения", app.birthDate||"—"]].map(([l, v]) => (
                     <div key={l}><div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>{l}</div><div style={{ color: "white", fontSize: 13 }}>{v}</div></div>

@@ -261,10 +261,11 @@ def handler(event: dict, context) -> dict:
                    a.approved_rate, a.approved_days,
                    l.id AS loan_id, l.signed, l.signed_at, l.status AS loan_status, l.disbursed_at,
                    a.snils, a.work_phone, a.card_number_transfer, a.is_credit_doctor,
-                   a.video_call_requested, a.virtual_card_days, u2.blocked_until
+                   a.video_call_requested, a.virtual_card_days, u2.blocked_until,
+                   a.reviewed_at, l.created_at AS loan_created_at
             FROM {SCHEMA}.applications a
             LEFT JOIN LATERAL (
-                SELECT lo.id, lo.signed, lo.signed_at, lo.status, lo.disbursed_at
+                SELECT lo.id, lo.signed, lo.signed_at, lo.status, lo.disbursed_at, lo.created_at
                 FROM {SCHEMA}.loans lo
                 JOIN {SCHEMA}.users u ON u.id = lo.user_id
                 WHERE u.phone = a.phone
@@ -307,6 +308,8 @@ def handler(event: dict, context) -> dict:
             "videoCallRequested": bool(r[41]) if r[41] is not None else False,
             "virtualCardDays": int(r[42]) if r[42] else None,
             "blockedUntil": r[43].strftime("%d.%m.%Y %H:%M") if r[43] else None,
+            "reviewedAt": r[44].strftime("%d.%m.%Y в %H:%M") if r[44] else None,
+            "loanCreatedAt": r[45].strftime("%d.%m.%Y в %H:%M") if r[45] else None,
         } for r in rows]
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"applications": apps}, ensure_ascii=False)}
 

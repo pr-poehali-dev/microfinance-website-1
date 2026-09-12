@@ -20,6 +20,8 @@ export interface App {
   videoCallRequested: boolean;
   virtualCardDays: number | null;
   blockedUntil: string | null;
+  reviewedAt: string | null;
+  loanCreatedAt: string | null;
 }
 export interface User { id: number; phone: string; fullName: string; email: string; createdAt: string; loanCount: number; debt: number; }
 export interface Loan { id: number; amount: number; days: number; ratePercent: number; status: string; createdAt: string; }
