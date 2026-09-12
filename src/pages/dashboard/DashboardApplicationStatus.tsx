@@ -108,8 +108,10 @@ export default function DashboardApplicationStatus({
 
   return (
     <>
-      {/* ОФФЕР ОТ МЕНЕДЖЕРА (займ в статусе review с offer) */}
-      {loans.some((l) => l.status === "review" && !l.signed && l.offer) && (
+      {/* ОФФЕР ОТ МЕНЕДЖЕРА (займ в статусе review с offer) —
+          показываем только если это НЕ связано с текущей одобренной заявкой,
+          иначе кнопка "Подписать договор" дублируется с блоком APPROVED ниже */}
+      {application?.status !== "approved" && loans.some((l) => l.status === "review" && !l.signed && l.offer) && (
         <div className="mb-6">
           {loans.filter((l) => l.status === "review" && !l.signed && l.offer).map((loan) => (
             <div key={loan.id} className="glass rounded-2xl overflow-hidden"
