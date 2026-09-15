@@ -200,17 +200,6 @@ export default function AdminPage() {
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, fullName: data.fullName, phone: data.phone, email: data.email } : u));
   }
 
-  async function partnerApprove(appId: number, conditions: { amount: number; days: number; rate: number }) {
-    const r = await fetch(`${ADMIN_URL}?sub=partner_approve&appId=${appId}`, {
-      method: "POST", headers: hdrs(),
-      body: JSON.stringify(conditions)
-    });
-    if (r.ok) {
-      setAppMsg("Клиент направлен к партнёру.");
-      setApps(prev => prev.filter(a => a.id !== appId));
-    }
-  }
-
   async function creditDoctorApprove(appId: number, conditions: { amount: number; days: number; rate: number }) {
     const r = await fetch(`${ADMIN_URL}?sub=creditdoctor_approve&appId=${appId}`, {
       method: "POST", headers: hdrs(),
@@ -319,7 +308,7 @@ export default function AdminPage() {
             appAmount={appAmount} setAppAmount={setAppAmount}
             appDays={appDays} setAppDays={setAppDays}
             rejectReason={rejectReason} setRejectReason={setRejectReason}
-            onApprove={approveApp} onReject={rejectApp} onPostpone={postponeApp} onRestore={restoreApp} onPartnerApprove={partnerApprove} onPartnerRemind={partnerRemind} onCreditDoctorApprove={creditDoctorApprove}
+            onApprove={approveApp} onReject={rejectApp} onPostpone={postponeApp} onRestore={restoreApp} onPartnerRemind={partnerRemind} onCreditDoctorApprove={creditDoctorApprove}
             onDeleteApplication={deleteApplication} onBlockClient={blockClient} onUnblockClient={unblockClient} onRequestVideoCall={requestVideoCall}
             setLightbox={setLightbox}
             token={token}
