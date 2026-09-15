@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
+import AdminLoanDetailModal from "./AdminLoanDetailModal";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
 
@@ -23,6 +24,11 @@ interface DisbursedItem {
   itemInfo: string;
   disbursedAt: string | null;
   createdAt: string;
+  telegramId: string;
+  paidTotal: number;
+  totalDue: number;
+  isOverdue: boolean;
+  nextDueDate: string | null;
 }
 
 const G = { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14 };
@@ -33,7 +39,9 @@ export default function AdminDisbursed({ token }: Props) {
   const [items, setItems] = useState<DisbursedItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [typeFilter, setTypeFilter] = useState<"all" | "loan" | "carloan" | "shoploan">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "overdue">("all");
   const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<{ type: string; id: number } | null>(null);
 
   const hdrs = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
 
@@ -50,8 +58,11 @@ export default function AdminDisbursed({ token }: Props) {
 
   const fmt = (n: number) => n ? `${n.toLocaleString("ru-RU")} ₽` : "—";
 
+  const overdueCount = items.filter(i => i.isOverdue).length;
+
   const filtered = items.filter(item => {
     if (typeFilter !== "all" && item.type !== typeFilter) return false;
+    if (statusFilter === "overdue" && !item.isOverdue) return false;
     if (search) {
       const q = search.toLowerCase();
       return item.fullName.toLowerCase().includes(q) || item.phone.includes(q) || item.email.toLowerCase().includes(q);
@@ -63,6 +74,10 @@ export default function AdminDisbursed({ token }: Props) {
 
   return (
     <div>
+      {selected && (
+        <AdminLoanDetailModal token={token} type={selected.type} id={selected.id} onClose={() => setSelected(null)} />
+      )}
+
       {/* Статистика */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
         {[
@@ -70,6 +85,7 @@ export default function AdminDisbursed({ token }: Props) {
           { label: "Займов", value: items.filter(i => i.type === "loan").length, icon: "Banknote", color: "#a78bfa" },
           { label: "Авто займов", value: items.filter(i => i.type === "carloan").length, icon: "Car", color: "#fbbf24" },
           { label: "Товарных", value: items.filter(i => i.type === "shoploan").length, icon: "ShoppingBag", color: "#34d399" },
+          { label: "Просроченных", value: overdueCount, icon: "AlertTriangle", color: "#f87171" },
         ].map(s => (
           <div key={s.label} style={{ ...G, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: `${s.color}22`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -83,16 +99,37 @@ export default function AdminDisbursed({ token }: Props) {
         ))}
       </div>
 
-      {/* Фильтры и поиск */}
+      {/* Фильтр по статусу — Все / Просроченные */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        <button onClick={() => setStatusFilter("all")}
+          style={{
+            padding: "8px 18px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 700, fontSize: 13,
+            background: statusFilter === "all" ? "linear-gradient(135deg,#0ea5e9,#38bdf8)" : "rgba(255,255,255,0.07)",
+            color: statusFilter === "all" ? "white" : "rgba(255,255,255,0.5)",
+          }}>
+          Все займы
+        </button>
+        <button onClick={() => setStatusFilter("overdue")}
+          style={{
+            padding: "8px 18px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 700, fontSize: 13,
+            display: "flex", alignItems: "center", gap: 6,
+            background: statusFilter === "overdue" ? "linear-gradient(135deg,#dc2626,#f87171)" : "rgba(239,68,68,0.1)",
+            color: statusFilter === "overdue" ? "white" : "#f87171",
+          }}>
+          <Icon name="AlertTriangle" size={14} />Просроченные{overdueCount > 0 ? ` (${overdueCount})` : ""}
+        </button>
+      </div>
+
+      {/* Фильтры типа и поиск */}
       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
         {(["all", "loan", "carloan", "shoploan"] as const).map(t => (
           <button key={t} onClick={() => setTypeFilter(t)}
             style={{
               padding: "7px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13,
-              background: typeFilter === t ? "linear-gradient(135deg,#0ea5e9,#38bdf8)" : "rgba(255,255,255,0.07)",
+              background: typeFilter === t ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.07)",
               color: typeFilter === t ? "white" : "rgba(255,255,255,0.5)",
             }}>
-            {t === "all" ? "Все" : TYPE_LABELS[t].label}
+            {t === "all" ? "Все типы" : TYPE_LABELS[t].label}
           </button>
         ))}
         <input
@@ -118,8 +155,8 @@ export default function AdminDisbursed({ token }: Props) {
         <div style={{ color: "rgba(255,255,255,0.35)", textAlign: "center", padding: 48 }}>Загрузка...</div>
       ) : filtered.length === 0 ? (
         <div style={{ ...G, padding: 48, textAlign: "center" }}>
-          <Icon name="Banknote" size={40} style={{ color: "rgba(255,255,255,0.15)", display: "block", margin: "0 auto 12px" }} />
-          <div style={{ color: "rgba(255,255,255,0.3)" }}>Выданных займов нет</div>
+          <Icon name={statusFilter === "overdue" ? "CheckCircle2" : "Banknote"} size={40} style={{ color: "rgba(255,255,255,0.15)", display: "block", margin: "0 auto 12px" }} />
+          <div style={{ color: "rgba(255,255,255,0.3)" }}>{statusFilter === "overdue" ? "Просроченных займов нет" : "Выданных займов нет"}</div>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -127,7 +164,12 @@ export default function AdminDisbursed({ token }: Props) {
             const tp = TYPE_LABELS[item.type] || TYPE_LABELS.loan;
             const amount = item.approvedAmount || item.loanAmount;
             return (
-              <div key={`${item.type}-${item.id}`} style={{ ...G, padding: "16px 20px" }}>
+              <button
+                key={`${item.type}-${item.id}`}
+                onClick={() => setSelected({ type: item.type, id: item.id })}
+                style={{ ...G, padding: "16px 20px", textAlign: "left", cursor: "pointer", width: "100%", transition: "border-color 0.15s",
+                  border: item.isOverdue ? "1px solid rgba(239,68,68,0.4)" : G.border }}
+              >
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {/* Шапка */}
@@ -136,6 +178,11 @@ export default function AdminDisbursed({ token }: Props) {
                         <Icon name={tp.icon} size={12} />
                         {tp.label}
                       </span>
+                      {item.isOverdue && (
+                        <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(239,68,68,0.18)", color: "#f87171", display: "flex", alignItems: "center", gap: 5 }}>
+                          <Icon name="AlertTriangle" size={12} />Просрочен
+                        </span>
+                      )}
                       <span style={{ color: "white", fontWeight: 700, fontSize: 15 }}>{item.fullName || item.phone}</span>
                       <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>#{item.id}</span>
                     </div>
@@ -146,31 +193,35 @@ export default function AdminDisbursed({ token }: Props) {
                         { l: "Телефон", v: item.phone },
                         { l: "Email", v: item.email || "—" },
                         { l: "Сумма", v: fmt(amount) },
-                        { l: "Срок", v: item.loanMonths ? `${item.loanMonths} мес.` : "—" },
+                        { l: "Срок", v: item.loanMonths ? `${item.loanMonths} ${item.type === "loan" ? "дн." : "мес."}` : "—" },
                         item.carInfo  ? { l: "Авто", v: item.carInfo } : null,
                         item.itemInfo ? { l: "Товар", v: item.itemInfo } : null,
-                        { l: "Заявка подана", v: item.createdAt },
-                      ].filter(Boolean).map(({ l, v }) => (
-                        <div key={l}>
-                          <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>{l}</div>
-                          <div style={{ color: "rgba(255,255,255,0.85)", fontSize: 13 }}>{v}</div>
+                        { l: "Оплачено", v: fmt(item.paidTotal) },
+                        item.nextDueDate ? { l: item.isOverdue ? "Просрочен платёж" : "След. платёж", v: item.nextDueDate } : null,
+                      ].filter(Boolean).map((f) => (
+                        <div key={f!.l}>
+                          <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>{f!.l}</div>
+                          <div style={{ color: f!.l.includes("Просрочен") ? "#f87171" : "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: f!.l.includes("Просрочен") ? 700 : 400 }}>{f!.v}</div>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Дата выдачи */}
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
-                    <div style={{ padding: "8px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6, background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.35)", color: "#38bdf8" }}>
-                      <Icon name="BadgeCheck" size={15} />
-                      Займ выдан
+                  {/* Дата выдачи + стрелка открытия */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                      <div style={{ padding: "8px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6, background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.35)", color: "#38bdf8" }}>
+                        <Icon name="BadgeCheck" size={15} />
+                        Займ выдан
+                      </div>
+                      {item.disbursedAt && (
+                        <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>{item.disbursedAt}</div>
+                      )}
                     </div>
-                    {item.disbursedAt && (
-                      <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>{item.disbursedAt}</div>
-                    )}
+                    <Icon name="ChevronRight" size={18} style={{ color: "rgba(255,255,255,0.25)" }} />
                   </div>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>

@@ -837,14 +837,60 @@ def handler(event: dict, context) -> dict:
 
     # --- СПИСОК ВСЕХ ВЫДАННЫХ ЗАЙМОВ (GET, sub='disbursed') ---
     if sub == "disbursed" and method == "GET":
+        now = datetime.now()
+
+        def calc_overdue(amount, months_or_days, rate, disbursed_at, created_at, paid_total, monthly: bool):
+            """Считает переплату по графику и определяет просрочку + ближайшую дату платежа."""
+            if not amount or not months_or_days or not rate:
+                return False, None, float(amount or 0)
+            start = disbursed_at or created_at
+            if not start:
+                return False, None, float(amount)
+            if monthly:
+                months = int(months_or_days)
+                monthly_principal = float(amount) / months
+                remaining = float(amount)
+                cumulative = 0.0
+                next_due = None
+                overdue = False
+                for m in range(1, months + 1):
+                    interest_m = round(remaining * float(rate) / 100)
+                    payment_m = round(monthly_principal + interest_m)
+                    due_dt = start + timedelta(days=30 * m)
+                    cumulative += payment_m
+                    if paid_total < cumulative:
+                        next_due = due_dt
+                        if due_dt < now:
+                            overdue = True
+                        break
+                    remaining -= monthly_principal
+                total_due = round(float(amount) * (1 + float(rate) / 100 * months))
+                return overdue, next_due, total_due
+            else:
+                days = int(months_or_days)
+                due_dt = start + timedelta(days=days)
+                total_due = float(amount) + round(float(amount) * float(rate) * days)
+                overdue = due_dt < now and paid_total < total_due
+                next_due = due_dt if paid_total < total_due else None
+                return overdue, next_due, total_due
+
+        # Платежи по всем займам сразу (чтобы не делать N запросов)
+        cur.execute(f"SELECT loan_type, loan_id, COALESCE(SUM(amount),0) FROM {SCHEMA}.payments GROUP BY loan_type, loan_id")
+        paid_map: dict = {}
+        for lt, lid, s in cur.fetchall():
+            paid_map[(lt, lid)] = float(s)
+
         # Основные займы (loans)
         cur.execute(f"""
-            SELECT 'loan' AS type, l.id, u.full_name, u.phone, u.email,
-                   l.amount AS loan_amount, l.days AS loan_months, l.rate,
-                   NULL AS approved_amount, NULL AS car_info, NULL AS item_info,
-                   l.disbursed_at, l.created_at
+            SELECT l.id, u.full_name, u.phone, u.email,
+                   l.amount, l.days, l.rate,
+                   l.disbursed_at, l.created_at, l.status,
+                   a.telegram_id
             FROM {SCHEMA}.loans l
             JOIN {SCHEMA}.users u ON u.id = l.user_id
+            LEFT JOIN LATERAL (
+                SELECT telegram_id FROM {SCHEMA}.applications WHERE phone = u.phone ORDER BY created_at DESC LIMIT 1
+            ) a ON true
             WHERE l.disbursed_at IS NOT NULL
             ORDER BY l.disbursed_at DESC
         """)
@@ -852,11 +898,9 @@ def handler(event: dict, context) -> dict:
 
         # Авто займы
         cur.execute(f"""
-            SELECT 'carloan' AS type, id, full_name, phone, email,
-                   loan_amount, loan_months, NULL AS rate,
-                   approved_amount,
+            SELECT id, full_name, phone, email,
+                   loan_amount, loan_months, approved_rate, approved_amount, approved_months,
                    CONCAT(car_brand, ' ', car_model, ' ', COALESCE(car_year::text, '')) AS car_info,
-                   NULL AS item_info,
                    disbursed_at, created_at
             FROM {SCHEMA}.car_loan_applications
             WHERE disbursed_at IS NOT NULL
@@ -866,10 +910,8 @@ def handler(event: dict, context) -> dict:
 
         # Товарные займы
         cur.execute(f"""
-            SELECT 'shoploan' AS type, id, full_name, phone, email,
-                   loan_amount, loan_months, NULL AS rate,
-                   approved_amount,
-                   NULL AS car_info,
+            SELECT id, full_name, phone, email,
+                   loan_amount, loan_months, approved_rate, approved_amount, approved_months,
                    CONCAT(COALESCE(shop_name,''), ' — ', COALESCE(item_name,'')) AS item_info,
                    disbursed_at, created_at
             FROM {SCHEMA}.shopping_loan_applications
@@ -880,24 +922,232 @@ def handler(event: dict, context) -> dict:
 
         cur.close(); conn.close()
 
-        def fmt_row(r):
-            return {
-                "type": r[0], "id": r[1],
-                "fullName": r[2] or "", "phone": r[3], "email": r[4] or "",
-                "loanAmount": float(r[5]) if r[5] else 0,
-                "loanMonths": r[6] or 0,
-                "rate": float(r[7]) if r[7] else None,
-                "approvedAmount": float(r[8]) if r[8] else None,
-                "carInfo": r[9] or "",
-                "itemInfo": r[10] or "",
-                "disbursedAt": r[11].strftime("%d.%m.%Y в %H:%M") if r[11] else None,
-                "createdAt": r[12].strftime("%d.%m.%Y") if r[12] else "",
-            }
+        all_items = []
+        for r in loan_rows:
+            loan_id, full_name, phone, email, amount, days, rate, disbursed_at, created_at, status, tg_id = r
+            paid_total = paid_map.get(("loan", loan_id), 0.0)
+            overdue, next_due, total_due = calc_overdue(amount, days, rate, disbursed_at, created_at, paid_total, monthly=False)
+            all_items.append({
+                "type": "loan", "id": loan_id,
+                "fullName": full_name or "", "phone": phone, "email": email or "",
+                "loanAmount": float(amount) if amount else 0,
+                "loanMonths": days or 0,
+                "rate": float(rate) if rate else None,
+                "approvedAmount": None,
+                "carInfo": "", "itemInfo": "",
+                "disbursedAt": disbursed_at.strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
+                "createdAt": created_at.strftime("%d.%m.%Y") if created_at else "",
+                "telegramId": tg_id or "",
+                "paidTotal": paid_total,
+                "totalDue": total_due,
+                "isOverdue": bool(overdue) and status != "paid",
+                "nextDueDate": next_due.strftime("%d.%m.%Y") if next_due else None,
+            })
+        for r in car_rows:
+            app_id, full_name, phone, email, loan_amount, loan_months, appr_rate, appr_amount, appr_months, car_info, disbursed_at, created_at = r
+            eff_amount = appr_amount or loan_amount
+            eff_months = appr_months or loan_months
+            paid_total = paid_map.get(("carloan", app_id), 0.0)
+            overdue, next_due, total_due = calc_overdue(eff_amount, eff_months, appr_rate, disbursed_at, created_at, paid_total, monthly=True)
+            all_items.append({
+                "type": "carloan", "id": app_id,
+                "fullName": full_name or "", "phone": phone, "email": email or "",
+                "loanAmount": float(loan_amount) if loan_amount else 0,
+                "loanMonths": loan_months or 0,
+                "rate": float(appr_rate) if appr_rate else None,
+                "approvedAmount": float(appr_amount) if appr_amount else None,
+                "carInfo": car_info or "", "itemInfo": "",
+                "disbursedAt": disbursed_at.strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
+                "createdAt": created_at.strftime("%d.%m.%Y") if created_at else "",
+                "telegramId": "",
+                "paidTotal": paid_total,
+                "totalDue": total_due,
+                "isOverdue": bool(overdue),
+                "nextDueDate": next_due.strftime("%d.%m.%Y") if next_due else None,
+            })
+        for r in shop_rows:
+            app_id, full_name, phone, email, loan_amount, loan_months, appr_rate, appr_amount, appr_months, item_info, disbursed_at, created_at = r
+            eff_amount = appr_amount or loan_amount
+            eff_months = appr_months or loan_months
+            paid_total = paid_map.get(("shoploan", app_id), 0.0)
+            overdue, next_due, total_due = calc_overdue(eff_amount, eff_months, appr_rate, disbursed_at, created_at, paid_total, monthly=True)
+            all_items.append({
+                "type": "shoploan", "id": app_id,
+                "fullName": full_name or "", "phone": phone, "email": email or "",
+                "loanAmount": float(loan_amount) if loan_amount else 0,
+                "loanMonths": loan_months or 0,
+                "rate": float(appr_rate) if appr_rate else None,
+                "approvedAmount": float(appr_amount) if appr_amount else None,
+                "carInfo": "", "itemInfo": item_info or "",
+                "disbursedAt": disbursed_at.strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
+                "createdAt": created_at.strftime("%d.%m.%Y") if created_at else "",
+                "telegramId": "",
+                "paidTotal": paid_total,
+                "totalDue": total_due,
+                "isOverdue": bool(overdue),
+                "nextDueDate": next_due.strftime("%d.%m.%Y") if next_due else None,
+            })
 
-        all_items = [fmt_row(r) for r in loan_rows] + [fmt_row(r) for r in car_rows] + [fmt_row(r) for r in shop_rows]
         all_items.sort(key=lambda x: x["disbursedAt"] or "", reverse=True)
 
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"items": all_items, "total": len(all_items)}, ensure_ascii=False)}
+
+    # --- ПОЛНАЯ КАРТОЧКА КЛИЕНТА ПО ВЫДАННОМУ ЗАЙМУ (GET, sub='loan_detail', type=..., id=...) ---
+    if sub == "loan_detail" and method == "GET":
+        loan_type = (qs.get("type") or "").strip()
+        item_id = int(qs.get("id", 0) or 0)
+        if loan_type not in ("loan", "carloan", "shoploan") or not item_id:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Некорректные параметры"})}
+
+        if loan_type == "loan":
+            cur.execute(f"""
+                SELECT l.id, l.amount, l.days, l.rate, l.status, l.created_at, l.signed, l.signed_at, l.disbursed_at,
+                       u.id, u.phone, u.full_name, u.email
+                FROM {SCHEMA}.loans l JOIN {SCHEMA}.users u ON u.id = l.user_id
+                WHERE l.id = {item_id}
+            """)
+            row = cur.fetchone()
+            if not row:
+                cur.close(); conn.close()
+                return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Займ не найден"})}
+            (loan_id, amount, days, rate, status, created_at, signed, signed_at, disbursed_at,
+             user_id, phone, full_name, email) = row
+
+            cur.execute(f"""
+                SELECT amount, days, birth_date, birth_place, passport_series, passport_number, passport_date,
+                       passport_code, passport_by, workplace, position, work_phone, salary, contact_person, snils,
+                       card_number, file_passport, file_registration, file_selfie, file_previous_passports,
+                       telegram_id
+                FROM {SCHEMA}.applications WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1
+            """)
+            app_row = cur.fetchone()
+            profile = {}
+            if app_row:
+                (req_amount, req_days, birth_date, birth_place, passport_series, passport_number, passport_date,
+                 passport_code, passport_by, workplace, position, work_phone, salary, contact_person, snils,
+                 card_number, file_passport, file_registration, file_selfie, file_previous_passports, telegram_id) = app_row
+                profile = {
+                    "birthDate": birth_date or "", "birthPlace": birth_place or "",
+                    "passportSeries": passport_series or "", "passportNumber": passport_number or "",
+                    "passportDate": passport_date or "", "passportCode": passport_code or "", "passportBy": passport_by or "",
+                    "workplace": workplace or "", "position": position or "", "workPhone": work_phone or "",
+                    "salary": float(salary) if salary else None, "contactPerson": contact_person or "", "snils": snils or "",
+                    "cardNumber": card_number or "",
+                    "filePassport": file_passport or "", "fileRegistration": file_registration or "",
+                    "fileSelfie": file_selfie or "", "filePreviousPassports": file_previous_passports or "",
+                    "telegramId": telegram_id or "",
+                }
+
+            interest = round(float(amount) * float(rate) * days)
+            total_due = float(amount) + interest
+            start = disbursed_at or created_at
+            schedule = [{"dueDate": (start + timedelta(days=days)).strftime("%d.%m.%Y"), "amount": total_due, "label": "Погашение полной суммы"}] if start else []
+
+            cur.execute(f"SELECT amount, paid_at, note FROM {SCHEMA}.payments WHERE loan_type='loan' AND loan_id={loan_id} ORDER BY paid_at DESC")
+            payments = [{"amount": float(p[0]), "paidAt": p[1].strftime("%d.%m.%Y в %H:%M"), "note": p[2] or ""} for p in cur.fetchall()]
+            paid_total = sum(p["amount"] for p in payments)
+
+            cur.close(); conn.close()
+            return {"statusCode": 200, "headers": CORS, "body": json.dumps({
+                "type": "loan", "id": loan_id,
+                "fullName": full_name or "", "phone": phone, "email": email or "",
+                "amount": float(amount), "days": days, "rate": float(rate),
+                "status": status, "createdAt": created_at.strftime("%d.%m.%Y в %H:%M") if created_at else "",
+                "signed": bool(signed), "signedAt": signed_at.strftime("%d.%m.%Y в %H:%M") if signed_at else None,
+                "disbursedAt": disbursed_at.strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
+                "totalDue": total_due, "paidTotal": paid_total, "remaining": max(0, total_due - paid_total),
+                "schedule": schedule, "payments": payments, "profile": profile,
+            }, ensure_ascii=False)}
+
+        table = "car_loan_applications" if loan_type == "carloan" else "shopping_loan_applications"
+        if loan_type == "carloan":
+            cur.execute(f"""
+                SELECT id, full_name, phone, email, birth_date, address, passport_serial, passport_num, passport_issued,
+                       car_brand, car_model, car_year, car_mileage, contact_person, card_number,
+                       loan_amount, loan_months, status, reject_reason, approved_amount, approved_months, approved_rate,
+                       notes, created_at, disbursed_at, contract_signed, contract_signed_at
+                FROM {SCHEMA}.{table} WHERE id = {item_id}
+            """)
+            row = cur.fetchone()
+            if not row:
+                cur.close(); conn.close()
+                return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
+            (app_id, full_name, phone, email, birth_date, address, passport_serial, passport_num, passport_issued,
+             car_brand, car_model, car_year, car_mileage, contact_person, card_number,
+             loan_amount, loan_months, status, reject_reason, approved_amount, approved_months, approved_rate,
+             notes, created_at, disbursed_at, contract_signed, contract_signed_at) = row
+            profile = {
+                "birthDate": birth_date or "", "address": address or "",
+                "passportSeries": passport_serial or "", "passportNumber": passport_num or "", "passportBy": passport_issued or "",
+                "contactPerson": contact_person or "", "cardNumber": card_number or "",
+                "carBrand": car_brand or "", "carModel": car_model or "", "carYear": car_year, "carMileage": car_mileage,
+            }
+            eff_amount = float(approved_amount) if approved_amount else float(loan_amount)
+            eff_months = approved_months or loan_months
+            eff_rate = float(approved_rate) if approved_rate else None
+        else:
+            cur.execute(f"""
+                SELECT id, full_name, phone, email, birth_date, address, passport_series, passport_number, passport_date,
+                       passport_by, snils, shop_name, item_name, item_price, contact_person, card_number,
+                       file_passport, file_registration, file_selfie, file_snils,
+                       loan_amount, loan_months, status, reject_reason, approved_amount, approved_months, approved_rate,
+                       notes, created_at, disbursed_at, contract_signed, contract_signed_at
+                FROM {SCHEMA}.{table} WHERE id = {item_id}
+            """)
+            row = cur.fetchone()
+            if not row:
+                cur.close(); conn.close()
+                return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
+            (app_id, full_name, phone, email, birth_date, address, passport_series, passport_number, passport_date,
+             passport_by, snils, shop_name, item_name, item_price, contact_person, card_number,
+             file_passport, file_registration, file_selfie, file_snils,
+             loan_amount, loan_months, status, reject_reason, approved_amount, approved_months, approved_rate,
+             notes, created_at, disbursed_at, contract_signed, contract_signed_at) = row
+            profile = {
+                "birthDate": birth_date or "", "address": address or "",
+                "passportSeries": passport_series or "", "passportNumber": passport_number or "",
+                "passportDate": passport_date or "", "passportBy": passport_by or "", "snils": snils or "",
+                "contactPerson": contact_person or "", "cardNumber": card_number or "",
+                "shopName": shop_name or "", "itemName": item_name or "", "itemPrice": float(item_price) if item_price else None,
+                "filePassport": file_passport or "", "fileRegistration": file_registration or "",
+                "fileSelfie": file_selfie or "", "fileSnils": file_snils or "",
+            }
+            eff_amount = float(approved_amount) if approved_amount else float(loan_amount)
+            eff_months = approved_months or loan_months
+            eff_rate = float(approved_rate) if approved_rate else None
+
+        schedule = []
+        if eff_amount and eff_months and eff_rate:
+            start = disbursed_at or created_at
+            monthly_principal = eff_amount / int(eff_months)
+            remaining = eff_amount
+            for m in range(1, int(eff_months) + 1):
+                interest_m = round(remaining * eff_rate / 100)
+                payment_m = round(monthly_principal + interest_m)
+                due = (start + timedelta(days=30 * m)).strftime("%d.%m.%Y") if start else None
+                schedule.append({"month": m, "dueDate": due, "amount": payment_m, "principal": round(monthly_principal), "interest": interest_m})
+                remaining -= monthly_principal
+        total_due = sum(s["amount"] for s in schedule) if schedule else eff_amount
+
+        cur.execute(f"SELECT amount, paid_at, note FROM {SCHEMA}.payments WHERE loan_type='{loan_type}' AND loan_id={app_id} ORDER BY paid_at DESC")
+        payments = [{"amount": float(p[0]), "paidAt": p[1].strftime("%d.%m.%Y в %H:%M"), "note": p[2] or ""} for p in cur.fetchall()]
+        paid_total = sum(p["amount"] for p in payments)
+
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({
+            "type": loan_type, "id": app_id,
+            "fullName": full_name or "", "phone": phone, "email": email or "",
+            "amount": float(loan_amount) if loan_amount else 0, "days": eff_months, "rate": eff_rate,
+            "status": status, "rejectReason": reject_reason or "",
+            "approvedAmount": float(approved_amount) if approved_amount else None,
+            "approvedMonths": approved_months, "approvedRate": eff_rate, "notes": notes or "",
+            "createdAt": created_at.strftime("%d.%m.%Y в %H:%M") if created_at else "",
+            "signed": bool(contract_signed), "signedAt": contract_signed_at.strftime("%d.%m.%Y в %H:%M") if contract_signed_at else None,
+            "disbursedAt": disbursed_at.strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
+            "totalDue": total_due, "paidTotal": paid_total, "remaining": max(0, total_due - paid_total),
+            "schedule": schedule, "payments": payments, "profile": profile,
+        }, ensure_ascii=False)}
 
     # --- ВНЕСТИ ПЛАТЁЖ (POST, sub='add_payment', loanType=loan|carloan|shoploan, loanId=...) ---
     if sub == "add_payment" and method == "POST":
