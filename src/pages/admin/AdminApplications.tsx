@@ -163,7 +163,6 @@ export default function AdminApplications({
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
         {([
           ["pending","Ожидают","Clock","#f59e0b"],
-          ["partner_card","Партнёр","CreditCard","#a855f7"],
           ["creditdoctor","💊 Кред. Доктор","HeartPulse","linear-gradient(135deg,#a855f7,#ec4899)"],
           ["postponed","Отложенные","PhoneMissed","#60a5fa"],
           ["approved","Одобренные","CheckCircle","#22c55e"],
