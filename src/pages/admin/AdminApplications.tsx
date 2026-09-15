@@ -524,6 +524,41 @@ export default function AdminApplications({
                       {app.loanSignedAt && <div style={{ fontSize: 11, fontWeight: 400, opacity: 0.8 }}>{app.loanSignedAt}</div>}
                     </div>
                   </div>
+
+                  {/* Статус займа — уже выдан */}
+                  {app.loanId && (disbursed[app.id] || app.loanDisbursedAt) && (
+                    <>
+                      <div style={{
+                        borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 600,
+                        display: "flex", alignItems: "center", gap: 8,
+                        background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.35)", color: "#38bdf8",
+                      }}>
+                        <Icon name="BadgeCheck" size={15} />
+                        <div>
+                          <div>Займ выдан</div>
+                          {app.loanDisbursedAt && <div style={{ fontSize: 11, fontWeight: 400, opacity: 0.8 }}>{app.loanDisbursedAt}</div>}
+                        </div>
+                      </div>
+                      <button onClick={() => setPaymentModalApp(app)}
+                        style={{ background: "rgba(34,197,94,0.12)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.35)", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                        <Icon name="Plus" size={15} />Внести платёж{paymentAdded[app.id] ? ` (${paymentAdded[app.id]})` : ""}
+                      </button>
+                    </>
+                  )}
+
+                  {/* Кнопка "Займ выдан" — для всех у кого есть подписанный займ и он ещё не отмечен как выданный */}
+                  {app.loanId && app.loanSigned && !disbursed[app.id] && !app.loanDisbursedAt && (
+                    <button
+                      onClick={() => handleDisburse(app)}
+                      disabled={disbursing[app.id]}
+                      style={{ background: "linear-gradient(135deg,#0ea5e9,#38bdf8)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6, opacity: disbursing[app.id] ? 0.7 : 1 }}>
+                      {disbursing[app.id]
+                        ? <><Icon name="Loader2" size={15} className="animate-spin" />Выдаём...</>
+                        : <><Icon name="Banknote" size={15} />Займ выдан</>
+                      }
+                    </button>
+                  )}
+
                   {cardIssued[app.id] ? (
                     <div style={{ padding: "10px 12px", borderRadius: 10, fontSize: 13, fontWeight: 600, textAlign: "center", background: "rgba(74,222,128,0.15)", color: "#4ade80", border: "1px solid rgba(74,222,128,0.3)" }}>
                       <Icon name="CheckCircle" size={14} style={{ marginRight: 6 }} />Карта выдана!
