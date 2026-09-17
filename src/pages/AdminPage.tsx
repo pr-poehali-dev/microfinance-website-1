@@ -19,7 +19,7 @@ export default function AdminPage() {
 
   const [tab, setTab]   = useState<"apps" | "clients" | "carloan" | "shoploan" | "disbursed">("apps");
   const [apps, setApps] = useState<App[]>([]);
-  const [appFilter, setAppFilter] = useState<"pending"|"approved"|"rejected"|"postponed"|"partner_card"|"creditdoctor">("pending");
+  const [appFilter, setAppFilter] = useState<"pending"|"approved"|"rejected"|"postponed"|"partner_card"|"creditdoctor"|"paid_loans">("pending");
   const [appsLoading, setAppsLoading] = useState(false);
 
   const [users, setUsers]       = useState<User[]>([]);

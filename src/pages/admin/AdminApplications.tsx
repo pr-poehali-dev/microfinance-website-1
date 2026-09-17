@@ -13,8 +13,8 @@ interface SbFields { workplace: string; position: string; activeLoans: string; s
 interface Props {
   apps: App[];
   appsLoading: boolean;
-  appFilter: "pending" | "approved" | "rejected" | "postponed" | "partner_card" | "creditdoctor";
-  setAppFilter: (f: "pending" | "approved" | "rejected" | "postponed" | "partner_card" | "creditdoctor") => void;
+  appFilter: "pending" | "approved" | "rejected" | "postponed" | "partner_card" | "creditdoctor" | "paid_loans";
+  setAppFilter: (f: "pending" | "approved" | "rejected" | "postponed" | "partner_card" | "creditdoctor" | "paid_loans") => void;
   appMsg: string;
   appErr2: string;
   appProcessing: boolean;
@@ -124,7 +124,9 @@ export default function AdminApplications({
   }
 
   const filtered = apps.filter(a => {
-    if (appFilter === "creditdoctor") {
+    if (appFilter === "paid_loans") {
+      if (a.loanStatus !== "paid") return false;
+    } else if (appFilter === "creditdoctor") {
       if (!a.isCreditDoctor) return false;
     } else if (appFilter === "partner_card") {
       if (a.status !== "partner_card" || a.isCreditDoctor) return false;
@@ -163,6 +165,7 @@ export default function AdminApplications({
           ["creditdoctor","💊 Кред. Доктор","HeartPulse","linear-gradient(135deg,#a855f7,#ec4899)"],
           ["postponed","Отложенные","PhoneMissed","#60a5fa"],
           ["approved","Одобренные","CheckCircle","#22c55e"],
+          ["paid_loans","Погашенные","BadgeCheck","#a78bfa"],
           ["rejected","Отклонённые","XCircle","#ef4444"],
         ] as const).map(([f, label, icon, color]) => (
           <button key={f} onClick={() => setAppFilter(f)}
@@ -237,6 +240,11 @@ export default function AdminApplications({
                   {(app.status === "approved" || app.status === "partner_card") && app.loanId && app.loanSigned && (
                     <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "rgba(34,197,94,0.15)", color: "#4ade80" }}>
                       ✍️ Подписан
+                    </span>
+                  )}
+                  {app.loanStatus === "paid" && (
+                    <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(167,139,250,0.18)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.4)", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                      <Icon name="BadgeCheck" size={12} />Займ погашен
                     </span>
                   )}
                   <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>№{fmtAppId(app.id)} · {app.createdAt}</span>

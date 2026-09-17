@@ -1193,6 +1193,21 @@ def handler(event: dict, context) -> dict:
             f"VALUES ('{loan_type}', {loan_id}, {float(amount)}, {note_sql}) RETURNING id"
         )
         payment_id = cur.fetchone()[0]
+
+        # Автопогашение: если для обычного займа сумма всех платежей покрыла долг — переводим в статус "paid"
+        became_paid = False
+        if loan_type == "loan":
+            loan_amount, loan_days, loan_rate = row[2], row[3], row[4]
+            total_due = float(loan_amount) + round(float(loan_amount) * float(loan_rate) * loan_days)
+            cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.payments WHERE loan_type='loan' AND loan_id={loan_id}")
+            paid_total = float(cur.fetchone()[0])
+            if paid_total >= total_due:
+                cur.execute(f"SELECT status FROM {SCHEMA}.loans WHERE id={loan_id}")
+                cur_status_row = cur.fetchone()
+                if cur_status_row and cur_status_row[0] != "paid":
+                    cur.execute(f"UPDATE {SCHEMA}.loans SET status = 'paid' WHERE id = {loan_id}")
+                    became_paid = True
+
         conn.commit()
         cur.close(); conn.close()
 
@@ -1202,7 +1217,12 @@ def handler(event: dict, context) -> dict:
             f"👤 {fname or phone_n} | 📞 {phone_n}\n"
             f"💵 Сумма: {int(float(amount)):,} ₽".replace(",", " ")
         )
-        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "paymentId": payment_id})}
+        if became_paid:
+            tg(
+                f"✅ <b>Займ #{loan_id} полностью погашен!</b>\n"
+                f"👤 {fname or phone_n} | 📞 {phone_n}"
+            )
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "paymentId": payment_id, "loanPaid": became_paid})}
 
     # --- ИСТОРИЯ ПЛАТЕЖЕЙ (GET, sub='payments', loanType=..., loanId=...) ---
     if sub == "payments" and method == "GET":
