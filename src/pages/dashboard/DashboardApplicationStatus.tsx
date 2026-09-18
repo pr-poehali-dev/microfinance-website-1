@@ -230,7 +230,7 @@ export default function DashboardApplicationStatus({
       )}
 
       {/* БЛОК СТАТУСА ЗАЯВКИ: PARTNER_CARD — оформление карты партнёра */}
-      {application && application.status === "partner_card" && (
+      {application && application.status === "partner_card" && mainLoan(loans)?.status !== "paid" && (
         <div className="glass rounded-2xl overflow-hidden mb-6"
           style={{ border: "1px solid rgba(168,85,247,0.4)", background: "rgba(168,85,247,0.03)" }}>
           <div className="px-6 py-4 flex items-center gap-3"
@@ -392,8 +392,38 @@ export default function DashboardApplicationStatus({
         </div>
       )}
 
+      {/* КОМПАКТНАЯ ИСТОРИЯ: заявка одобрена, займ уже погашен — не показываем громоздкий блок ввода карты/подписи */}
+      {application && (application.status === "approved" || application.status === "partner_card") && mainLoan(loans)?.status === "paid" && (
+        <div className="glass rounded-2xl overflow-hidden mb-6"
+          style={{ border: "1px solid rgba(167,139,250,0.4)", background: "rgba(167,139,250,0.04)" }}>
+          <div className="px-6 py-4 flex items-center gap-3"
+            style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.25),rgba(167,139,250,0.08))" }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: "rgba(167,139,250,0.2)" }}>
+              <Icon name="BadgeCheck" size={20} className="text-purple-300" />
+            </div>
+            <div className="flex-1">
+              <div className="text-white font-bold">Заявка №{fmtAppId(application.id)} — займ погашен</div>
+              <div className="text-purple-300 text-xs mt-0.5">Одобрено {application.createdAt}</div>
+            </div>
+            <span className="text-xs px-3 py-1 rounded-full font-semibold"
+              style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa" }}>Погашен ✔️</span>
+          </div>
+          <div className="px-6 py-4">
+            <button
+              onClick={() => document.getElementById("my-loans")?.scrollIntoView({ behavior: "smooth" })}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-white transition-all hover:opacity-90"
+              style={{ background: "rgba(167,139,250,0.15)", border: "1px solid rgba(167,139,250,0.35)" }}
+            >
+              <Icon name="History" size={16} />
+              Смотреть историю платежей
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* БЛОК СТАТУСА ЗАЯВКИ: APPROVED */}
-      {application && application.status === "approved" && (
+      {application && application.status === "approved" && mainLoan(loans)?.status !== "paid" && (
         <div className="glass rounded-2xl overflow-hidden mb-6"
           style={{ border: "1px solid rgba(74,222,128,0.4)", background: "rgba(74,222,128,0.03)" }}>
           <div className="px-6 py-4 flex items-center gap-3"
