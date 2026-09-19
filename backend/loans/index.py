@@ -152,6 +152,98 @@ def handler(event: dict, context) -> dict:
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
+    # --- ПОВТОРНАЯ ЗАЯВКА НА ЗАЙМ ИЗ ЛИЧНОГО КАБИНЕТА (POST) ---
+    if event.get("httpMethod") == "POST":
+        raw_b = event.get("body") or "{}"
+        b = json.loads(raw_b) if isinstance(raw_b, str) else raw_b
+        try:
+            amount = float(b.get("amount", 0))
+            days = int(b.get("days", 0))
+        except Exception:
+            amount = 0
+            days = 0
+        if amount <= 0 or days <= 0:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите сумму и срок займа"})}
+
+        ph_e = phone.replace("'", "''")
+
+        cur.execute(f"SELECT id FROM {SCHEMA}.applications WHERE phone = '{ph_e}' AND status = 'pending' LIMIT 1")
+        if cur.fetchone():
+            cur.close(); conn.close()
+            return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": "У вас уже есть заявка на рассмотрении"})}
+
+        # Берём анкетные данные из последней заявки клиента, чтобы не заставлять
+        # заново вводить паспорт/работу — это же наш повторный клиент.
+        cur.execute(f"""
+            SELECT birth_date, birth_place, passport_series, passport_number, passport_date, passport_code, passport_by,
+                   telegram_id, snils, workplace, position, work_phone, salary, contact_person, card_number_transfer,
+                   file_passport, file_registration, file_selfie, file_previous_passports, email
+            FROM {SCHEMA}.applications WHERE phone = '{ph_e}' ORDER BY created_at DESC LIMIT 1
+        """)
+        prev = cur.fetchone()
+
+        def v(x):
+            if x is None:
+                return "NULL"
+            return "'" + str(x).replace("'", "''") + "'"
+
+        if prev:
+            (birth_date, birth_place, passport_series, passport_number, passport_date, passport_code, passport_by,
+             telegram_id, snils, workplace, position, work_phone, salary, contact_person, card_number_transfer,
+             file_passport, file_registration, file_selfie, file_previous_passports, prev_email) = prev
+        else:
+            birth_date = birth_place = passport_series = passport_number = passport_date = passport_code = passport_by = None
+            telegram_id = snils = workplace = position = work_phone = contact_person = card_number_transfer = None
+            file_passport = file_registration = file_selfie = file_previous_passports = None
+            salary = None
+            prev_email = None
+
+        salary_val = str(float(salary)) if salary is not None else "NULL"
+        email_val = v(email or prev_email)
+        fn_e = (full_name or "").replace("'", "''")
+
+        cur.execute(f"""
+            INSERT INTO {SCHEMA}.applications
+                (full_name, phone, email, amount, days, birth_date, birth_place,
+                 passport_series, passport_number, passport_date, passport_code, passport_by,
+                 telegram_id, status, file_passport, file_registration, file_selfie, file_previous_passports,
+                 snils, workplace, position, work_phone, salary, contact_person, card_number_transfer)
+            VALUES (
+                '{fn_e}', '{ph_e}', {email_val}, {amount}, {days},
+                {v(birth_date)}, {v(birth_place)}, {v(passport_series)}, {v(passport_number)}, {v(passport_date)}, {v(passport_code)}, {v(passport_by)},
+                {v(telegram_id)}, 'pending', {v(file_passport)}, {v(file_registration)}, {v(file_selfie)}, {v(file_previous_passports)},
+                {v(snils)}, {v(workplace)}, {v(position)}, {v(work_phone)}, {salary_val}, {v(contact_person)}, {v(card_number_transfer)}
+            ) RETURNING id
+        """)
+        new_app_id = cur.fetchone()[0]
+        conn.commit()
+        cur.close(); conn.close()
+
+        import urllib.request
+        tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+        chat_id = "8540431915"
+        if tg_token:
+            text = (
+                f"🔁 <b>Повторная заявка от клиента — FINANS 24 (#{new_app_id})</b>\n\n"
+                f"👤 <b>ФИО:</b> {full_name or phone}\n"
+                f"📞 <b>Телефон:</b> {phone}\n"
+                f"💰 <b>Сумма:</b> {int(amount):,} ₽\n".replace(",", " ") +
+                f"📅 <b>Срок:</b> {days} дн.\n\n"
+                f"Клиент уже брал займ ранее — заявка подана через личный кабинет."
+            )
+            data = json.dumps({"chat_id": chat_id, "text": text, "parse_mode": "HTML"}).encode()
+            req = urllib.request.Request(
+                f"https://api.telegram.org/bot{tg_token}/sendMessage",
+                data=data, headers={"Content-Type": "application/json"}
+            )
+            try:
+                urllib.request.urlopen(req, timeout=5)
+            except Exception:
+                pass
+
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "appId": new_app_id})}
+
     # --- ПОДПИСАТЬ ОФФЕР (PUT, loanId=...) ---
     if event.get("httpMethod") == "PUT":
         qs = event.get("queryStringParameters") or {}
@@ -364,5 +456,6 @@ def handler(event: dict, context) -> dict:
             "user": {"id": user_id, "phone": phone, "fullName": full_name or "", "email": email or ""},
             "loans": loans,
             "application": application,
+            "isRepeatClient": len(loans) > 0,
         }, ensure_ascii=False)
     }

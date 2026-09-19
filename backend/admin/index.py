@@ -262,7 +262,9 @@ def handler(event: dict, context) -> dict:
                    l.id AS loan_id, l.signed, l.signed_at, l.status AS loan_status, l.disbursed_at,
                    a.snils, a.work_phone, a.card_number_transfer, a.is_credit_doctor,
                    a.video_call_requested, a.virtual_card_days, u2.blocked_until,
-                   a.reviewed_at, l.created_at AS loan_created_at
+                   a.reviewed_at, l.created_at AS loan_created_at,
+                   COALESCE(hist.loans_count, 0), COALESCE(hist.paid_count, 0), COALESCE(hist.overdue_count, 0),
+                   COALESCE(hist.total_borrowed, 0), COALESCE(hist.apps_count, 0)
             FROM {SCHEMA}.applications a
             LEFT JOIN LATERAL (
                 SELECT lo.id, lo.signed, lo.signed_at, lo.status, lo.disbursed_at, lo.created_at
@@ -272,6 +274,17 @@ def handler(event: dict, context) -> dict:
                 ORDER BY lo.created_at DESC LIMIT 1
             ) l ON true
             LEFT JOIN {SCHEMA}.users u2 ON u2.phone = a.phone
+            LEFT JOIN LATERAL (
+                SELECT
+                    COUNT(lo2.id) AS loans_count,
+                    COUNT(lo2.id) FILTER (WHERE lo2.status = 'paid') AS paid_count,
+                    COUNT(lo2.id) FILTER (WHERE lo2.status = 'overdue') AS overdue_count,
+                    COALESCE(SUM(lo2.amount), 0) AS total_borrowed,
+                    (SELECT COUNT(*) FROM {SCHEMA}.applications a2 WHERE a2.phone = a.phone AND a2.id != a.id) AS apps_count
+                FROM {SCHEMA}.loans lo2
+                JOIN {SCHEMA}.users u3 ON u3.id = lo2.user_id
+                WHERE u3.phone = a.phone
+            ) hist ON true
             {where_clause} ORDER BY a.created_at DESC
         """)
         rows = cur.fetchall()
@@ -310,6 +323,11 @@ def handler(event: dict, context) -> dict:
             "blockedUntil": r[43].strftime("%d.%m.%Y %H:%M") if r[43] else None,
             "reviewedAt": r[44].strftime("%d.%m.%Y в %H:%M") if r[44] else None,
             "loanCreatedAt": r[45].strftime("%d.%m.%Y в %H:%M") if r[45] else None,
+            "prevLoansCount": int(r[46]) if r[46] else 0,
+            "prevPaidCount": int(r[47]) if r[47] else 0,
+            "prevOverdueCount": int(r[48]) if r[48] else 0,
+            "totalBorrowed": float(r[49]) if r[49] else 0,
+            "isRepeatClient": (int(r[46]) if r[46] else 0) > 0 or (int(r[50]) if r[50] else 0) > 0,
         } for r in rows]
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"applications": apps}, ensure_ascii=False)}
 

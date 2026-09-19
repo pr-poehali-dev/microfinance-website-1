@@ -8,6 +8,7 @@ import DashboardSupport from "./dashboard/DashboardSupport";
 import PaymentHistory from "./dashboard/PaymentHistory";
 import ClientProfileCard from "./dashboard/ClientProfileCard";
 import PartnerCardLinks from "./dashboard/PartnerCardLinks";
+import RepeatLoanForm from "./dashboard/RepeatLoanForm";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 const CAR_URL  = "https://functions.poehali.dev/651adde1-4432-4e5a-8086-3cda9898b7ac";
@@ -128,6 +129,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loans, setLoans] = useState<Loan[]>([]);
   const [application, setApplication] = useState<Application | null>(null);
+  const [isRepeatClient, setIsRepeatClient] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [signingId, setSigningId] = useState<number | null>(null);
@@ -200,6 +202,7 @@ export default function DashboardPage() {
         }
         setUser(data.user);
         setLoans(data.loans || []);
+        setIsRepeatClient(!!data.isRepeatClient);
         const app = data.application || null;
         setApplication(app);
         if (app?.cardNumber) {
@@ -454,11 +457,26 @@ export default function DashboardPage() {
           />
         )}
 
+        {/* ПОВТОРНАЯ ЗАЯВКА: клиент уже брал займ раньше и сейчас свободен от активной заявки
+            (нет заявки, отказ, либо предыдущий займ уже полностью погашен) */}
+        {!loading && !error && user && isRepeatClient && (
+          !application ||
+          application.status === "rejected" ||
+          ((application.status === "approved" || application.status === "partner_card") && loans[0]?.status === "paid")
+        ) && (
+          <RepeatLoanForm
+            fullName={user.fullName}
+            phone={user.phone}
+            onSuccess={() => { const t = localStorage.getItem("token"); if (t) loadData(t, false); }}
+          />
+        )}
+
         {!loading && !error && (
           <>
             <DashboardApplicationStatus
               application={application}
               loans={loans}
+              isRepeatClient={isRepeatClient}
               timerSec={timerSec}
               timerDone={timerDone}
               fmtTimer={fmtTimer}
@@ -487,6 +505,7 @@ export default function DashboardPage() {
             <DashboardLoans
               loans={loans}
               application={application}
+              isRepeatClient={isRepeatClient}
               signingId={signingId}
               signMsg={signMsg}
               onSign={handleSign}

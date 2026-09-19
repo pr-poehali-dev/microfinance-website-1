@@ -247,6 +247,14 @@ export default function AdminApplications({
                       <Icon name="BadgeCheck" size={12} />Займ погашен
                     </span>
                   )}
+                  {app.isRepeatClient && (
+                    <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(56,189,248,0.15)", color: "#38bdf8", border: "1px solid rgba(56,189,248,0.4)", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                      <Icon name="RefreshCw" size={12} />Повторный клиент
+                      {app.prevOverdueCount > 0 && (
+                        <span style={{ color: "#f87171" }}>· с просрочкой</span>
+                      )}
+                    </span>
+                  )}
                   <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>№{fmtAppId(app.id)} · {app.createdAt}</span>
                   {app.telegramId && <span style={{ color: "#a78bfa", fontSize: 13 }}>@{app.telegramId}</span>}
                 </div>
@@ -270,6 +278,33 @@ export default function AdminApplications({
                   )}
                   <div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Срок</div><div style={{ color: "white", fontWeight: 600 }}>{app.days} дн.</div></div>
                 </div>
+
+                {/* История клиента — сколько раньше брал займов, как гасил */}
+                {app.isRepeatClient && (
+                  <div style={{ background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.25)", borderRadius: 12, padding: "14px 16px", marginBottom: 12 }}>
+                    <div style={{ color: "#38bdf8", fontWeight: 700, fontSize: 13, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+                      <Icon name="History" size={14} />История клиента
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: 8 }}>
+                      <div>
+                        <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Займов брал</div>
+                        <div style={{ color: "white", fontWeight: 700 }}>{app.prevLoansCount}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Погашено вовремя</div>
+                        <div style={{ color: "#4ade80", fontWeight: 700 }}>{app.prevPaidCount}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>С просрочкой</div>
+                        <div style={{ color: app.prevOverdueCount > 0 ? "#f87171" : "rgba(255,255,255,0.4)", fontWeight: 700 }}>{app.prevOverdueCount}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Всего занимал</div>
+                        <div style={{ color: "white", fontWeight: 700 }}>{app.totalBorrowed.toLocaleString("ru-RU")} ₽</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Блок условий партнёра */}
                 {app.status === "partner_card" && (app.approvedAmount || app.approvedDays || app.approvedRate) && (

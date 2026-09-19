@@ -73,6 +73,7 @@ const mainLoan = (loans: Loan[]) => loans[0] || null;
 interface Props {
   application: Application | null;
   loans: Loan[];
+  isRepeatClient?: boolean;
   timerSec: number;
   timerDone: boolean;
   fmtTimer: (sec: number) => string;
@@ -99,7 +100,7 @@ interface Props {
 }
 
 export default function DashboardApplicationStatus({
-  application, loans, timerSec, timerDone, fmtTimer, fmtAppId,
+  application, loans, isRepeatClient, timerSec, timerDone, fmtTimer, fmtAppId,
   signingId, signMsg, cardInput, cardSaving, cardSaved, cardError,
   confirming, confirmDone, cardActivating, cardActivated, cvvVisible, setCvvVisible,
   onSign, onSaveCard, onConfirm, onActivateCard, setCardInput, setCardSaved, setCardError,
@@ -626,6 +627,8 @@ export default function DashboardApplicationStatus({
                   Повторная заявка возможна через <b className="text-yellow-400">{application.reapplyDaysLeft} {application.reapplyDaysLeft === 1 ? "день" : application.reapplyDaysLeft < 5 ? "дня" : "дней"}</b>
                 </div>
               </div>
+            ) : isRepeatClient ? (
+              <p className="text-white/40 text-sm">Вы можете подать новую заявку прямо здесь — форма выше, или связаться с нами для уточнения деталей.</p>
             ) : (
               <>
                 <p className="text-white/40 text-sm">Вы можете подать повторную заявку или связаться с нами для уточнения деталей.</p>

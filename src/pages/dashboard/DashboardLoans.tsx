@@ -56,13 +56,14 @@ const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> =
 interface Props {
   loans: Loan[];
   application: Application | null;
+  isRepeatClient?: boolean;
   signingId: number | null;
   signMsg: string;
   onSign: (loan: Loan) => void;
   onPay: (loan: Loan) => void;
 }
 
-export default function DashboardLoans({ loans, application, signingId, signMsg, onSign, onPay }: Props) {
+export default function DashboardLoans({ loans, application, isRepeatClient, signingId, signMsg, onSign, onPay }: Props) {
   const navigate = useNavigate();
 
   return (
@@ -247,7 +248,9 @@ export default function DashboardLoans({ loans, application, signingId, signMsg,
       {loans.length > 0 && (
         <div className="mt-6 text-center">
           <button
-            onClick={() => navigate("/")}
+            onClick={() => isRepeatClient
+              ? window.scrollTo({ top: 0, behavior: "smooth" })
+              : navigate("/")}
             className="text-purple-400 hover:text-purple-300 text-sm flex items-center gap-2 mx-auto transition-colors"
           >
             <Icon name="Plus" size={16} />

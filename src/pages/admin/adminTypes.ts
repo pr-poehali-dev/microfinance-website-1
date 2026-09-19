@@ -22,6 +22,11 @@ export interface App {
   blockedUntil: string | null;
   reviewedAt: string | null;
   loanCreatedAt: string | null;
+  prevLoansCount: number;
+  prevPaidCount: number;
+  prevOverdueCount: number;
+  totalBorrowed: number;
+  isRepeatClient: boolean;
 }
 export interface User { id: number; phone: string; fullName: string; email: string; createdAt: string; loanCount: number; debt: number; }
 export interface Loan { id: number; amount: number; days: number; ratePercent: number; status: string; createdAt: string; }
