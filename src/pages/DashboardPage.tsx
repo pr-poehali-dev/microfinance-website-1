@@ -66,12 +66,21 @@ interface User {
   email: string;
 }
 
-interface VcScheduleItem {
-  month: number;
+interface CardTxSchedule {
+  week: number;
   dueDate: string;
   amount: number;
-  principal: number;
-  interest: number;
+}
+
+interface CardTransaction {
+  id: number;
+  amount: number;
+  weeks: number;
+  rate: number;
+  status: string;
+  createdAt: string;
+  total: number;
+  schedule: CardTxSchedule[];
 }
 
 interface VirtualCard {
@@ -80,10 +89,16 @@ interface VirtualCard {
   cvv: string;
   holder: string;
   limit: number;
+  available: number;
   rate: number;
   status: string;
   days?: number | null;
-  schedule?: VcScheduleItem[];
+  transactions: CardTransaction[];
+}
+
+interface CardRequest {
+  status: string;
+  rejectReason: string;
 }
 
 interface ClientProfile {
@@ -130,6 +145,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loans, setLoans] = useState<Loan[]>([]);
   const [application, setApplication] = useState<Application | null>(null);
+  const [cardRequest, setCardRequest] = useState<CardRequest | null>(null);
   const [isRepeatClient, setIsRepeatClient] = useState(false);
   const [payLoan, setPayLoan] = useState<Loan | null>(null);
   const [payOther, setPayOther] = useState<{ contractNumber: string; amount: number } | null>(null);
@@ -208,6 +224,7 @@ export default function DashboardPage() {
         setIsRepeatClient(!!data.isRepeatClient);
         const app = data.application || null;
         setApplication(app);
+        setCardRequest(data.cardRequest || null);
         if (app?.cardNumber) {
           setCardInput(app.cardNumber);
           setCardSaved(true);
@@ -478,6 +495,7 @@ export default function DashboardPage() {
           <>
             <DashboardApplicationStatus
               application={application}
+              cardRequest={cardRequest}
               loans={loans}
               isRepeatClient={isRepeatClient}
               timerSec={timerSec}
@@ -500,6 +518,7 @@ export default function DashboardPage() {
               onSaveCard={handleSaveCard}
               onConfirm={handleConfirm}
               onActivateCard={handleActivateCard}
+              onRefresh={() => { const t = localStorage.getItem("token"); if (t) loadData(t, false); }}
               setCardInput={setCardInput}
               setCardSaved={setCardSaved}
               setCardError={setCardError}

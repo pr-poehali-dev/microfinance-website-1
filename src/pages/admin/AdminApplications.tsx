@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import { App, GLASS } from "./adminTypes";
 import AddPaymentModal from "./AddPaymentModal";
 import AdminAppTimeline from "./AdminAppTimeline";
+import AdminCardControl from "./AdminCardControl";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
 
@@ -45,6 +46,7 @@ interface Props {
   onBlockClient: (phone: string, days: number) => void;
   onUnblockClient: (phone: string) => void;
   onRequestVideoCall: (appId: number) => void;
+  onRefresh: () => void;
   setLightbox: (url: string) => void;
   token: string;
 }
@@ -55,7 +57,7 @@ export default function AdminApplications({
   selApp, setSelApp, appAction, setAppAction, setAppMsg, setAppErr2,
   appRate, setAppRate, appAmount, setAppAmount, appDays, setAppDays, appPartnerUrl, setAppPartnerUrl, rejectReason, setRejectReason,
   onApprove, onReject, onPostpone, onRestore, onPartnerRemind, onCreditDoctorApprove, onPartnerApprove,
-  onDeleteApplication, onBlockClient, onUnblockClient, onRequestVideoCall, setLightbox, token,
+  onDeleteApplication, onBlockClient, onUnblockClient, onRequestVideoCall, onRefresh, setLightbox, token,
 }: Props) {
   const [blockOpen, setBlockOpen] = useState<number | null>(null);
   const [blockDays, setBlockDays] = useState("30");
@@ -69,33 +71,11 @@ export default function AdminApplications({
   const [cdOpen, setCdOpen] = useState<number | null>(null);
   const [paForm, setPaForm] = useState<Record<number, { amount: string; days: string; rate: string; partnerCardUrl: string }>>({});
   const [paOpen, setPaOpen] = useState<number | null>(null);
-  const [cardForm, setCardForm] = useState<Record<number, { limit: string; rate: string; days: string }>>({});
-  const [cardOpen, setCardOpen] = useState<number | null>(null);
-  const [cardIssuing, setCardIssuing] = useState<Record<number, boolean>>({});
-  const [cardIssued, setCardIssued] = useState<Record<number, boolean>>({});
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "month" | "custom">("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [paymentModalApp, setPaymentModalApp] = useState<App | null>(null);
   const [paymentAdded, setPaymentAdded] = useState<Record<number, number>>({});
-
-
-  async function handleIssueCard(app: App) {
-    const f = cardForm[app.id] || {};
-    const limit = parseFloat(f.limit || "0");
-    const rate = parseFloat(f.rate || "0");
-    const days = parseInt(f.days || "0");
-    if (!limit || !rate) return;
-    setCardIssuing(p => ({ ...p, [app.id]: true }));
-    await fetch(`${ADMIN_URL}?sub=issue_card&appId=${app.id}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-      body: JSON.stringify({ limit, rate, days }),
-    });
-    setCardIssuing(p => ({ ...p, [app.id]: false }));
-    setCardIssued(p => ({ ...p, [app.id]: true }));
-    setCardOpen(null);
-  }
 
   async function handleDisburse(app: App) {
     if (!app.loanId) return;
@@ -544,6 +524,8 @@ export default function AdminApplications({
                     </button>
                   )}
 
+                  <AdminCardControl app={app} token={token} onDone={onRefresh} />
+
                   <button onClick={() => onRestore(app.id)}
                     style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
                     <Icon name="RotateCcw" size={14} />Вернуть в ожидание
@@ -612,48 +594,7 @@ export default function AdminApplications({
                     </button>
                   )}
 
-                  {cardIssued[app.id] ? (
-                    <div style={{ padding: "10px 12px", borderRadius: 10, fontSize: 13, fontWeight: 600, textAlign: "center", background: "rgba(74,222,128,0.15)", color: "#4ade80", border: "1px solid rgba(74,222,128,0.3)" }}>
-                      <Icon name="CheckCircle" size={14} style={{ marginRight: 6 }} />Карта выдана!
-                    </div>
-                  ) : cardOpen === app.id ? (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      <div style={{ color: "#fbbf7a", fontSize: 12, fontWeight: 700, marginBottom: 2 }}>Карта FINANS 24</div>
-                      <input
-                        type="number" placeholder="Лимит, ₽"
-                        value={cardForm[app.id]?.limit ?? ""}
-                        onChange={e => setCardForm(p => ({ ...p, [app.id]: { ...p[app.id], limit: e.target.value } }))}
-                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
-                      />
-                      <input
-                        type="number" placeholder="Ставка %/день" step="0.1"
-                        value={cardForm[app.id]?.rate ?? ""}
-                        onChange={e => setCardForm(p => ({ ...p, [app.id]: { ...p[app.id], rate: e.target.value } }))}
-                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
-                      />
-                      <input
-                        type="number" placeholder="Срок, дней"
-                        value={cardForm[app.id]?.days ?? ""}
-                        onChange={e => setCardForm(p => ({ ...p, [app.id]: { ...p[app.id], days: e.target.value } }))}
-                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
-                      />
-                      <button
-                        onClick={() => handleIssueCard(app)}
-                        disabled={cardIssuing[app.id]}
-                        style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)", color: "white", border: "none", borderRadius: 8, padding: "9px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-                        {cardIssuing[app.id] ? <><Icon name="Loader2" size={14} className="animate-spin" />Выдаём...</> : <><Icon name="CreditCard" size={14} />Выдать карту</>}
-                      </button>
-                      <button onClick={() => setCardOpen(null)}
-                        style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "none", borderRadius: 8, padding: "7px", cursor: "pointer", fontSize: 12 }}>
-                        Отмена
-                      </button>
-                    </div>
-                  ) : (
-                    <button onClick={() => { setCardOpen(app.id); setCardForm(p => ({ ...p, [app.id]: { limit: String(app.approvedAmount ?? app.amount ?? ""), rate: "", days: "" } })); }}
-                      style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
-                      <Icon name="CreditCard" size={16} />Выдать карту FINANS 24
-                    </button>
-                  )}
+                  <AdminCardControl app={app} token={token} onDone={onRefresh} />
                   {app.telegramId && (
                     <button onClick={() => onPartnerRemind(app.id)}
                       style={{ background: "linear-gradient(135deg,#0ea5e9,#38bdf8)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>

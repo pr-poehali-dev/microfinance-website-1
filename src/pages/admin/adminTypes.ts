@@ -28,6 +28,20 @@ export interface App {
   totalBorrowed: number;
   isRepeatClient: boolean;
   partnerCardUrl: string;
+  virtualCardStatus?: string;
+  virtualCardLimit?: number | null;
+}
+export interface CardRequestItem {
+  id: number;
+  phone: string;
+  fullName: string;
+  status: string;
+  rejectReason: string;
+  createdAt: string;
+  reviewedAt: string | null;
+  appId: number | null;
+  cardStatus: string;
+  cardLimit: number | null;
 }
 export interface User { id: number; phone: string; fullName: string; email: string; createdAt: string; loanCount: number; debt: number; }
 export interface Loan { id: number; amount: number; days: number; ratePercent: number; status: string; createdAt: string; }

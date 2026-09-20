@@ -1,7 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
-import PaymentHistory from "./PaymentHistory";
 import PartnerCardLinks from "./PartnerCardLinks";
+import CardWithdrawForm from "./CardWithdrawForm";
+import CardTransactionsList, { CardTransaction } from "./CardTransactionsList";
+import CardRequestBlock from "./CardRequestBlock";
 
 interface LoanOffer {
   amount: number;
@@ -26,24 +28,22 @@ interface Loan {
   offer?: LoanOffer;
 }
 
-interface VcScheduleItem {
-  month: number;
-  dueDate: string;
-  amount: number;
-  principal: number;
-  interest: number;
-}
-
 interface VirtualCard {
   number: string;
   expiry: string;
   cvv: string;
   holder: string;
   limit: number;
+  available: number;
   rate: number;
   status: string;
   days?: number | null;
-  schedule?: VcScheduleItem[];
+  transactions: CardTransaction[];
+}
+
+interface CardRequest {
+  status: string;
+  rejectReason: string;
 }
 
 interface Application {
@@ -73,6 +73,7 @@ const mainLoan = (loans: Loan[]) => loans[0] || null;
 
 interface Props {
   application: Application | null;
+  cardRequest?: CardRequest | null;
   loans: Loan[];
   isRepeatClient?: boolean;
   timerSec: number;
@@ -95,16 +96,17 @@ interface Props {
   onSaveCard: () => void;
   onConfirm: () => void;
   onActivateCard: () => void;
+  onRefresh: () => void;
   setCardInput: (v: string) => void;
   setCardSaved: (v: boolean) => void;
   setCardError: (v: string) => void;
 }
 
 export default function DashboardApplicationStatus({
-  application, loans, isRepeatClient, timerSec, timerDone, fmtTimer, fmtAppId,
+  application, cardRequest, loans, isRepeatClient, timerSec, timerDone, fmtTimer, fmtAppId,
   signingId, signMsg, cardInput, cardSaving, cardSaved, cardError,
   confirming, confirmDone, cardActivating, cardActivated, cvvVisible, setCvvVisible,
-  onSign, onSaveCard, onConfirm, onActivateCard, setCardInput, setCardSaved, setCardError,
+  onSign, onSaveCard, onConfirm, onActivateCard, onRefresh, setCardInput, setCardSaved, setCardError,
 }: Props) {
   const navigate = useNavigate();
 
@@ -769,12 +771,12 @@ export default function DashboardApplicationStatus({
                     </div>
                   </div>
                 </div>
-                {/* Лимит, ставка и срок */}
-                <div className={`grid ${application.virtualCard.days ? "grid-cols-3" : "grid-cols-2"} gap-3`}>
+                {/* Лимит, доступный остаток и ставка */}
+                <div className="grid grid-cols-3 gap-3">
                   {[
-                    { label: "Лимит карты", value: `${application.virtualCard.limit.toLocaleString("ru-RU")} ₽`, color: "#4ade80" },
-                    { label: "Ставка", value: `${application.virtualCard.rate}% / день`, color: "white" },
-                    ...(application.virtualCard.days ? [{ label: "Срок", value: `${application.virtualCard.days} дн.`, color: "white" }] : []),
+                    { label: "Лимит карты", value: `${application.virtualCard.limit.toLocaleString("ru-RU")} ₽`, color: "white" },
+                    { label: "Доступно", value: `${application.virtualCard.available.toLocaleString("ru-RU")} ₽`, color: "#4ade80" },
+                    { label: "Ставка", value: "24% / нед.", color: "white" },
                   ].map(({ label, value, color }) => (
                     <div key={label} className="rounded-xl px-4 py-3 text-center"
                       style={{ background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.2)" }}>
@@ -784,28 +786,24 @@ export default function DashboardApplicationStatus({
                   ))}
                 </div>
 
-                {/* Помесячный график погашения лимита */}
-                {application.virtualCard.schedule && application.virtualCard.schedule.length > 0 && (
-                  <PaymentHistory
-                    schedule={application.virtualCard.schedule}
-                    payments={[]}
-                    paidTotal={0}
-                    totalDue={application.virtualCard.schedule.reduce((s, i) => s + i.amount, 0)}
-                  />
-                )}
+                {/* Форма перевода средств в рамках доступного лимита */}
+                <CardWithdrawForm available={application.virtualCard.available} onSuccess={onRefresh} />
 
-                {/* Кнопка Оплатить */}
-                <button
-                  onClick={() => alert(`Оплата картой FINANS 24\nЛимит: ${application.virtualCard!.limit.toLocaleString("ru-RU")} ₽\n\nДля совершения платежа свяжитесь с нами:\n📞 +7 (996) 201-95-00\n📧 investorfinans24@ya.ru`)}
-                  className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90"
-                  style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)", boxShadow: "0 4px 20px rgba(234,128,52,0.35)" }}>
-                  <Icon name="Wallet" size={18} />
-                  Оплатить
-                </button>
+                {/* История переводов с еженедельными графиками */}
+                <CardTransactionsList transactions={application.virtualCard.transactions} />
               </div>
             </div>
           )}
         </div>
+      )}
+
+      {/* ЗАЯВКА НА КАРТУ ОТ КЛИЕНТА — если карты ещё нет */}
+      {(!application?.virtualCard || application.virtualCard.status === "none") && (
+        <CardRequestBlock
+          cardRequestStatus={cardRequest?.status ?? null}
+          cardRequestRejectReason={cardRequest?.rejectReason}
+          onSuccess={onRefresh}
+        />
       )}
     </>
   );

@@ -152,6 +152,121 @@ def handler(event: dict, context) -> dict:
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
+    # --- ПОДАТЬ ЗАЯВКУ НА КАРТУ FINANS 24 (POST, ?sub=card_request) ---
+    if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "card_request":
+        ph_e = phone.replace("'", "''")
+        fn_e = (full_name or "").replace("'", "''")
+        cur.execute(
+            f"SELECT id FROM {SCHEMA}.card_requests WHERE phone = '{ph_e}' AND status = 'pending'"
+        )
+        if cur.fetchone():
+            cur.close(); conn.close()
+            return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": "Заявка на карту уже отправлена и ожидает рассмотрения"})}
+        cur.execute(
+            f"SELECT id FROM {SCHEMA}.applications WHERE phone = '{ph_e}' AND virtual_card_status IN ('pending','active') LIMIT 1"
+        )
+        if cur.fetchone():
+            cur.close(); conn.close()
+            return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": "У вас уже есть карта FINANS 24"})}
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.card_requests (user_id, phone, full_name, status) "
+            f"VALUES ({user_id}, '{ph_e}', '{fn_e}', 'pending') RETURNING id"
+        )
+        req_id = cur.fetchone()[0]
+        conn.commit()
+        cur.close(); conn.close()
+
+        import urllib.request
+        tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+        chat_id = "8540431915"
+        if tg_token:
+            text = (
+                f"💳 <b>Новая заявка на карту FINANS 24 (#{req_id})</b>\n\n"
+                f"👤 <b>ФИО:</b> {full_name or phone}\n"
+                f"📞 <b>Телефон:</b> {phone}"
+            )
+            data = json.dumps({"chat_id": chat_id, "text": text, "parse_mode": "HTML"}).encode()
+            req = urllib.request.Request(
+                f"https://api.telegram.org/bot{tg_token}/sendMessage",
+                data=data, headers={"Content-Type": "application/json"}
+            )
+            try:
+                urllib.request.urlopen(req, timeout=5)
+            except Exception:
+                pass
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "requestId": req_id})}
+
+    # --- ПЕРЕВОД С КАРТЫ FINANS 24 (POST, ?sub=card_withdraw, body: {amount, weeks}) ---
+    if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "card_withdraw":
+        raw_b = event.get("body") or "{}"
+        b = json.loads(raw_b) if isinstance(raw_b, str) else raw_b
+        try:
+            wd_amount = float(b.get("amount", 0))
+            wd_weeks = int(b.get("weeks", 0))
+        except Exception:
+            wd_amount = 0
+            wd_weeks = 0
+        if wd_amount <= 0 or wd_weeks <= 0:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите сумму и срок перевода"})}
+
+        ph_e = phone.replace("'", "''")
+        cur.execute(
+            f"SELECT id, virtual_card_limit, virtual_card_status FROM {SCHEMA}.applications "
+            f"WHERE phone = '{ph_e}' AND virtual_card_status = 'active' ORDER BY virtual_card_issued_at DESC LIMIT 1"
+        )
+        app_row_c = cur.fetchone()
+        if not app_row_c:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Активная карта не найдена"})}
+        card_app_id, card_limit, _ = app_row_c
+        card_limit = float(card_limit or 0)
+
+        cur.execute(
+            f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_transactions "
+            f"WHERE application_id = {card_app_id} AND status != 'cancelled'"
+        )
+        used = float(cur.fetchone()[0])
+        available = card_limit - used
+        if wd_amount > available:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": f"Сумма превышает доступный остаток лимита ({int(available):,} ₽)".replace(",", " ")})}
+
+        CARD_WEEKLY_RATE = 24.0  # 24% в неделю, фиксировано, без пересчёта
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.card_transactions (application_id, phone, amount, weeks, rate, status) "
+            f"VALUES ({card_app_id}, '{ph_e}', {wd_amount}, {wd_weeks}, {CARD_WEEKLY_RATE}, 'active') RETURNING id"
+        )
+        tx_id = cur.fetchone()[0]
+        conn.commit()
+        cur.close(); conn.close()
+
+        import urllib.request
+        tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+        chat_id = "8540431915"
+        if tg_token:
+            interest_tx = round(wd_amount * CARD_WEEKLY_RATE / 100 * wd_weeks)
+            text = (
+                f"💸 <b>Перевод с карты FINANS 24 (#{tx_id})</b>\n\n"
+                f"👤 <b>ФИО:</b> {full_name or phone}\n"
+                f"📞 <b>Телефон:</b> {phone}\n"
+                f"💰 <b>Сумма:</b> {int(wd_amount):,} ₽\n".replace(",", " ") +
+                f"📅 <b>Срок:</b> {wd_weeks} нед.\n"
+                f"📈 <b>Ставка:</b> {CARD_WEEKLY_RATE}%/нед.\n"
+                f"💵 <b>К возврату:</b> {int(wd_amount + interest_tx):,} ₽\n".replace(",", " ") +
+                f"Деньги будут переведены на карту клиента."
+            )
+            data = json.dumps({"chat_id": chat_id, "text": text, "parse_mode": "HTML"}).encode()
+            req = urllib.request.Request(
+                f"https://api.telegram.org/bot{tg_token}/sendMessage",
+                data=data, headers={"Content-Type": "application/json"}
+            )
+            try:
+                urllib.request.urlopen(req, timeout=5)
+            except Exception:
+                pass
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "transactionId": tx_id})}
+
     # --- ПОВТОРНАЯ ЗАЯВКА НА ЗАЙМ ИЗ ЛИЧНОГО КАБИНЕТА (POST) ---
     if event.get("httpMethod") == "POST":
         raw_b = event.get("body") or "{}"
@@ -297,25 +412,43 @@ def handler(event: dict, context) -> dict:
             days_passed = (datetime.now() - reviewed_at).days
             reapply_days_left = max(0, 30 - days_passed)
         vc_days = int(app_row[36]) if app_row[36] else None
-        vc_schedule = []
-        if app_row[11] and app_row[17] == "active" and vc_days and app_row[15] and app_row[16]:
-            vc_limit = float(app_row[15])
-            vc_rate = float(app_row[16])
-            monthly = vc_limit / max(1, round(vc_days / 30))
-            months = max(1, round(vc_days / 30))
-            remaining = vc_limit
-            issued_from = datetime.now()
-            for m in range(1, months + 1):
-                interest_m = round(remaining * vc_rate / 100 * 30)
-                payment_m = round(monthly + interest_m)
-                vc_schedule.append({
-                    "month": m,
-                    "dueDate": (issued_from + timedelta(days=30 * m)).strftime("%d.%m.%Y"),
-                    "amount": payment_m,
-                    "principal": round(monthly),
-                    "interest": interest_m,
+
+        # Транзакции (переводы) по карте: каждая — со своим еженедельным графиком погашения
+        vc_transactions = []
+        vc_used = 0.0
+        if app_row[11]:
+            cur.execute(
+                f"SELECT id, amount, weeks, rate, status, created_at FROM {SCHEMA}.card_transactions "
+                f"WHERE application_id = {app_row[0]} ORDER BY created_at DESC"
+            )
+            for tx_id, tx_amount, tx_weeks, tx_rate, tx_status, tx_created in cur.fetchall():
+                tx_amount = float(tx_amount)
+                tx_rate = float(tx_rate)
+                if tx_status != "cancelled":
+                    vc_used += tx_amount
+                tx_interest_total = round(tx_amount * tx_rate / 100 * tx_weeks)
+                tx_total = tx_amount + tx_interest_total
+                weekly_principal = tx_amount / tx_weeks
+                weekly_payment = round(tx_total / tx_weeks)
+                tx_schedule = [{
+                    "week": w,
+                    "dueDate": (tx_created + timedelta(weeks=w)).strftime("%d.%m.%Y"),
+                    "amount": weekly_payment,
+                } for w in range(1, tx_weeks + 1)]
+                vc_transactions.append({
+                    "id": tx_id,
+                    "amount": tx_amount,
+                    "weeks": tx_weeks,
+                    "rate": tx_rate,
+                    "status": tx_status,
+                    "createdAt": tx_created.strftime("%d.%m.%Y"),
+                    "total": tx_total,
+                    "schedule": tx_schedule,
                 })
-                remaining -= monthly
+
+        vc_limit_val = float(app_row[15]) if app_row[15] else 0
+        vc_available = max(0, vc_limit_val - vc_used)
+
         application = {
             "id": app_row[0],
             "amount": app_amount,
@@ -335,11 +468,12 @@ def handler(event: dict, context) -> dict:
                 "expiry": app_row[12] or "",
                 "cvv": app_row[13] or "",
                 "holder": app_row[14] or "",
-                "limit": float(app_row[15]) if app_row[15] else 0,
+                "limit": vc_limit_val,
+                "available": vc_available,
                 "rate": float(app_row[16]) if app_row[16] else 0,
                 "status": app_row[17] or "none",
                 "days": vc_days,
-                "schedule": vc_schedule,
+                "transactions": vc_transactions,
             } if app_row[11] else None,
             "isCreditDoctor": bool(app_row[18]) if app_row[18] is not None else False,
             "reapplyDaysLeft": reapply_days_left,
@@ -365,6 +499,15 @@ def handler(event: dict, context) -> dict:
             "snils": app_row[33] or "",
         }
         application["profile"] = profile
+
+    # Статус заявки клиента на получение карты FINANS 24 (если подавал)
+    ph_e2 = phone.replace("'", "''")
+    cur.execute(
+        f"SELECT status, reject_reason FROM {SCHEMA}.card_requests "
+        f"WHERE phone = '{ph_e2}' ORDER BY created_at DESC LIMIT 1"
+    )
+    cr_row = cur.fetchone()
+    card_request = {"status": cr_row[0], "rejectReason": cr_row[1] or ""} if cr_row else None
 
     # Платежи по всем основным займам пользователя
     loan_ids = [str(r[0]) for r in rows]
@@ -458,5 +601,6 @@ def handler(event: dict, context) -> dict:
             "loans": loans,
             "application": application,
             "isRepeatClient": len(loans) > 0,
+            "cardRequest": card_request,
         }, ensure_ascii=False)
     }

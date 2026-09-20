@@ -264,7 +264,8 @@ def handler(event: dict, context) -> dict:
                    a.video_call_requested, a.virtual_card_days, u2.blocked_until,
                    a.reviewed_at, l.created_at AS loan_created_at,
                    COALESCE(hist.loans_count, 0), COALESCE(hist.paid_count, 0), COALESCE(hist.overdue_count, 0),
-                   COALESCE(hist.total_borrowed, 0), COALESCE(hist.apps_count, 0), a.partner_card_url
+                   COALESCE(hist.total_borrowed, 0), COALESCE(hist.apps_count, 0), a.partner_card_url,
+                   a.virtual_card_status, a.virtual_card_limit
             FROM {SCHEMA}.applications a
             LEFT JOIN LATERAL (
                 SELECT lo.id, lo.signed, lo.signed_at, lo.status, lo.disbursed_at, lo.created_at
@@ -329,6 +330,8 @@ def handler(event: dict, context) -> dict:
             "totalBorrowed": float(r[49]) if r[49] else 0,
             "isRepeatClient": (int(r[46]) if r[46] else 0) > 0 or (int(r[50]) if r[50] else 0) > 0,
             "partnerCardUrl": r[51] or "",
+            "virtualCardStatus": r[52] or "none",
+            "virtualCardLimit": float(r[53]) if r[53] else None,
         } for r in rows]
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"applications": apps}, ensure_ascii=False)}
 
@@ -1370,11 +1373,11 @@ def handler(event: dict, context) -> dict:
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
-    # --- ВЫДАТЬ ВИРТУАЛЬНУЮ КАРТУ FINANS 24 (POST, sub='issue_card', appId=...) ---
+    # --- ВЫДАТЬ ВИРТУАЛЬНУЮ КАРТУ FINANS 24 (POST, sub='issue_card', appId=... ИЛИ phone=...) ---
     if sub == "issue_card" and method == "POST":
         import random, string
         app_id = qs.get("appId", "")
-        app_id_e = str(app_id).replace("'", "''")
+        phone_q = (qs.get("phone") or "").strip()
         card_limit = float(body.get("limit", 0))
         card_rate = float(body.get("rate", 0))
         card_days = int(body.get("days", 0) or 0)
@@ -1383,13 +1386,23 @@ def handler(event: dict, context) -> dict:
             cur.close(); conn.close()
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите лимит и ставку"})}
 
-        cur.execute(f"SELECT full_name, phone FROM {SCHEMA}.applications WHERE id='{app_id_e}'")
+        if app_id:
+            app_id_e = str(app_id).replace("'", "''")
+            cur.execute(f"SELECT id, full_name, phone FROM {SCHEMA}.applications WHERE id='{app_id_e}'")
+        elif phone_q:
+            phone_e = phone_q.replace("'", "''")
+            cur.execute(f"SELECT id, full_name, phone FROM {SCHEMA}.applications WHERE phone='{phone_e}' ORDER BY created_at DESC LIMIT 1")
+        else:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Не указан клиент"})}
         app = cur.fetchone()
         if not app:
             cur.close(); conn.close()
-            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Клиент не найден"})}
 
-        full_name, phone = app
+        real_app_id, full_name, phone = app
+        app_id_e = str(real_app_id)
+        app_id = real_app_id
 
         # Генерация данных карты
         card_number = "4276 " + " ".join("".join([str(random.randint(0,9)) for _ in range(4)]) for _ in range(3))
@@ -1446,6 +1459,117 @@ def handler(event: dict, context) -> dict:
         tg(f"✅ <b>Карта FINANS 24 активирована</b>\n\n👤 {full_name or phone}\n📞 {phone}")
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    # --- РЕДАКТИРОВАТЬ УСЛОВИЯ УЖЕ ВЫДАННОЙ КАРТЫ (POST, sub='edit_card', appId=..., body: {limit, rate, days}) ---
+    if sub == "edit_card" and method == "POST":
+        app_id = qs.get("appId", "")
+        app_id_e = str(app_id).replace("'", "''")
+        cur.execute(f"SELECT full_name, phone, virtual_card_number FROM {SCHEMA}.applications WHERE id='{app_id_e}'")
+        app = cur.fetchone()
+        if not app or not app[2]:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Карта не найдена"})}
+        full_name, phone, _ = app
+        set_parts = []
+        if body.get("limit") is not None and body.get("limit") != "":
+            set_parts.append(f"virtual_card_limit={float(body['limit'])}")
+        if body.get("rate") is not None and body.get("rate") != "":
+            set_parts.append(f"virtual_card_rate={float(body['rate'])}")
+        if body.get("days") is not None and body.get("days") != "":
+            set_parts.append(f"virtual_card_days={int(body['days'])}")
+        if not set_parts:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Нечего обновлять"})}
+        cur.execute(f"UPDATE {SCHEMA}.applications SET {', '.join(set_parts)} WHERE id='{app_id_e}'")
+        conn.commit(); cur.close(); conn.close()
+        tg(f"✏️ <b>Условия карты FINANS 24 изменены</b>\n\n👤 {full_name or phone}\n📞 {phone}")
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    # --- ЗАБЛОКИРОВАТЬ/РАЗБЛОКИРОВАТЬ КАРТУ (POST, sub='card_status', appId=..., body: {status: active|blocked}) ---
+    if sub == "card_status" and method == "POST":
+        app_id = qs.get("appId", "")
+        app_id_e = str(app_id).replace("'", "''")
+        new_status = (body.get("status") or "").strip()
+        if new_status not in ("active", "blocked"):
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Некорректный статус"})}
+        cur.execute(f"SELECT full_name, phone FROM {SCHEMA}.applications WHERE id='{app_id_e}' AND virtual_card_number IS NOT NULL")
+        app = cur.fetchone()
+        if not app:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Карта не найдена"})}
+        full_name, phone = app
+        cur.execute(f"UPDATE {SCHEMA}.applications SET virtual_card_status='{new_status}' WHERE id='{app_id_e}'")
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    # --- СПИСОК ЗАЯВОК НА КАРТУ ОТ КЛИЕНТОВ (GET, sub='card_requests') ---
+    if sub == "card_requests" and method == "GET":
+        status_f = (qs.get("status") or "pending").strip()
+        status_e = status_f.replace("'", "''")
+        where_r = "" if status_f == "all" else f"WHERE cr.status = '{status_e}'"
+        cur.execute(f"""
+            SELECT cr.id, cr.phone, cr.full_name, cr.status, cr.reject_reason, cr.created_at, cr.reviewed_at,
+                   a.id AS app_id, a.virtual_card_status, a.virtual_card_limit
+            FROM {SCHEMA}.card_requests cr
+            LEFT JOIN LATERAL (
+                SELECT id, virtual_card_status, virtual_card_limit FROM {SCHEMA}.applications
+                WHERE phone = cr.phone ORDER BY created_at DESC LIMIT 1
+            ) a ON true
+            {where_r} ORDER BY cr.created_at DESC
+        """)
+        items = [{
+            "id": r[0], "phone": r[1], "fullName": r[2] or "",
+            "status": r[3], "rejectReason": r[4] or "",
+            "createdAt": r[5].strftime("%d.%m.%Y в %H:%M"),
+            "reviewedAt": r[6].strftime("%d.%m.%Y в %H:%M") if r[6] else None,
+            "appId": r[7], "cardStatus": r[8] or "none",
+            "cardLimit": float(r[9]) if r[9] else None,
+        } for r in cur.fetchall()]
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"requests": items}, ensure_ascii=False)}
+
+    # --- ОТКЛОНИТЬ ЗАЯВКУ НА КАРТУ (POST, sub='card_request_reject', id=..., body: {reason}) ---
+    if sub == "card_request_reject" and method == "POST":
+        req_id = qs.get("id", "")
+        req_id_e = str(req_id).replace("'", "''")
+        reason = (body.get("reason") or "").replace("'", "''")
+        cur.execute(f"SELECT phone, full_name FROM {SCHEMA}.card_requests WHERE id='{req_id_e}'")
+        r = cur.fetchone()
+        if not r:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
+        phone_r, fname_r = r
+        cur.execute(
+            f"UPDATE {SCHEMA}.card_requests SET status='rejected', reject_reason='{reason}', reviewed_at=NOW() WHERE id='{req_id_e}'"
+        )
+        conn.commit(); cur.close(); conn.close()
+        tg(f"❌ <b>Заявка на карту отклонена</b>\n\n👤 {fname_r or phone_r}\n📞 {phone_r}")
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    # --- ОДОБРИТЬ ЗАЯВКУ НА КАРТУ БЕЗ ВЫДАЧИ (POST, sub='card_request_approve', id=...) — помечает как одобренную, карту выдаём отдельно через issue_card ---
+    if sub == "card_request_approve" and method == "POST":
+        req_id = qs.get("id", "")
+        req_id_e = str(req_id).replace("'", "''")
+        cur.execute(f"UPDATE {SCHEMA}.card_requests SET status='approved', reviewed_at=NOW() WHERE id='{req_id_e}'")
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    # --- ИСТОРИЯ ПЕРЕВОДОВ (ТРАНЗАКЦИЙ) ПО КАРТЕ (GET, sub='card_transactions', appId=...) ---
+    if sub == "card_transactions" and method == "GET":
+        app_id = qs.get("appId", "")
+        app_id_e = str(app_id).replace("'", "''")
+        cur.execute(
+            f"SELECT id, amount, weeks, rate, status, created_at FROM {SCHEMA}.card_transactions "
+            f"WHERE application_id = '{app_id_e}' ORDER BY created_at DESC"
+        )
+        items = [{
+            "id": r[0], "amount": float(r[1]), "weeks": r[2], "rate": float(r[3]),
+            "status": r[4], "createdAt": r[5].strftime("%d.%m.%Y в %H:%M"),
+            "total": round(float(r[1]) * (1 + float(r[3]) / 100 * r[2])),
+        } for r in cur.fetchall()]
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"transactions": items}, ensure_ascii=False)}
 
     # --- УДАЛИТЬ АНКЕТУ КЛИЕНТА (POST, sub='delete_application', appId=...) ---
     if sub == "delete_application" and method == "POST":
