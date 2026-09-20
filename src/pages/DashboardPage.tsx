@@ -9,6 +9,7 @@ import PaymentHistory from "./dashboard/PaymentHistory";
 import ClientProfileCard from "./dashboard/ClientProfileCard";
 import PartnerCardLinks from "./dashboard/PartnerCardLinks";
 import RepeatLoanForm from "./dashboard/RepeatLoanForm";
+import PayLoanModal from "./dashboard/PayLoanModal";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 const CAR_URL  = "https://functions.poehali.dev/651adde1-4432-4e5a-8086-3cda9898b7ac";
@@ -130,6 +131,7 @@ export default function DashboardPage() {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [application, setApplication] = useState<Application | null>(null);
   const [isRepeatClient, setIsRepeatClient] = useState(false);
+  const [payLoan, setPayLoan] = useState<Loan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [signingId, setSigningId] = useState<number | null>(null);
@@ -297,7 +299,7 @@ export default function DashboardPage() {
   };
 
   const handlePay = (loan: Loan) => {
-    alert(`Оплата займа №${fmtAppId(loan.id)} на сумму ${loan.total.toLocaleString("ru-RU")} ₽\n\nДля оплаты свяжитесь с нами:\n📞 +7-863-270-85-24\n📧 investorfinans24@ya.ru`);
+    setPayLoan(loan);
   };
 
   const handleSign = async (loan: Loan) => {
@@ -859,6 +861,16 @@ export default function DashboardPage() {
 
         <DashboardSupport />
       </div>
+
+      {payLoan && (
+        <PayLoanModal
+          loanId={payLoan.id}
+          amount={payLoan.remaining ?? payLoan.total}
+          fullName={user?.fullName || ""}
+          fmtAppId={fmtAppId}
+          onClose={() => setPayLoan(null)}
+        />
+      )}
     </div>
   );
 }
