@@ -9,7 +9,7 @@ import AdminDisbursed from "./admin/AdminDisbursed";
 import { App, User, Loan, PURPLE } from "./admin/adminTypes";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
-const S = { background: "#0F0A1E", minHeight: "100vh" };
+const S = { background: "#1e110a", minHeight: "100vh" };
 
 export default function AdminPage() {
   const [token, setToken] = useState(localStorage.getItem("admin_token") || "");
@@ -269,19 +269,19 @@ export default function AdminPage() {
       )}
 
       {/* NAVBAR */}
-      <div style={{ background: "rgba(15,10,30,0.95)", borderBottom: "1px solid rgba(124,58,237,0.3)", padding: "12px 20px", display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
+      <div style={{ background: "rgba(30,17,10,0.95)", borderBottom: "1px solid rgba(234,128,52,0.3)", padding: "12px 20px", display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
         <div style={{ width: 36, height: 36, ...PURPLE, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Icon name="ShieldCheck" size={18} className="text-white" />
         </div>
         <span style={{ color: "white", fontWeight: 700, fontSize: 18, flex: 1 }}>FINANS 24 Admin</span>
         <button onClick={() => setTab("apps")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14,
-            background: tab === "apps" ? "linear-gradient(135deg,#7c3aed,#a855f7)" : "rgba(255,255,255,0.07)", color: tab === "apps" ? "white" : "rgba(255,255,255,0.5)" }}>
+            background: tab === "apps" ? "linear-gradient(135deg,#ea8034,#f0994a)" : "rgba(255,255,255,0.07)", color: tab === "apps" ? "white" : "rgba(255,255,255,0.5)" }}>
           Заявки {apps.filter(a => a.status === "pending").length > 0 && tab !== "apps" ? `(${apps.filter(a => a.status === "pending").length})` : ""}
         </button>
         <button onClick={() => setTab("clients")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14,
-            background: tab === "clients" ? "linear-gradient(135deg,#7c3aed,#a855f7)" : "rgba(255,255,255,0.07)", color: tab === "clients" ? "white" : "rgba(255,255,255,0.5)" }}>
+            background: tab === "clients" ? "linear-gradient(135deg,#ea8034,#f0994a)" : "rgba(255,255,255,0.07)", color: tab === "clients" ? "white" : "rgba(255,255,255,0.5)" }}>
           Клиенты
         </button>
         <button onClick={() => setTab("carloan")}
@@ -291,7 +291,7 @@ export default function AdminPage() {
         </button>
         <button onClick={() => setTab("shoploan")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
-            background: tab === "shoploan" ? "linear-gradient(135deg,#a855f7,#06b6d4)" : "rgba(255,255,255,0.07)", color: tab === "shoploan" ? "white" : "rgba(255,255,255,0.5)" }}>
+            background: tab === "shoploan" ? "linear-gradient(135deg,#f0994a,#06b6d4)" : "rgba(255,255,255,0.07)", color: tab === "shoploan" ? "white" : "rgba(255,255,255,0.5)" }}>
           🛒 Товарные займы
         </button>
         <button onClick={() => setTab("disbursed")}

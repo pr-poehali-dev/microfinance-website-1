@@ -19,7 +19,7 @@ export default function AdminAppTimeline({ app }: { app: App }) {
       color: app.status === "rejected" ? "#f87171" : "#4ade80",
       done: !!app.reviewedAt,
     },
-    { label: "Договор подписан", date: app.loanSignedAt, icon: "FileSignature", color: "#a78bfa", done: !!app.loanSignedAt },
+    { label: "Договор подписан", date: app.loanSignedAt, icon: "FileSignature", color: "#fdba74", done: !!app.loanSignedAt },
     { label: "Займ выдан", date: app.loanDisbursedAt, icon: "Banknote", color: "#38bdf8", done: !!app.loanDisbursedAt },
   ].filter(s => s.done || s.label !== "Заявка отклонена");
 

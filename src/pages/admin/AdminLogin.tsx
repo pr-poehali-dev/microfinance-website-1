@@ -9,7 +9,7 @@ interface Props {
   onSubmit: (e: React.FormEvent) => void;
 }
 
-const S = { background: "#0F0A1E", minHeight: "100vh" };
+const S = { background: "#1e110a", minHeight: "100vh" };
 
 export default function AdminLogin({ pwd, setPwd, err, loading, onSubmit }: Props) {
   return (

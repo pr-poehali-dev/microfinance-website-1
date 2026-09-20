@@ -97,7 +97,7 @@ export default function AdminApplications({
         </div>
       )}
 
-      {appsLoading && <div className="flex items-center justify-center py-20"><Icon name="Loader2" size={32} className="animate-spin text-purple-400" /></div>}
+      {appsLoading && <div className="flex items-center justify-center py-20"><Icon name="Loader2" size={32} className="animate-spin text-orange-400" /></div>}
 
       {!appsLoading && applications.length === 0 && (
         <div className="glass rounded-2xl p-12 text-center">
@@ -119,7 +119,7 @@ export default function AdminApplications({
                   <span className="text-white/30 text-sm">№{fmtAppId(app.id)}</span>
                   <span className="text-white/30 text-xs">{app.createdAt}</span>
                   {app.telegramId && (
-                    <span className="text-purple-400 text-xs">@{app.telegramId}</span>
+                    <span className="text-orange-400 text-xs">@{app.telegramId}</span>
                   )}
                 </div>
 
@@ -151,7 +151,7 @@ export default function AdminApplications({
                       <button onClick={() => toggleDocs(app.id)}
                         className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
                         style={hasFiles
-                          ? { background: "rgba(124,58,237,0.2)", color: "#c084fc", border: "1px solid rgba(124,58,237,0.3)" }
+                          ? { background: "rgba(234,128,52,0.2)", color: "#fbbf7a", border: "1px solid rgba(234,128,52,0.3)" }
                           : { background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.25)", border: "1px solid rgba(255,255,255,0.08)" }}>
                         <Icon name="Paperclip" size={12} />
                         Документы {hasFiles ? `(${fileCount}/${FILE_LABELS.length})` : "(не загружены)"}
@@ -168,7 +168,7 @@ export default function AdminApplications({
                                 {url ? (
                                   <button onClick={() => setLightbox(url)}
                                     className="relative group rounded-xl overflow-hidden"
-                                    style={{ aspectRatio: "4/3", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(124,58,237,0.3)" }}>
+                                    style={{ aspectRatio: "4/3", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(234,128,52,0.3)" }}>
                                     <img src={url} alt={label}
                                       className="w-full h-full object-cover transition-transform group-hover:scale-105"
                                       onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />

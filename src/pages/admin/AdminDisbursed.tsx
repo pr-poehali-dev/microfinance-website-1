@@ -5,7 +5,7 @@ import AdminLoanDetailModal from "./AdminLoanDetailModal";
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
 
 const TYPE_LABELS: Record<string, { label: string; icon: string; color: string; bg: string }> = {
-  loan:     { label: "Займ",            icon: "Banknote",    color: "#a78bfa", bg: "rgba(167,139,250,0.15)" },
+  loan:     { label: "Займ",            icon: "Banknote",    color: "#fdba74", bg: "rgba(253,186,116,0.15)" },
   carloan:  { label: "Авто займ",       icon: "Car",         color: "#fbbf24", bg: "rgba(245,158,11,0.15)" },
   shoploan: { label: "Товарный займ",   icon: "ShoppingBag", color: "#34d399", bg: "rgba(52,211,153,0.15)" },
 };
@@ -82,7 +82,7 @@ export default function AdminDisbursed({ token }: Props) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
         {[
           { label: "Всего выдано", value: items.length, icon: "BadgeCheck", color: "#38bdf8" },
-          { label: "Займов", value: items.filter(i => i.type === "loan").length, icon: "Banknote", color: "#a78bfa" },
+          { label: "Займов", value: items.filter(i => i.type === "loan").length, icon: "Banknote", color: "#fdba74" },
           { label: "Авто займов", value: items.filter(i => i.type === "carloan").length, icon: "Car", color: "#fbbf24" },
           { label: "Товарных", value: items.filter(i => i.type === "shoploan").length, icon: "ShoppingBag", color: "#34d399" },
           { label: "Просроченных", value: overdueCount, icon: "AlertTriangle", color: "#f87171" },

@@ -37,8 +37,8 @@ export default function PaymentHistory({ schedule, payments, paidTotal, totalDue
         className="w-full px-5 py-4 flex items-center justify-between gap-3 transition-colors hover:bg-white/5"
       >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(124,58,237,0.15)" }}>
-            <Icon name="Calendar" size={16} className="text-purple-400" />
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(234,128,52,0.15)" }}>
+            <Icon name="Calendar" size={16} className="text-orange-400" />
           </div>
           <div className="text-left">
             <div className="text-white font-semibold text-sm">График погашения и платежи</div>

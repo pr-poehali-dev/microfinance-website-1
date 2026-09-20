@@ -33,10 +33,10 @@ export interface User { id: number; phone: string; fullName: string; email: stri
 export interface Loan { id: number; amount: number; days: number; ratePercent: number; status: string; createdAt: string; }
 
 export const GLASS = { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16 };
-export const PURPLE = { background: "linear-gradient(135deg,#7c3aed,#a855f7)" };
+export const PURPLE = { background: "linear-gradient(135deg,#ea8034,#f0994a)" };
 export const STATUS: Record<string, { label: string; color: string }> = {
   active:  { label: "Активен",   color: "#4ade80" },
-  paid:    { label: "Погашен",   color: "#a78bfa" },
+  paid:    { label: "Погашен",   color: "#fdba74" },
   overdue: { label: "Просрочен", color: "#f87171" },
   review:  { label: "На рассм.", color: "#fbbf24" },
 };

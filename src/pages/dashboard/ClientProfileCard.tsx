@@ -52,7 +52,7 @@ export default function ClientProfileCard({ profile, phone }: Props) {
       <button
         onClick={() => setOpen(!open)}
         className="w-full p-5 flex items-center gap-3 transition-colors hover:bg-white/5"
-        style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.15), rgba(168,85,247,0.05))" }}
+        style={{ background: "linear-gradient(135deg, rgba(234,128,52,0.15), rgba(240,153,74,0.05))" }}
       >
         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 btn-neon">
           <Icon name="UserCircle" size={20} className="text-white" />

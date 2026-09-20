@@ -129,14 +129,14 @@ export default function ConsentDocuments({ consents, onChange }: Props) {
             type="checkbox"
             checked={consents[doc.key]}
             onChange={(e) => onChange(doc.key, e.target.checked)}
-            className="mt-0.5 w-4 h-4 shrink-0 accent-purple-500 cursor-pointer"
+            className="mt-0.5 w-4 h-4 shrink-0 accent-orange-500 cursor-pointer"
           />
           <span className="flex-1 text-sm text-white/70 leading-snug">
             Я даю{" "}
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); setOpenDoc(doc); }}
-              className="text-purple-400 underline underline-offset-2 hover:text-purple-300 transition-colors"
+              className="text-orange-400 underline underline-offset-2 hover:text-orange-300 transition-colors"
             >
               {doc.title.charAt(0).toLowerCase() + doc.title.slice(1)}
             </button>
@@ -151,7 +151,7 @@ export default function ConsentDocuments({ consents, onChange }: Props) {
           onClick={() => setOpenDoc(null)}
         >
           <div
-            style={{ background: "#0F0A1E", borderRadius: 20, padding: "28px", maxWidth: 620, width: "100%", maxHeight: "80vh", overflowY: "auto", border: "1px solid rgba(168,85,247,0.35)" }}
+            style={{ background: "#1e110a", borderRadius: 20, padding: "28px", maxWidth: 620, width: "100%", maxHeight: "80vh", overflowY: "auto", border: "1px solid rgba(240,153,74,0.35)" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4 mb-4">

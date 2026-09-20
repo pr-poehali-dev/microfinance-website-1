@@ -50,9 +50,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen font-golos hero-bg flex flex-col" style={{ background: "#0F0A1E" }}>
+    <div className="min-h-screen font-golos hero-bg flex flex-col" style={{ background: "#1e110a" }}>
       {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass" style={{ borderBottom: "1px solid rgba(168,85,247,0.2)" }}>
+      <nav className="fixed top-0 left-0 right-0 z-50 glass" style={{ borderBottom: "1px solid rgba(240,153,74,0.2)" }}>
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <button onClick={() => navigate("/")} className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center">
@@ -88,7 +88,7 @@ export default function LoginPage() {
                   key={m}
                   onClick={() => switchMode(m)}
                   className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all"
-                  style={mode === m ? { background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white" } : { color: "rgba(255,255,255,0.5)" }}
+                  style={mode === m ? { background: "linear-gradient(135deg,#ea8034,#f0994a)", color: "white" } : { color: "rgba(255,255,255,0.5)" }}
                 >
                   {m === "login" ? "Войти" : "Регистрация"}
                 </button>
@@ -104,7 +104,7 @@ export default function LoginPage() {
                     placeholder="Иванов Иван Иванович"
                     value={form.fullName}
                     onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                    className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                    className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors"
                     style={{ background: "rgba(255,255,255,0.05)" }}
                   />
                 </div>
@@ -120,7 +120,7 @@ export default function LoginPage() {
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     required
-                    className="w-full rounded-xl pl-10 pr-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                    className="w-full rounded-xl pl-10 pr-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors"
                     style={{ background: "rgba(255,255,255,0.05)" }}
                   />
                 </div>
@@ -134,7 +134,7 @@ export default function LoginPage() {
                     placeholder="example@mail.ru"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                    className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors"
                     style={{ background: "rgba(255,255,255,0.05)" }}
                   />
                 </div>
@@ -152,7 +152,7 @@ export default function LoginPage() {
                       onChange={(e) => setForm({ ...form, password: e.target.value })}
                       required
                       minLength={6}
-                      className="w-full rounded-xl pl-10 pr-12 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                      className="w-full rounded-xl pl-10 pr-12 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors"
                       style={{ background: "rgba(255,255,255,0.05)" }}
                     />
                     <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70">
@@ -166,8 +166,8 @@ export default function LoginPage() {
               {/* Подсказка для phone_login */}
               {mode === "phone_login" && (
                 <div className="rounded-xl px-4 py-3 flex items-start gap-3 text-sm"
-                  style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.25)" }}>
-                  <Icon name="Info" size={15} className="text-purple-400 mt-0.5 shrink-0" />
+                  style={{ background: "rgba(234,128,52,0.1)", border: "1px solid rgba(234,128,52,0.25)" }}>
+                  <Icon name="Info" size={15} className="text-orange-400 mt-0.5 shrink-0" />
                   <p className="text-white/60">Введите номер телефона, который вы указали в заявке. Вход доступен после одобрения займа.</p>
                 </div>
               )}
@@ -189,7 +189,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={() => switchMode("login")}
                     className="w-full py-2.5 rounded-xl font-semibold text-white text-sm"
-                    style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)" }}
+                    style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)" }}
                   >
                     Войти в кабинет
                   </button>
@@ -217,7 +217,7 @@ export default function LoginPage() {
                 <button
                   onClick={() => switchMode("phone_login")}
                   className="w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-80"
-                  style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", color: "#c084fc" }}
+                  style={{ background: "rgba(234,128,52,0.15)", border: "1px solid rgba(234,128,52,0.3)", color: "#fbbf7a" }}
                 >
                   <Icon name="Smartphone" size={16} />
                   Войти только по номеру телефона

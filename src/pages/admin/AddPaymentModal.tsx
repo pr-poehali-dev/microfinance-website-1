@@ -35,7 +35,7 @@ export default function AddPaymentModal({ token, loanType, loanId, clientName, o
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
       onClick={onClose}>
-      <div style={{ background: "#1a1030", border: "1px solid rgba(14,165,233,0.35)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 420 }}
+      <div style={{ background: "#301b10", border: "1px solid rgba(14,165,233,0.35)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 420 }}
         onClick={e => e.stopPropagation()}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
           <div>

@@ -20,8 +20,8 @@ export default function RepeatLoanForm({ fullName, phone, onSuccess }: Props) {
   const calc = useMemo(() => {
     const interest = Math.round(amount * 0.008 * days);
     const total = amount + interest;
-    const amountBg = `linear-gradient(to right, #7C3AED ${((amount - 5000) / (100000 - 5000)) * 100}%, rgba(124,58,237,0.2) ${((amount - 5000) / (100000 - 5000)) * 100}%)`;
-    const daysBg = `linear-gradient(to right, #7C3AED ${((days - 5) / (365 - 5)) * 100}%, rgba(124,58,237,0.2) ${((days - 5) / (365 - 5)) * 100}%)`;
+    const amountBg = `linear-gradient(to right, #EA8034 ${((amount - 5000) / (100000 - 5000)) * 100}%, rgba(234,128,52,0.2) ${((amount - 5000) / (100000 - 5000)) * 100}%)`;
+    const daysBg = `linear-gradient(to right, #EA8034 ${((days - 5) / (365 - 5)) * 100}%, rgba(234,128,52,0.2) ${((days - 5) / (365 - 5)) * 100}%)`;
     return { interest, total, amountBg, daysBg };
   }, [amount, days]);
 
@@ -60,11 +60,11 @@ export default function RepeatLoanForm({ fullName, phone, onSuccess }: Props) {
   if (!open) {
     return (
       <div className="glass rounded-2xl overflow-hidden mb-6"
-        style={{ border: "1px solid rgba(124,58,237,0.35)", background: "rgba(124,58,237,0.04)" }}>
+        style={{ border: "1px solid rgba(234,128,52,0.35)", background: "rgba(234,128,52,0.04)" }}>
         <div className="px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(124,58,237,0.2)" }}>
-              <Icon name="RefreshCw" size={20} className="text-purple-400" />
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(234,128,52,0.2)" }}>
+              <Icon name="RefreshCw" size={20} className="text-orange-400" />
             </div>
             <div>
               <div className="text-white font-bold">Оформить новый займ</div>
@@ -85,12 +85,12 @@ export default function RepeatLoanForm({ fullName, phone, onSuccess }: Props) {
 
   return (
     <div className="glass rounded-2xl overflow-hidden mb-6"
-      style={{ border: "1px solid rgba(124,58,237,0.4)", background: "rgba(124,58,237,0.04)" }}>
+      style={{ border: "1px solid rgba(234,128,52,0.4)", background: "rgba(234,128,52,0.04)" }}>
       <div className="px-6 py-4 flex items-center justify-between gap-3"
-        style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.25),rgba(168,85,247,0.08))" }}>
+        style={{ background: "linear-gradient(135deg,rgba(234,128,52,0.25),rgba(240,153,74,0.08))" }}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(124,58,237,0.2)" }}>
-            <Icon name="Calculator" size={18} className="text-purple-300" />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(234,128,52,0.2)" }}>
+            <Icon name="Calculator" size={18} className="text-orange-300" />
           </div>
           <div className="text-white font-bold">Новая заявка на займ</div>
         </div>
@@ -153,7 +153,7 @@ export default function RepeatLoanForm({ fullName, phone, onSuccess }: Props) {
         </div>
 
         {/* Итог */}
-        <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.3)" }}>
+        <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ background: "rgba(234,128,52,0.1)", border: "1px solid rgba(234,128,52,0.3)" }}>
           <span className="text-white/50 text-sm">К возврату</span>
           <span className="font-bold text-xl gradient-text">{calc.total.toLocaleString("ru-RU")} ₽</span>
         </div>

@@ -92,7 +92,7 @@ export default function CarLoanApplyPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen font-golos flex items-center justify-center px-4" style={{ background: "#0F0A1E" }}>
+      <div className="min-h-screen font-golos flex items-center justify-center px-4" style={{ background: "#1e110a" }}>
         <div className="max-w-md w-full text-center">
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-full mb-6"
             style={{ background: "linear-gradient(135deg, #f59e0b, #ef4444)", boxShadow: "0 0 60px rgba(245,158,11,0.4)" }}>
@@ -117,7 +117,7 @@ export default function CarLoanApplyPage() {
   }
 
   return (
-    <div className="min-h-screen font-golos" style={{ background: "#0F0A1E" }}>
+    <div className="min-h-screen font-golos" style={{ background: "#1e110a" }}>
       <Navbar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} scrollTo={scrollTo} />
 
       <div className="max-w-3xl mx-auto px-4 pt-28 pb-16">
@@ -139,7 +139,7 @@ export default function CarLoanApplyPage() {
           {[
             { icon: "Banknote", v: "100т — 1 млн ₽", l: "сумма", color: "#f59e0b" },
             { icon: "Calendar", v: "до 36 мес.", l: "срок", color: "#06b6d4" },
-            { icon: "Percent", v: "от 12%/мес.", l: "ставка", color: "#a855f7" },
+            { icon: "Percent", v: "от 12%/мес.", l: "ставка", color: "#f0994a" },
           ].map((c) => (
             <div key={c.l} className="rounded-2xl p-4 text-center"
               style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
@@ -296,9 +296,9 @@ export default function CarLoanApplyPage() {
                 <div className="text-xs text-white/50">Иностранное: <span className="text-cyan-400 font-semibold">не старше 10 лет</span></div>
               </div>
               <div className="rounded-xl p-3 flex items-center gap-2"
-                style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.2)" }}>
-                <Icon name="Flag" size={14} className="text-purple-400 shrink-0" />
-                <div className="text-xs text-white/50">Отечественное: <span className="text-purple-400 font-semibold">не старше 5 лет</span></div>
+                style={{ background: "rgba(240,153,74,0.08)", border: "1px solid rgba(240,153,74,0.2)" }}>
+                <Icon name="Flag" size={14} className="text-orange-400 shrink-0" />
+                <div className="text-xs text-white/50">Отечественное: <span className="text-orange-400 font-semibold">не старше 5 лет</span></div>
               </div>
             </div>
 

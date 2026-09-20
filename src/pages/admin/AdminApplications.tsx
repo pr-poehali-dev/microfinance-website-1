@@ -167,16 +167,16 @@ export default function AdminApplications({
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
         {([
           ["pending","Ожидают","Clock","#f59e0b"],
-          ["creditdoctor","💊 Кред. Доктор","HeartPulse","linear-gradient(135deg,#a855f7,#ec4899)"],
+          ["creditdoctor","💊 Кред. Доктор","HeartPulse","linear-gradient(135deg,#f0994a,#ec4899)"],
           ["postponed","Отложенные","PhoneMissed","#60a5fa"],
           ["approved","Одобренные","CheckCircle","#22c55e"],
-          ["paid_loans","Погашенные","BadgeCheck","#a78bfa"],
+          ["paid_loans","Погашенные","BadgeCheck","#fdba74"],
           ["rejected","Отклонённые","XCircle","#ef4444"],
         ] as const).map(([f, label, icon, color]) => (
           <button key={f} onClick={() => setAppFilter(f)}
             style={{ padding: "8px 18px", borderRadius: 12, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 8,
               background: appFilter === f ? color : "rgba(255,255,255,0.07)", color: appFilter === f ? "white" : "rgba(255,255,255,0.5)",
-              boxShadow: appFilter === f && f === "creditdoctor" ? "0 0 14px rgba(168,85,247,0.4)" : "none" }}>
+              boxShadow: appFilter === f && f === "creditdoctor" ? "0 0 14px rgba(240,153,74,0.4)" : "none" }}>
             <Icon name={icon} size={14} />{label}
           </button>
         ))}
@@ -199,9 +199,9 @@ export default function AdminApplications({
         {([["all","Все время"],["today","Сегодня"],["week","7 дней"],["month","Месяц"],["custom","Период"]] as const).map(([f, label]) => (
           <button key={f} onClick={() => setDateFilter(f)}
             style={{ padding: "6px 14px", borderRadius: 8, cursor: "pointer", fontWeight: 600, fontSize: 13,
-              background: dateFilter === f ? "rgba(124,58,237,0.4)" : "rgba(255,255,255,0.05)",
+              background: dateFilter === f ? "rgba(234,128,52,0.4)" : "rgba(255,255,255,0.05)",
               color: dateFilter === f ? "#e9d5ff" : "rgba(255,255,255,0.4)",
-              border: dateFilter === f ? "1px solid rgba(124,58,237,0.5)" : "1px solid transparent" }}>
+              border: dateFilter === f ? "1px solid rgba(234,128,52,0.5)" : "1px solid transparent" }}>
             {label}
           </button>
         ))}
@@ -221,7 +221,7 @@ export default function AdminApplications({
 
       {appMsg && <div style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)", borderRadius: 12, padding: "12px 16px", color: "#4ade80", marginBottom: 16, fontSize: 14 }}>{appMsg}</div>}
 
-      {appsLoading && <div style={{ textAlign: "center", padding: 60 }}><Icon name="Loader2" size={36} className="animate-spin text-purple-400" /></div>}
+      {appsLoading && <div style={{ textAlign: "center", padding: 60 }}><Icon name="Loader2" size={36} className="animate-spin text-orange-400" /></div>}
 
       {!appsLoading && apps.length === 0 && (
         <div style={{ ...GLASS, padding: 60, textAlign: "center", color: "rgba(255,255,255,0.3)" }}>Заявок нет</div>
@@ -238,7 +238,7 @@ export default function AdminApplications({
                 <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
                   <span style={{ color: "white", fontWeight: 700, fontSize: 18 }}>{app.fullName || app.phone}</span>
                   {app.isCreditDoctor && (
-                    <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,rgba(168,85,247,0.3),rgba(236,72,153,0.25))", color: "#e879f9", border: "1px solid rgba(168,85,247,0.5)", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,rgba(240,153,74,0.3),rgba(236,72,153,0.25))", color: "#fb923c", border: "1px solid rgba(240,153,74,0.5)", display: "inline-flex", alignItems: "center", gap: 5 }}>
                       💊 Кредитный Доктор
                     </span>
                   )}
@@ -248,7 +248,7 @@ export default function AdminApplications({
                     </span>
                   )}
                   {app.loanStatus === "paid" && (
-                    <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(167,139,250,0.18)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.4)", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(253,186,116,0.18)", color: "#fdba74", border: "1px solid rgba(253,186,116,0.4)", display: "inline-flex", alignItems: "center", gap: 5 }}>
                       <Icon name="BadgeCheck" size={12} />Займ погашен
                     </span>
                   )}
@@ -261,7 +261,7 @@ export default function AdminApplications({
                     </span>
                   )}
                   <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>№{fmtAppId(app.id)} · {app.createdAt}</span>
-                  {app.telegramId && <span style={{ color: "#a78bfa", fontSize: 13 }}>@{app.telegramId}</span>}
+                  {app.telegramId && <span style={{ color: "#fdba74", fontSize: 13 }}>@{app.telegramId}</span>}
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px,1fr))", gap: 12, marginBottom: 12 }}>
                   <div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Телефон</div><div style={{ color: "white", fontWeight: 600 }}>{app.phone}</div></div>
@@ -313,8 +313,8 @@ export default function AdminApplications({
 
                 {/* Блок условий партнёра */}
                 {app.status === "partner_card" && (app.approvedAmount || app.approvedDays || app.approvedRate) && (
-                  <div style={{ background: "rgba(124,58,237,0.07)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 12, padding: "14px 16px", marginBottom: 12 }}>
-                    <div style={{ color: "#c084fc", fontWeight: 700, fontSize: 13, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ background: "rgba(234,128,52,0.07)", border: "1px solid rgba(234,128,52,0.3)", borderRadius: 12, padding: "14px 16px", marginBottom: 12 }}>
+                    <div style={{ color: "#fbbf7a", fontWeight: 700, fontSize: 13, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
                       <Icon name="CreditCard" size={14} />Условия займа (партнёр)
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: 8 }}>
@@ -337,7 +337,7 @@ export default function AdminApplications({
                       ))}
                     </div>
                     {app.partnerCardUrl && (
-                      <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(124,58,237,0.2)" }}>
+                      <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(234,128,52,0.2)" }}>
                         <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 4 }}>Ссылка на карту партнёра</div>
                         <a href={app.partnerCardUrl} target="_blank" rel="noopener noreferrer"
                           style={{ color: "#38bdf8", fontSize: 13, fontWeight: 600, wordBreak: "break-all" }}>
@@ -379,13 +379,13 @@ export default function AdminApplications({
 
                 {/* Данные для входа клиента */}
                 {app.clientPassword && (
-                  <div style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.35)", borderRadius: 12, padding: "14px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-                    <Icon name="KeyRound" size={18} style={{ color: "#a78bfa", flexShrink: 0 }} />
+                  <div style={{ background: "rgba(234,128,52,0.1)", border: "1px solid rgba(234,128,52,0.35)", borderRadius: 12, padding: "14px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                    <Icon name="KeyRound" size={18} style={{ color: "#fdba74", flexShrink: 0 }} />
                     <div style={{ flex: 1 }}>
                       <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 4 }}>Данные для входа в личный кабинет</div>
                       <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
                         <span style={{ color: "white", fontSize: 14 }}>📞 <b>{app.phone}</b></span>
-                        <span style={{ color: "white", fontSize: 14 }}>🔑 Пароль: <b style={{ color: "#a78bfa", letterSpacing: 1 }}>{app.clientPassword}</b></span>
+                        <span style={{ color: "white", fontSize: 14 }}>🔑 Пароль: <b style={{ color: "#fdba74", letterSpacing: 1 }}>{app.clientPassword}</b></span>
                       </div>
                     </div>
                   </div>
@@ -408,7 +408,7 @@ export default function AdminApplications({
                     const url = app[key as keyof App] as string;
                     return url ? (
                       <button key={key} onClick={() => setLightbox(url)}
-                        style={{ background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.4)", borderRadius: 8, padding: "6px 12px", color: "#c084fc", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                        style={{ background: "rgba(234,128,52,0.2)", border: "1px solid rgba(234,128,52,0.4)", borderRadius: 8, padding: "6px 12px", color: "#fbbf7a", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
                         <Icon name="Image" size={12} />{label}
                       </button>
                     ) : null;
@@ -618,29 +618,29 @@ export default function AdminApplications({
                     </div>
                   ) : cardOpen === app.id ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      <div style={{ color: "#c084fc", fontSize: 12, fontWeight: 700, marginBottom: 2 }}>Карта FINANS 24</div>
+                      <div style={{ color: "#fbbf7a", fontSize: 12, fontWeight: 700, marginBottom: 2 }}>Карта FINANS 24</div>
                       <input
                         type="number" placeholder="Лимит, ₽"
                         value={cardForm[app.id]?.limit ?? ""}
                         onChange={e => setCardForm(p => ({ ...p, [app.id]: { ...p[app.id], limit: e.target.value } }))}
-                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(168,85,247,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
                       />
                       <input
                         type="number" placeholder="Ставка %/день" step="0.1"
                         value={cardForm[app.id]?.rate ?? ""}
                         onChange={e => setCardForm(p => ({ ...p, [app.id]: { ...p[app.id], rate: e.target.value } }))}
-                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(168,85,247,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
                       />
                       <input
                         type="number" placeholder="Срок, дней"
                         value={cardForm[app.id]?.days ?? ""}
                         onChange={e => setCardForm(p => ({ ...p, [app.id]: { ...p[app.id], days: e.target.value } }))}
-                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(168,85,247,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
                       />
                       <button
                         onClick={() => handleIssueCard(app)}
                         disabled={cardIssuing[app.id]}
-                        style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white", border: "none", borderRadius: 8, padding: "9px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                        style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)", color: "white", border: "none", borderRadius: 8, padding: "9px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
                         {cardIssuing[app.id] ? <><Icon name="Loader2" size={14} className="animate-spin" />Выдаём...</> : <><Icon name="CreditCard" size={14} />Выдать карту</>}
                       </button>
                       <button onClick={() => setCardOpen(null)}
@@ -650,7 +650,7 @@ export default function AdminApplications({
                     </div>
                   ) : (
                     <button onClick={() => { setCardOpen(app.id); setCardForm(p => ({ ...p, [app.id]: { limit: String(app.approvedAmount ?? app.amount ?? ""), rate: "", days: "" } })); }}
-                      style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                      style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
                       <Icon name="CreditCard" size={16} />Выдать карту FINANS 24
                     </button>
                   )}
@@ -720,30 +720,30 @@ export default function AdminApplications({
                       </button>
                       {cdOpen === app.id ? (
                         <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 140 }}>
-                          <div style={{ color: "#e879f9", fontSize: 12, fontWeight: 700, marginBottom: 2 }}>💊 Кредитный Доктор</div>
+                          <div style={{ color: "#fb923c", fontSize: 12, fontWeight: 700, marginBottom: 2 }}>💊 Кредитный Доктор</div>
                           <input
                             type="number" placeholder="Сумма, ₽"
                             value={cdForm[app.id]?.amount ?? ""}
                             onChange={e => setCdForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], amount: e.target.value } }))}
-                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(168,85,247,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
                           />
                           <input
                             type="number" placeholder="Срок, дней"
                             value={cdForm[app.id]?.days ?? ""}
                             onChange={e => setCdForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], days: e.target.value } }))}
-                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(168,85,247,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
                           />
                           <input
                             type="number" placeholder="Ставка %/день" step="0.1"
                             value={cdForm[app.id]?.rate ?? ""}
                             onChange={e => setCdForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], rate: e.target.value } }))}
-                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(168,85,247,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
                           />
                           <input
                             type="text" placeholder="Ссылка на карту партнёра"
                             value={cdForm[app.id]?.partnerCardUrl ?? ""}
                             onChange={e => setCdForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], partnerCardUrl: e.target.value } }))}
-                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(168,85,247,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
                           />
                           <button
                             onClick={() => {
@@ -756,7 +756,7 @@ export default function AdminApplications({
                               setCdOpen(null);
                             }}
                             disabled={appProcessing}
-                            style={{ background: "linear-gradient(135deg,#a855f7,#ec4899)", color: "white", border: "none", borderRadius: 8, padding: "9px 10px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                            style={{ background: "linear-gradient(135deg,#f0994a,#ec4899)", color: "white", border: "none", borderRadius: 8, padding: "9px 10px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
                             <Icon name="Send" size={14} />{appProcessing ? "..." : "Одобрить"}
                           </button>
                           <button onClick={() => setCdOpen(null)}
@@ -769,7 +769,7 @@ export default function AdminApplications({
                           setCdOpen(app.id);
                           setCdForm(prev => ({ ...prev, [app.id]: { amount: String(app.approvedAmount ?? app.amount ?? ""), days: String(app.approvedDays ?? app.days ?? ""), rate: String(app.approvedRate ? app.approvedRate * 100 : "1"), partnerCardUrl: app.partnerCardUrl || "" } }));
                         }}
-                          style={{ background: "linear-gradient(135deg,#a855f7,#ec4899)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6, boxShadow: "0 0 12px rgba(168,85,247,0.3)" }}>
+                          style={{ background: "linear-gradient(135deg,#f0994a,#ec4899)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6, boxShadow: "0 0 12px rgba(240,153,74,0.3)" }}>
                           💊 Кред. Доктор + карта партнёра
                         </button>
                       )}

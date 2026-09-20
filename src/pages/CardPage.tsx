@@ -52,9 +52,9 @@ export default function CardPage() {
   };
 
   return (
-    <div className="min-h-screen font-golos" style={{ background: "#0F0A1E" }}>
+    <div className="min-h-screen font-golos" style={{ background: "#1e110a" }}>
       {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass" style={{ borderBottom: "1px solid rgba(168,85,247,0.2)" }}>
+      <nav className="fixed top-0 left-0 right-0 z-50 glass" style={{ borderBottom: "1px solid rgba(240,153,74,0.2)" }}>
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <button onClick={() => navigate("/")} className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center">
@@ -77,7 +77,7 @@ export default function CardPage() {
       {/* HERO */}
       <section className="hero-bg pt-32 pb-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6" style={{ background: "rgba(124,58,237,0.2)", border: "1px solid rgba(168,85,247,0.3)", color: "#c084fc" }}>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6" style={{ background: "rgba(234,128,52,0.2)", border: "1px solid rgba(240,153,74,0.3)", color: "#fbbf7a" }}>
             <Icon name="CreditCard" size={14} />
             Новый продукт
           </div>
@@ -117,7 +117,7 @@ export default function CardPage() {
       </section>
 
       {/* ТАРИФЫ */}
-      <section className="py-20 px-4" style={{ background: "rgba(124,58,237,0.05)" }}>
+      <section className="py-20 px-4" style={{ background: "rgba(234,128,52,0.05)" }}>
         <div className="max-w-3xl mx-auto">
           <h2 className="font-oswald text-4xl font-bold text-white text-center mb-3">
             Тарифы и <span className="gradient-text">условия</span>
@@ -156,7 +156,7 @@ export default function CardPage() {
       </section>
 
       {/* ФОРМА */}
-      <section id="card-form" className="py-20 px-4" style={{ background: "rgba(124,58,237,0.05)" }}>
+      <section id="card-form" className="py-20 px-4" style={{ background: "rgba(234,128,52,0.05)" }}>
         <div className="max-w-xl mx-auto">
           <h2 className="font-oswald text-4xl font-bold text-white text-center mb-3">
             Заявка на <span className="gradient-text">карту</span>
@@ -181,7 +181,7 @@ export default function CardPage() {
                   value={form.fullName}
                   onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                   required
-                  className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                  className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors"
                   style={{ background: "rgba(255,255,255,0.05)" }}
                 />
               </div>
@@ -193,7 +193,7 @@ export default function CardPage() {
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   required
-                  className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                  className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors"
                   style={{ background: "rgba(255,255,255,0.05)" }}
                 />
               </div>
@@ -205,14 +205,14 @@ export default function CardPage() {
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   required
-                  className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                  className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors"
                   style={{ background: "rgba(255,255,255,0.05)" }}
                 />
               </div>
-              <div className="rounded-2xl border border-purple-500/40 overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.15), rgba(168,85,247,0.08))" }}>
+              <div className="rounded-2xl border border-orange-500/40 overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(234,128,52,0.15), rgba(240,153,74,0.08))" }}>
                 <div className="flex items-center gap-2 px-5 pt-4 pb-3 border-b border-white/10">
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(124,58,237,0.4)" }}>
-                    <Icon name="CreditCard" size={14} className="text-purple-300" />
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(234,128,52,0.4)" }}>
+                    <Icon name="CreditCard" size={14} className="text-orange-300" />
                   </div>
                   <span className="text-white/80 text-sm font-medium">Желаемый лимит</span>
                 </div>
@@ -229,7 +229,7 @@ export default function CardPage() {
                     value={limitVal}
                     onChange={(e) => { const v = Number(e.target.value); setLimitVal(v); setForm({ ...form, limit: String(v) }); }}
                     className="slider-custom w-full"
-                    style={{ background: `linear-gradient(to right, #7C3AED ${((limitVal - 5000) / (200000 - 5000)) * 100}%, rgba(124,58,237,0.2) ${((limitVal - 5000) / (200000 - 5000)) * 100}%)` }}
+                    style={{ background: `linear-gradient(to right, #EA8034 ${((limitVal - 5000) / (200000 - 5000)) * 100}%, rgba(234,128,52,0.2) ${((limitVal - 5000) / (200000 - 5000)) * 100}%)` }}
                   />
                   <div className="flex justify-between text-xs text-white/30 mt-1">
                     <span>5 000 ₽</span>
@@ -254,7 +254,7 @@ export default function CardPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="py-8 px-4 text-center border-t" style={{ borderColor: "rgba(168,85,247,0.15)" }}>
+      <footer className="py-8 px-4 text-center border-t" style={{ borderColor: "rgba(240,153,74,0.15)" }}>
         <p className="text-white/30 text-sm">© 2024 FINANS 24 · Лицензия ЦБ РФ · Все права защищены</p>
       </footer>
     </div>

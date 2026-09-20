@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import { useState } from "react";
 
 const CONDITIONS = [
-  { icon: "Banknote", title: "Сумма займа", value: "100 000 — 1 000 000 ₽", color: "#a855f7" },
+  { icon: "Banknote", title: "Сумма займа", value: "100 000 — 1 000 000 ₽", color: "#f0994a" },
   { icon: "Calendar", title: "Срок займа", value: "до 36 месяцев", color: "#06b6d4" },
   { icon: "Percent", title: "Ставка", value: "от 12% в месяц", color: "#22c55e" },
   { icon: "Clock", title: "Решение", value: "в течение 2 часов", color: "#f59e0b" },
@@ -30,9 +30,9 @@ const CAR_REQS = [
     icon: "Flag",
     title: "Отечественное производство",
     value: "не старше 5 лет",
-    color: "#a855f7",
-    bg: "rgba(168,85,247,0.1)",
-    border: "rgba(168,85,247,0.3)",
+    color: "#f0994a",
+    bg: "rgba(240,153,74,0.1)",
+    border: "rgba(240,153,74,0.3)",
     examples: "LADA, УАЗ, ГАЗ, Москвич...",
   },
 ];
@@ -54,7 +54,7 @@ export default function CarLoanPage() {
   };
 
   return (
-    <div className="min-h-screen font-golos" style={{ background: "#0F0A1E" }}>
+    <div className="min-h-screen font-golos" style={{ background: "#1e110a" }}>
       <Navbar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} scrollTo={scrollTo} />
 
       {/* HERO */}
@@ -64,7 +64,7 @@ export default function CarLoanPage() {
           <div className="absolute top-20 left-[-100px] w-[500px] h-[500px] rounded-full opacity-20 blur-3xl"
             style={{ background: "radial-gradient(circle, #f59e0b, transparent)" }} />
           <div className="absolute bottom-0 right-[-50px] w-[400px] h-[400px] rounded-full opacity-15 blur-3xl"
-            style={{ background: "radial-gradient(circle, #a855f7, transparent)" }} />
+            style={{ background: "radial-gradient(circle, #f0994a, transparent)" }} />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[200px] rounded-full opacity-10 blur-3xl"
             style={{ background: "radial-gradient(ellipse, #06b6d4, transparent)" }} />
         </div>
@@ -84,7 +84,7 @@ export default function CarLoanPage() {
 
               <h1 className="font-oswald text-5xl md:text-7xl font-bold leading-tight text-white mb-6">
                 ДЕНЬГИ ПОД<br />
-                <span style={{ background: "linear-gradient(135deg, #f59e0b, #ef4444, #a855f7)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                <span style={{ background: "linear-gradient(135deg, #f59e0b, #ef4444, #f0994a)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                   ЗАЛОГ АВТО
                 </span>
               </h1>
@@ -103,7 +103,7 @@ export default function CarLoanPage() {
                   <div key={s.l} className="rounded-2xl p-4 text-center"
                     style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
                     <div className="font-oswald text-2xl font-bold mb-1"
-                      style={{ background: "linear-gradient(135deg, #f59e0b, #a855f7)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                      style={{ background: "linear-gradient(135deg, #f59e0b, #f0994a)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                       {s.v}
                     </div>
                     <div className="text-white/40 text-xs">{s.l}</div>
@@ -128,7 +128,7 @@ export default function CarLoanPage() {
             <div className="relative">
               <div className="rounded-3xl p-8 relative overflow-hidden"
                 style={{
-                  background: "linear-gradient(135deg, rgba(245,158,11,0.1), rgba(239,68,68,0.08), rgba(168,85,247,0.1))",
+                  background: "linear-gradient(135deg, rgba(245,158,11,0.1), rgba(239,68,68,0.08), rgba(240,153,74,0.1))",
                   border: "1px solid rgba(245,158,11,0.3)",
                   boxShadow: "0 0 60px rgba(245,158,11,0.15)",
                 }}>
@@ -238,7 +238,7 @@ export default function CarLoanPage() {
       <section className="py-20 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <div className="inline-block glass px-4 py-1.5 rounded-full text-purple-300 text-sm mb-4">Документы</div>
+            <div className="inline-block glass px-4 py-1.5 rounded-full text-orange-300 text-sm mb-4">Документы</div>
             <h2 className="font-oswald text-4xl md:text-5xl font-bold text-white">
               МИНИМУМ <span className="gradient-text">ДОКУМЕНТОВ</span>
             </h2>
@@ -264,10 +264,10 @@ export default function CarLoanPage() {
       </section>
 
       {/* КАК РАБОТАЕТ */}
-      <section className="py-20 px-4" style={{ background: "rgba(124,58,237,0.05)" }}>
+      <section className="py-20 px-4" style={{ background: "rgba(234,128,52,0.05)" }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <div className="inline-block glass px-4 py-1.5 rounded-full text-purple-300 text-sm mb-4">Как получить</div>
+            <div className="inline-block glass px-4 py-1.5 rounded-full text-orange-300 text-sm mb-4">Как получить</div>
             <h2 className="font-oswald text-4xl md:text-5xl font-bold text-white">
               4 ПРОСТЫХ <span className="gradient-text">ШАГА</span>
             </h2>
@@ -288,14 +288,14 @@ export default function CarLoanPage() {
           {/* CTA */}
           <div className="rounded-3xl p-8 md:p-12 text-center relative overflow-hidden"
             style={{
-              background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(239,68,68,0.1), rgba(168,85,247,0.15))",
+              background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(239,68,68,0.1), rgba(240,153,74,0.15))",
               border: "1px solid rgba(245,158,11,0.3)",
             }}>
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
               <div className="absolute top-[-50px] left-[-50px] w-64 h-64 rounded-full opacity-20 blur-3xl"
                 style={{ background: "radial-gradient(circle, #f59e0b, transparent)" }} />
               <div className="absolute bottom-[-50px] right-[-50px] w-64 h-64 rounded-full opacity-20 blur-3xl"
-                style={{ background: "radial-gradient(circle, #a855f7, transparent)" }} />
+                style={{ background: "radial-gradient(circle, #f0994a, transparent)" }} />
             </div>
             <div className="relative z-10">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl mx-auto mb-6"

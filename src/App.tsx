@@ -27,7 +27,7 @@ function MaintenanceBanner() {
   if (pathname === "/admin") return null;
   return (
     <div style={{
-      background: "#7c3aed",
+      background: "#ea8034",
       color: "white",
       textAlign: "center",
       padding: "12px 16px",

@@ -2,7 +2,7 @@ import Icon from "@/components/ui/icon";
 
 const LOAN_STATUSES = [
   { value: "active",  label: "Активен",          color: "#4ade80" },
-  { value: "paid",    label: "Погашен",           color: "#a78bfa" },
+  { value: "paid",    label: "Погашен",           color: "#fdba74" },
   { value: "overdue", label: "Просрочен",         color: "#f87171" },
   { value: "review",  label: "На рассмотрении",   color: "#fbbf24" },
 ];
@@ -61,7 +61,7 @@ export default function AdminClients({
             <button
               onClick={() => { setSelectedUser(null); setClientTab("register"); setActionMsg(""); setActionErr(""); }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-              style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white" }}>
+              style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)", color: "white" }}>
               <Icon name="UserPlus" size={13} />Добавить
             </button>
           </div>
@@ -70,16 +70,16 @@ export default function AdminClients({
           <Icon name="Search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
           <input type="text" placeholder="Поиск по телефону или имени"
             value={search} onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-white text-sm placeholder-white/20 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-white text-sm placeholder-white/20 outline-none border border-white/10 focus:border-orange-500 transition-colors"
             style={{ background: "rgba(255,255,255,0.05)" }} />
         </div>
         <div className="overflow-y-auto space-y-2 pr-1" style={{ maxHeight: "calc(100vh - 210px)" }}>
-          {usersLoading && <div className="text-center py-10"><Icon name="Loader2" size={24} className="animate-spin text-purple-400 mx-auto" /></div>}
+          {usersLoading && <div className="text-center py-10"><Icon name="Loader2" size={24} className="animate-spin text-orange-400 mx-auto" /></div>}
           {!usersLoading && filtered.length === 0 && <p className="text-white/30 text-sm text-center py-8">Нет клиентов</p>}
           {filtered.map((user) => (
             <button key={user.id} onClick={() => onOpenUser(user)}
-              className="w-full text-left glass rounded-xl px-4 py-3 transition-all hover:border-purple-500/40"
-              style={{ border: selectedUser?.id === user.id ? "1px solid rgba(124,58,237,0.6)" : "1px solid transparent" }}>
+              className="w-full text-left glass rounded-xl px-4 py-3 transition-all hover:border-orange-500/40"
+              style={{ border: selectedUser?.id === user.id ? "1px solid rgba(234,128,52,0.6)" : "1px solid transparent" }}>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-white text-sm font-semibold">{user.phone}</span>
                 <span className="text-white/40 text-xs">{user.loanCount} займ.</span>
@@ -95,14 +95,14 @@ export default function AdminClients({
       <div className="flex-1 overflow-y-auto" style={{ maxHeight: "calc(100vh - 100px)" }}>
         {!selectedUser && clientTab !== "register" ? (
           <div className="flex flex-col items-center justify-center h-full text-center py-20">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: "rgba(124,58,237,0.15)" }}>
-              <Icon name="Users" size={28} className="text-purple-400" />
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: "rgba(234,128,52,0.15)" }}>
+              <Icon name="Users" size={28} className="text-orange-400" />
             </div>
             <p className="text-white/50 mb-4">Выберите клиента из списка слева</p>
             <button
               onClick={() => { setClientTab("register"); setActionMsg(""); setActionErr(""); }}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
-              style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white" }}>
+              style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)", color: "white" }}>
               <Icon name="UserPlus" size={15} />Добавить нового клиента
             </button>
           </div>
@@ -110,7 +110,7 @@ export default function AdminClients({
           <div className="pt-2">
             <div className="glass rounded-2xl p-6">
               <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                <Icon name="UserPlus" size={18} className="text-purple-400" />
+                <Icon name="UserPlus" size={18} className="text-orange-400" />
                 Новый клиент
               </h3>
               <form onSubmit={onRegisterClient} className="space-y-4">
@@ -124,7 +124,7 @@ export default function AdminClients({
                     <input type={type} required={required} placeholder={placeholder}
                       value={newClient[key as keyof typeof newClient]}
                       onChange={(e) => setNewClient({ ...newClient, [key]: e.target.value })}
-                      className="w-full rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/20 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                      className="w-full rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/20 outline-none border border-white/10 focus:border-orange-500 transition-colors"
                       style={{ background: "rgba(255,255,255,0.05)" }} />
                   </div>
                 ))}
@@ -167,7 +167,7 @@ export default function AdminClients({
                   style={clientTab === t
                     ? t === "offer"
                       ? { background: "linear-gradient(135deg,#0ea5e9,#38bdf8)", color: "white" }
-                      : { background: "linear-gradient(135deg,#7c3aed,#a855f7)", color: "white" }
+                      : { background: "linear-gradient(135deg,#ea8034,#f0994a)", color: "white" }
                     : { background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)" }}>
                   <Icon name={icon} size={14} />{label}
                 </button>
@@ -176,7 +176,7 @@ export default function AdminClients({
 
             {clientTab === "loans" && (
               <div className="space-y-3">
-                {loansLoad && <div className="text-center py-10"><Icon name="Loader2" size={24} className="animate-spin text-purple-400 mx-auto" /></div>}
+                {loansLoad && <div className="text-center py-10"><Icon name="Loader2" size={24} className="animate-spin text-orange-400 mx-auto" /></div>}
                 {!loansLoad && loans.length === 0 && <div className="glass rounded-2xl p-8 text-center text-white/40">У клиента нет займов</div>}
                 {loans.map((loan) => {
                   const st = LOAN_STATUSES.find((s) => s.value === loan.status) || LOAN_STATUSES[0];
@@ -224,13 +224,13 @@ export default function AdminClients({
                         <input type="number" required min={min} step={step} placeholder={placeholder}
                           value={newLoan[key as keyof typeof newLoan]}
                           onChange={(e) => setNewLoan({ ...newLoan, [key]: e.target.value })}
-                          className="w-full rounded-xl px-3 py-2.5 text-white text-sm placeholder-white/20 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                          className="w-full rounded-xl px-3 py-2.5 text-white text-sm placeholder-white/20 outline-none border border-white/10 focus:border-orange-500 transition-colors"
                           style={{ background: "rgba(255,255,255,0.05)" }} />
                       </div>
                     ))}
                   </div>
                   {newLoan.amount && newLoan.days && (
-                    <div className="rounded-xl px-4 py-3 text-sm" style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.3)" }}>
+                    <div className="rounded-xl px-4 py-3 text-sm" style={{ background: "rgba(234,128,52,0.12)", border: "1px solid rgba(234,128,52,0.3)" }}>
                       <span className="text-white/50">К возврату: </span>
                       <span className="text-white font-bold">
                         {(parseFloat(newLoan.amount) + parseFloat(newLoan.amount) * (parseFloat(newLoan.rate) / 100) * parseInt(newLoan.days)).toLocaleString("ru-RU", { maximumFractionDigits: 0 })} ₽
@@ -322,7 +322,7 @@ export default function AdminClients({
                       <input type={type} required={required} placeholder={placeholder}
                         value={newClient[key as keyof typeof newClient]}
                         onChange={(e) => setNewClient({ ...newClient, [key]: e.target.value })}
-                        className="w-full rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/20 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                        className="w-full rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/20 outline-none border border-white/10 focus:border-orange-500 transition-colors"
                         style={{ background: "rgba(255,255,255,0.05)" }} />
                     </div>
                   ))}

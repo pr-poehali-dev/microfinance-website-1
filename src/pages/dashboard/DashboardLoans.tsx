@@ -47,7 +47,7 @@ interface Application {
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
   active:   { label: "Займ выдан",      color: "#4ade80", bg: "rgba(74,222,128,0.15)" },
-  paid:     { label: "Погашен",         color: "#a78bfa", bg: "rgba(167,139,250,0.15)" },
+  paid:     { label: "Погашен",         color: "#fdba74", bg: "rgba(253,186,116,0.15)" },
   overdue:  { label: "Просрочен",       color: "#f87171", bg: "rgba(248,113,113,0.15)" },
   review:   { label: "На рассмотрении", color: "#fbbf24", bg: "rgba(251,191,36,0.15)" },
   signed:   { label: "Ожидает выдачи",  color: "#fbbf24", bg: "rgba(251,191,36,0.15)" },
@@ -72,8 +72,8 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
 
       {loans.length === 0 ? (
         <div className="glass rounded-2xl p-10 text-center">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(124,58,237,0.2)" }}>
-            <Icon name="FileText" size={28} className="text-purple-400" />
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(234,128,52,0.2)" }}>
+            <Icon name="FileText" size={28} className="text-orange-400" />
           </div>
           {application && application.status === "pending" ? (
             <>
@@ -102,7 +102,7 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
             return (
               <div key={loan.id} className="glass rounded-2xl overflow-hidden">
                 <div className="px-6 py-4 flex items-center justify-between border-b border-white/10"
-                  style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.2), rgba(168,85,247,0.08))" }}>
+                  style={{ background: "linear-gradient(135deg, rgba(234,128,52,0.2), rgba(240,153,74,0.08))" }}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 btn-neon rounded-xl flex items-center justify-center shrink-0">
                       <Icon name="CreditCard" size={18} className="text-white" />
@@ -144,15 +144,15 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                           rel="noopener noreferrer"
                           download
                           className="w-full flex items-center justify-center gap-3 py-3 rounded-xl font-semibold text-white transition-all hover:opacity-90"
-                          style={{ background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.4)", textDecoration: "none" }}
+                          style={{ background: "rgba(234,128,52,0.2)", border: "1px solid rgba(234,128,52,0.4)", textDecoration: "none" }}
                         >
                           <Icon name="FileDown" size={18} />
                           Скачать договор займа (PDF)
                         </a>
                       ) : (
                         <div className="rounded-xl px-4 py-3 flex items-center gap-3"
-                          style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.2)" }}>
-                          <Icon name="Loader2" size={16} className="text-purple-400 animate-spin shrink-0" />
+                          style={{ background: "rgba(234,128,52,0.08)", border: "1px solid rgba(234,128,52,0.2)" }}>
+                          <Icon name="Loader2" size={16} className="text-orange-400 animate-spin shrink-0" />
                           <span className="text-white/50 text-sm">Договор формируется, появится через минуту...</span>
                         </div>
                       )}
@@ -164,7 +164,7 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                       )}
                       <button onClick={() => onSign(loan)} disabled={signingId === loan.id}
                         className="w-full text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-60"
-                        style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", boxShadow: "0 4px 20px rgba(124,58,237,0.3)" }}>
+                        style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)", boxShadow: "0 4px 20px rgba(234,128,52,0.3)" }}>
                         {signingId === loan.id
                           ? <><Icon name="Loader2" size={16} className="animate-spin" />Подписываем...</>
                           : <><Icon name="PenLine" size={16} />Подписать договор</>
@@ -206,7 +206,7 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                   />
 
                   <div className="flex items-center justify-between rounded-xl px-5 py-4"
-                    style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.3)" }}>
+                    style={{ background: "rgba(234,128,52,0.12)", border: "1px solid rgba(234,128,52,0.3)" }}>
                     <div>
                       <div className="text-white/50 text-sm">{loan.paidTotal ? "Остаток к возврату" : "К возврату"}</div>
                       <div className="font-bold text-2xl gradient-text">{(loan.remaining ?? loan.total).toLocaleString("ru-RU")} ₽</div>
@@ -251,7 +251,7 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
             onClick={() => isRepeatClient
               ? window.scrollTo({ top: 0, behavior: "smooth" })
               : navigate("/")}
-            className="text-purple-400 hover:text-purple-300 text-sm flex items-center gap-2 mx-auto transition-colors"
+            className="text-orange-400 hover:text-orange-300 text-sm flex items-center gap-2 mx-auto transition-colors"
           >
             <Icon name="Plus" size={16} />
             Оформить ещё один займ

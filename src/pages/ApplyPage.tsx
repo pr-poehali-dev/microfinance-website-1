@@ -6,7 +6,7 @@ import ConsentDocuments, { ConsentState, DEFAULT_CONSENTS, REQUIRED_CONSENT_KEYS
 const API_URL = "https://functions.poehali.dev/29f70c88-f1f7-4926-9c65-c642fd11fdfb";
 const UPLOAD_URL = "https://functions.poehali.dev/45733e38-49ca-4566-9ae3-b5323aec9a63";
 
-const inputCls = "w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors text-sm";
+const inputCls = "w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors text-sm";
 const inputStyle = { background: "rgba(255,255,255,0.05)" };
 const labelCls = "text-white/70 text-sm mb-2 block font-medium";
 
@@ -147,14 +147,14 @@ export default function ApplyPage() {
   };
 
   const RATE = 0.005;
-  const amountBg = `linear-gradient(to right, #7C3AED ${((formAmount - 500) / (50000 - 500)) * 100}%, rgba(124,58,237,0.2) ${((formAmount - 500) / (50000 - 500)) * 100}%)`;
-  const daysBg = `linear-gradient(to right, #7C3AED ${((formDays - 15) / (365 - 15)) * 100}%, rgba(124,58,237,0.2) ${((formDays - 15) / (365 - 15)) * 100}%)`;
+  const amountBg = `linear-gradient(to right, #EA8034 ${((formAmount - 500) / (50000 - 500)) * 100}%, rgba(234,128,52,0.2) ${((formAmount - 500) / (50000 - 500)) * 100}%)`;
+  const daysBg = `linear-gradient(to right, #EA8034 ${((formDays - 15) / (365 - 15)) * 100}%, rgba(234,128,52,0.2) ${((formDays - 15) / (365 - 15)) * 100}%)`;
 
   const setF = (key: string, val: string) => setForm(p => ({ ...p, [key]: val }));
 
   if (submitted) {
     return (
-      <div className="min-h-screen font-golos flex items-center justify-center px-4" style={{ background: "#0F0A1E" }}>
+      <div className="min-h-screen font-golos flex items-center justify-center px-4" style={{ background: "#1e110a" }}>
         <div className="max-w-md w-full text-center">
           <div className="w-20 h-20 btn-neon rounded-3xl flex items-center justify-center mx-auto mb-6">
             <Icon name="CheckCircle" size={40} className="text-white" />
@@ -176,9 +176,9 @@ export default function ApplyPage() {
   }
 
   return (
-    <div className="min-h-screen font-golos" style={{ background: "#0F0A1E" }}>
+    <div className="min-h-screen font-golos" style={{ background: "#1e110a" }}>
       {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass" style={{ borderBottom: "1px solid rgba(168,85,247,0.2)" }}>
+      <nav className="fixed top-0 left-0 right-0 z-50 glass" style={{ borderBottom: "1px solid rgba(240,153,74,0.2)" }}>
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <button onClick={() => navigate("/")} className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center">
@@ -199,14 +199,14 @@ export default function ApplyPage() {
         <div className="text-center mb-10">
           {isCreditDoctor && (
             <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold mb-4"
-              style={{ background: "linear-gradient(135deg,rgba(168,85,247,0.25),rgba(236,72,153,0.2))", border: "1px solid rgba(168,85,247,0.5)", color: "#e879f9" }}>
+              style={{ background: "linear-gradient(135deg,rgba(240,153,74,0.25),rgba(236,72,153,0.2))", border: "1px solid rgba(240,153,74,0.5)", color: "#fb923c" }}>
               <Icon name="HeartPulse" size={15} />
               Программа «Кредитный Доктор»
             </div>
           )}
           {!isCreditDoctor && (
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-4"
-              style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.35)", color: "#c084fc" }}>
+              style={{ background: "rgba(234,128,52,0.15)", border: "1px solid rgba(234,128,52,0.35)", color: "#fbbf7a" }}>
               <Icon name="FileText" size={14} />
               Анкета заёмщика
             </div>
@@ -223,8 +223,8 @@ export default function ApplyPage() {
             <button key={s.id} onClick={() => setActiveSection(s.id)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
               style={{
-                background: activeSection === s.id ? "rgba(124,58,237,0.4)" : "rgba(255,255,255,0.05)",
-                border: activeSection === s.id ? "1px solid rgba(168,85,247,0.6)" : "1px solid rgba(255,255,255,0.08)",
+                background: activeSection === s.id ? "rgba(234,128,52,0.4)" : "rgba(255,255,255,0.05)",
+                border: activeSection === s.id ? "1px solid rgba(240,153,74,0.6)" : "1px solid rgba(255,255,255,0.08)",
                 color: activeSection === s.id ? "#e9d5ff" : "rgba(255,255,255,0.5)",
               }}>
               <Icon name={s.icon} size={13} />
@@ -274,7 +274,7 @@ export default function ApplyPage() {
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 text-sm">@</span>
                     <input type="text" placeholder="username" value={form.telegramId} onChange={e => setF("telegramId", e.target.value.replace(/^@/, ""))}
-                      className="w-full rounded-xl pl-8 pr-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors text-sm" style={inputStyle} />
+                      className="w-full rounded-xl pl-8 pr-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors text-sm" style={inputStyle} />
                   </div>
                 </div>
                 <div className="flex justify-end">
@@ -442,7 +442,7 @@ export default function ApplyPage() {
                     <span>15 дней</span><span>365 дней</span>
                   </div>
                 </div>
-                <div className="rounded-xl p-4" style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.3)" }}>
+                <div className="rounded-xl p-4" style={{ background: "rgba(234,128,52,0.12)", border: "1px solid rgba(234,128,52,0.3)" }}>
                   <div className="grid grid-cols-2 gap-3 text-center mb-3">
                     <div>
                       <div className="text-white/40 text-xs mb-1">Сумма</div>
@@ -460,7 +460,7 @@ export default function ApplyPage() {
                     </div>
                     <div>
                       <div className="text-white/40 text-xs mb-1">К возврату</div>
-                      <div className="text-purple-300 font-bold">{Math.round(formAmount * (1 + RATE * formDays)).toLocaleString("ru-RU")} ₽</div>
+                      <div className="text-orange-300 font-bold">{Math.round(formAmount * (1 + RATE * formDays)).toLocaleString("ru-RU")} ₽</div>
                     </div>
                   </div>
                 </div>
@@ -544,7 +544,7 @@ export default function ApplyPage() {
             <div key={s.id} onClick={() => setActiveSection(s.id)}
               className="w-2 h-2 rounded-full cursor-pointer transition-all"
               style={{
-                background: activeSection === s.id ? "#a855f7" : "rgba(255,255,255,0.15)",
+                background: activeSection === s.id ? "#f0994a" : "rgba(255,255,255,0.15)",
                 width: activeSection === s.id ? 24 : 8,
               }} />
           ))}

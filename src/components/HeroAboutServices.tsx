@@ -12,7 +12,7 @@ const SERVICES = [
     badge: "Популярно",
     rate: "от 0.8%/день",
     term: "до 30 дней",
-    color: "from-purple-600 to-violet-700",
+    color: "from-orange-600 to-orange-700",
   },
   {
     icon: "TrendingUp",
@@ -60,7 +60,7 @@ const SERVICES = [
     badge: "Только паспорт",
     rate: "от 9%/мес.",
     term: "до 24 месяцев",
-    color: "from-purple-600 to-cyan-600",
+    color: "from-orange-600 to-cyan-600",
     link: "/shop-loan",
   },
 ];
@@ -103,7 +103,7 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
       <section id="home" className="hero-bg min-h-screen flex items-center pt-20 relative overflow-hidden">
         <div
           className="absolute top-20 right-10 w-72 h-72 rounded-full opacity-20 blur-3xl pointer-events-none"
-          style={{ background: "radial-gradient(circle, #A855F7, transparent)" }}
+          style={{ background: "radial-gradient(circle, #F0994A, transparent)" }}
         />
         <div
           className="absolute bottom-20 left-10 w-96 h-96 rounded-full opacity-10 blur-3xl pointer-events-none"
@@ -112,7 +112,7 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
 
         <div className="max-w-7xl mx-auto px-4 py-20 grid lg:grid-cols-2 gap-12 items-center">
           <div>
-            <div className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full text-sm text-purple-300 mb-6">
+            <div className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full text-sm text-orange-300 mb-6">
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
               Онлайн 24/7 · Без отказов
             </div>
@@ -169,7 +169,7 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
             <div className="flex flex-wrap gap-6 mt-12">
               {HERO_STATS.map((s) => (
                 <div key={s.l}>
-                  <div className="font-oswald text-2xl font-bold text-purple-300">{s.v}</div>
+                  <div className="font-oswald text-2xl font-bold text-orange-300">{s.v}</div>
                   <div className="text-white/50 text-sm">{s.l}</div>
                 </div>
               ))}
@@ -179,12 +179,12 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
           <div className="relative hidden lg:block">
             <div
               className="relative rounded-3xl overflow-hidden"
-              style={{ boxShadow: "0 0 60px rgba(168,85,247,0.3)" }}
+              style={{ boxShadow: "0 0 60px rgba(240,153,74,0.3)" }}
             >
               <img src={HERO_IMAGE} alt="Быстрый займ" className="w-full h-96 object-cover" />
               <div
                 className="absolute inset-0"
-                style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.2), rgba(6,182,212,0.1))" }}
+                style={{ background: "linear-gradient(135deg, rgba(234,128,52,0.2), rgba(6,182,212,0.1))" }}
               />
             </div>
             <div className="absolute -bottom-6 -left-6 glass px-5 py-4 rounded-2xl animate-float">
@@ -203,13 +203,13 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
       </section>
 
       {/* ADVANTAGES */}
-      <section className="py-16" style={{ background: "rgba(124,58,237,0.05)" }}>
+      <section className="py-16" style={{ background: "rgba(234,128,52,0.05)" }}>
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {ADVANTAGES.map((a) => (
               <div key={a.label} className="glass card-hover rounded-2xl p-6 text-center">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-purple-600/20 flex items-center justify-center">
-                  <Icon name={a.icon} size={22} className="text-purple-400" />
+                <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-orange-600/20 flex items-center justify-center">
+                  <Icon name={a.icon} size={22} className="text-orange-400" />
                 </div>
                 <div className="font-oswald text-3xl font-bold gradient-text mb-1">{a.value}</div>
                 <div className="text-white/50 text-sm">{a.label}</div>
@@ -224,7 +224,7 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <div className="inline-block glass px-4 py-1.5 rounded-full text-purple-300 text-sm mb-4">
+              <div className="inline-block glass px-4 py-1.5 rounded-full text-orange-300 text-sm mb-4">
                 О компании
               </div>
               <h2 className="font-oswald text-4xl md:text-5xl font-bold text-white mb-6">
@@ -239,7 +239,7 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
               <div className="grid grid-cols-2 gap-4">
                 {ABOUT_FEATURES.map((f) => (
                   <div key={f.text} className="flex items-center gap-3 glass rounded-xl p-3">
-                    <Icon name={f.icon} size={18} className="text-purple-400 shrink-0" />
+                    <Icon name={f.icon} size={18} className="text-orange-400 shrink-0" />
                     <span className="text-white/80 text-sm">{f.text}</span>
                   </div>
                 ))}
@@ -267,10 +267,10 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
       </section>
 
       {/* SERVICES */}
-      <section id="services" className="py-24" style={{ background: "rgba(124,58,237,0.05)" }}>
+      <section id="services" className="py-24" style={{ background: "rgba(234,128,52,0.05)" }}>
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-14">
-            <div className="inline-block glass px-4 py-1.5 rounded-full text-purple-300 text-sm mb-4">
+            <div className="inline-block glass px-4 py-1.5 rounded-full text-orange-300 text-sm mb-4">
               Наши услуги
             </div>
             <h2 className="font-oswald text-4xl md:text-5xl font-bold text-white">
@@ -297,11 +297,11 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
                   <div className="flex justify-between mb-5">
                     <div>
                       <div className="text-white/40 text-xs mb-1">Ставка</div>
-                      <div className="text-purple-300 font-bold">{s.rate}</div>
+                      <div className="text-orange-300 font-bold">{s.rate}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-white/40 text-xs mb-1">Срок</div>
-                      <div className="text-purple-300 font-bold">{s.term}</div>
+                      <div className="text-orange-300 font-bold">{s.term}</div>
                     </div>
                   </div>
                   <button

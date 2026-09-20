@@ -1,7 +1,7 @@
 import Icon from "@/components/ui/icon";
 
 const DEFAULT_LINKS = [
-  { href: "https://pxl.leads.su/click/7f2581de7fb2fdca76f71fbac99adf14", label: "Оформить карту партнёра", color: "#7c3aed" },
+  { href: "https://pxl.leads.su/click/7f2581de7fb2fdca76f71fbac99adf14", label: "Оформить карту партнёра", color: "#ea8034" },
 ];
 
 interface Props {
@@ -10,16 +10,16 @@ interface Props {
 
 export default function PartnerCardLinks({ customUrl }: Props) {
   const LINKS = customUrl
-    ? [{ href: customUrl, label: "Оформить карту партнёра", color: "#7c3aed" }]
+    ? [{ href: customUrl, label: "Оформить карту партнёра", color: "#ea8034" }]
     : DEFAULT_LINKS;
 
   return (
     <div className="rounded-xl p-4 space-y-3"
-      style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.25)" }}>
+      style={{ background: "rgba(234,128,52,0.08)", border: "1px solid rgba(234,128,52,0.25)" }}>
       <div className="flex items-start gap-3">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
-          style={{ background: "rgba(168,85,247,0.2)" }}>
-          <Icon name="Wallet" size={16} className="text-purple-400" />
+          style={{ background: "rgba(240,153,74,0.2)" }}>
+          <Icon name="Wallet" size={16} className="text-orange-400" />
         </div>
         <div>
           <div className="text-white font-semibold mb-1">Получение дебетовой карты для идентификации</div>

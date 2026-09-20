@@ -21,13 +21,13 @@ function LoanSubmittedScreen({ timerSec, timerDone, fmtTime }: LoanSubmittedScre
           <div
             className="mx-auto w-40 h-40 rounded-full flex flex-col items-center justify-center mb-6"
             style={{
-              background: "conic-gradient(#7c3aed " + ((timerSec - 5 * 60) / (10 * 60) * 360) + "deg, rgba(255,255,255,0.07) 0deg)",
-              boxShadow: "0 0 40px rgba(124,58,237,0.4)",
+              background: "conic-gradient(#ea8034 " + ((timerSec - 5 * 60) / (10 * 60) * 360) + "deg, rgba(255,255,255,0.07) 0deg)",
+              boxShadow: "0 0 40px rgba(234,128,52,0.4)",
             }}
           >
             <div
               className="w-32 h-32 rounded-full flex flex-col items-center justify-center"
-              style={{ background: "#0F0A1E" }}
+              style={{ background: "#1e110a" }}
             >
               <span className="font-oswald text-4xl font-bold gradient-text leading-none">{fmtTime(timerSec)}</span>
               <span className="text-white/40 text-xs mt-1">осталось</span>
@@ -39,9 +39,9 @@ function LoanSubmittedScreen({ timerSec, timerDone, fmtTime }: LoanSubmittedScre
         <>
           <div
             className="mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-4"
-            style={{ background: "rgba(124,58,237,0.2)", boxShadow: "0 0 30px rgba(124,58,237,0.4)" }}
+            style={{ background: "rgba(234,128,52,0.2)", boxShadow: "0 0 30px rgba(234,128,52,0.4)" }}
           >
-            <Icon name="Phone" size={32} className="text-purple-400" />
+            <Icon name="Phone" size={32} className="text-orange-400" />
           </div>
           <p className="text-white font-semibold text-lg mb-2">Ожидайте звонка специалиста</p>
           <p className="text-white/50 text-sm">Мы скоро с вами свяжемся</p>

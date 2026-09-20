@@ -39,7 +39,7 @@ interface ShopApp {
 }
 
 const ST: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  pending:  { label: "На рассмотрении", color: "#a78bfa", bg: "rgba(168,85,247,0.12)", border: "rgba(168,85,247,0.3)" },
+  pending:  { label: "На рассмотрении", color: "#fdba74", bg: "rgba(240,153,74,0.12)", border: "rgba(240,153,74,0.3)" },
   signing:  { label: "На подписании",   color: "#60a5fa", bg: "rgba(96,165,250,0.12)", border: "rgba(96,165,250,0.3)" },
   approved: { label: "Одобрено",        color: "#4ade80", bg: "rgba(34,197,94,0.12)",  border: "rgba(34,197,94,0.3)" },
   rejected: { label: "Отказ",           color: "#f87171", bg: "rgba(239,68,68,0.12)",  border: "rgba(239,68,68,0.3)" },
@@ -225,7 +225,7 @@ export default function AdminShopLoans({ token }: Props) {
                           { url: app.file_snils,        label: "СНИЛС" },
                         ].filter(d => d.url).map(d => (
                           <button key={d.label} onClick={() => setLightbox(d.url)}
-                            style={{ padding: "5px 12px", borderRadius: 8, border: "1px solid rgba(168,85,247,0.3)", background: "rgba(168,85,247,0.1)", color: "#d8b4fe", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
+                            style={{ padding: "5px 12px", borderRadius: 8, border: "1px solid rgba(240,153,74,0.3)", background: "rgba(240,153,74,0.1)", color: "#fed7aa", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
                             <Icon name="Image" size={12} /> {d.label}
                           </button>
                         ))}
@@ -252,7 +252,7 @@ export default function AdminShopLoans({ token }: Props) {
                       </button>
                     )}
                     <button onClick={() => openEdit(app)}
-                      style={{ padding: "8px 18px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13, background: "linear-gradient(135deg,#a855f7,#06b6d4)", color: "white", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
+                      style={{ padding: "8px 18px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13, background: "linear-gradient(135deg,#f0994a,#06b6d4)", color: "white", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
                       <Icon name="Pencil" size={14} /> Редактировать
                     </button>
                   </div>
@@ -267,7 +267,7 @@ export default function AdminShopLoans({ token }: Props) {
       {selected && (
         <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
           onClick={() => setSelected(null)}>
-          <div style={{ background: "#1a1030", border: "1px solid rgba(168,85,247,0.3)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 530, maxHeight: "90vh", overflowY: "auto" }}
+          <div style={{ background: "#301b10", border: "1px solid rgba(240,153,74,0.3)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 530, maxHeight: "90vh", overflowY: "auto" }}
             onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <div>
@@ -350,7 +350,7 @@ export default function AdminShopLoans({ token }: Props) {
                   Отмена
                 </button>
                 <button onClick={save} disabled={saving}
-                  style={{ flex: 2, padding: 11, borderRadius: 10, border: "none", cursor: "pointer", background: "linear-gradient(135deg,#a855f7,#06b6d4)", color: "white", fontWeight: 700, opacity: saving ? 0.7 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  style={{ flex: 2, padding: 11, borderRadius: 10, border: "none", cursor: "pointer", background: "linear-gradient(135deg,#f0994a,#06b6d4)", color: "white", fontWeight: 700, opacity: saving ? 0.7 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                   {saving ? <><Icon name="Loader" size={14} className="animate-spin" />Сохранение...</> : <><Icon name="Check" size={14} />Сохранить</>}
                 </button>
               </div>

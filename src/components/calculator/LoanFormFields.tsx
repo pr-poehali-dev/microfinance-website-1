@@ -32,7 +32,7 @@ interface LoanFormFieldsProps {
   onSubmit: (e: React.FormEvent) => void;
 }
 
-const inputCls = "w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors";
+const inputCls = "w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors";
 const inputStyle = { background: "rgba(255,255,255,0.05)" };
 
 const FILE_FIELDS = [
@@ -50,8 +50,8 @@ export default function LoanFormFields({
   const calc = useMemo(() => {
     const interest = Math.round(formAmount * 0.008 * formDays);
     const total = formAmount + interest;
-    const amountBg = `linear-gradient(to right, #7C3AED ${((formAmount - 5000) / (100000 - 5000)) * 100}%, rgba(124,58,237,0.2) ${((formAmount - 5000) / (100000 - 5000)) * 100}%)`;
-    const daysBg = `linear-gradient(to right, #7C3AED ${((formDays - 5) / (365 - 5)) * 100}%, rgba(124,58,237,0.2) ${((formDays - 5) / (365 - 5)) * 100}%)`;
+    const amountBg = `linear-gradient(to right, #EA8034 ${((formAmount - 5000) / (100000 - 5000)) * 100}%, rgba(234,128,52,0.2) ${((formAmount - 5000) / (100000 - 5000)) * 100}%)`;
+    const daysBg = `linear-gradient(to right, #EA8034 ${((formDays - 5) / (365 - 5)) * 100}%, rgba(234,128,52,0.2) ${((formDays - 5) / (365 - 5)) * 100}%)`;
     return { interest, total, amountBg, daysBg };
   }, [formAmount, formDays]);
 
@@ -116,7 +116,7 @@ export default function LoanFormFields({
             placeholder="username"
             value={form.telegramId}
             onChange={(e) => setForm({ ...form, telegramId: e.target.value.replace(/^@/, "") })}
-            className="w-full rounded-xl pl-8 pr-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+            className="w-full rounded-xl pl-8 pr-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors"
             style={inputStyle}
           />
         </div>
@@ -200,10 +200,10 @@ export default function LoanFormFields({
       </div>
 
       {/* КАЛЬКУЛЯТОР */}
-      <div className="rounded-2xl border border-purple-500/40 overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.15), rgba(168,85,247,0.08))" }}>
+      <div className="rounded-2xl border border-orange-500/40 overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(234,128,52,0.15), rgba(240,153,74,0.08))" }}>
         <div className="flex items-center gap-2 px-5 pt-4 pb-3 border-b border-white/10">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(124,58,237,0.4)" }}>
-            <Icon name="Calculator" size={14} className="text-purple-300" />
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(234,128,52,0.4)" }}>
+            <Icon name="Calculator" size={14} className="text-orange-300" />
           </div>
           <span className="text-white/80 text-sm font-medium">Параметры займа</span>
         </div>
@@ -282,11 +282,11 @@ export default function LoanFormFields({
           {FILE_FIELDS.map(({ key, label }) => (
             <label
               key={key}
-              className="flex items-center gap-3 rounded-xl px-4 py-3 border border-white/10 cursor-pointer hover:border-purple-500 transition-colors"
+              className="flex items-center gap-3 rounded-xl px-4 py-3 border border-white/10 cursor-pointer hover:border-orange-500 transition-colors"
               style={{ background: "rgba(255,255,255,0.05)" }}
             >
-              <div className="w-8 h-8 rounded-lg bg-purple-600/20 flex items-center justify-center shrink-0">
-                <Icon name={files[key] ? "CheckCircle" : "Upload"} size={16} className={files[key] ? "text-green-400" : "text-purple-400"} />
+              <div className="w-8 h-8 rounded-lg bg-orange-600/20 flex items-center justify-center shrink-0">
+                <Icon name={files[key] ? "CheckCircle" : "Upload"} size={16} className={files[key] ? "text-green-400" : "text-orange-400"} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-white/70 text-sm">{label}</div>
@@ -320,7 +320,7 @@ export default function LoanFormFields({
       {sending && (
         <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
           <div
-            className="h-full bg-purple-400 rounded-full animate-pulse"
+            className="h-full bg-orange-400 rounded-full animate-pulse"
             style={{ width: sendStep.startsWith("Отправляем") ? "90%" : sendStep.includes("4") ? "75%" : sendStep.includes("3") ? "55%" : sendStep.includes("2") ? "35%" : "15%" }}
           />
         </div>

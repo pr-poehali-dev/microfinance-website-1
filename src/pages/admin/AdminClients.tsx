@@ -141,12 +141,12 @@ export default function AdminClients({
         <input placeholder="Поиск по телефону или имени" value={search} onChange={e => setSearch(e.target.value)}
           style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "10px 14px", color: "white", fontSize: 14, width: "100%", boxSizing: "border-box", marginBottom: 12, outline: "none" }} />
         <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 220px)", display: "flex", flexDirection: "column", gap: 8 }}>
-          {usersLoading && <div style={{ textAlign: "center", padding: 40 }}><Icon name="Loader2" size={28} className="animate-spin text-purple-400" /></div>}
+          {usersLoading && <div style={{ textAlign: "center", padding: 40 }}><Icon name="Loader2" size={28} className="animate-spin text-orange-400" /></div>}
           {!usersLoading && filtered.length === 0 && <p style={{ color: "rgba(255,255,255,0.3)", textAlign: "center", padding: 40 }}>Нет клиентов</p>}
           {filtered.map(u => (
             <div key={u.id} style={{ position: "relative" }}>
               <button onClick={() => { setSelUser(u); setClientView("loans"); setActionMsg(""); setActionErr(""); onLoadLoans(u.id); }}
-                style={{ ...GLASS, padding: "12px 14px", paddingRight: 40, cursor: "pointer", textAlign: "left", width: "100%", border: selUser?.id === u.id ? "1px solid rgba(124,58,237,0.6)" : "1px solid rgba(255,255,255,0.08)", borderRadius: 12 }}>
+                style={{ ...GLASS, padding: "12px 14px", paddingRight: 40, cursor: "pointer", textAlign: "left", width: "100%", border: selUser?.id === u.id ? "1px solid rgba(234,128,52,0.6)" : "1px solid rgba(255,255,255,0.08)", borderRadius: 12 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                   <span style={{ color: "white", fontWeight: 600, fontSize: 14 }}>{u.phone}</span>
                   <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>{u.loanCount} займ.</span>
@@ -157,7 +157,7 @@ export default function AdminClients({
               <button
                 onClick={(e) => { e.stopPropagation(); setSelUser(u); setClientView("edit"); setActionMsg(""); setActionErr(""); }}
                 title="Редактировать клиента"
-                style={{ position: "absolute", top: 8, right: 8, background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 8, padding: "4px 6px", cursor: "pointer", color: "#a78bfa", display: "flex", alignItems: "center" }}>
+                style={{ position: "absolute", top: 8, right: 8, background: "rgba(234,128,52,0.2)", border: "1px solid rgba(234,128,52,0.3)", borderRadius: 8, padding: "4px 6px", cursor: "pointer", color: "#fdba74", display: "flex", alignItems: "center" }}>
                 <Icon name="Pencil" size={13} />
               </button>
             </div>
@@ -192,7 +192,7 @@ export default function AdminClients({
                 <button key={v} onClick={() => { setClientView(v); setActionMsg(""); setActionErr(""); }}
                   style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13, display: "flex", alignItems: "center", gap: 6,
                     background: clientView === v
-                      ? (v === "offer" ? "linear-gradient(135deg,#0ea5e9,#38bdf8)" : v === "edit" ? "linear-gradient(135deg,#d97706,#f59e0b)" : v === "docs" ? "linear-gradient(135deg,#059669,#10b981)" : "linear-gradient(135deg,#7c3aed,#a855f7)")
+                      ? (v === "offer" ? "linear-gradient(135deg,#0ea5e9,#38bdf8)" : v === "edit" ? "linear-gradient(135deg,#d97706,#f59e0b)" : v === "docs" ? "linear-gradient(135deg,#059669,#10b981)" : "linear-gradient(135deg,#ea8034,#f0994a)")
                       : "rgba(255,255,255,0.07)",
                     color: clientView === v ? "white" : "rgba(255,255,255,0.5)" }}>
                   <Icon name={icon} size={13} />{label}
@@ -201,16 +201,16 @@ export default function AdminClients({
               {selUser && (
                 <button onClick={() => { setClientView("creditdoctor" as typeof clientView); setActionMsg(""); setActionErr(""); }}
                   style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 6,
-                    background: clientView === ("creditdoctor" as typeof clientView) ? "linear-gradient(135deg,#a855f7,#ec4899)" : "rgba(168,85,247,0.15)",
-                    color: clientView === ("creditdoctor" as typeof clientView) ? "white" : "#d8b4fe",
-                    border: "1px solid rgba(168,85,247,0.35)",
-                    boxShadow: clientView === ("creditdoctor" as typeof clientView) ? "0 0 14px rgba(168,85,247,0.4)" : "none" }}>
+                    background: clientView === ("creditdoctor" as typeof clientView) ? "linear-gradient(135deg,#f0994a,#ec4899)" : "rgba(240,153,74,0.15)",
+                    color: clientView === ("creditdoctor" as typeof clientView) ? "white" : "#fed7aa",
+                    border: "1px solid rgba(240,153,74,0.35)",
+                    boxShadow: clientView === ("creditdoctor" as typeof clientView) ? "0 0 14px rgba(240,153,74,0.4)" : "none" }}>
                   💊 Кредитный Доктор
                 </button>
               )}
               <button onClick={() => { setSelUser(null); setClientView("addclient"); setActionMsg(""); setActionErr(""); }}
                 style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13, display: "flex", alignItems: "center", gap: 6,
-                  background: clientView === "addclient" ? "linear-gradient(135deg,#7c3aed,#a855f7)" : "rgba(255,255,255,0.07)",
+                  background: clientView === "addclient" ? "linear-gradient(135deg,#ea8034,#f0994a)" : "rgba(255,255,255,0.07)",
                   color: clientView === "addclient" ? "white" : "rgba(255,255,255,0.5)" }}>
                 <Icon name="UserPlus" size={13} />Новый клиент
               </button>
@@ -250,17 +250,17 @@ export default function AdminClients({
 
             {/* Кредитный Доктор */}
             {(clientView as string) === "creditdoctor" && selUser && (
-              <div style={{ ...GLASS, padding: 24, border: "1px solid rgba(168,85,247,0.4)", background: "rgba(168,85,247,0.04)" }}>
+              <div style={{ ...GLASS, padding: 24, border: "1px solid rgba(240,153,74,0.4)", background: "rgba(240,153,74,0.04)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg,#a855f7,#ec4899)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>💊</div>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg,#f0994a,#ec4899)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>💊</div>
                   <div>
                     <h3 style={{ color: "white", fontWeight: 700, margin: 0, fontSize: 18 }}>Кредитный Доктор</h3>
                     <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, margin: 0 }}>Одобрить займ по программе восстановления кредитной истории</p>
                   </div>
                 </div>
 
-                <div style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.2)", borderRadius: 12, padding: "12px 16px", marginBottom: 20, marginTop: 12 }}>
-                  <div style={{ color: "#d8b4fe", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>💡 Программа Кредитный Доктор</div>
+                <div style={{ background: "rgba(240,153,74,0.08)", border: "1px solid rgba(240,153,74,0.2)", borderRadius: 12, padding: "12px 16px", marginBottom: 20, marginTop: 12 }}>
+                  <div style={{ color: "#fed7aa", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>💡 Программа Кредитный Доктор</div>
                   <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, lineHeight: 1.6 }}>
                     Займ выдаётся через карту партнёра. Клиент восстанавливает кредитную историю поэтапно:<br/>
                     Этап 1: 500–5 000 ₽ · Этап 2: до 15 000 ₽ · Этап 3: до 30 000 ₽ · Этап 4: до 50 000 ₽
@@ -290,7 +290,7 @@ export default function AdminClients({
                         <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 6 }}>{label}</div>
                         <input type="number" step="any" placeholder={placeholder} value={cdForm[key]}
                           onChange={e => setCdForm(p => ({ ...p, [key]: e.target.value }))} required
-                          style={{ ...INPUT, border: "1px solid rgba(168,85,247,0.35)" }} />
+                          style={{ ...INPUT, border: "1px solid rgba(240,153,74,0.35)" }} />
                       </div>
                     ))}
                   </div>
@@ -305,14 +305,14 @@ export default function AdminClients({
                       ].map(({ l, v }) => (
                         <div key={l}>
                           <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>{l}</div>
-                          <div style={{ color: "#e879f9", fontWeight: 700, fontSize: 14 }}>{v}</div>
+                          <div style={{ color: "#fb923c", fontWeight: 700, fontSize: 14 }}>{v}</div>
                         </div>
                       ))}
                     </div>
                   )}
 
                   <button type="submit" disabled={cdSaving}
-                    style={{ background: "linear-gradient(135deg,#a855f7,#ec4899)", color: "white", border: "none", borderRadius: 12, padding: "14px", cursor: cdSaving ? "not-allowed" : "pointer", fontWeight: 700, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, opacity: cdSaving ? 0.7 : 1, boxShadow: "0 0 20px rgba(168,85,247,0.3)" }}>
+                    style={{ background: "linear-gradient(135deg,#f0994a,#ec4899)", color: "white", border: "none", borderRadius: 12, padding: "14px", cursor: cdSaving ? "not-allowed" : "pointer", fontWeight: 700, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, opacity: cdSaving ? 0.7 : 1, boxShadow: "0 0 20px rgba(240,153,74,0.3)" }}>
                     {cdSaving ? <><Icon name="Loader2" size={18} className="animate-spin" />Создаём займ...</> : <>💊 Одобрить по Кредитному Доктору</>}
                   </button>
                 </form>
@@ -354,7 +354,7 @@ export default function AdminClients({
             {/* Займы */}
             {clientView === "loans" && selUser && (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {loansLoading && <div style={{ textAlign: "center", padding: 40 }}><Icon name="Loader2" size={28} className="animate-spin text-purple-400" /></div>}
+                {loansLoading && <div style={{ textAlign: "center", padding: 40 }}><Icon name="Loader2" size={28} className="animate-spin text-orange-400" /></div>}
                 {!loansLoading && loans.length === 0 && <div style={{ ...GLASS, padding: 40, textAlign: "center", color: "rgba(255,255,255,0.3)" }}>У клиента нет займов</div>}
                 {loans.map(loan => {
                   const st = STATUS[loan.status] || STATUS.active;

@@ -72,7 +72,7 @@ export default function AdminLoanDetailModal({ token, type, id, onClose }: Props
           <img src={lightbox} style={{ maxWidth: "90vw", maxHeight: "90vh", borderRadius: 16 }} />
         </div>
       )}
-      <div style={{ background: "#1a1030", border: "1px solid rgba(14,165,233,0.3)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 640, maxHeight: "90vh", overflowY: "auto" }}
+      <div style={{ background: "#301b10", border: "1px solid rgba(14,165,233,0.3)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 640, maxHeight: "90vh", overflowY: "auto" }}
         onClick={e => e.stopPropagation()}>
         {loading ? (
           <div style={{ textAlign: "center", padding: 60, color: "rgba(255,255,255,0.4)" }}>
@@ -107,7 +107,7 @@ export default function AdminLoanDetailModal({ token, type, id, onClose }: Props
               <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                 {[
                   { label: "Заявка подана", date: data.createdAt, icon: "FileText", color: "#94a3b8", done: !!data.createdAt },
-                  { label: "Договор подписан", date: data.signedAt, icon: "FileSignature", color: "#a78bfa", done: !!data.signed },
+                  { label: "Договор подписан", date: data.signedAt, icon: "FileSignature", color: "#fdba74", done: !!data.signed },
                   { label: "Займ выдан", date: data.disbursedAt, icon: "Banknote", color: "#38bdf8", done: !!data.disbursedAt },
                 ].map((s, i, arr) => (
                   <div key={s.label} style={{ display: "flex", gap: 10 }}>

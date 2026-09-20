@@ -23,12 +23,12 @@ export default function PayLoanModal({ amount, contractNumber, fullName, onClose
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
       onClick={onClose}>
-      <div className="glass" style={{ borderRadius: 20, padding: 0, width: "100%", maxWidth: 440, overflow: "hidden", border: "1px solid rgba(124,58,237,0.4)" }}
+      <div className="glass" style={{ borderRadius: 20, padding: 0, width: "100%", maxWidth: 440, overflow: "hidden", border: "1px solid rgba(234,128,52,0.4)" }}
         onClick={(e) => e.stopPropagation()}>
         <div className="px-6 py-5 flex items-center justify-between"
-          style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.3),rgba(168,85,247,0.1))" }}>
+          style={{ background: "linear-gradient(135deg,rgba(234,128,52,0.3),rgba(240,153,74,0.1))" }}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(124,58,237,0.3)" }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(234,128,52,0.3)" }}>
               <Icon name="Banknote" size={20} className="text-white" />
             </div>
             <div className="text-white font-bold text-lg">Погашение займа</div>
@@ -39,7 +39,7 @@ export default function PayLoanModal({ amount, contractNumber, fullName, onClose
         </div>
 
         <div className="px-6 py-5 space-y-4">
-          <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.3)" }}>
+          <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ background: "rgba(234,128,52,0.1)", border: "1px solid rgba(234,128,52,0.3)" }}>
             <span className="text-white/50 text-sm">Сумма к оплате</span>
             <span className="font-bold text-2xl gradient-text">{amount.toLocaleString("ru-RU")} ₽</span>
           </div>

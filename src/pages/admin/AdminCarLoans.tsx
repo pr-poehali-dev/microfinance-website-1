@@ -247,7 +247,7 @@ export default function AdminCarLoans({ token }: Props) {
       {editing && selected && (
         <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
           onClick={() => setEditing(false)}>
-          <div style={{ background: "#1a1030", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 520, maxHeight: "90vh", overflowY: "auto" }}
+          <div style={{ background: "#301b10", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 520, maxHeight: "90vh", overflowY: "auto" }}
             onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <div>

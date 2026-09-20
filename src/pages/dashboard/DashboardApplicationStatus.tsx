@@ -196,7 +196,7 @@ export default function DashboardApplicationStatus({
                 <div className="text-white font-semibold">Заявка №{fmtAppId(application.id)} принята</div>
                 {application.isCreditDoctor && (
                   <span className="text-xs px-2.5 py-1 rounded-full font-bold inline-flex items-center gap-1"
-                    style={{ background: "linear-gradient(135deg,rgba(168,85,247,0.35),rgba(236,72,153,0.25))", color: "#e879f9", border: "1px solid rgba(168,85,247,0.5)" }}>
+                    style={{ background: "linear-gradient(135deg,rgba(240,153,74,0.35),rgba(236,72,153,0.25))", color: "#fb923c", border: "1px solid rgba(240,153,74,0.5)" }}>
                     💊 Кредитный Доктор
                   </span>
                 )}
@@ -234,33 +234,33 @@ export default function DashboardApplicationStatus({
       {/* БЛОК СТАТУСА ЗАЯВКИ: PARTNER_CARD — оформление карты партнёра */}
       {application && application.status === "partner_card" && mainLoan(loans)?.status !== "paid" && (
         <div className="glass rounded-2xl overflow-hidden mb-6"
-          style={{ border: "1px solid rgba(168,85,247,0.4)", background: "rgba(168,85,247,0.03)" }}>
+          style={{ border: "1px solid rgba(240,153,74,0.4)", background: "rgba(240,153,74,0.03)" }}>
           <div className="px-6 py-4 flex items-center gap-3"
-            style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.3),rgba(168,85,247,0.1))" }}>
+            style={{ background: "linear-gradient(135deg,rgba(234,128,52,0.3),rgba(240,153,74,0.1))" }}>
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: "rgba(168,85,247,0.2)" }}>
-              <Icon name="CheckCircle" size={20} className="text-purple-400" />
+              style={{ background: "rgba(240,153,74,0.2)" }}>
+              <Icon name="CheckCircle" size={20} className="text-orange-400" />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <div className="text-white font-bold">Ваша заявка одобрена!</div>
                 {application.isCreditDoctor && (
                   <span className="text-xs px-2.5 py-1 rounded-full font-bold inline-flex items-center gap-1"
-                    style={{ background: "linear-gradient(135deg,rgba(168,85,247,0.35),rgba(236,72,153,0.25))", color: "#e879f9", border: "1px solid rgba(168,85,247,0.5)" }}>
+                    style={{ background: "linear-gradient(135deg,rgba(240,153,74,0.35),rgba(236,72,153,0.25))", color: "#fb923c", border: "1px solid rgba(240,153,74,0.5)" }}>
                     💊 Кредитный Доктор
                   </span>
                 )}
               </div>
-              <div className="text-purple-300 text-xs mt-0.5">Подана {application.createdAt}</div>
+              <div className="text-orange-300 text-xs mt-0.5">Подана {application.createdAt}</div>
             </div>
             <span className="text-xs px-3 py-1 rounded-full font-semibold"
-              style={{ background: "rgba(168,85,247,0.2)", color: "#c084fc" }}>Одобрено</span>
+              style={{ background: "rgba(240,153,74,0.2)", color: "#fbbf7a" }}>Одобрено</span>
           </div>
           <div className="px-6 py-6 space-y-5">
             {application.approvedAmount && (
               <div className="rounded-xl p-4"
-                style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.3)" }}>
-                <div className="text-purple-300 text-xs font-semibold uppercase tracking-wider mb-3">Условия вашего займа</div>
+                style={{ background: "rgba(234,128,52,0.1)", border: "1px solid rgba(234,128,52,0.3)" }}>
+                <div className="text-orange-300 text-xs font-semibold uppercase tracking-wider mb-3">Условия вашего займа</div>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="rounded-lg p-3 text-center" style={{ background: "rgba(255,255,255,0.05)" }}>
                     <div className="text-white/40 text-xs mb-1">Сумма</div>
@@ -272,17 +272,17 @@ export default function DashboardApplicationStatus({
                   </div>
                   <div className="rounded-lg p-3 text-center" style={{ background: "rgba(255,255,255,0.05)" }}>
                     <div className="text-white/40 text-xs mb-1">К возврату</div>
-                    <div className="text-purple-300 font-bold">{application.approvedTotal.toLocaleString("ru-RU")} ₽</div>
+                    <div className="text-orange-300 font-bold">{application.approvedTotal.toLocaleString("ru-RU")} ₽</div>
                   </div>
                 </div>
               </div>
             )}
             <div className="rounded-xl p-5 space-y-4"
-              style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.25)" }}>
+              style={{ background: "rgba(234,128,52,0.08)", border: "1px solid rgba(234,128,52,0.25)" }}>
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
-                  style={{ background: "rgba(168,85,247,0.2)" }}>
-                  <Icon name="CreditCard" size={16} className="text-purple-400" />
+                  style={{ background: "rgba(240,153,74,0.2)" }}>
+                  <Icon name="CreditCard" size={16} className="text-orange-400" />
                 </div>
                 <div>
                   <div className="text-white font-semibold mb-1">Для получения займа необходима карта партнёра</div>
@@ -294,7 +294,7 @@ export default function DashboardApplicationStatus({
               {/* Поле номера карты для partner_card */}
               <div className="space-y-2">
                 <div className="text-white/70 text-sm font-medium flex items-center gap-2">
-                  <Icon name="Wallet" size={15} className="text-purple-400" />
+                  <Icon name="Wallet" size={15} className="text-orange-400" />
                   Укажите реквизиты для перевода займа
                 </div>
                 <div className="flex gap-2">
@@ -310,7 +310,7 @@ export default function DashboardApplicationStatus({
                   {!cardSaved ? (
                     <button onClick={onSaveCard} disabled={cardSaving}
                       className="px-4 py-3 rounded-xl text-white text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-60 flex items-center gap-2"
-                      style={{ background: "rgba(124,58,237,0.4)", border: "1px solid rgba(124,58,237,0.5)" }}>
+                      style={{ background: "rgba(234,128,52,0.4)", border: "1px solid rgba(234,128,52,0.5)" }}>
                       {cardSaving ? <Icon name="Loader2" size={15} className="animate-spin" /> : <Icon name="Save" size={15} />}
                       Сохранить
                     </button>
@@ -362,7 +362,7 @@ export default function DashboardApplicationStatus({
                 return (
                   <button onClick={onConfirm} disabled={confirming}
                     className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-60"
-                    style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", boxShadow: "0 4px 20px rgba(124,58,237,0.35)" }}>
+                    style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)", boxShadow: "0 4px 20px rgba(234,128,52,0.35)" }}>
                     {confirming ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="PenLine" size={18} />}
                     {confirming ? "Подписываем..." : "Подписать договор"}
                   </button>
@@ -372,8 +372,8 @@ export default function DashboardApplicationStatus({
               <div className="grid sm:grid-cols-2 gap-3">
                 <a href="tel:+74956635124"
                   className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:opacity-90"
-                  style={{ background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.4)" }}>
-                  <Icon name="Phone" size={18} className="text-purple-400 shrink-0" />
+                  style={{ background: "rgba(234,128,52,0.2)", border: "1px solid rgba(234,128,52,0.4)" }}>
+                  <Icon name="Phone" size={18} className="text-orange-400 shrink-0" />
                   <div>
                     <div className="text-white font-medium text-sm">Позвонить менеджеру</div>
                     <div className="text-white/40 text-xs">+7 (495) 663-51-24</div>
@@ -381,8 +381,8 @@ export default function DashboardApplicationStatus({
                 </a>
                 <a href="https://t.me/INVESTORFINANS24" target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:opacity-90"
-                  style={{ background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.4)" }}>
-                  <Icon name="Send" size={18} className="text-purple-400 shrink-0" />
+                  style={{ background: "rgba(234,128,52,0.2)", border: "1px solid rgba(234,128,52,0.4)" }}>
+                  <Icon name="Send" size={18} className="text-orange-400 shrink-0" />
                   <div>
                     <div className="text-white font-medium text-sm">Написать в Telegram</div>
                     <div className="text-white/40 text-xs">@INVESTORFINANS24</div>
@@ -397,25 +397,25 @@ export default function DashboardApplicationStatus({
       {/* КОМПАКТНАЯ ИСТОРИЯ: заявка одобрена, займ уже погашен — не показываем громоздкий блок ввода карты/подписи */}
       {application && (application.status === "approved" || application.status === "partner_card") && mainLoan(loans)?.status === "paid" && (
         <div className="glass rounded-2xl overflow-hidden mb-6"
-          style={{ border: "1px solid rgba(167,139,250,0.4)", background: "rgba(167,139,250,0.04)" }}>
+          style={{ border: "1px solid rgba(253,186,116,0.4)", background: "rgba(253,186,116,0.04)" }}>
           <div className="px-6 py-4 flex items-center gap-3"
-            style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.25),rgba(167,139,250,0.08))" }}>
+            style={{ background: "linear-gradient(135deg,rgba(234,128,52,0.25),rgba(253,186,116,0.08))" }}>
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: "rgba(167,139,250,0.2)" }}>
-              <Icon name="BadgeCheck" size={20} className="text-purple-300" />
+              style={{ background: "rgba(253,186,116,0.2)" }}>
+              <Icon name="BadgeCheck" size={20} className="text-orange-300" />
             </div>
             <div className="flex-1">
               <div className="text-white font-bold">Заявка №{fmtAppId(application.id)} — займ погашен</div>
-              <div className="text-purple-300 text-xs mt-0.5">Одобрено {application.createdAt}</div>
+              <div className="text-orange-300 text-xs mt-0.5">Одобрено {application.createdAt}</div>
             </div>
             <span className="text-xs px-3 py-1 rounded-full font-semibold"
-              style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa" }}>Погашен ✔️</span>
+              style={{ background: "rgba(253,186,116,0.2)", color: "#fdba74" }}>Погашен ✔️</span>
           </div>
           <div className="px-6 py-4">
             <button
               onClick={() => document.getElementById("my-loans")?.scrollIntoView({ behavior: "smooth" })}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-white transition-all hover:opacity-90"
-              style={{ background: "rgba(167,139,250,0.15)", border: "1px solid rgba(167,139,250,0.35)" }}
+              style={{ background: "rgba(253,186,116,0.15)", border: "1px solid rgba(253,186,116,0.35)" }}
             >
               <Icon name="History" size={16} />
               Смотреть историю платежей
@@ -439,7 +439,7 @@ export default function DashboardApplicationStatus({
                 <div className="text-white font-bold">Заявка №{fmtAppId(application.id)} одобрена!</div>
                 {application.isCreditDoctor && (
                   <span className="text-xs px-2.5 py-1 rounded-full font-bold inline-flex items-center gap-1"
-                    style={{ background: "linear-gradient(135deg,rgba(168,85,247,0.35),rgba(236,72,153,0.25))", color: "#e879f9", border: "1px solid rgba(168,85,247,0.5)" }}>
+                    style={{ background: "linear-gradient(135deg,rgba(240,153,74,0.35),rgba(236,72,153,0.25))", color: "#fb923c", border: "1px solid rgba(240,153,74,0.5)" }}>
                     💊 Кредитный Доктор
                   </span>
                 )}
@@ -468,9 +468,9 @@ export default function DashboardApplicationStatus({
 
             {/* Ввод карты/СБП */}
             <div className="rounded-xl p-4 space-y-3"
-              style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.25)" }}>
+              style={{ background: "rgba(234,128,52,0.08)", border: "1px solid rgba(234,128,52,0.25)" }}>
               <div className="text-white/70 text-sm font-medium flex items-center gap-2">
-                <Icon name="CreditCard" size={16} className="text-purple-400" />
+                <Icon name="CreditCard" size={16} className="text-orange-400" />
                 Укажите реквизиты для перевода
               </div>
               <div className="flex gap-2">
@@ -488,7 +488,7 @@ export default function DashboardApplicationStatus({
                     onClick={onSaveCard}
                     disabled={cardSaving}
                     className="px-5 py-3 rounded-xl text-white text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-60 flex items-center gap-2"
-                    style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)" }}
+                    style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)" }}
                   >
                     {cardSaving
                       ? <Icon name="Loader2" size={16} className="animate-spin" />
@@ -522,15 +522,15 @@ export default function DashboardApplicationStatus({
                 rel="noopener noreferrer"
                 download
                 className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90"
-                style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", boxShadow: "0 4px 20px rgba(124,58,237,0.35)", textDecoration: "none" }}
+                style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)", boxShadow: "0 4px 20px rgba(234,128,52,0.35)", textDecoration: "none" }}
               >
                 <Icon name="FileDown" size={20} />
                 Скачать договор займа (PDF)
               </a>
             ) : (
               <div className="rounded-xl px-5 py-4 flex items-center gap-3"
-                style={{ background: "rgba(124,58,237,0.07)", border: "1px solid rgba(124,58,237,0.2)" }}>
-                <Icon name="Loader2" size={18} className="text-purple-400 animate-spin shrink-0" />
+                style={{ background: "rgba(234,128,52,0.07)", border: "1px solid rgba(234,128,52,0.2)" }}>
+                <Icon name="Loader2" size={18} className="text-orange-400 animate-spin shrink-0" />
                 <div className="text-white/50 text-sm">Договор формируется, появится в течение минуты...</div>
               </div>
             )}
@@ -577,7 +577,7 @@ export default function DashboardApplicationStatus({
               return (
                 <button onClick={onConfirm} disabled={confirming}
                   className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-60"
-                  style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", boxShadow: "0 4px 20px rgba(124,58,237,0.35)" }}>
+                  style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)", boxShadow: "0 4px 20px rgba(234,128,52,0.35)" }}>
                   {confirming ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="PenLine" size={18} />}
                   {confirming ? "Подписываем..." : "Подписать договор"}
                 </button>
@@ -602,7 +602,7 @@ export default function DashboardApplicationStatus({
                 <div className="text-white font-bold">По заявке #{application.id} отказано</div>
                 {application.isCreditDoctor && (
                   <span className="text-xs px-2.5 py-1 rounded-full font-bold inline-flex items-center gap-1"
-                    style={{ background: "linear-gradient(135deg,rgba(168,85,247,0.35),rgba(236,72,153,0.25))", color: "#e879f9", border: "1px solid rgba(168,85,247,0.5)" }}>
+                    style={{ background: "linear-gradient(135deg,rgba(240,153,74,0.35),rgba(236,72,153,0.25))", color: "#fb923c", border: "1px solid rgba(240,153,74,0.5)" }}>
                     💊 Кредитный Доктор
                   </span>
                 )}
@@ -652,43 +652,43 @@ export default function DashboardApplicationStatus({
           {/* Ожидает подтверждения */}
           {application.virtualCard.status === "pending" && !cardActivated && (
             <div className="glass rounded-2xl overflow-hidden"
-              style={{ border: "1px solid rgba(168,85,247,0.5)", background: "rgba(124,58,237,0.04)" }}>
+              style={{ border: "1px solid rgba(240,153,74,0.5)", background: "rgba(234,128,52,0.04)" }}>
               <div className="px-6 py-4 flex items-center gap-3"
-                style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.3),rgba(168,85,247,0.1))" }}>
+                style={{ background: "linear-gradient(135deg,rgba(234,128,52,0.3),rgba(240,153,74,0.1))" }}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: "rgba(168,85,247,0.25)" }}>
-                  <Icon name="CreditCard" size={20} className="text-purple-300" />
+                  style={{ background: "rgba(240,153,74,0.25)" }}>
+                  <Icon name="CreditCard" size={20} className="text-orange-300" />
                 </div>
                 <div className="flex-1">
                   <div className="text-white font-bold">Карта FINANS 24 одобрена!</div>
-                  <div className="text-purple-300 text-xs mt-0.5">Ознакомьтесь с условиями и подтвердите</div>
+                  <div className="text-orange-300 text-xs mt-0.5">Ознакомьтесь с условиями и подтвердите</div>
                 </div>
                 <span className="text-xs px-3 py-1 rounded-full font-semibold animate-pulse"
-                  style={{ background: "rgba(168,85,247,0.2)", color: "#c084fc" }}>Одобрено</span>
+                  style={{ background: "rgba(240,153,74,0.2)", color: "#fbbf7a" }}>Одобрено</span>
               </div>
               <div className="px-6 py-5 space-y-4">
                 {/* Карта-превью */}
                 <div className="rounded-2xl p-5 relative overflow-hidden"
-                  style={{ background: "linear-gradient(135deg,#4c1d95,#7c3aed,#a855f7)", boxShadow: "0 8px 32px rgba(124,58,237,0.4)" }}>
+                  style={{ background: "linear-gradient(135deg,#4c1d95,#ea8034,#f0994a)", boxShadow: "0 8px 32px rgba(234,128,52,0.4)" }}>
                   <div className="absolute top-0 right-0 w-40 h-40 rounded-full opacity-10"
                     style={{ background: "white", transform: "translate(30%,-30%)" }} />
                   <div className="flex justify-between items-start mb-6">
                     <div>
-                      <div className="text-purple-200 text-xs font-semibold uppercase tracking-wider">FINANS 24</div>
+                      <div className="text-orange-200 text-xs font-semibold uppercase tracking-wider">FINANS 24</div>
                       <div className="text-white text-xs opacity-60 mt-0.5">Виртуальная карта</div>
                     </div>
-                    <Icon name="CreditCard" size={28} className="text-purple-200 opacity-70" />
+                    <Icon name="CreditCard" size={28} className="text-orange-200 opacity-70" />
                   </div>
                   <div className="text-white font-mono text-xl font-bold tracking-widest mb-4">
                     •••• •••• •••• {application.virtualCard.number.slice(-4)}
                   </div>
                   <div className="flex justify-between items-end">
                     <div>
-                      <div className="text-purple-200 text-xs opacity-60 mb-0.5">Держатель</div>
+                      <div className="text-orange-200 text-xs opacity-60 mb-0.5">Держатель</div>
                       <div className="text-white text-sm font-semibold">{application.virtualCard.holder}</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-purple-200 text-xs opacity-60 mb-0.5">Действует до</div>
+                      <div className="text-orange-200 text-xs opacity-60 mb-0.5">Действует до</div>
                       <div className="text-white text-sm font-semibold">{application.virtualCard.expiry}</div>
                     </div>
                   </div>
@@ -696,11 +696,11 @@ export default function DashboardApplicationStatus({
                 {/* Условия */}
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { label: "Лимит", value: `${application.virtualCard.limit.toLocaleString("ru-RU")} ₽`, color: "#c084fc" },
+                    { label: "Лимит", value: `${application.virtualCard.limit.toLocaleString("ru-RU")} ₽`, color: "#fbbf7a" },
                     { label: "Ставка", value: `${application.virtualCard.rate}% / день`, color: "white" },
                   ].map(({ label, value, color }) => (
                     <div key={label} className="rounded-xl px-4 py-3 text-center"
-                      style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.3)" }}>
+                      style={{ background: "rgba(234,128,52,0.12)", border: "1px solid rgba(234,128,52,0.3)" }}>
                       <div className="text-white/40 text-xs mb-1">{label}</div>
                       <div className="font-bold text-base" style={{ color }}>{value}</div>
                     </div>
@@ -798,7 +798,7 @@ export default function DashboardApplicationStatus({
                 <button
                   onClick={() => alert(`Оплата картой FINANS 24\nЛимит: ${application.virtualCard!.limit.toLocaleString("ru-RU")} ₽\n\nДля совершения платежа свяжитесь с нами:\n📞 +7 (495) 663-51-24\n📧 investorfinans24@ya.ru`)}
                   className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90"
-                  style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)", boxShadow: "0 4px 20px rgba(124,58,237,0.35)" }}>
+                  style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)", boxShadow: "0 4px 20px rgba(234,128,52,0.35)" }}>
                   <Icon name="Wallet" size={18} />
                   Оплатить
                 </button>

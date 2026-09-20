@@ -58,12 +58,12 @@ export default {
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				brand: {
-					violet: '#7C3AED',
-					purple: '#A855F7',
-					neon: '#C084FC',
-					dark: '#0F0A1E',
-					navy: '#1A1035',
-					card: '#1E1540',
+					violet: '#EA8034',
+					purple: '#F0994A',
+					neon: '#FBBF7A',
+					dark: '#1e110a',
+					navy: '#351c10',
+					card: '#402315',
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
@@ -99,8 +99,8 @@ export default {
 					to: { opacity: '1', transform: 'translateX(0)' }
 				},
 				'pulse-glow': {
-					'0%, 100%': { boxShadow: '0 0 20px rgba(168, 85, 247, 0.4)' },
-					'50%': { boxShadow: '0 0 40px rgba(168, 85, 247, 0.8)' }
+					'0%, 100%': { boxShadow: '0 0 20px rgba(240, 153, 74, 0.4)' },
+					'50%': { boxShadow: '0 0 40px rgba(240, 153, 74, 0.8)' }
 				},
 				'float': {
 					'0%, 100%': { transform: 'translateY(0px)' },

@@ -15,8 +15,8 @@ function LoanCalculator({ amount, days, onAmountChange, onDaysChange }: LoanCalc
     const total = amount + interest;
     const amountPct = ((amount - 5000) / (100000 - 5000)) * 100;
     const daysPct = ((days - 5) / (365 - 5)) * 100;
-    const amountBg = `linear-gradient(to right, #7C3AED ${amountPct}%, rgba(124,58,237,0.2) ${amountPct}%)`;
-    const daysBg = `linear-gradient(to right, #7C3AED ${daysPct}%, rgba(124,58,237,0.2) ${daysPct}%)`;
+    const amountBg = `linear-gradient(to right, #EA8034 ${amountPct}%, rgba(234,128,52,0.2) ${amountPct}%)`;
+    const daysBg = `linear-gradient(to right, #EA8034 ${daysPct}%, rgba(234,128,52,0.2) ${daysPct}%)`;
     return { interest, total, amountPct, daysPct, amountBg, daysBg };
   }, [amount, days]);
 
@@ -24,7 +24,7 @@ function LoanCalculator({ amount, days, onAmountChange, onDaysChange }: LoanCalc
     <section id="calc" className="py-24">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-14">
-          <div className="inline-block glass px-4 py-1.5 rounded-full text-purple-300 text-sm mb-4">
+          <div className="inline-block glass px-4 py-1.5 rounded-full text-orange-300 text-sm mb-4">
             Калькулятор
           </div>
           <h2 className="font-oswald text-4xl md:text-5xl font-bold text-white">

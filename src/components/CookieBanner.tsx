@@ -23,8 +23,8 @@ export default function CookieBanner() {
       left: 0,
       right: 0,
       zIndex: 10000,
-      background: "rgba(26, 16, 53, 0.97)",
-      borderTop: "1px solid rgba(168, 85, 247, 0.3)",
+      background: "rgba(53, 28, 16, 0.97)",
+      borderTop: "1px solid rgba(240, 153, 74, 0.3)",
       backdropFilter: "blur(20px)",
       padding: "16px 24px",
       display: "flex",
@@ -36,7 +36,7 @@ export default function CookieBanner() {
       <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, margin: 0, maxWidth: 700, lineHeight: 1.5 }}>
         Мы используем файлы cookie для улучшения работы сайта и персонализации контента.
         Продолжая использовать сайт, вы соглашаетесь с нашей{" "}
-        <a href="#" style={{ color: "#a855f7", textDecoration: "underline" }}>
+        <a href="#" style={{ color: "#f0994a", textDecoration: "underline" }}>
           политикой конфиденциальности
         </a>.
       </p>

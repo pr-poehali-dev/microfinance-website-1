@@ -398,7 +398,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen font-golos" style={{ background: "#0F0A1E" }}>
+    <div className="min-h-screen font-golos" style={{ background: "#1e110a" }}>
       <DashboardNavbar user={user} onLogout={handleLogout} />
 
       <div className="max-w-4xl mx-auto px-4 pt-28 pb-16">
@@ -421,7 +421,7 @@ export default function DashboardPage() {
         {/* СОСТОЯНИЕ ЗАГРУЗКИ */}
         {loading && (
           <div className="text-center py-20">
-            <Icon name="Loader2" size={40} className="animate-spin text-purple-400 mx-auto mb-4" />
+            <Icon name="Loader2" size={40} className="animate-spin text-orange-400 mx-auto mb-4" />
             <p className="text-white/50">Загружаем ваши данные...</p>
           </div>
         )}
@@ -522,9 +522,9 @@ export default function DashboardPage() {
           <div className="mb-6">
             <div className="glass rounded-2xl overflow-hidden">
               <div className="p-5 flex items-center gap-3"
-                style={{ background: "linear-gradient(135deg,rgba(168,85,247,0.15),rgba(6,182,212,0.1))", borderBottom: "1px solid rgba(168,85,247,0.2)" }}>
+                style={{ background: "linear-gradient(135deg,rgba(240,153,74,0.15),rgba(6,182,212,0.1))", borderBottom: "1px solid rgba(240,153,74,0.2)" }}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: "linear-gradient(135deg,#a855f7,#06b6d4)" }}>
+                  style={{ background: "linear-gradient(135deg,#f0994a,#06b6d4)" }}>
                   <Icon name="ShoppingBag" size={20} className="text-white" />
                 </div>
                 <div className="flex-1">
@@ -532,7 +532,7 @@ export default function DashboardPage() {
                   <div className="text-white/40 text-xs">{shopLoan.item_name || "Товар"} · #{shopLoan.id}</div>
                 </div>
                 {shopLoan.status === "pending" && (
-                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(168,85,247,0.2)", color: "#d8b4fe", border: "1px solid rgba(168,85,247,0.3)" }}>На рассмотрении</span>
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(240,153,74,0.2)", color: "#fed7aa", border: "1px solid rgba(240,153,74,0.3)" }}>На рассмотрении</span>
                 )}
                 {shopLoan.status === "approved" && !shopLoan.contract_signed && (
                   <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(34,197,94,0.2)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.3)" }}>Одобрено ✓</span>
@@ -553,8 +553,8 @@ export default function DashboardPage() {
                   <div>
                     <div className="flex items-start gap-3 mb-4">
                       <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
-                        style={{ background: "rgba(168,85,247,0.15)" }}>
-                        <Icon name="Clock" size={16} className="text-purple-400" />
+                        style={{ background: "rgba(240,153,74,0.15)" }}>
+                        <Icon name="Clock" size={16} className="text-orange-400" />
                       </div>
                       <div>
                         <div className="text-white font-semibold mb-1">Заявка рассматривается</div>
@@ -562,18 +562,18 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <div className="rounded-2xl p-5 text-center"
-                      style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.25)" }}>
+                      style={{ background: "rgba(240,153,74,0.08)", border: "1px solid rgba(240,153,74,0.25)" }}>
                       {!shopTimerDone ? (
                         <>
                           <div className="font-oswald text-5xl font-bold mb-2"
-                            style={{ color: "#d8b4fe", textShadow: "0 0 24px rgba(168,85,247,0.5)" }}>
+                            style={{ color: "#fed7aa", textShadow: "0 0 24px rgba(240,153,74,0.5)" }}>
                             {`${Math.floor(shopTimer/60).toString().padStart(2,"0")}:${(shopTimer%60).toString().padStart(2,"0")}`}
                           </div>
                           <div className="text-white/40 text-sm">Примерное время до ответа</div>
                         </>
                       ) : (
                         <>
-                          <Icon name="FileSearch" size={28} className="text-purple-400 mx-auto mb-2" />
+                          <Icon name="FileSearch" size={28} className="text-orange-400 mx-auto mb-2" />
                           <div className="text-white font-semibold mb-1">Заявка на рассмотрении</div>
                           <div className="text-white/40 text-sm">Специалист свяжется с вами в ближайшее время</div>
                         </>
@@ -598,7 +598,7 @@ export default function DashboardPage() {
                           const m = shopLoan.approved_months || shopLoan.loan_months;
                           const r = (shopLoan.approved_rate || 9) / 100;
                           return `${Math.round(a * (1 + r * m)).toLocaleString("ru-RU")} ₽`;
-                        })(), c: "#c084fc" },
+                        })(), c: "#fbbf7a" },
                       ].map(({ l, v, c }) => (
                         <div key={l} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
                           <div className="text-white/40 text-xs mb-1">{l}</div>
@@ -636,8 +636,8 @@ export default function DashboardPage() {
                     {!shopLoan.contract_signed ? (
                       <div>
                         <div className="rounded-xl p-4 mb-4 flex items-start gap-3"
-                          style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.2)" }}>
-                          <Icon name="FileText" size={16} className="text-purple-400 shrink-0 mt-0.5" />
+                          style={{ background: "rgba(240,153,74,0.08)", border: "1px solid rgba(240,153,74,0.2)" }}>
+                          <Icon name="FileText" size={16} className="text-orange-400 shrink-0 mt-0.5" />
                           <div className="text-white/60 text-sm">
                             Нажмите кнопку ниже для подписания договора. Деньги будут переведены в магазин сразу после подписания.
                           </div>
@@ -647,7 +647,7 @@ export default function DashboardPage() {
                         )}
                         <button onClick={handleShopSign} disabled={shopSigning}
                           className="w-full py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2"
-                          style={{ background: "linear-gradient(135deg,#a855f7,#06b6d4)", opacity: shopSigning ? 0.7 : 1 }}>
+                          style={{ background: "linear-gradient(135deg,#f0994a,#06b6d4)", opacity: shopSigning ? 0.7 : 1 }}>
                           {shopSigning
                             ? <><Icon name="Loader" size={18} className="animate-spin" /> Подписываем...</>
                             : <><Icon name="PenLine" size={18} /> Подписать договор</>
@@ -674,7 +674,7 @@ export default function DashboardPage() {
                               setPayOther({ contractNumber: `Т-${String(shopLoan.id).padStart(12, "0")}`, amount: remaining });
                             }}
                             className="w-full text-white font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2"
-                            style={{ background: "linear-gradient(135deg,#a855f7,#06b6d4)" }}
+                            style={{ background: "linear-gradient(135deg,#f0994a,#06b6d4)" }}
                           >
                             <Icon name="Banknote" size={16} />
                             Погасить займ
@@ -801,7 +801,7 @@ export default function DashboardPage() {
                             const r = (carLoan.approved_rate || 12) / 100;
                             return `${Math.round(a * (1 + r * m)).toLocaleString("ru-RU")} ₽`;
                           })(),
-                          c: "#c084fc" },
+                          c: "#fbbf7a" },
                       ].map(({ l, v, c }) => (
                         <div key={l} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
                           <div className="text-white/40 text-xs mb-1">{l}</div>

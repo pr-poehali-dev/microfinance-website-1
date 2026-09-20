@@ -8,9 +8,9 @@ const STAGES = [
     amount: "500 — 5 000 ₽",
     term: "от 15 до 365 дней",
     desc: "Оформление карты партнёра. Первый шаг к восстановлению кредитной истории.",
-    color: "#a855f7",
-    bg: "rgba(168,85,247,0.12)",
-    border: "rgba(168,85,247,0.35)",
+    color: "#f0994a",
+    bg: "rgba(240,153,74,0.12)",
+    border: "rgba(240,153,74,0.35)",
   },
   {
     num: "02",
@@ -57,9 +57,9 @@ export default function CreditDoctorPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen font-golos" style={{ background: "#0F0A1E" }}>
+    <div className="min-h-screen font-golos" style={{ background: "#1e110a" }}>
       {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass" style={{ borderBottom: "1px solid rgba(168,85,247,0.2)" }}>
+      <nav className="fixed top-0 left-0 right-0 z-50 glass" style={{ borderBottom: "1px solid rgba(240,153,74,0.2)" }}>
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <button onClick={() => navigate("/")} className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center">
@@ -79,13 +79,13 @@ export default function CreditDoctorPage() {
       {/* HERO */}
       <section className="hero-bg pt-32 pb-20 px-4 relative overflow-hidden">
         <div className="absolute top-20 right-10 w-72 h-72 rounded-full opacity-20 blur-3xl pointer-events-none"
-          style={{ background: "radial-gradient(circle, #A855F7, transparent)" }} />
+          style={{ background: "radial-gradient(circle, #F0994A, transparent)" }} />
         <div className="absolute bottom-10 left-10 w-64 h-64 rounded-full opacity-10 blur-3xl pointer-events-none"
           style={{ background: "radial-gradient(circle, #06B6D4, transparent)" }} />
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-6"
-            style={{ background: "rgba(168,85,247,0.15)", border: "1px solid rgba(168,85,247,0.4)", color: "#c084fc" }}>
+            style={{ background: "rgba(240,153,74,0.15)", border: "1px solid rgba(240,153,74,0.4)", color: "#fbbf7a" }}>
             <Icon name="HeartPulse" size={15} />
             Специальная программа
           </div>
@@ -105,7 +105,7 @@ export default function CreditDoctorPage() {
             Восстановите свой кредитный рейтинг поэтапно и получите доступ к большим суммам.
           </p>
           <p className="text-white/50 text-base mb-10">
-            Сумма займа от <span className="text-purple-300 font-bold">500 ₽</span> до <span className="text-purple-300 font-bold">50 000 ₽</span>
+            Сумма займа от <span className="text-orange-300 font-bold">500 ₽</span> до <span className="text-orange-300 font-bold">50 000 ₽</span>
           </p>
 
           <button
@@ -163,7 +163,7 @@ export default function CreditDoctorPage() {
 
           {/* Стрелка прогресса */}
           <div className="mt-8 glass rounded-2xl p-5 flex items-center gap-4">
-            <Icon name="TrendingUp" size={24} className="text-purple-400 shrink-0" />
+            <Icon name="TrendingUp" size={24} className="text-orange-400 shrink-0" />
             <div>
               <div className="text-white font-semibold mb-1">Прогресс без остановок</div>
               <div className="text-white/50 text-sm">После успешного погашения каждого этапа вы автоматически переходите на следующий уровень с увеличенным лимитом</div>
@@ -173,7 +173,7 @@ export default function CreditDoctorPage() {
       </section>
 
       {/* ПРЕИМУЩЕСТВА */}
-      <section className="py-20 px-4" style={{ background: "rgba(124,58,237,0.05)" }}>
+      <section className="py-20 px-4" style={{ background: "rgba(234,128,52,0.05)" }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="font-oswald text-4xl font-bold text-white mb-3">
@@ -214,7 +214,7 @@ export default function CreditDoctorPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-4" style={{ background: "rgba(124,58,237,0.05)" }}>
+      <section className="py-20 px-4" style={{ background: "rgba(234,128,52,0.05)" }}>
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="font-oswald text-4xl font-bold text-white mb-4">
             Начните <span className="gradient-text">прямо сейчас</span>
@@ -234,7 +234,7 @@ export default function CreditDoctorPage() {
               { icon: "Lock", text: "Безопасно" },
             ].map((i) => (
               <div key={i.text} className="flex items-center gap-2 text-white/40 text-sm">
-                <Icon name={i.icon} size={14} className="text-purple-400" />
+                <Icon name={i.icon} size={14} className="text-orange-400" />
                 {i.text}
               </div>
             ))}

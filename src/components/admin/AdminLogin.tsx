@@ -11,7 +11,7 @@ interface Props {
 
 export default function AdminLogin({ password, setPassword, loginErr, loginLoad, onSubmit, onBack }: Props) {
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "#0F0A1E" }}>
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "#1e110a" }}>
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="w-16 h-16 btn-neon rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -29,7 +29,7 @@ export default function AdminLogin({ password, setPassword, loginErr, loginLoad,
                 onBlur={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
                 placeholder="Введите пароль"
-                className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-purple-500 transition-colors"
+                className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors"
                 style={{ background: "rgba(255,255,255,0.05)" }} />
             </div>
             {loginErr && <p className="text-red-400 text-sm flex items-center gap-2"><Icon name="AlertCircle" size={14} />{loginErr}</p>}

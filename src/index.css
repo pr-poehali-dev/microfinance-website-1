@@ -4,34 +4,34 @@
 
 @layer base {
   :root {
-    --background: 265 60% 7%;
+    --background: 20 60% 7%;
     --foreground: 0 0% 98%;
-    --card: 265 50% 12%;
+    --card: 20 50% 12%;
     --card-foreground: 0 0% 98%;
-    --popover: 265 50% 10%;
+    --popover: 20 50% 10%;
     --popover-foreground: 0 0% 98%;
-    --primary: 271 81% 56%;
+    --primary: 25 81% 56%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 265 40% 18%;
+    --secondary: 20 40% 18%;
     --secondary-foreground: 0 0% 90%;
-    --muted: 265 30% 20%;
-    --muted-foreground: 265 20% 65%;
-    --accent: 285 85% 70%;
-    --accent-foreground: 265 60% 7%;
+    --muted: 20 30% 20%;
+    --muted-foreground: 20 20% 65%;
+    --accent: 30 85% 70%;
+    --accent-foreground: 20 60% 7%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 265 30% 22%;
-    --input: 265 30% 18%;
-    --ring: 271 81% 56%;
+    --border: 20 30% 22%;
+    --input: 20 30% 18%;
+    --ring: 25 81% 56%;
     --radius: 0.75rem;
-    --sidebar-background: 265 50% 10%;
+    --sidebar-background: 20 50% 10%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 271 81% 56%;
+    --sidebar-primary: 25 81% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 265 40% 18%;
+    --sidebar-accent: 20 40% 18%;
     --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 265 30% 22%;
-    --sidebar-ring: 271 81% 56%;
+    --sidebar-border: 20 30% 22%;
+    --sidebar-ring: 25 81% 56%;
   }
 }
 
@@ -41,7 +41,7 @@
   }
   body {
     @apply bg-background text-foreground font-golos;
-    background: #0f0a1e;
+    background: #1e110a;
   }
 }
 
@@ -50,16 +50,16 @@
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #1a1035;
+  background: #351c10;
 }
 ::-webkit-scrollbar-thumb {
-  background: #7c3aed;
+  background: #ea8034;
   border-radius: 3px;
 }
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, #c084fc 0%, #7c3aed 50%, #06b6d4 100%);
+  background: linear-gradient(135deg, #fbbf7a 0%, #ea8034 50%, #06b6d4 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -67,9 +67,9 @@
 
 /* Glassmorphism */
 .glass {
-  background: rgba(30, 21, 64, 0.6);
+  background: rgba(64, 35, 21, 0.6);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(168, 85, 247, 0.2);
+  border: 1px solid rgba(240, 153, 74, 0.2);
 }
 
 .glass-light {
@@ -80,14 +80,14 @@
 
 /* Neon button */
 .btn-neon {
-  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-  box-shadow: 0 0 30px rgba(168, 85, 247, 0.5);
+  background: linear-gradient(135deg, #ea8034 0%, #f0994a 100%);
+  box-shadow: 0 0 30px rgba(240, 153, 74, 0.5);
   transition: all 0.3s ease;
 }
 .btn-neon:hover {
   box-shadow:
-    0 0 50px rgba(168, 85, 247, 0.8),
-    0 0 100px rgba(168, 85, 247, 0.3);
+    0 0 50px rgba(240, 153, 74, 0.8),
+    0 0 100px rgba(240, 153, 74, 0.3);
   transform: translateY(-2px);
 }
 
@@ -96,7 +96,7 @@
   background:
     radial-gradient(
       ellipse at 30% 20%,
-      rgba(124, 58, 237, 0.3) 0%,
+      rgba(234, 128, 52, 0.3) 0%,
       transparent 60%
     ),
     radial-gradient(
@@ -104,7 +104,7 @@
       rgba(6, 182, 212, 0.15) 0%,
       transparent 60%
     ),
-    linear-gradient(180deg, #0f0a1e 0%, #1a1035 100%);
+    linear-gradient(180deg, #1e110a 0%, #351c10 100%);
 }
 
 /* Card hover */
@@ -113,8 +113,8 @@
 }
 .card-hover:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 60px rgba(168, 85, 247, 0.2);
-  border-color: rgba(168, 85, 247, 0.4);
+  box-shadow: 0 20px 60px rgba(240, 153, 74, 0.2);
+  border-color: rgba(240, 153, 74, 0.4);
 }
 
 /* Slider styles */
@@ -131,15 +131,15 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #a855f7, #7c3aed);
+  background: linear-gradient(135deg, #f0994a, #ea8034);
   cursor: pointer;
-  box-shadow: 0 0 15px rgba(168, 85, 247, 0.6);
+  box-shadow: 0 0 15px rgba(240, 153, 74, 0.6);
   border: 2px solid white;
 }
 
 /* Step indicator */
 .step-number {
-  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  background: linear-gradient(135deg, #ea8034, #f0994a);
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -149,7 +149,7 @@
   font-family: "Oswald", sans-serif;
   font-size: 1.25rem;
   font-weight: 600;
-  box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+  box-shadow: 0 0 20px rgba(240, 153, 74, 0.4);
   flex-shrink: 0;
   color: white;
 }
@@ -201,6 +201,6 @@
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  border: 2px solid rgba(168, 85, 247, 0.5);
+  border: 2px solid rgba(240, 153, 74, 0.5);
   animation: pulse-ring 2s ease-out infinite;
 }
