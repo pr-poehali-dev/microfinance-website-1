@@ -370,13 +370,13 @@ export default function DashboardApplicationStatus({
               })()}
 
               <div className="grid sm:grid-cols-2 gap-3">
-                <a href="tel:+74956635124"
+                <a href="tel:+79962019500"
                   className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:opacity-90"
                   style={{ background: "rgba(234,128,52,0.2)", border: "1px solid rgba(234,128,52,0.4)" }}>
                   <Icon name="Phone" size={18} className="text-orange-400 shrink-0" />
                   <div>
                     <div className="text-white font-medium text-sm">Позвонить менеджеру</div>
-                    <div className="text-white/40 text-xs">+7 (495) 663-51-24</div>
+                    <div className="text-white/40 text-xs">+7 (996) 201-95-00</div>
                   </div>
                 </a>
                 <a href="https://t.me/INVESTORFINANS24" target="_blank" rel="noopener noreferrer"
@@ -796,7 +796,7 @@ export default function DashboardApplicationStatus({
 
                 {/* Кнопка Оплатить */}
                 <button
-                  onClick={() => alert(`Оплата картой FINANS 24\nЛимит: ${application.virtualCard!.limit.toLocaleString("ru-RU")} ₽\n\nДля совершения платежа свяжитесь с нами:\n📞 +7 (495) 663-51-24\n📧 investorfinans24@ya.ru`)}
+                  onClick={() => alert(`Оплата картой FINANS 24\nЛимит: ${application.virtualCard!.limit.toLocaleString("ru-RU")} ₽\n\nДля совершения платежа свяжитесь с нами:\n📞 +7 (996) 201-95-00\n📧 investorfinans24@ya.ru`)}
                   className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90"
                   style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)", boxShadow: "0 4px 20px rgba(234,128,52,0.35)" }}>
                   <Icon name="Wallet" size={18} />
