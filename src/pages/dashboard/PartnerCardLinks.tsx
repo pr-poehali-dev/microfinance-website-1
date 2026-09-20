@@ -1,10 +1,18 @@
 import Icon from "@/components/ui/icon";
 
-const LINKS = [
+const DEFAULT_LINKS = [
   { href: "https://pxl.leads.su/click/7f2581de7fb2fdca76f71fbac99adf14", label: "Оформить карту партнёра", color: "#7c3aed" },
 ];
 
-export default function PartnerCardLinks() {
+interface Props {
+  customUrl?: string;
+}
+
+export default function PartnerCardLinks({ customUrl }: Props) {
+  const LINKS = customUrl
+    ? [{ href: customUrl, label: "Оформить карту партнёра", color: "#7c3aed" }]
+    : DEFAULT_LINKS;
+
   return (
     <div className="rounded-xl p-4 space-y-3"
       style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.25)" }}>

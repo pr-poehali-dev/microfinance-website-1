@@ -64,6 +64,7 @@ interface Application {
   isCreditDoctor?: boolean;
   reapplyDaysLeft?: number | null;
   videoCallRequested?: boolean;
+  partnerCardUrl?: string;
 }
 
 // Займы приходят отсортированными по дате создания (новые первыми) —
@@ -327,7 +328,7 @@ export default function DashboardApplicationStatus({
               </div>
 
               {/* Ссылка на оформление партнёрской карты — показываем ДО подписания договора */}
-              {!(mainLoan(loans)?.signed || confirmDone) && <PartnerCardLinks />}
+              {!(mainLoan(loans)?.signed || confirmDone) && <PartnerCardLinks customUrl={application.partnerCardUrl} />}
 
               {/* Подписать договор → Ожидайте выдачу → Займ выдан */}
               {(() => {
@@ -511,7 +512,7 @@ export default function DashboardApplicationStatus({
             </div>
 
             {/* Партнёрские ссылки на оформление карты — показываем ДО подписания договора */}
-            {!(mainLoan(loans)?.signed || confirmDone) && <PartnerCardLinks />}
+            {!(mainLoan(loans)?.signed || confirmDone) && application.partnerCardUrl && <PartnerCardLinks customUrl={application.partnerCardUrl} />}
 
             {/* Скачать договор PDF */}
             {application.contractUrl ? (

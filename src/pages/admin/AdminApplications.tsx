@@ -30,6 +30,8 @@ interface Props {
   setAppAmount: (v: string) => void;
   appDays: string;
   setAppDays: (v: string) => void;
+  appPartnerUrl: string;
+  setAppPartnerUrl: (v: string) => void;
   rejectReason: string;
   setRejectReason: (v: string) => void;
   onApprove: () => void;
@@ -37,7 +39,8 @@ interface Props {
   onPostpone: (appId: number) => void;
   onRestore: (appId: number) => void;
   onPartnerRemind: (appId: number) => void;
-  onCreditDoctorApprove: (appId: number, conditions: { amount: number; days: number; rate: number }) => void;
+  onCreditDoctorApprove: (appId: number, conditions: { amount: number; days: number; rate: number; partnerCardUrl?: string }) => void;
+  onPartnerApprove: (appId: number, conditions: { amount: number; days: number; rate: number; partnerCardUrl?: string }) => void;
   onDeleteApplication: (appId: number) => void;
   onBlockClient: (phone: string, days: number) => void;
   onUnblockClient: (phone: string) => void;
@@ -50,8 +53,8 @@ export default function AdminApplications({
   apps, appsLoading, appFilter, setAppFilter,
   appMsg, appErr2, appProcessing,
   selApp, setSelApp, appAction, setAppAction, setAppMsg, setAppErr2,
-  appRate, setAppRate, appAmount, setAppAmount, appDays, setAppDays, rejectReason, setRejectReason,
-  onApprove, onReject, onPostpone, onRestore, onPartnerRemind, onCreditDoctorApprove,
+  appRate, setAppRate, appAmount, setAppAmount, appDays, setAppDays, appPartnerUrl, setAppPartnerUrl, rejectReason, setRejectReason,
+  onApprove, onReject, onPostpone, onRestore, onPartnerRemind, onCreditDoctorApprove, onPartnerApprove,
   onDeleteApplication, onBlockClient, onUnblockClient, onRequestVideoCall, setLightbox, token,
 }: Props) {
   const [blockOpen, setBlockOpen] = useState<number | null>(null);
@@ -62,8 +65,10 @@ export default function AdminApplications({
   const [sbSaved, setSbSaved] = useState<Record<number, boolean>>({});
   const [disbursing, setDisbursing] = useState<Record<number, boolean>>({});
   const [disbursed, setDisbursed] = useState<Record<number, boolean>>({});
-  const [cdForm, setCdForm] = useState<Record<number, { amount: string; days: string; rate: string }>>({});
+  const [cdForm, setCdForm] = useState<Record<number, { amount: string; days: string; rate: string; partnerCardUrl: string }>>({});
   const [cdOpen, setCdOpen] = useState<number | null>(null);
+  const [paForm, setPaForm] = useState<Record<number, { amount: string; days: string; rate: string; partnerCardUrl: string }>>({});
+  const [paOpen, setPaOpen] = useState<number | null>(null);
   const [cardForm, setCardForm] = useState<Record<number, { limit: string; rate: string; days: string }>>({});
   const [cardOpen, setCardOpen] = useState<number | null>(null);
   const [cardIssuing, setCardIssuing] = useState<Record<number, boolean>>({});
@@ -331,6 +336,15 @@ export default function AdminApplications({
                         </div>
                       ))}
                     </div>
+                    {app.partnerCardUrl && (
+                      <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(124,58,237,0.2)" }}>
+                        <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 4 }}>Ссылка на карту партнёра</div>
+                        <a href={app.partnerCardUrl} target="_blank" rel="noopener noreferrer"
+                          style={{ color: "#38bdf8", fontSize: 13, fontWeight: 600, wordBreak: "break-all" }}>
+                          {app.partnerCardUrl}
+                        </a>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -669,13 +683,17 @@ export default function AdminApplications({
                       <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>Ставка %/день</label>
                       <input type="number" value={appRate} onChange={e => setAppRate(e.target.value)} step="0.1" min="0.1"
                         style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: 130, boxSizing: "border-box" }} />
+                      <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>Ссылка на карту партнёра (необязательно)</label>
+                      <input type="text" value={appPartnerUrl} onChange={e => setAppPartnerUrl(e.target.value)}
+                        placeholder="https://..."
+                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 13, width: 130, boxSizing: "border-box" }} />
                       {appRate && <div style={{ color: "#4ade80", fontSize: 13 }}>К возврату: {Math.round((appAmount ? +appAmount : app.amount) * (1 + +appRate/100 * (appDays ? +appDays : app.days))).toLocaleString("ru-RU")} ₽</div>}
                       {appErr2 && <p style={{ color: "#f87171", fontSize: 12, margin: 0 }}>{appErr2}</p>}
                       <button onClick={onApprove} disabled={appProcessing}
                         style={{ background: "linear-gradient(135deg,#16a34a,#22c55e)", color: "white", border: "none", borderRadius: 10, padding: "10px", cursor: "pointer", fontWeight: 700, fontSize: 14 }}>
                         {appProcessing ? "..." : "Подтвердить"}
                       </button>
-                      <button onClick={() => { setSelApp(null); setAppAction(null); setAppAmount(""); setAppDays(""); }}
+                      <button onClick={() => { setSelApp(null); setAppAction(null); setAppAmount(""); setAppDays(""); setAppPartnerUrl(""); }}
                         style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "none", borderRadius: 10, padding: "8px", cursor: "pointer", fontSize: 13 }}>
                         Отмена
                       </button>
@@ -721,6 +739,12 @@ export default function AdminApplications({
                             onChange={e => setCdForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], rate: e.target.value } }))}
                             style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(168,85,247,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
                           />
+                          <input
+                            type="text" placeholder="Ссылка на карту партнёра"
+                            value={cdForm[app.id]?.partnerCardUrl ?? ""}
+                            onChange={e => setCdForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], partnerCardUrl: e.target.value } }))}
+                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(168,85,247,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                          />
                           <button
                             onClick={() => {
                               const f = cdForm[app.id] || {};
@@ -728,7 +752,7 @@ export default function AdminApplications({
                               const days = parseInt(f.days || "0");
                               const rate = parseFloat(f.rate || "0") / 100;
                               if (!amount || !days || !rate) return;
-                              onCreditDoctorApprove(app.id, { amount, days, rate });
+                              onCreditDoctorApprove(app.id, { amount, days, rate, partnerCardUrl: f.partnerCardUrl?.trim() || undefined });
                               setCdOpen(null);
                             }}
                             disabled={appProcessing}
@@ -743,10 +767,65 @@ export default function AdminApplications({
                       ) : (
                         <button onClick={() => {
                           setCdOpen(app.id);
-                          setCdForm(prev => ({ ...prev, [app.id]: { amount: String(app.approvedAmount ?? app.amount ?? ""), days: String(app.approvedDays ?? app.days ?? ""), rate: String(app.approvedRate ? app.approvedRate * 100 : "1") } }));
+                          setCdForm(prev => ({ ...prev, [app.id]: { amount: String(app.approvedAmount ?? app.amount ?? ""), days: String(app.approvedDays ?? app.days ?? ""), rate: String(app.approvedRate ? app.approvedRate * 100 : "1"), partnerCardUrl: app.partnerCardUrl || "" } }));
                         }}
                           style={{ background: "linear-gradient(135deg,#a855f7,#ec4899)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6, boxShadow: "0 0 12px rgba(168,85,247,0.3)" }}>
-                          💊 Кред. Доктор
+                          💊 Кред. Доктор + карта партнёра
+                        </button>
+                      )}
+                      {paOpen === app.id ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 140 }}>
+                          <div style={{ color: "#38bdf8", fontSize: 12, fontWeight: 700, marginBottom: 2 }}>🔗 С партнёрской картой</div>
+                          <input
+                            type="number" placeholder="Сумма, ₽"
+                            value={paForm[app.id]?.amount ?? ""}
+                            onChange={e => setPaForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], amount: e.target.value } }))}
+                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(56,189,248,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                          />
+                          <input
+                            type="number" placeholder="Срок, дней"
+                            value={paForm[app.id]?.days ?? ""}
+                            onChange={e => setPaForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], days: e.target.value } }))}
+                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(56,189,248,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                          />
+                          <input
+                            type="number" placeholder="Ставка %/день" step="0.1"
+                            value={paForm[app.id]?.rate ?? ""}
+                            onChange={e => setPaForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], rate: e.target.value } }))}
+                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(56,189,248,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                          />
+                          <input
+                            type="text" placeholder="Ссылка на карту партнёра"
+                            value={paForm[app.id]?.partnerCardUrl ?? ""}
+                            onChange={e => setPaForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], partnerCardUrl: e.target.value } }))}
+                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(56,189,248,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                          />
+                          <button
+                            onClick={() => {
+                              const f = paForm[app.id] || {};
+                              const amount = parseFloat(f.amount || "0");
+                              const days = parseInt(f.days || "0");
+                              const rate = parseFloat(f.rate || "0") / 100;
+                              if (!amount || !days || !rate) return;
+                              onPartnerApprove(app.id, { amount, days, rate, partnerCardUrl: f.partnerCardUrl?.trim() || undefined });
+                              setPaOpen(null);
+                            }}
+                            disabled={appProcessing}
+                            style={{ background: "linear-gradient(135deg,#0ea5e9,#38bdf8)", color: "white", border: "none", borderRadius: 8, padding: "9px 10px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                            <Icon name="Send" size={14} />{appProcessing ? "..." : "Одобрить"}
+                          </button>
+                          <button onClick={() => setPaOpen(null)}
+                            style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "none", borderRadius: 8, padding: "7px", cursor: "pointer", fontSize: 12 }}>
+                            Отмена
+                          </button>
+                        </div>
+                      ) : (
+                        <button onClick={() => {
+                          setPaOpen(app.id);
+                          setPaForm(prev => ({ ...prev, [app.id]: { amount: String(app.approvedAmount ?? app.amount ?? ""), days: String(app.approvedDays ?? app.days ?? ""), rate: String(app.approvedRate ? app.approvedRate * 100 : "0.8"), partnerCardUrl: app.partnerCardUrl || "" } }));
+                        }}
+                          style={{ background: "linear-gradient(135deg,#0ea5e9,#38bdf8)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                          <Icon name="Wallet" size={16} />Одобрить с картой партнёра
                         </button>
                       )}
                       <button onClick={() => onPostpone(app.id)}

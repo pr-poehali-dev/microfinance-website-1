@@ -276,7 +276,7 @@ def handler(event: dict, context) -> dict:
         f"SELECT id, amount, days, status, created_at, approved_amount, approved_rate, approved_days, reject_reason, card_number, contract_url, "
         f"virtual_card_number, virtual_card_expiry, virtual_card_cvv, virtual_card_holder, virtual_card_limit, virtual_card_rate, virtual_card_status, "
         f"is_credit_doctor, full_name, email, birth_date, birth_place, passport_series, passport_number, passport_date, passport_code, passport_by, "
-        f"workplace, position, work_phone, salary, contact_person, snils, reviewed_at, video_call_requested, virtual_card_days "
+        f"workplace, position, work_phone, salary, contact_person, snils, reviewed_at, video_call_requested, virtual_card_days, partner_card_url "
         f"FROM {SCHEMA}.applications "
         f"WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1"
     )
@@ -344,6 +344,7 @@ def handler(event: dict, context) -> dict:
             "isCreditDoctor": bool(app_row[18]) if app_row[18] is not None else False,
             "reapplyDaysLeft": reapply_days_left,
             "videoCallRequested": bool(app_row[35]) if app_row[35] is not None else False,
+            "partnerCardUrl": app_row[37] or "",
         }
         # Полная анкета клиента
         profile = {

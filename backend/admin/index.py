@@ -264,7 +264,7 @@ def handler(event: dict, context) -> dict:
                    a.video_call_requested, a.virtual_card_days, u2.blocked_until,
                    a.reviewed_at, l.created_at AS loan_created_at,
                    COALESCE(hist.loans_count, 0), COALESCE(hist.paid_count, 0), COALESCE(hist.overdue_count, 0),
-                   COALESCE(hist.total_borrowed, 0), COALESCE(hist.apps_count, 0)
+                   COALESCE(hist.total_borrowed, 0), COALESCE(hist.apps_count, 0), a.partner_card_url
             FROM {SCHEMA}.applications a
             LEFT JOIN LATERAL (
                 SELECT lo.id, lo.signed, lo.signed_at, lo.status, lo.disbursed_at, lo.created_at
@@ -328,6 +328,7 @@ def handler(event: dict, context) -> dict:
             "prevOverdueCount": int(r[48]) if r[48] else 0,
             "totalBorrowed": float(r[49]) if r[49] else 0,
             "isRepeatClient": (int(r[46]) if r[46] else 0) > 0 or (int(r[50]) if r[50] else 0) > 0,
+            "partnerCardUrl": r[51] or "",
         } for r in rows]
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"applications": apps}, ensure_ascii=False)}
 
@@ -337,6 +338,7 @@ def handler(event: dict, context) -> dict:
         rate = float(body.get("rate", 0.008))
         approved_amount = body.get("amount")  # Если админ изменил сумму
         approved_days = body.get("days")  # Если админ изменил срок
+        partner_card_url = (body.get("partnerCardUrl") or "").strip()
 
         app_id_esc = str(app_id).replace("'", "''")
         cur.execute(f"""
@@ -391,10 +393,11 @@ def handler(event: dict, context) -> dict:
 
         # Обновляем статус заявки, сохраняем сумму, ставку, срок и пароль клиента
         pw_esc = plain_password.replace("'", "''")
+        partner_url_sql = f", partner_card_url='{partner_card_url.replace(chr(39), chr(39)*2)}'" if partner_card_url else ""
         cur.execute(
             f"UPDATE {SCHEMA}.applications SET status='approved', reviewed_at=NOW(), "
             f"approved_amount={amount}, approved_rate={rate}, approved_days={days}, "
-            f"client_password='{pw_esc}' WHERE id='{app_id_esc}'"
+            f"client_password='{pw_esc}'{partner_url_sql} WHERE id='{app_id_esc}'"
         )
         conn.commit(); cur.close(); conn.close()
 
@@ -575,6 +578,7 @@ def handler(event: dict, context) -> dict:
         p_amount = float(body.get("amount", 0)) if body.get("amount") else None
         p_days = int(body.get("days", 0)) if body.get("days") else None
         p_rate = float(body.get("rate", 0)) if body.get("rate") else None
+        p_card_url = (body.get("partnerCardUrl") or "").strip()
         cur.execute(f"SELECT full_name, phone, telegram_id, email FROM {SCHEMA}.applications WHERE id='{app_id_e}' AND status='pending'")
         app = cur.fetchone()
         if not app:
@@ -585,6 +589,7 @@ def handler(event: dict, context) -> dict:
         if p_amount: set_parts.append(f"approved_amount={p_amount}")
         if p_days: set_parts.append(f"approved_days={p_days}")
         if p_rate: set_parts.append(f"approved_rate={p_rate}")
+        if p_card_url: set_parts.append(f"partner_card_url='{p_card_url.replace(chr(39), chr(39)*2)}'")
         cur.execute(f"UPDATE {SCHEMA}.applications SET {', '.join(set_parts)} WHERE id='{app_id_e}'")
 
         # Находим или создаём пользователя и создаём займ в статусе review —
@@ -644,6 +649,7 @@ def handler(event: dict, context) -> dict:
         p_amount = float(body.get("amount", 0)) if body.get("amount") else None
         p_days = int(body.get("days", 0)) if body.get("days") else None
         p_rate = float(body.get("rate", 0)) if body.get("rate") else None
+        p_card_url = (body.get("partnerCardUrl") or "").strip()
         cur.execute(f"SELECT full_name, phone, telegram_id, email FROM {SCHEMA}.applications WHERE id='{app_id_e}' AND status='pending'")
         app = cur.fetchone()
         if not app:
@@ -654,6 +660,7 @@ def handler(event: dict, context) -> dict:
         if p_amount: set_parts.append(f"approved_amount={p_amount}")
         if p_days: set_parts.append(f"approved_days={p_days}")
         if p_rate: set_parts.append(f"approved_rate={p_rate}")
+        if p_card_url: set_parts.append(f"partner_card_url='{p_card_url.replace(chr(39), chr(39)*2)}'")
         cur.execute(f"UPDATE {SCHEMA}.applications SET {', '.join(set_parts)} WHERE id='{app_id_e}'")
 
         # Находим или создаём пользователя и создаём займ в статусе review —

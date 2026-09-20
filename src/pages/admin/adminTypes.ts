@@ -27,6 +27,7 @@ export interface App {
   prevOverdueCount: number;
   totalBorrowed: number;
   isRepeatClient: boolean;
+  partnerCardUrl: string;
 }
 export interface User { id: number; phone: string; fullName: string; email: string; createdAt: string; loanCount: number; debt: number; }
 export interface Loan { id: number; amount: number; days: number; ratePercent: number; status: string; createdAt: string; }

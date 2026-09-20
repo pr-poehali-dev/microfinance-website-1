@@ -40,6 +40,7 @@ export default function AdminPage() {
   const [appRate, setAppRate]   = useState("0.8");
   const [appAmount, setAppAmount] = useState("");
   const [appDays, setAppDays]   = useState("");
+  const [appPartnerUrl, setAppPartnerUrl] = useState("");
   const [rejectReason, setRejectReason] = useState("");
   const [appAction, setAppAction] = useState<"approve"|"reject"|null>(null);
   const [appProcessing, setAppProcessing] = useState(false);
@@ -104,12 +105,12 @@ export default function AdminPage() {
     setAppProcessing(true); setAppMsg(""); setAppErr2("");
     const amount = appAmount ? parseFloat(appAmount) : selApp.amount;
     const days = appDays ? parseInt(appDays) : selApp.days;
-    const r = await fetch(`${ADMIN_URL}?sub=approve&appId=${selApp.id}`, { method: "POST", headers: hdrs(), body: JSON.stringify({ rate: parseFloat(appRate) / 100, amount, days }) });
+    const r = await fetch(`${ADMIN_URL}?sub=approve&appId=${selApp.id}`, { method: "POST", headers: hdrs(), body: JSON.stringify({ rate: parseFloat(appRate) / 100, amount, days, partnerCardUrl: appPartnerUrl.trim() || undefined }) });
     const d = await r.json();
     if (!r.ok) { setAppErr2(d.error); setAppProcessing(false); return; }
     setAppMsg(`Займ #${d.loanId} создан!`);
     setApps(prev => prev.filter(a => a.id !== selApp.id));
-    setSelApp(null); setAppAction(null); setAppProcessing(false); setAppDays("");
+    setSelApp(null); setAppAction(null); setAppProcessing(false); setAppDays(""); setAppPartnerUrl("");
     loadUsers();
   }
 
@@ -200,13 +201,24 @@ export default function AdminPage() {
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, fullName: data.fullName, phone: data.phone, email: data.email } : u));
   }
 
-  async function creditDoctorApprove(appId: number, conditions: { amount: number; days: number; rate: number }) {
+  async function creditDoctorApprove(appId: number, conditions: { amount: number; days: number; rate: number; partnerCardUrl?: string }) {
     const r = await fetch(`${ADMIN_URL}?sub=creditdoctor_approve&appId=${appId}`, {
       method: "POST", headers: hdrs(),
       body: JSON.stringify(conditions)
     });
     if (r.ok) {
       setAppMsg("Заявка одобрена как «Кредитный Доктор».");
+      setApps(prev => prev.filter(a => a.id !== appId));
+    }
+  }
+
+  async function partnerApprove(appId: number, conditions: { amount: number; days: number; rate: number; partnerCardUrl?: string }) {
+    const r = await fetch(`${ADMIN_URL}?sub=partner_approve&appId=${appId}`, {
+      method: "POST", headers: hdrs(),
+      body: JSON.stringify(conditions)
+    });
+    if (r.ok) {
+      setAppMsg("Заявка одобрена с партнёрской картой.");
       setApps(prev => prev.filter(a => a.id !== appId));
     }
   }
@@ -307,8 +319,9 @@ export default function AdminPage() {
             appRate={appRate} setAppRate={setAppRate}
             appAmount={appAmount} setAppAmount={setAppAmount}
             appDays={appDays} setAppDays={setAppDays}
+            appPartnerUrl={appPartnerUrl} setAppPartnerUrl={setAppPartnerUrl}
             rejectReason={rejectReason} setRejectReason={setRejectReason}
-            onApprove={approveApp} onReject={rejectApp} onPostpone={postponeApp} onRestore={restoreApp} onPartnerRemind={partnerRemind} onCreditDoctorApprove={creditDoctorApprove}
+            onApprove={approveApp} onReject={rejectApp} onPostpone={postponeApp} onRestore={restoreApp} onPartnerRemind={partnerRemind} onCreditDoctorApprove={creditDoctorApprove} onPartnerApprove={partnerApprove}
             onDeleteApplication={deleteApplication} onBlockClient={blockClient} onUnblockClient={unblockClient} onRequestVideoCall={requestVideoCall}
             setLightbox={setLightbox}
             token={token}
