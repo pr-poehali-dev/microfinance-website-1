@@ -4,17 +4,14 @@ import Icon from "@/components/ui/icon";
 const CARD_NUMBER = "2204 3901 1553 9020";
 
 interface Props {
-  loanId: number;
   amount: number;
+  contractNumber: string;
   fullName: string;
-  fmtAppId: (id: number) => string;
   onClose: () => void;
 }
 
-export default function PayLoanModal({ loanId, amount, fullName, fmtAppId, onClose }: Props) {
+export default function PayLoanModal({ amount, contractNumber, fullName, onClose }: Props) {
   const [copied, setCopied] = useState<"card" | "contract" | null>(null);
-
-  const contractNumber = fmtAppId(loanId);
 
   const copy = (text: string, type: "card" | "contract") => {
     navigator.clipboard.writeText(text).then(() => {

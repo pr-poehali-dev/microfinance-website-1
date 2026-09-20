@@ -132,6 +132,7 @@ export default function DashboardPage() {
   const [application, setApplication] = useState<Application | null>(null);
   const [isRepeatClient, setIsRepeatClient] = useState(false);
   const [payLoan, setPayLoan] = useState<Loan | null>(null);
+  const [payOther, setPayOther] = useState<{ contractNumber: string; amount: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [signingId, setSigningId] = useState<number | null>(null);
@@ -654,12 +655,31 @@ export default function DashboardPage() {
                         </button>
                       </div>
                     ) : shopLoan.disbursed_at ? (
-                      <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.3)" }}>
-                        <Icon name="BadgeCheck" size={18} className="text-sky-400" />
-                        <div>
-                          <div className="text-sky-300 text-sm font-semibold">Займ выдан! Деньги переведены в магазин.</div>
-                          <div className="text-white/40 text-xs mt-0.5">{new Date(shopLoan.disbursed_at).toLocaleString("ru-RU")}</div>
+                      <div className="space-y-3">
+                        <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.3)" }}>
+                          <Icon name="BadgeCheck" size={18} className="text-sky-400" />
+                          <div>
+                            <div className="text-sky-300 text-sm font-semibold">Займ выдан! Деньги переведены в магазин.</div>
+                            <div className="text-white/40 text-xs mt-0.5">{new Date(shopLoan.disbursed_at).toLocaleString("ru-RU")}</div>
+                          </div>
                         </div>
+                        {shopLoan.status === "approved" && (
+                          <button
+                            onClick={() => {
+                              const a = shopLoan.approved_amount || shopLoan.loan_amount;
+                              const m = shopLoan.approved_months || shopLoan.loan_months;
+                              const r = (shopLoan.approved_rate || 9) / 100;
+                              const totalDue = Math.round(a * (1 + r * m));
+                              const remaining = Math.max(0, totalDue - (shopLoan.paidTotal || 0));
+                              setPayOther({ contractNumber: `Т-${String(shopLoan.id).padStart(12, "0")}`, amount: remaining });
+                            }}
+                            className="w-full text-white font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2"
+                            style={{ background: "linear-gradient(135deg,#a855f7,#06b6d4)" }}
+                          >
+                            <Icon name="Banknote" size={16} />
+                            Погасить займ
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.3)" }}>
@@ -797,17 +817,36 @@ export default function DashboardPage() {
                     )}
 
                     {carLoan.disbursed_at ? (
-                      <PaymentHistory
-                        schedule={carLoan.schedule || []}
-                        payments={carLoan.payments || []}
-                        paidTotal={carLoan.paidTotal || 0}
-                        totalDue={(() => {
-                          const a = carLoan.approved_amount || carLoan.loan_amount;
-                          const m = carLoan.approved_months || carLoan.loan_months;
-                          const r = (carLoan.approved_rate || 12) / 100;
-                          return Math.round(a * (1 + r * m));
-                        })()}
-                      />
+                      <div className="space-y-3">
+                        <PaymentHistory
+                          schedule={carLoan.schedule || []}
+                          payments={carLoan.payments || []}
+                          paidTotal={carLoan.paidTotal || 0}
+                          totalDue={(() => {
+                            const a = carLoan.approved_amount || carLoan.loan_amount;
+                            const m = carLoan.approved_months || carLoan.loan_months;
+                            const r = (carLoan.approved_rate || 12) / 100;
+                            return Math.round(a * (1 + r * m));
+                          })()}
+                        />
+                        {carLoan.status === "approved" && (
+                          <button
+                            onClick={() => {
+                              const a = carLoan.approved_amount || carLoan.loan_amount;
+                              const m = carLoan.approved_months || carLoan.loan_months;
+                              const r = (carLoan.approved_rate || 12) / 100;
+                              const totalDue = Math.round(a * (1 + r * m));
+                              const remaining = Math.max(0, totalDue - (carLoan.paidTotal || 0));
+                              setPayOther({ contractNumber: `А-${String(carLoan.id).padStart(12, "0")}`, amount: remaining });
+                            }}
+                            className="w-full text-white font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2"
+                            style={{ background: "linear-gradient(135deg,#f59e0b,#ef4444)" }}
+                          >
+                            <Icon name="Banknote" size={16} />
+                            Погасить займ
+                          </button>
+                        )}
+                      </div>
                     ) : !carLoan.contract_signed ? (
                       <div>
                         <div className="rounded-xl p-4 mb-4 flex items-start gap-3"
@@ -864,11 +903,19 @@ export default function DashboardPage() {
 
       {payLoan && (
         <PayLoanModal
-          loanId={payLoan.id}
+          contractNumber={fmtAppId(payLoan.id)}
           amount={payLoan.remaining ?? payLoan.total}
           fullName={user?.fullName || ""}
-          fmtAppId={fmtAppId}
           onClose={() => setPayLoan(null)}
+        />
+      )}
+
+      {payOther && (
+        <PayLoanModal
+          contractNumber={payOther.contractNumber}
+          amount={payOther.amount}
+          fullName={user?.fullName || ""}
+          onClose={() => setPayOther(null)}
         />
       )}
     </div>
