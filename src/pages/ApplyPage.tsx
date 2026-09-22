@@ -181,9 +181,7 @@ export default function ApplyPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 glass" style={{ borderBottom: "1px solid rgba(240,153,74,0.2)" }}>
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <button onClick={() => navigate("/")} className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center">
-              <Icon name="Wallet" size={20} className="text-white" />
-            </div>
+            <img src="/logo-icon.png" alt="Русфинанс 24" className="w-9 h-9 rounded-xl" />
             <span className="font-oswald text-xl font-bold tracking-wide text-white">
               <span className="gradient-text">РУСФИНАНС24</span>
             </span>
