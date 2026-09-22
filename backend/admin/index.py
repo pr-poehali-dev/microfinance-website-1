@@ -360,6 +360,12 @@ def handler(event: dict, context) -> dict:
         if approved_days:
             days = int(approved_days)
 
+        # Страхование жизни и здоровья: 50% от суммы, выдаваемой клиенту на руки.
+        # Клиент получает на карту исходную сумму (amount), а тело долга,
+        # на которое начисляются проценты, увеличивается на страховку.
+        insurance_amount = round(amount * 0.5)
+        debt_amount = amount + insurance_amount
+
         # Находим или создаём пользователя, всегда генерируем новый пароль
         import secrets as _s, hashlib as _h, string as _str
         alphabet = _str.ascii_letters + _str.digits
@@ -387,19 +393,20 @@ def handler(event: dict, context) -> dict:
             user_id = user[0]
             cur.execute(f"UPDATE {SCHEMA}.users SET password_hash='{pw_hash}' WHERE id={user_id}")
 
-        # Создаём займ со статусом review — клиент сам подпишет договор в ЛК
+        # Создаём займ со статусом review — клиент сам подпишет договор в ЛК.
+        # amount в loans — это тело долга (сумма + страховка), проценты считаются от него.
         cur.execute(
-            f"INSERT INTO {SCHEMA}.loans (user_id, amount, days, rate, status, offer_amount, offer_days, offer_rate) "
-            f"VALUES ({user_id},{amount},{days},{rate},'review',{amount},{days},{rate}) RETURNING id"
+            f"INSERT INTO {SCHEMA}.loans (user_id, amount, days, rate, status, offer_amount, offer_days, offer_rate, insurance_amount) "
+            f"VALUES ({user_id},{debt_amount},{days},{rate},'review',{debt_amount},{days},{rate},{insurance_amount}) RETURNING id"
         )
         loan_id = cur.fetchone()[0]
 
-        # Обновляем статус заявки, сохраняем сумму, ставку, срок и пароль клиента
+        # Обновляем статус заявки, сохраняем сумму, ставку, срок, страховку и пароль клиента
         pw_esc = plain_password.replace("'", "''")
         partner_url_sql = f", partner_card_url='{partner_card_url.replace(chr(39), chr(39)*2)}'" if partner_card_url else ""
         cur.execute(
             f"UPDATE {SCHEMA}.applications SET status='approved', reviewed_at=NOW(), "
-            f"approved_amount={amount}, approved_rate={rate}, approved_days={days}, "
+            f"approved_amount={amount}, approved_rate={rate}, approved_days={days}, insurance_amount={insurance_amount}, "
             f"client_password='{pw_esc}'{partner_url_sql} WHERE id='{app_id_esc}'"
         )
         conn.commit(); cur.close(); conn.close()
@@ -420,8 +427,8 @@ def handler(event: dict, context) -> dict:
         except Exception as ex:
             print(f"[admin] contract generation error (non-blocking): {ex}")
 
-        interest = round(float(amount) * rate * int(days))
-        total = float(amount) + interest
+        interest = round(debt_amount * rate * int(days))
+        total = debt_amount + interest
         now = datetime.now().strftime("%d.%m.%Y в %H:%М")
 
         tg(
@@ -429,7 +436,8 @@ def handler(event: dict, context) -> dict:
             f"⏱ {now}\n\n"
             f"👤 <b>Клиент:</b> {full_name or phone}\n"
             f"📞 <b>Телефон:</b> {phone}\n"
-            f"💰 <b>Сумма:</b> {int(amount):,} ₽\n".replace(",", " ") +
+            f"💰 <b>Сумма на руки:</b> {int(amount):,} ₽\n".replace(",", " ") +
+            f"🛡 <b>Страховка (50%):</b> {int(insurance_amount):,} ₽\n".replace(",", " ") +
             f"📅 <b>Срок:</b> {days} дн.\n"
             f"🔖 <b>Займ №:</b> {loan_id}"
         )
@@ -438,6 +446,7 @@ def handler(event: dict, context) -> dict:
                 tg_username,
                 f"✅ <b>Ваша заявка одобрена!</b>\n\n"
                 f"💰 <b>Сумма займа:</b> {int(amount):,} ₽\n".replace(",", " ") +
+                f"🛡 <b>Страхование жизни и здоровья (50%):</b> {int(insurance_amount):,} ₽\n".replace(",", " ") +
                 f"📅 <b>Срок:</b> {days} дн.\n"
                 f"📈 <b>Ставка:</b> {round(rate * 100, 1)}%/день\n"
                 f"💳 <b>К возврату:</b> {int(total):,} ₽\n\n".replace(",", " ") +
@@ -445,6 +454,7 @@ def handler(event: dict, context) -> dict:
             )
         if client_email:
             amount_fmt = f"{int(amount):,}".replace(",", " ")
+            insurance_fmt = f"{int(insurance_amount):,}".replace(",", " ")
             total_fmt = f"{int(total):,}".replace(",", " ")
             send_email(
                 to=client_email,
@@ -467,6 +477,10 @@ def handler(event: dict, context) -> dict:
                 <tr>
                   <td style="padding:6px 0;"><span style="color:rgba(255,255,255,0.5);font-size:13px;">Сумма займа</span></td>
                   <td align="right"><b style="color:#fff;font-size:16px;">{amount_fmt} ₽</b></td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 0;"><span style="color:rgba(255,255,255,0.5);font-size:13px;">Страхование жизни и здоровья (50%)</span></td>
+                  <td align="right"><b style="color:#fff;font-size:16px;">{insurance_fmt} ₽</b></td>
                 </tr>
                 <tr>
                   <td style="padding:6px 0;"><span style="color:rgba(255,255,255,0.5);font-size:13px;">Срок</span></td>

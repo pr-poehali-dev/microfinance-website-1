@@ -382,7 +382,7 @@ def handler(event: dict, context) -> dict:
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     cur.execute(
-        f"SELECT id, amount, days, rate, status, created_at, signed, offer_amount, offer_days, offer_rate, disbursed_at FROM {SCHEMA}.loans WHERE user_id = {user_id} ORDER BY created_at DESC"
+        f"SELECT id, amount, days, rate, status, created_at, signed, offer_amount, offer_days, offer_rate, disbursed_at, insurance_amount FROM {SCHEMA}.loans WHERE user_id = {user_id} ORDER BY created_at DESC"
     )
     rows = cur.fetchall()
 
@@ -391,7 +391,7 @@ def handler(event: dict, context) -> dict:
         f"SELECT id, amount, days, status, created_at, approved_amount, approved_rate, approved_days, reject_reason, card_number, contract_url, "
         f"virtual_card_number, virtual_card_expiry, virtual_card_cvv, virtual_card_holder, virtual_card_limit, virtual_card_rate, virtual_card_status, "
         f"is_credit_doctor, full_name, email, birth_date, birth_place, passport_series, passport_number, passport_date, passport_code, passport_by, "
-        f"workplace, position, work_phone, salary, contact_person, snils, reviewed_at, video_call_requested, virtual_card_days, partner_card_url "
+        f"workplace, position, work_phone, salary, contact_person, snils, reviewed_at, video_call_requested, virtual_card_days, partner_card_url, insurance_amount "
         f"FROM {SCHEMA}.applications "
         f"WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1"
     )
@@ -403,9 +403,11 @@ def handler(event: dict, context) -> dict:
         approved_amount = float(app_row[5]) if app_row[5] else None
         approved_rate = float(app_row[6]) if app_row[6] else 0.008
         approved_days = int(app_row[7]) if app_row[7] else app_days
+        insurance_amount_app = float(app_row[38]) if app_row[38] else 0
         eff_amount = approved_amount if approved_amount else app_amount
-        approved_interest = round(eff_amount * approved_rate * approved_days)
-        approved_total = eff_amount + approved_interest
+        eff_debt = eff_amount + insurance_amount_app
+        approved_interest = round(eff_debt * approved_rate * approved_days)
+        approved_total = eff_debt + approved_interest
         reviewed_at = app_row[34]
         reapply_days_left = None
         if app_row[3] == "rejected" and reviewed_at:
@@ -479,6 +481,7 @@ def handler(event: dict, context) -> dict:
             "reapplyDaysLeft": reapply_days_left,
             "videoCallRequested": bool(app_row[35]) if app_row[35] is not None else False,
             "partnerCardUrl": app_row[37] or "",
+            "insuranceAmount": insurance_amount_app,
         }
         # Полная анкета клиента
         profile = {
@@ -530,7 +533,8 @@ def handler(event: dict, context) -> dict:
 
     loans = []
     for row in rows:
-        loan_id, amount, days, rate, status, created_at, signed, offer_amount, offer_days, offer_rate, disbursed_at = row
+        loan_id, amount, days, rate, status, created_at, signed, offer_amount, offer_days, offer_rate, disbursed_at, loan_insurance = row
+        loan_insurance = float(loan_insurance) if loan_insurance else 0
         interest = round(float(amount) * float(rate) * days)
         total = float(amount) + interest
         loan_payments = payments_by_loan.get(loan_id, [])
@@ -565,6 +569,8 @@ def handler(event: dict, context) -> dict:
         loan_data = {
             "id": loan_id,
             "amount": float(amount),
+            "insuranceAmount": loan_insurance,
+            "principalAmount": float(amount) - loan_insurance,
             "days": days,
             "rate": float(rate),
             "ratePercent": round(float(rate) * 100, 1),

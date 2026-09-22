@@ -16,6 +16,8 @@ interface LoanOffer {
 interface Loan {
   id: number;
   amount: number;
+  insuranceAmount?: number;
+  principalAmount?: number;
   days: number;
   rate: number;
   ratePercent: number;
@@ -57,6 +59,7 @@ interface Application {
   approvedRatePercent: number;
   approvedDays: number;
   approvedTotal: number;
+  insuranceAmount?: number;
   rejectReason: string;
   cardNumber: string;
   contractUrl: string;
@@ -145,6 +148,15 @@ export default function DashboardApplicationStatus({
                     </div>
                   ))}
                 </div>
+                {!!loan.insuranceAmount && (
+                  <div className="rounded-xl p-3 flex items-start gap-3 mb-4"
+                    style={{ background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.2)" }}>
+                    <Icon name="ShieldCheck" size={16} className="text-green-400 shrink-0 mt-0.5" />
+                    <p className="text-white/50 text-xs leading-relaxed">
+                      Страхование жизни и здоровья — <span className="text-green-400 font-semibold">{loan.insuranceAmount.toLocaleString("ru-RU")} ₽</span> (50% от суммы займа) включено в общую сумму к возврату.
+                    </p>
+                  </div>
+                )}
                 {signMsg && (
                   <div className="rounded-xl px-4 py-3 mb-4 text-sm font-medium"
                     style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)", color: "#4ade80" }}>
@@ -467,6 +479,17 @@ export default function DashboardApplicationStatus({
                 </div>
               ))}
             </div>
+
+            {/* Пояснение про страхование жизни и здоровья */}
+            {!!application.insuranceAmount && (
+              <div className="rounded-xl p-3 flex items-start gap-3"
+                style={{ background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.2)" }}>
+                <Icon name="ShieldCheck" size={16} className="text-green-400 shrink-0 mt-0.5" />
+                <p className="text-white/50 text-xs leading-relaxed">
+                  Страхование жизни и здоровья — <span className="text-green-400 font-semibold">{application.insuranceAmount.toLocaleString("ru-RU")} ₽</span> (50% от суммы займа) включено в общую сумму к возврату.
+                </p>
+              </div>
+            )}
 
             {/* Ввод карты/СБП */}
             <div className="rounded-xl p-4 space-y-3"

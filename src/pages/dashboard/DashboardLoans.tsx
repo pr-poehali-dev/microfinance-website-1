@@ -13,6 +13,7 @@ interface LoanOffer {
 interface Loan {
   id: number;
   amount: number;
+  insuranceAmount?: number;
   days: number;
   rate: number;
   ratePercent: number;
@@ -133,6 +134,16 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                       <div className="text-white font-bold text-lg">{loan.ratePercent}%/день</div>
                     </div>
                   </div>
+
+                  {!!loan.insuranceAmount && (
+                    <div className="rounded-xl p-3 flex items-start gap-3 mb-5"
+                      style={{ background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.2)" }}>
+                      <Icon name="ShieldCheck" size={16} className="text-green-400 shrink-0 mt-0.5" />
+                      <p className="text-white/50 text-xs leading-relaxed">
+                        Страхование жизни и здоровья — <span className="text-green-400 font-semibold">{loan.insuranceAmount.toLocaleString("ru-RU")} ₽</span> (50% от суммы займа) включено в сумму займа.
+                      </p>
+                    </div>
+                  )}
 
                   {/* Подпись договора для review-займа */}
                   {loan.status === "review" && !loan.signed && !loan.offer && (

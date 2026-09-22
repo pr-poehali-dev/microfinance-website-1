@@ -1,0 +1,3 @@
+UPDATE t_p30184577_microfinance_website.sessions SET expires_at = NOW() - INTERVAL '1 day' WHERE token = 'test_insurance_session';
+UPDATE t_p30184577_microfinance_website.loans SET status = 'cancelled' WHERE id = 150;
+UPDATE t_p30184577_microfinance_website.applications SET status = 'pending', approved_amount = NULL, approved_rate = NULL, approved_days = NULL, insurance_amount = NULL, client_password = NULL, reviewed_at = NULL WHERE id = 20266350;

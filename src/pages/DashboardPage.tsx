@@ -43,6 +43,7 @@ interface PaymentItem {
 interface Loan {
   id: number;
   amount: number;
+  insuranceAmount?: number;
   days: number;
   rate: number;
   ratePercent: number;
@@ -130,6 +131,7 @@ interface Application {
   approvedRatePercent: number;
   approvedDays: number;
   approvedTotal: number;
+  insuranceAmount?: number;
   rejectReason: string;
   cardNumber: string;
   contractUrl: string;
