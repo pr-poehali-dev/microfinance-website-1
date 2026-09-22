@@ -35,6 +35,7 @@ export default function CarLoanApplyPage() {
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
+  const [insuranceAgreed, setInsuranceAgreed] = useState(false);
 
   const setF = (key: string, val: string) => setForm(p => ({ ...p, [key]: val }));
 
@@ -47,6 +48,10 @@ export default function CarLoanApplyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!insuranceAgreed) {
+      setSendError("Отметьте согласие на страхование жизни и здоровья перед отправкой заявки");
+      return;
+    }
     setSending(true);
     setSendError("");
     try {
@@ -357,6 +362,20 @@ export default function CarLoanApplyPage() {
             </p>
           </div>
 
+          {/* Страхование жизни и здоровья — обязательное согласие */}
+          <label className="rounded-xl p-4 flex items-start gap-3 cursor-pointer transition-colors"
+            style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)" }}>
+            <input
+              type="checkbox"
+              checked={insuranceAgreed}
+              onChange={e => setInsuranceAgreed(e.target.checked)}
+              className="mt-0.5 w-4 h-4 shrink-0 accent-yellow-500 cursor-pointer"
+            />
+            <span className="text-white/70 text-xs leading-relaxed">
+              Я согласен(а) на <span className="text-yellow-400 font-medium">страхование жизни и здоровья</span> в качестве обеспечения исполнения обязательств по договору займа. Страховая премия включается в общую стоимость займа.
+            </span>
+          </label>
+
           {sendError && (
             <div className="rounded-xl p-4 text-red-400 text-sm text-center"
               style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}>
@@ -364,12 +383,13 @@ export default function CarLoanApplyPage() {
             </div>
           )}
 
-          <button type="submit" disabled={sending}
+          <button type="submit" disabled={sending || !insuranceAgreed}
             className="w-full py-5 rounded-2xl font-bold text-xl text-white transition-all flex items-center justify-center gap-3"
             style={{
               background: "linear-gradient(135deg, #f59e0b, #ef4444)",
               boxShadow: "0 0 40px rgba(245,158,11,0.4)",
-              opacity: sending ? 0.7 : 1,
+              opacity: sending || !insuranceAgreed ? 0.6 : 1,
+              cursor: !insuranceAgreed ? "not-allowed" : "pointer",
             }}>
             {sending ? (
               <><Icon name="Loader" size={22} className="animate-spin" /> Отправляем...</>

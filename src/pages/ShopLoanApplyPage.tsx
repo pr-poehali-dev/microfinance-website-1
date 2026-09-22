@@ -45,6 +45,7 @@ export default function ShopLoanApplyPage() {
   const [sending, setSending] = useState(false);
   const [sendStep, setSendStep] = useState("");
   const [sendError, setSendError] = useState("");
+  const [insuranceAgreed, setInsuranceAgreed] = useState(false);
 
   const setF = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));
 
@@ -100,6 +101,10 @@ export default function ShopLoanApplyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!insuranceAgreed) {
+      setSendError("Отметьте согласие на страхование жизни и здоровья перед отправкой заявки");
+      return;
+    }
     setSending(true); setSendError(""); setSendStep("");
     try {
       const fileEntries = Object.entries(files).filter(([, f]) => f);
@@ -406,6 +411,20 @@ export default function ShopLoanApplyPage() {
             </p>
           </div>
 
+          {/* Страхование жизни и здоровья — обязательное согласие */}
+          <label className="rounded-xl p-4 flex items-start gap-3 cursor-pointer transition-colors"
+            style={{ background: "rgba(240,153,74,0.06)", border: "1px solid rgba(240,153,74,0.2)" }}>
+            <input
+              type="checkbox"
+              checked={insuranceAgreed}
+              onChange={e => setInsuranceAgreed(e.target.checked)}
+              className="mt-0.5 w-4 h-4 shrink-0 accent-orange-500 cursor-pointer"
+            />
+            <span className="text-white/70 text-xs leading-relaxed">
+              Я согласен(а) на <span className="text-orange-400 font-medium">страхование жизни и здоровья</span> в качестве обеспечения исполнения обязательств по договору займа. Страховая премия включается в общую стоимость займа.
+            </span>
+          </label>
+
           {sendStep && (
             <div className="rounded-xl p-3 flex items-center gap-2 text-sm"
               style={{ background: "rgba(240,153,74,0.1)", border: "1px solid rgba(240,153,74,0.2)", color: "#fed7aa" }}>
@@ -419,9 +438,9 @@ export default function ShopLoanApplyPage() {
             </div>
           )}
 
-          <button type="submit" disabled={sending}
+          <button type="submit" disabled={sending || !insuranceAgreed}
             className="w-full py-5 rounded-2xl font-bold text-xl text-white flex items-center justify-center gap-3"
-            style={{ background: "linear-gradient(135deg,#f0994a,#06b6d4)", boxShadow: "0 0 40px rgba(240,153,74,0.4)", opacity: sending ? 0.7 : 1 }}>
+            style={{ background: "linear-gradient(135deg,#f0994a,#06b6d4)", boxShadow: "0 0 40px rgba(240,153,74,0.4)", opacity: sending || !insuranceAgreed ? 0.6 : 1, cursor: !insuranceAgreed ? "not-allowed" : "pointer" }}>
             {sending
               ? <><Icon name="Loader" size={22} className="animate-spin" /> Отправляем...</>
               : <><Icon name="ShoppingBag" size={22} /> Отправить заявку</>
