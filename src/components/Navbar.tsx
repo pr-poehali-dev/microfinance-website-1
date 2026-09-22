@@ -26,7 +26,7 @@ export default function Navbar({ mobileOpen, setMobileOpen, scrollTo }: NavbarPr
             <Icon name="Wallet" size={20} className="text-white" />
           </div>
           <span className="font-oswald text-xl font-bold tracking-wide text-white">
-            <span className="gradient-text">FINANS24</span>
+            <span className="gradient-text">РУСФИНАНС24</span>
           </span>
         </div>
 
@@ -89,7 +89,7 @@ export default function Navbar({ mobileOpen, setMobileOpen, scrollTo }: NavbarPr
             className="text-left gradient-text font-semibold py-2 flex items-center gap-2"
           >
             <Icon name="CreditCard" size={16} />
-            Карта FINANS 24
+            Карта РУСФИНАНС 24
           </button>
           <button
             onClick={() => { setMobileOpen(false); navigate(localStorage.getItem("token") ? "/dashboard" : "/login"); }}

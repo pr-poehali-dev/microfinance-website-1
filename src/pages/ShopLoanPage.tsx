@@ -130,7 +130,7 @@ export default function ShopLoanPage() {
                   </div>
                   <div>
                     <div className="text-white font-bold text-lg">Займ на товары</div>
-                    <div className="text-white/40 text-sm">FINANS 24</div>
+                    <div className="text-white/40 text-sm">РУСФИНАНС 24</div>
                   </div>
                 </div>
 

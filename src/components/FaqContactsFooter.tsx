@@ -82,7 +82,7 @@ export default function FaqContactsFooter() {
           <div className="grid md:grid-cols-3 gap-6 mb-10">
             {[
               { icon: "Phone", title: "Телефон", value: "+7-996-201-95-00", sub: "Бесплатно, круглосуточно", href: "tel:+79962019500" },
-              { icon: "Mail", title: "Email", value: "investorfinans24@ya.ru", sub: "Ответим в течение часа", href: "mailto:investorfinans24@ya.ru" },
+              { icon: "Mail", title: "Email", value: "rusfinans24@ya.ru", sub: "Ответим в течение часа", href: "mailto:rusfinans24@ya.ru" },
               { icon: "Clock", title: "Режим работы", value: "Круглосуточно", sub: "Онлайн: 24/7", href: null },
             ].map((c) => (
               <div key={c.title} className="glass card-hover rounded-2xl p-6 text-center">
@@ -146,11 +146,11 @@ export default function FaqContactsFooter() {
               <Icon name="Wallet" size={16} className="text-white" />
             </div>
             <span className="font-oswald text-lg font-bold text-white">
-              <span className="gradient-text">FINANS24</span>
+              <span className="gradient-text">РУСФИНАНС24</span>
             </span>
           </div>
           <div className="text-white/30 text-sm text-center">
-            © 2026 FINANS 24. Все права защищены.
+            © 2026 РУСФИНАНС 24. Все права защищены.
           </div>
           <div className="flex gap-4">
             {["Политика", "Условия", "Реквизиты"].map((l) => (

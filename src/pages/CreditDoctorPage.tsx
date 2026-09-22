@@ -66,7 +66,7 @@ export default function CreditDoctorPage() {
               <Icon name="Wallet" size={20} className="text-white" />
             </div>
             <span className="font-oswald text-xl font-bold tracking-wide text-white">
-              <span className="gradient-text">FINANS24</span>
+              <span className="gradient-text">РУСФИНАНС24</span>
             </span>
           </button>
           <button onClick={() => navigate("/")} className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm">
@@ -244,7 +244,7 @@ export default function CreditDoctorPage() {
 
       {/* FOOTER */}
       <footer className="py-8 px-4 text-center">
-        <p className="text-white/20 text-sm">© 2024 FINANS 24 · Займы от частных инвесторов</p>
+        <p className="text-white/20 text-sm">© 2024 РУСФИНАНС 24 · Займы от частных инвесторов</p>
       </footer>
     </div>
   );

@@ -74,7 +74,7 @@ export default function AdminCardControl({ app, token, onDone }: Props) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 150 }}>
         <div style={{ color: "#fbbf7a", fontSize: 12, fontWeight: 700, marginBottom: 2 }}>
-          {mode === "issue" ? "Выдать карту FINANS 24" : "Изменить условия карты"}
+          {mode === "issue" ? "Выдать карту РУСФИНАНС 24" : "Изменить условия карты"}
         </div>
         <input
           type="number" placeholder="Лимит, ₽"
@@ -126,7 +126,7 @@ export default function AdminCardControl({ app, token, onDone }: Props) {
       <button onClick={() => { setMode(hasCard ? "edit" : "issue"); setOpen(true); }}
         style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)", color: "white", border: "none", borderRadius: 10, padding: "9px 12px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
         <Icon name={hasCard ? "Pencil" : "CreditCard"} size={14} />
-        {hasCard ? "Изменить условия" : "Выдать карту FINANS 24"}
+        {hasCard ? "Изменить условия" : "Выдать карту РУСФИНАНС 24"}
       </button>
       {hasCard && (
         <button onClick={toggleBlock} disabled={saving}

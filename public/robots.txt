@@ -15,4 +15,4 @@ Allow: /
 Disallow: /admin
 Disallow: /dashboard
 
-Sitemap: https://finans24.online/sitemap.xml
+Sitemap: https://rusfinans24.ru/sitemap.xml

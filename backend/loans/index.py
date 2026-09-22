@@ -69,7 +69,7 @@ def handler(event: dict, context) -> dict:
         confirm_card = b.get("confirm_card", False)
 
         if confirm_card:
-            # Клиент подтвердил виртуальную карту FINANS 24 — активируем
+            # Клиент подтвердил виртуальную карту РУСФИНАНС 24 — активируем
             cur.execute(
                 f"UPDATE {SCHEMA}.applications SET virtual_card_status='active' "
                 f"WHERE phone='{ph_e}' AND virtual_card_status='pending' AND virtual_card_number IS NOT NULL"
@@ -86,7 +86,7 @@ def handler(event: dict, context) -> dict:
             if tg_token and vc_row:
                 vc_id, vc_name, vc_limit, vc_rate = vc_row
                 text = (
-                    f"✅ <b>Клиент активировал карту FINANS 24</b>\n\n"
+                    f"✅ <b>Клиент активировал карту РУСФИНАНС 24</b>\n\n"
                     f"👤 <b>ФИО:</b> {vc_name or phone}\n"
                     f"📞 <b>Телефон:</b> {phone}\n"
                     f"💰 <b>Лимит:</b> {int(float(vc_limit)):,} ₽\n".replace(",", " ") +
@@ -152,7 +152,7 @@ def handler(event: dict, context) -> dict:
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
-    # --- ПОДАТЬ ЗАЯВКУ НА КАРТУ FINANS 24 (POST, ?sub=card_request) ---
+    # --- ПОДАТЬ ЗАЯВКУ НА КАРТУ РУСФИНАНС 24 (POST, ?sub=card_request) ---
     if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "card_request":
         ph_e = phone.replace("'", "''")
         fn_e = (full_name or "").replace("'", "''")
@@ -167,7 +167,7 @@ def handler(event: dict, context) -> dict:
         )
         if cur.fetchone():
             cur.close(); conn.close()
-            return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": "У вас уже есть карта FINANS 24"})}
+            return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": "У вас уже есть карта РУСФИНАНС 24"})}
         cur.execute(
             f"INSERT INTO {SCHEMA}.card_requests (user_id, phone, full_name, status) "
             f"VALUES ({user_id}, '{ph_e}', '{fn_e}', 'pending') RETURNING id"
@@ -181,7 +181,7 @@ def handler(event: dict, context) -> dict:
         chat_id = "8540431915"
         if tg_token:
             text = (
-                f"💳 <b>Новая заявка на карту FINANS 24 (#{req_id})</b>\n\n"
+                f"💳 <b>Новая заявка на карту РУСФИНАНС 24 (#{req_id})</b>\n\n"
                 f"👤 <b>ФИО:</b> {full_name or phone}\n"
                 f"📞 <b>Телефон:</b> {phone}"
             )
@@ -196,7 +196,7 @@ def handler(event: dict, context) -> dict:
                 pass
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "requestId": req_id})}
 
-    # --- ПЕРЕВОД С КАРТЫ FINANS 24 (POST, ?sub=card_withdraw, body: {amount, weeks}) ---
+    # --- ПЕРЕВОД С КАРТЫ РУСФИНАНС 24 (POST, ?sub=card_withdraw, body: {amount, weeks}) ---
     if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "card_withdraw":
         raw_b = event.get("body") or "{}"
         b = json.loads(raw_b) if isinstance(raw_b, str) else raw_b
@@ -247,7 +247,7 @@ def handler(event: dict, context) -> dict:
         if tg_token:
             interest_tx = round(wd_amount * CARD_WEEKLY_RATE / 100 * wd_weeks)
             text = (
-                f"💸 <b>Перевод с карты FINANS 24 (#{tx_id})</b>\n\n"
+                f"💸 <b>Перевод с карты РУСФИНАНС 24 (#{tx_id})</b>\n\n"
                 f"👤 <b>ФИО:</b> {full_name or phone}\n"
                 f"📞 <b>Телефон:</b> {phone}\n"
                 f"💰 <b>Сумма:</b> {int(wd_amount):,} ₽\n".replace(",", " ") +
@@ -340,7 +340,7 @@ def handler(event: dict, context) -> dict:
         chat_id = "8540431915"
         if tg_token:
             text = (
-                f"🔁 <b>Повторная заявка от клиента — FINANS 24 (#{new_app_id})</b>\n\n"
+                f"🔁 <b>Повторная заявка от клиента — РУСФИНАНС 24 (#{new_app_id})</b>\n\n"
                 f"👤 <b>ФИО:</b> {full_name or phone}\n"
                 f"📞 <b>Телефон:</b> {phone}\n"
                 f"💰 <b>Сумма:</b> {int(amount):,} ₽\n".replace(",", " ") +
@@ -500,7 +500,7 @@ def handler(event: dict, context) -> dict:
         }
         application["profile"] = profile
 
-    # Статус заявки клиента на получение карты FINANS 24 (если подавал)
+    # Статус заявки клиента на получение карты РУСФИНАНС 24 (если подавал)
     ph_e2 = phone.replace("'", "''")
     cur.execute(
         f"SELECT status, reject_reason FROM {SCHEMA}.card_requests "

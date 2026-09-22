@@ -648,7 +648,7 @@ export default function DashboardApplicationStatus({
         </div>
       )}
 
-      {/* ВИРТУАЛЬНАЯ КАРТА FINANS 24 */}
+      {/* ВИРТУАЛЬНАЯ КАРТА РУСФИНАНС 24 */}
       {application?.virtualCard && application.virtualCard.status !== "none" && (
         <div className="mb-6">
           {/* Ожидает подтверждения */}
@@ -662,7 +662,7 @@ export default function DashboardApplicationStatus({
                   <Icon name="CreditCard" size={20} className="text-orange-300" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-white font-bold">Карта FINANS 24 одобрена!</div>
+                  <div className="text-white font-bold">Карта РУСФИНАНС 24 одобрена!</div>
                   <div className="text-orange-300 text-xs mt-0.5">Ознакомьтесь с условиями и подтвердите</div>
                 </div>
                 <span className="text-xs px-3 py-1 rounded-full font-semibold animate-pulse"
@@ -676,7 +676,7 @@ export default function DashboardApplicationStatus({
                     style={{ background: "white", transform: "translate(30%,-30%)" }} />
                   <div className="flex justify-between items-start mb-6">
                     <div>
-                      <div className="text-orange-200 text-xs font-semibold uppercase tracking-wider">FINANS 24</div>
+                      <div className="text-orange-200 text-xs font-semibold uppercase tracking-wider">РУСФИНАНС 24</div>
                       <div className="text-white text-xs opacity-60 mt-0.5">Виртуальная карта</div>
                     </div>
                     <Icon name="CreditCard" size={28} className="text-orange-200 opacity-70" />
@@ -728,7 +728,7 @@ export default function DashboardApplicationStatus({
                   <Icon name="CreditCard" size={20} className="text-green-400" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-white font-bold">Карта FINANS 24 активна</div>
+                  <div className="text-white font-bold">Карта РУСФИНАНС 24 активна</div>
                   <div className="text-green-300 text-xs mt-0.5">Виртуальная карта готова к использованию</div>
                 </div>
                 <span className="text-xs px-3 py-1 rounded-full font-semibold"
@@ -742,7 +742,7 @@ export default function DashboardApplicationStatus({
                     style={{ background: "white", transform: "translate(30%,-30%)" }} />
                   <div className="flex justify-between items-start mb-5">
                     <div>
-                      <div className="text-green-200 text-xs font-semibold uppercase tracking-wider">FINANS 24</div>
+                      <div className="text-green-200 text-xs font-semibold uppercase tracking-wider">РУСФИНАНС 24</div>
                       <div className="text-white text-xs opacity-60 mt-0.5">Виртуальная карта</div>
                     </div>
                     <Icon name="Wifi" size={22} className="text-green-200 opacity-70 rotate-90" />

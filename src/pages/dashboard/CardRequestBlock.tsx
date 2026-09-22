@@ -38,7 +38,7 @@ export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectR
             <Icon name="Clock" size={20} className="text-yellow-400" />
           </div>
           <div>
-            <div className="text-white font-bold">Заявка на карту FINANS 24 на рассмотрении</div>
+            <div className="text-white font-bold">Заявка на карту РУСФИНАНС 24 на рассмотрении</div>
             <div className="text-yellow-300 text-sm mt-0.5">Мы сообщим вам, как только карта будет одобрена</div>
           </div>
         </div>
@@ -55,7 +55,7 @@ export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectR
             <Icon name="CreditCard" size={20} className="text-orange-400" />
           </div>
           <div>
-            <div className="text-white font-bold">Карта FINANS 24</div>
+            <div className="text-white font-bold">Карта РУСФИНАНС 24</div>
             <div className="text-white/40 text-sm">Подайте заявку и получите доступ к лимиту в любое время</div>
             {cardRequestStatus === "rejected" && (
               <div className="text-red-400 text-xs mt-1">
