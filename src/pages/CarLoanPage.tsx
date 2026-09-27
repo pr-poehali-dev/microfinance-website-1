@@ -58,7 +58,7 @@ export default function CarLoanPage() {
       <Navbar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} scrollTo={scrollTo} />
 
       {/* HERO */}
-      <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
+      <section className="relative min-h-screen flex items-center overflow-hidden">
         {/* Фоновые блики */}
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
           <div className="absolute top-20 left-[-100px] w-[500px] h-[500px] rounded-full opacity-20 blur-3xl"

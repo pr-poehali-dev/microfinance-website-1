@@ -54,7 +54,7 @@ export default function ShopLoanPage() {
       <Navbar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} scrollTo={scrollTo} />
 
       {/* ═══ HERO ═══════════════════════════════════════════════════════════ */}
-      <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
+      <section className="relative min-h-screen flex items-center overflow-hidden">
         {/* Фоновые блики */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-10 left-[-80px] w-[500px] h-[500px] rounded-full opacity-25 blur-3xl"

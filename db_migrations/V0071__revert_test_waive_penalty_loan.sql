@@ -1,0 +1,1 @@
+UPDATE t_p30184577_microfinance_website.loans SET status = 'cancelled' WHERE id = 156;

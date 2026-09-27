@@ -241,6 +241,14 @@ export default function AdminPage() {
     if (selUser) loadLoans(selUser.id);
   }
 
+  async function waivePenalty(loanId: number, mode: "full" | "amount", amount?: number) {
+    const r = await fetch(`${ADMIN_URL}?sub=waive_penalty&loanId=${loanId}`, { method: "POST", headers: hdrs(), body: JSON.stringify({ mode, amount }) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || "Ошибка при списании пени");
+    if (selUser) loadLoans(selUser.id);
+    return d;
+  }
+
   async function creditDoctor(userId: number, data: { amount: number; days: number; rate: number }) {
     const r = await fetch(`${ADMIN_URL}?sub=loans`, { method: "POST", headers: hdrs(), body: JSON.stringify({
       phone: users.find(u => u.id === userId)?.phone,
@@ -362,7 +370,7 @@ export default function AdminPage() {
             onSendOffer={sendOffer} onAddLoan={addLoan}
             onAddClient={addClient} onChangeStatus={changeStatus}
             onUpdateUser={updateUser} onUploadDocs={uploadDocs}
-            onCreditDoctor={creditDoctor}
+            onCreditDoctor={creditDoctor} onWaivePenalty={waivePenalty}
           />
         )}
       </div>

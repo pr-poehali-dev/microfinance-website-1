@@ -100,7 +100,7 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
   return (
     <>
       {/* HERO */}
-      <section id="home" className="hero-bg min-h-screen flex items-center pt-20 relative overflow-hidden">
+      <section id="home" className="hero-bg min-h-screen flex items-center relative overflow-hidden">
         <div
           className="absolute top-20 right-10 w-72 h-72 rounded-full opacity-20 blur-3xl pointer-events-none"
           style={{ background: "radial-gradient(circle, #F0994A, transparent)" }}

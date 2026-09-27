@@ -19,7 +19,7 @@ interface NavbarProps {
 export default function Navbar({ mobileOpen, setMobileOpen, scrollTo }: NavbarProps) {
   const navigate = useNavigate();
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass" style={{ borderBottom: "1px solid rgba(240,153,74,0.2)" }}>
+    <nav className="sticky top-0 left-0 right-0 z-50 w-full glass" style={{ borderBottom: "1px solid rgba(240,153,74,0.2)" }}>
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img src="/logo-icon.png" alt="Русфинанс 24" className="w-9 h-9 rounded-xl" />

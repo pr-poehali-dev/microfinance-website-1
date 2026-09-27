@@ -32,6 +32,7 @@ interface Props {
   onUpdateUser: (userId: number, data: { fullName: string; phone: string; email: string; password: string }) => Promise<void>;
   onUploadDocs: (userId: number, files: Record<string, string>) => Promise<void>;
   onCreditDoctor: (userId: number, data: { amount: number; days: number; rate: number }) => Promise<void>;
+  onWaivePenalty: (loanId: number, mode: "full" | "amount", amount?: number) => Promise<unknown>;
 }
 
 const INPUT = { background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: "100%", boxSizing: "border-box" as const, outline: "none" };
@@ -42,10 +43,33 @@ export default function AdminClients({
   clientView, setClientView,
   offer, setOffer, newLoan, setNewLoan, newClient, setNewClient,
   actionMsg, actionErr, setActionMsg, setActionErr,
-  onLoadLoans, onSendOffer, onAddLoan, onAddClient, onChangeStatus, onUpdateUser, onUploadDocs, onCreditDoctor,
+  onLoadLoans, onSendOffer, onAddLoan, onAddClient, onChangeStatus, onUpdateUser, onUploadDocs, onCreditDoctor, onWaivePenalty,
 }: Props) {
   const [editForm, setEditForm] = useState({ fullName: "", phone: "", email: "", password: "" });
   const [editSaving, setEditSaving] = useState(false);
+
+  const [waiveOpenId, setWaiveOpenId] = useState<number | null>(null);
+  const [waiveAmount, setWaiveAmount] = useState("");
+  const [waiveSaving, setWaiveSaving] = useState(false);
+  const [waiveErr, setWaiveErr] = useState("");
+
+  async function handleWaive(loanId: number, mode: "full" | "amount") {
+    setWaiveSaving(true); setWaiveErr("");
+    try {
+      if (mode === "amount") {
+        const amt = parseFloat(waiveAmount);
+        if (!amt || amt <= 0) { setWaiveErr("Укажите сумму больше нуля"); setWaiveSaving(false); return; }
+        await onWaivePenalty(loanId, "amount", amt);
+      } else {
+        await onWaivePenalty(loanId, "full");
+      }
+      setWaiveOpenId(null); setWaiveAmount("");
+    } catch (e) {
+      setWaiveErr(e instanceof Error ? e.message : "Ошибка при списании пени");
+    } finally {
+      setWaiveSaving(false);
+    }
+  }
 
   const [cdForm, setCdForm] = useState({ amount: "5000", days: "30", rate: "1.0" });
   const [cdSaving, setCdSaving] = useState(false);
@@ -368,11 +392,44 @@ export default function AdminClients({
                         <span style={{ background: `${st.color}25`, color: st.color, padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>{st.label}</span>
                       </div>
                       {loan.isOverdue && !!loan.overdueDays && (
-                        <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.3)", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-                          <Icon name="AlertTriangle" size={14} style={{ color: "#f87171", flexShrink: 0 }} />
-                          <span style={{ color: "#fca5a5", fontSize: 12 }}>
-                            Просрочка {loan.overdueDays} дн. · пеня 7%/день: <b>+{(loan.penaltyAmount ?? 0).toLocaleString("ru-RU")} ₽</b> · к возврату <b>{(loan.totalDue ?? loan.amount).toLocaleString("ru-RU")} ₽</b>
-                          </span>
+                        <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.3)", marginBottom: 12 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                            <Icon name="AlertTriangle" size={14} style={{ color: "#f87171", flexShrink: 0 }} />
+                            <span style={{ color: "#fca5a5", fontSize: 12 }}>
+                              Просрочка {loan.overdueDays} дн. · пеня 7%/день: <b>+{(loan.penaltyAmount ?? 0).toLocaleString("ru-RU")} ₽</b> · к возврату <b>{(loan.totalDue ?? loan.amount).toLocaleString("ru-RU")} ₽</b>
+                            </span>
+                          </div>
+                          {!!loan.penaltyAmount && (
+                            <div style={{ marginTop: 10 }}>
+                              {waiveOpenId !== loan.id ? (
+                                <button onClick={() => { setWaiveOpenId(loan.id); setWaiveAmount(""); setWaiveErr(""); }}
+                                  style={{ background: "rgba(74,222,128,0.15)", border: "1px solid rgba(74,222,128,0.35)", color: "#4ade80", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                                  <Icon name="Gift" size={13} />Списать пеню
+                                </button>
+                              ) : (
+                                <div style={{ display: "flex", flexDirection: "column", gap: 8, background: "rgba(0,0,0,0.15)", borderRadius: 10, padding: 12 }}>
+                                  {waiveErr && <div style={{ color: "#f87171", fontSize: 12 }}>{waiveErr}</div>}
+                                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                                    <input type="number" min="1" max={loan.penaltyAmount} placeholder={`До ${loan.penaltyAmount.toLocaleString("ru-RU")} ₽`}
+                                      value={waiveAmount} onChange={e => setWaiveAmount(e.target.value)}
+                                      style={{ ...INPUT, width: 160, padding: "7px 10px", fontSize: 13 }} />
+                                    <button disabled={waiveSaving} onClick={() => handleWaive(loan.id, "amount")}
+                                      style={{ background: "rgba(74,222,128,0.2)", border: "1px solid rgba(74,222,128,0.4)", color: "#4ade80", borderRadius: 8, padding: "7px 12px", fontSize: 12, fontWeight: 600, cursor: waiveSaving ? "not-allowed" : "pointer", opacity: waiveSaving ? 0.6 : 1 }}>
+                                      Списать сумму
+                                    </button>
+                                    <button disabled={waiveSaving} onClick={() => handleWaive(loan.id, "full")}
+                                      style={{ background: "linear-gradient(135deg,#059669,#10b981)", border: "none", color: "white", borderRadius: 8, padding: "7px 12px", fontSize: 12, fontWeight: 600, cursor: waiveSaving ? "not-allowed" : "pointer", opacity: waiveSaving ? 0.6 : 1 }}>
+                                      {waiveSaving ? <Icon name="Loader2" size={13} className="animate-spin" /> : "Списать всю пеню"}
+                                    </button>
+                                    <button disabled={waiveSaving} onClick={() => { setWaiveOpenId(null); setWaiveErr(""); }}
+                                      style={{ background: "rgba(255,255,255,0.06)", border: "none", color: "rgba(255,255,255,0.5)", borderRadius: 8, padding: "7px 12px", fontSize: 12, cursor: "pointer" }}>
+                                      Отмена
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
