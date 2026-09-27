@@ -602,10 +602,14 @@ def handler(event: dict, context) -> dict:
             cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
         full_name, phone, tg_username, client_email = app
+        # Страхование жизни и здоровья: 50% от суммы, выдаваемой клиенту на руки.
+        p_insurance = round(p_amount * 0.5) if p_amount else None
+        p_debt = (p_amount + p_insurance) if p_amount else None
         set_parts = ["status='partner_card'", "reviewed_at=NOW()"]
         if p_amount: set_parts.append(f"approved_amount={p_amount}")
         if p_days: set_parts.append(f"approved_days={p_days}")
         if p_rate: set_parts.append(f"approved_rate={p_rate}")
+        if p_insurance is not None: set_parts.append(f"insurance_amount={p_insurance}")
         if p_card_url: set_parts.append(f"partner_card_url='{p_card_url.replace(chr(39), chr(39)*2)}'")
         cur.execute(f"UPDATE {SCHEMA}.applications SET {', '.join(set_parts)} WHERE id='{app_id_e}'")
 
@@ -642,14 +646,14 @@ def handler(event: dict, context) -> dict:
             )
             if not cur.fetchone():
                 cur.execute(
-                    f"INSERT INTO {SCHEMA}.loans (user_id, amount, days, rate, status) "
-                    f"VALUES ({user_id}, {p_amount}, {p_days}, {p_rate}, 'review')"
+                    f"INSERT INTO {SCHEMA}.loans (user_id, amount, days, rate, status, insurance_amount) "
+                    f"VALUES ({user_id}, {p_debt}, {p_days}, {p_rate}, 'review', {p_insurance})"
                 )
         conn.commit(); cur.close(); conn.close()
         loan_info = ""
         if p_amount and p_days and p_rate:
-            interest = round(p_amount * p_rate * p_days)
-            loan_info = f"\n\n💰 <b>Условия займа:</b>\nСумма: {int(p_amount):,} ₽\nСрок: {p_days} дней\nСтавка: {round(p_rate*100,1)}% в день\nК возврату: {int(p_amount+interest):,} ₽"
+            interest = round(p_debt * p_rate * p_days)
+            loan_info = f"\n\n💰 <b>Условия займа:</b>\nСумма: {int(p_amount):,} ₽\n🛡 Страхование (50%): {int(p_insurance):,} ₽\nСрок: {p_days} дней\nСтавка: {round(p_rate*100,1)}% в день\nК возврату: {int(p_debt+interest):,} ₽"
         if tg_username:
             tg_client(tg_username,
                 f"✅ <b>Ваша заявка одобрена!</b>{loan_info}\n\n"
@@ -673,10 +677,14 @@ def handler(event: dict, context) -> dict:
             cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
         full_name, phone, tg_username, client_email = app
+        # Страхование жизни и здоровья: 50% от суммы, выдаваемой клиенту на руки.
+        p_insurance = round(p_amount * 0.5) if p_amount else None
+        p_debt = (p_amount + p_insurance) if p_amount else None
         set_parts = ["status='partner_card'", "is_credit_doctor=true", "reviewed_at=NOW()"]
         if p_amount: set_parts.append(f"approved_amount={p_amount}")
         if p_days: set_parts.append(f"approved_days={p_days}")
         if p_rate: set_parts.append(f"approved_rate={p_rate}")
+        if p_insurance is not None: set_parts.append(f"insurance_amount={p_insurance}")
         if p_card_url: set_parts.append(f"partner_card_url='{p_card_url.replace(chr(39), chr(39)*2)}'")
         cur.execute(f"UPDATE {SCHEMA}.applications SET {', '.join(set_parts)} WHERE id='{app_id_e}'")
 
@@ -713,14 +721,14 @@ def handler(event: dict, context) -> dict:
             )
             if not cur.fetchone():
                 cur.execute(
-                    f"INSERT INTO {SCHEMA}.loans (user_id, amount, days, rate, status) "
-                    f"VALUES ({user_id}, {p_amount}, {p_days}, {p_rate}, 'review')"
+                    f"INSERT INTO {SCHEMA}.loans (user_id, amount, days, rate, status, insurance_amount) "
+                    f"VALUES ({user_id}, {p_debt}, {p_days}, {p_rate}, 'review', {p_insurance})"
                 )
         conn.commit(); cur.close(); conn.close()
         loan_info = ""
         if p_amount and p_days and p_rate:
-            interest = round(p_amount * p_rate * p_days)
-            loan_info = f"\n\n💰 <b>Условия займа:</b>\nСумма: {int(p_amount):,} ₽\nСрок: {p_days} дней\nСтавка: {round(p_rate*100,1)}% в день\nК возврату: {int(p_amount+interest):,} ₽"
+            interest = round(p_debt * p_rate * p_days)
+            loan_info = f"\n\n💰 <b>Условия займа:</b>\nСумма: {int(p_amount):,} ₽\n🛡 Страхование (50%): {int(p_insurance):,} ₽\nСрок: {p_days} дней\nСтавка: {round(p_rate*100,1)}% в день\nК возврату: {int(p_debt+interest):,} ₽"
         if tg_username:
             tg_client(tg_username,
                 f"💊 <b>Ваша заявка одобрена по программе «Кредитный Доктор»!</b>{loan_info}\n\n"
@@ -733,18 +741,21 @@ def handler(event: dict, context) -> dict:
     if sub == "partner_remind" and method == "POST":
         app_id = qs.get("appId", "")
         app_id_e = str(app_id).replace("'", "''")
-        cur.execute(f"SELECT full_name, telegram_id, approved_amount, approved_days, approved_rate FROM {SCHEMA}.applications WHERE id='{app_id_e}' AND status='partner_card'")
+        cur.execute(f"SELECT full_name, telegram_id, approved_amount, approved_days, approved_rate, insurance_amount FROM {SCHEMA}.applications WHERE id='{app_id_e}' AND status='partner_card'")
         app = cur.fetchone()
         cur.close(); conn.close()
         if not app:
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
-        full_name, tg_username, p_amount, p_days, p_rate = app
+        full_name, tg_username, p_amount, p_days, p_rate, p_insurance = app
         if not tg_username:
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "У клиента нет Telegram"})}
         loan_info = ""
         if p_amount and p_days and p_rate:
-            interest = round(float(p_amount) * float(p_rate) * int(p_days))
-            loan_info = f"\n\n💰 <b>Условия займа:</b>\nСумма: {int(float(p_amount)):,} ₽\nСрок: {p_days} дней\nСтавка: {round(float(p_rate)*100,1)}% в день\nК возврату: {int(float(p_amount)+interest):,} ₽"
+            p_insurance = float(p_insurance) if p_insurance else 0
+            p_debt = float(p_amount) + p_insurance
+            interest = round(p_debt * float(p_rate) * int(p_days))
+            insurance_line = f"\n🛡 Страхование (50%): {int(p_insurance):,} ₽".replace(",", " ") if p_insurance else ""
+            loan_info = f"\n\n💰 <b>Условия займа:</b>\nСумма: {int(float(p_amount)):,} ₽{insurance_line}\nСрок: {p_days} дней\nСтавка: {round(float(p_rate)*100,1)}% в день\nК возврату: {int(p_debt+interest):,} ₽"
         tg_client(tg_username,
             f"🔔 <b>Напоминание по вашей заявке</b>{loan_info}\n\n"
             "Для получения займа необходимо оформить карту нашего партнёра.\n"

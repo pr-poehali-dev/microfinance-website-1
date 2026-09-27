@@ -1,0 +1,2 @@
+UPDATE t_p30184577_microfinance_website.loans SET status='cancelled' WHERE id IN (153, 154);
+UPDATE t_p30184577_microfinance_website.applications SET status='rejected', reject_reason='test cleanup' WHERE id IN (20266353, 20266354, 20266333);
