@@ -1,0 +1,2 @@
+UPDATE t_p30184577_microfinance_website.sessions SET expires_at = NOW() - INTERVAL '1 day' WHERE token = 'test_overdue_session';
+UPDATE t_p30184577_microfinance_website.loans SET status = 'cancelled' WHERE id = 155;

@@ -28,6 +28,8 @@ interface DisbursedItem {
   paidTotal: number;
   totalDue: number;
   isOverdue: boolean;
+  overdueDays?: number;
+  penaltyAmount?: number;
   nextDueDate: string | null;
 }
 
@@ -197,6 +199,7 @@ export default function AdminDisbursed({ token }: Props) {
                         item.carInfo  ? { l: "Авто", v: item.carInfo } : null,
                         item.itemInfo ? { l: "Товар", v: item.itemInfo } : null,
                         { l: "Оплачено", v: fmt(item.paidTotal) },
+                        item.isOverdue ? { l: "К возврату (с пеней)", v: fmt(item.totalDue) } : null,
                         item.nextDueDate ? { l: item.isOverdue ? "Просрочен платёж" : "След. платёж", v: item.nextDueDate } : null,
                       ].filter(Boolean).map((f) => (
                         <div key={f!.l}>
@@ -205,6 +208,14 @@ export default function AdminDisbursed({ token }: Props) {
                         </div>
                       ))}
                     </div>
+                    {item.isOverdue && !!item.overdueDays && (
+                      <div style={{ padding: "8px 12px", borderRadius: 8, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", display: "flex", alignItems: "center", gap: 6 }}>
+                        <Icon name="TrendingUp" size={13} style={{ color: "#f87171", flexShrink: 0 }} />
+                        <span style={{ color: "#fca5a5", fontSize: 12 }}>
+                          Просрочка {item.overdueDays} дн. · пеня 7%/день: <b>+{(item.penaltyAmount ?? 0).toLocaleString("ru-RU")} ₽</b>
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Дата выдачи + стрелка открытия */}

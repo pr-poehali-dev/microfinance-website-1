@@ -12,6 +12,27 @@ CORS = {
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Authorization",
 }
 
+OVERDUE_DAILY_PENALTY_RATE = 0.07  # 7% от суммы основного долга за каждый день просрочки
+
+
+def calc_penalty(amount, days, rate, disbursed_at, created_at, paid_total, db_status):
+    """Считает пеню за просрочку. Возвращает (effective_status, base_total, total_due, is_overdue, overdue_days, penalty_amount).
+    amount — тело долга (сумма + страховка). Пеня 7%/день от amount начисляется за каждый
+    полный календарный день с даты истечения срока, если долг не погашен полностью.
+    Применяется только к уже выданным займам (active/overdue) — не трогает review/paid/rejected."""
+    base_interest = round(float(amount) * float(rate) * int(days))
+    base_total = float(amount) + base_interest
+    if db_status not in ("active", "overdue") or not disbursed_at:
+        return db_status, base_total, base_total, False, 0, 0.0
+    due_date = (disbursed_at + timedelta(days=int(days))).date()
+    today = datetime.now().date()
+    if today <= due_date or float(paid_total) >= base_total:
+        return "active", base_total, base_total, False, 0, 0.0
+    overdue_days = (today - due_date).days
+    penalty = round(float(amount) * OVERDUE_DAILY_PENALTY_RATE * overdue_days)
+    total_due = base_total + penalty
+    return "overdue", base_total, total_due, True, overdue_days, penalty
+
 
 def get_conn():
     return psycopg2.connect(os.environ["DATABASE_URL"])
@@ -533,17 +554,29 @@ def handler(event: dict, context) -> dict:
 
     loans = []
     for row in rows:
-        loan_id, amount, days, rate, status, created_at, signed, offer_amount, offer_days, offer_rate, disbursed_at, loan_insurance = row
+        loan_id, amount, days, rate, db_status, created_at, signed, offer_amount, offer_days, offer_rate, disbursed_at, loan_insurance = row
         loan_insurance = float(loan_insurance) if loan_insurance else 0
-        interest = round(float(amount) * float(rate) * days)
-        total = float(amount) + interest
         loan_payments = payments_by_loan.get(loan_id, [])
         paid_total = sum(p["amount"] for p in loan_payments)
+
+        is_monthly_cd = is_cd and days > 30
+        if is_monthly_cd:
+            # Помесячная схема Кредитного Доктора — пеня за просрочку сюда не применяется
+            interest = round(float(amount) * float(rate) * days)
+            total = float(amount) + interest
+            status = db_status
+            overdue_days = 0
+            penalty = 0.0
+        else:
+            status, base_total, total, is_overdue, overdue_days, penalty = calc_penalty(
+                amount, days, rate, disbursed_at, created_at, paid_total, db_status
+            )
+            interest = round(base_total - float(amount))
 
         schedule = []
         if status in ("active", "overdue", "paid"):
             start = disbursed_at or created_at
-            if is_cd and days > 30:
+            if is_monthly_cd:
                 # Помесячный график для Кредитного доктора
                 months = max(1, round(days / 30))
                 monthly_principal = float(amount) / months
@@ -563,7 +596,7 @@ def handler(event: dict, context) -> dict:
                 schedule = [{
                     "dueDate": (start + timedelta(days=days)).strftime("%d.%m.%Y"),
                     "amount": total,
-                    "label": "Погашение полной суммы",
+                    "label": "Погашение полной суммы" if not penalty else f"Погашение с пеней за просрочку ({overdue_days} дн.)",
                 }]
 
         loan_data = {
@@ -577,6 +610,9 @@ def handler(event: dict, context) -> dict:
             "interest": interest,
             "total": total,
             "status": status,
+            "overdueDays": overdue_days,
+            "penaltyAmount": penalty,
+            "penaltyRatePercent": round(OVERDUE_DAILY_PENALTY_RATE * 100, 1),
             "createdAt": created_at.strftime("%d.%m.%Y"),
             "signed": signed,
             "disbursedAt": disbursed_at.strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,

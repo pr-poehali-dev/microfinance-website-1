@@ -10,6 +10,24 @@ import psycopg2
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
 TELEGRAM_CHAT_ID = "8540431915"
 
+OVERDUE_DAILY_PENALTY_RATE = 0.07  # 7% от суммы основного долга (loans.amount, с учётом страховки) за каждый день просрочки
+
+
+def calc_loan_penalty(amount, days, rate, disbursed_at, created_at, paid_total, db_status):
+    """Пеня за просрочку обычного займа (loans): 7%/день от amount за каждый день сверх срока.
+    Возвращает (effective_status, total_due, is_overdue, overdue_days, penalty_amount)."""
+    base_interest = round(float(amount) * float(rate) * int(days))
+    base_total = float(amount) + base_interest
+    if db_status not in ("active", "overdue") or not disbursed_at:
+        return db_status, base_total, False, 0, 0.0
+    due_date = (disbursed_at + timedelta(days=int(days))).date()
+    today = datetime.now().date()
+    if today <= due_date or float(paid_total) >= base_total:
+        return "active", base_total, False, 0, 0.0
+    overdue_days = (today - due_date).days
+    penalty = round(float(amount) * OVERDUE_DAILY_PENALTY_RATE * overdue_days)
+    return "overdue", base_total + penalty, True, overdue_days, penalty
+
 
 def tg(text: str):
     token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
@@ -144,14 +162,31 @@ def handler(event: dict, context) -> dict:
     # --- ЗАЙМЫ КЛИЕНТА (GET, sub='loans', userId=...) ---
     if sub == "loans" and method == "GET":
         user_id = int(qs.get("userId", 0))
-        cur.execute(f"SELECT id, amount, days, rate, status, created_at FROM {SCHEMA}.loans WHERE user_id = {user_id} ORDER BY created_at DESC")
+        cur.execute(f"SELECT id, amount, days, rate, status, created_at, disbursed_at FROM {SCHEMA}.loans WHERE user_id = {user_id} ORDER BY created_at DESC")
         rows = cur.fetchall()
         cur.execute(f"SELECT phone, full_name FROM {SCHEMA}.users WHERE id = {user_id}")
         u = cur.fetchone()
+        loan_ids = [str(r[0]) for r in rows]
+        paid_map: dict = {}
+        if loan_ids:
+            cur.execute(f"SELECT loan_id, COALESCE(SUM(amount),0) FROM {SCHEMA}.payments WHERE loan_type='loan' AND loan_id IN ({','.join(loan_ids)}) GROUP BY loan_id")
+            for lid, s in cur.fetchall():
+                paid_map[lid] = float(s)
         cur.close(); conn.close()
-        loans = [{"id": r[0], "amount": float(r[1]), "days": r[2], "rate": float(r[3]),
-                  "ratePercent": round(float(r[3]) * 100, 1), "status": r[4],
-                  "createdAt": r[5].strftime("%d.%m.%Y")} for r in rows]
+        loans = []
+        for r in rows:
+            lid, amount, days, rate, status, created_at, disbursed_at = r
+            paid_total = paid_map.get(lid, 0.0)
+            eff_status, total_due, is_overdue, overdue_days, penalty = calc_loan_penalty(
+                amount, days, rate, disbursed_at, created_at, paid_total, status
+            )
+            loans.append({
+                "id": lid, "amount": float(amount), "days": days, "rate": float(rate),
+                "ratePercent": round(float(rate) * 100, 1), "status": eff_status,
+                "createdAt": created_at.strftime("%d.%m.%Y"),
+                "totalDue": total_due, "isOverdue": is_overdue,
+                "overdueDays": overdue_days, "penaltyAmount": penalty,
+            })
         return {"statusCode": 200, "headers": CORS, "body": json.dumps(
             {"loans": loans, "user": {"phone": u[0] if u else "", "fullName": u[1] if u else ""}},
             ensure_ascii=False
@@ -979,7 +1014,10 @@ def handler(event: dict, context) -> dict:
         for r in loan_rows:
             loan_id, full_name, phone, email, amount, days, rate, disbursed_at, created_at, status, tg_id = r
             paid_total = paid_map.get(("loan", loan_id), 0.0)
-            overdue, next_due, total_due = calc_overdue(amount, days, rate, disbursed_at, created_at, paid_total, monthly=False)
+            eff_status, total_due, is_overdue, overdue_days, penalty = calc_loan_penalty(
+                amount, days, rate, disbursed_at, created_at, paid_total, status
+            )
+            next_due = (disbursed_at + timedelta(days=int(days))) if disbursed_at and paid_total < total_due and status != "paid" else None
             all_items.append({
                 "type": "loan", "id": loan_id,
                 "fullName": full_name or "", "phone": phone, "email": email or "",
@@ -993,7 +1031,9 @@ def handler(event: dict, context) -> dict:
                 "telegramId": tg_id or "",
                 "paidTotal": paid_total,
                 "totalDue": total_due,
-                "isOverdue": bool(overdue) and status != "paid",
+                "isOverdue": is_overdue and status != "paid",
+                "overdueDays": overdue_days,
+                "penaltyAmount": penalty,
                 "nextDueDate": next_due.strftime("%d.%m.%Y") if next_due else None,
             })
         for r in car_rows:
@@ -1092,24 +1132,27 @@ def handler(event: dict, context) -> dict:
                     "telegramId": telegram_id or "",
                 }
 
-            interest = round(float(amount) * float(rate) * days)
-            total_due = float(amount) + interest
-            start = disbursed_at or created_at
-            schedule = [{"dueDate": (start + timedelta(days=days)).strftime("%d.%m.%Y"), "amount": total_due, "label": "Погашение полной суммы"}] if start else []
-
             cur.execute(f"SELECT amount, paid_at, note FROM {SCHEMA}.payments WHERE loan_type='loan' AND loan_id={loan_id} ORDER BY paid_at DESC")
             payments = [{"amount": float(p[0]), "paidAt": p[1].strftime("%d.%m.%Y в %H:%M"), "note": p[2] or ""} for p in cur.fetchall()]
             paid_total = sum(p["amount"] for p in payments)
+
+            eff_status, total_due, is_overdue, overdue_days, penalty = calc_loan_penalty(
+                amount, days, rate, disbursed_at, created_at, paid_total, status
+            )
+            start = disbursed_at or created_at
+            schedule = [{"dueDate": (start + timedelta(days=days)).strftime("%d.%m.%Y"), "amount": total_due, "label": "Погашение полной суммы" if not penalty else f"Погашение с пеней за просрочку ({overdue_days} дн.)"}] if start else []
 
             cur.close(); conn.close()
             return {"statusCode": 200, "headers": CORS, "body": json.dumps({
                 "type": "loan", "id": loan_id,
                 "fullName": full_name or "", "phone": phone, "email": email or "",
                 "amount": float(amount), "days": days, "rate": float(rate),
-                "status": status, "createdAt": created_at.strftime("%d.%m.%Y в %H:%M") if created_at else "",
+                "status": eff_status, "createdAt": created_at.strftime("%d.%m.%Y в %H:%M") if created_at else "",
                 "signed": bool(signed), "signedAt": signed_at.strftime("%d.%m.%Y в %H:%M") if signed_at else None,
                 "disbursedAt": disbursed_at.strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
                 "totalDue": total_due, "paidTotal": paid_total, "remaining": max(0, total_due - paid_total),
+                "isOverdue": is_overdue, "overdueDays": overdue_days, "penaltyAmount": penalty,
+                "penaltyRatePercent": round(OVERDUE_DAILY_PENALTY_RATE * 100, 1),
                 "schedule": schedule, "payments": payments, "profile": profile,
             }, ensure_ascii=False)}
 

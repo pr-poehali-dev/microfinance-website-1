@@ -359,7 +359,7 @@ export default function AdminClients({
                 {loans.map(loan => {
                   const st = STATUS[loan.status] || STATUS.active;
                   return (
-                    <div key={loan.id} style={{ ...GLASS, padding: 18 }}>
+                    <div key={loan.id} style={{ ...GLASS, padding: 18, border: loan.isOverdue ? "1px solid rgba(248,113,113,0.4)" : GLASS.border }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                         <div>
                           <span style={{ color: "white", fontWeight: 700, fontSize: 18 }}>{loan.amount.toLocaleString("ru-RU")} ₽</span>
@@ -367,6 +367,14 @@ export default function AdminClients({
                         </div>
                         <span style={{ background: `${st.color}25`, color: st.color, padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>{st.label}</span>
                       </div>
+                      {loan.isOverdue && !!loan.overdueDays && (
+                        <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.3)", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                          <Icon name="AlertTriangle" size={14} style={{ color: "#f87171", flexShrink: 0 }} />
+                          <span style={{ color: "#fca5a5", fontSize: 12 }}>
+                            Просрочка {loan.overdueDays} дн. · пеня 7%/день: <b>+{(loan.penaltyAmount ?? 0).toLocaleString("ru-RU")} ₽</b> · к возврату <b>{(loan.totalDue ?? loan.amount).toLocaleString("ru-RU")} ₽</b>
+                          </span>
+                        </div>
+                      )}
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                         <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, alignSelf: "center" }}>Статус:</span>
                         {Object.entries(STATUS).map(([val, cfg]) => (

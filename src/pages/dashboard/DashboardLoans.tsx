@@ -20,6 +20,9 @@ interface Loan {
   interest: number;
   total: number;
   status: string;
+  overdueDays?: number;
+  penaltyAmount?: number;
+  penaltyRatePercent?: number;
   createdAt: string;
   signed: boolean;
   disbursedAt?: string | null;
@@ -208,6 +211,20 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                     </div>
                   )}
 
+                  {/* Блок: Просрочка — растущая пеня */}
+                  {loan.status === "overdue" && !!loan.overdueDays && (
+                    <div className="mb-4 rounded-xl px-5 py-4 flex items-start gap-3"
+                      style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.35)" }}>
+                      <Icon name="AlertTriangle" size={22} className="text-red-400 shrink-0" />
+                      <div>
+                        <div className="text-red-300 font-bold text-sm">Займ просрочен на {loan.overdueDays} {loan.overdueDays === 1 ? "день" : loan.overdueDays < 5 ? "дня" : "дней"}</div>
+                        <div className="text-white/50 text-xs mt-0.5">
+                          Начисляется пеня {loan.penaltyRatePercent ?? 7}% в день от суммы основного долга — уже {(loan.penaltyAmount ?? 0).toLocaleString("ru-RU")} ₽. Сумма к возврату увеличивается каждый день.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* График погашения и история платежей */}
                   <PaymentHistory
                     schedule={loan.schedule || []}
@@ -217,11 +234,14 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                   />
 
                   <div className="flex items-center justify-between rounded-xl px-5 py-4"
-                    style={{ background: "rgba(234,128,52,0.12)", border: "1px solid rgba(234,128,52,0.3)" }}>
+                    style={{ background: loan.status === "overdue" ? "rgba(248,113,113,0.12)" : "rgba(234,128,52,0.12)", border: loan.status === "overdue" ? "1px solid rgba(248,113,113,0.35)" : "1px solid rgba(234,128,52,0.3)" }}>
                     <div>
                       <div className="text-white/50 text-sm">{loan.paidTotal ? "Остаток к возврату" : "К возврату"}</div>
-                      <div className="font-bold text-2xl gradient-text">{(loan.remaining ?? loan.total).toLocaleString("ru-RU")} ₽</div>
-                      <div className="text-white/30 text-xs">включая {loan.interest.toLocaleString("ru-RU")} ₽ процентов</div>
+                      <div className={`font-bold text-2xl ${loan.status === "overdue" ? "text-red-400" : "gradient-text"}`}>{(loan.remaining ?? loan.total).toLocaleString("ru-RU")} ₽</div>
+                      <div className="text-white/30 text-xs">
+                        включая {loan.interest.toLocaleString("ru-RU")} ₽ процентов
+                        {!!loan.penaltyAmount && ` и ${loan.penaltyAmount.toLocaleString("ru-RU")} ₽ пени за просрочку`}
+                      </div>
                     </div>
                     {loan.status === "active" && (
                       <button

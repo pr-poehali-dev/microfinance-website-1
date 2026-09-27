@@ -50,6 +50,9 @@ interface Loan {
   interest: number;
   total: number;
   status: string;
+  overdueDays?: number;
+  penaltyAmount?: number;
+  penaltyRatePercent?: number;
   createdAt: string;
   signed: boolean;
   disbursedAt?: string | null;

@@ -24,6 +24,7 @@ interface Detail {
   approvedAmount?: number | null; approvedMonths?: number | null; approvedRate?: number | null; notes?: string;
   createdAt: string; signed: boolean; signedAt: string | null; disbursedAt: string | null;
   totalDue: number; paidTotal: number; remaining: number;
+  isOverdue?: boolean; overdueDays?: number; penaltyAmount?: number; penaltyRatePercent?: number;
   schedule: ScheduleItem[]; payments: PaymentItem[]; profile: Profile;
 }
 
@@ -145,6 +146,14 @@ export default function AdminLoanDetailModal({ token, type, id, onClose }: Props
                   </div>
                 ))}
               </div>
+              {data.isOverdue && !!data.overdueDays && (
+                <div style={{ marginTop: 10, padding: "10px 14px", borderRadius: 10, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
+                  <Icon name="AlertTriangle" size={14} style={{ color: "#f87171", flexShrink: 0 }} />
+                  <span style={{ color: "#fca5a5", fontSize: 13 }}>
+                    Просрочка {data.overdueDays} дн. · пеня {data.penaltyRatePercent ?? 7}%/день от суммы долга: <b>+{(data.penaltyAmount ?? 0).toLocaleString("ru-RU")} ₽</b>
+                  </span>
+                </div>
+              )}
               {data.notes && <div style={{ marginTop: 10, color: "rgba(255,255,255,0.4)", fontSize: 13 }}>📝 {data.notes}</div>}
               {(data.type === "carloan" && (data.profile.carBrand || data.profile.carModel)) && (
                 <div style={{ marginTop: 10, color: "rgba(255,255,255,0.6)", fontSize: 13 }}>
