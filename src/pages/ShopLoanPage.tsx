@@ -4,7 +4,7 @@ import Icon from "@/components/ui/icon";
 import Navbar from "@/components/Navbar";
 
 const CONDITIONS = [
-  { icon: "Banknote",  title: "Сумма займа",  value: "3 000 — 150 000 ₽",  color: "#f0994a" },
+  { icon: "Banknote",  title: "Сумма займа",  value: "3 000 — 150 000 ₽",  color: "#14b8a6" },
   { icon: "Calendar",  title: "Срок займа",   value: "от 1 до 24 месяцев",  color: "#06b6d4" },
   { icon: "Percent",   title: "Ставка",        value: "от 9% в месяц",       color: "#22c55e" },
   { icon: "Clock",     title: "Решение",       value: "от 1 мин до 1 часа",  color: "#f59e0b" },
@@ -50,7 +50,7 @@ export default function ShopLoanPage() {
   };
 
   return (
-    <div className="min-h-screen font-golos" style={{ background: "#1e110a" }}>
+    <div className="min-h-screen font-golos" style={{ background: "#ffffff" }}>
       <Navbar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} scrollTo={scrollTo} />
 
       {/* ═══ HERO ═══════════════════════════════════════════════════════════ */}
@@ -58,7 +58,7 @@ export default function ShopLoanPage() {
         {/* Фоновые блики */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-10 left-[-80px] w-[500px] h-[500px] rounded-full opacity-25 blur-3xl"
-            style={{ background: "radial-gradient(circle, #f0994a, transparent)" }} />
+            style={{ background: "radial-gradient(circle, #14b8a6, transparent)" }} />
           <div className="absolute bottom-0 right-[-60px] w-[400px] h-[400px] rounded-full opacity-20 blur-3xl"
             style={{ background: "radial-gradient(circle, #06b6d4, transparent)" }} />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[200px] rounded-full opacity-10 blur-3xl"
@@ -66,27 +66,27 @@ export default function ShopLoanPage() {
         </div>
         {/* Сетка */}
         <div className="absolute inset-0 opacity-[0.04]"
-          style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.15) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.15) 1px,transparent 1px)", backgroundSize: "50px 50px" }} />
+          style={{ backgroundImage: "linear-gradient(rgba(16,185,129,0.15) 1px,transparent 1px),linear-gradient(90deg,rgba(16,185,129,0.15) 1px,transparent 1px)", backgroundSize: "50px 50px" }} />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 py-20 w-full">
           <div className="grid lg:grid-cols-2 gap-14 items-center">
             {/* Левая колонка */}
             <div>
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-6"
-                style={{ background: "rgba(240,153,74,0.15)", border: "1px solid rgba(240,153,74,0.4)", color: "#fed7aa" }}>
-                <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
+                style={{ background: "rgba(20,184,166,0.15)", border: "1px solid rgba(20,184,166,0.4)", color: "#6ee7b7" }}>
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
                 Займ на покупку товаров онлайн
               </div>
 
-              <h1 className="font-oswald text-5xl md:text-7xl font-bold leading-tight text-white mb-6">
+              <h1 className="font-oswald text-5xl md:text-7xl font-bold leading-tight text-emerald-950 mb-6">
                 КУПИ МЕЧТУ<br />
-                <span style={{ background: "linear-gradient(135deg,#f0994a,#06b6d4,#22c55e)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                <span style={{ background: "linear-gradient(135deg,#14b8a6,#06b6d4,#22c55e)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                   СЕЙЧАС
                 </span>
               </h1>
 
-              <p className="text-white/60 text-lg mb-8 leading-relaxed max-w-lg">
-                Одобрим займ на покупку вашей мечты за несколько минут. Выбираете товар — <strong className="text-white">деньги мы переведём в магазин сами</strong>. Вам остаётся только радоваться покупке!
+              <p className="text-emerald-950/60 text-lg mb-8 leading-relaxed max-w-lg">
+                Одобрим займ на покупку вашей мечты за несколько минут. Выбираете товар — <strong className="text-emerald-950">деньги мы переведём в магазин сами</strong>. Вам остаётся только радоваться покупке!
               </p>
 
               {/* Ключевые цифры */}
@@ -97,19 +97,19 @@ export default function ShopLoanPage() {
                   { v: "от 1 мин",  l: "решение" },
                 ].map(st => (
                   <div key={st.l} className="rounded-2xl p-4 text-center"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                    style={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.1)" }}>
                     <div className="font-oswald text-xl font-bold mb-1"
-                      style={{ background: "linear-gradient(135deg,#f0994a,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                      style={{ background: "linear-gradient(135deg,#14b8a6,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                       {st.v}
                     </div>
-                    <div className="text-white/40 text-xs">{st.l}</div>
+                    <div className="text-emerald-950/40 text-xs">{st.l}</div>
                   </div>
                 ))}
               </div>
 
               <button onClick={() => navigate("/shop-loan/apply")}
                 className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-bold text-lg text-white transition-all"
-                style={{ background: "linear-gradient(135deg,#f0994a,#06b6d4)", boxShadow: "0 0 40px rgba(240,153,74,0.4),0 0 80px rgba(6,182,212,0.2)" }}>
+                style={{ background: "linear-gradient(135deg,#14b8a6,#06b6d4)", boxShadow: "0 0 40px rgba(20,184,166,0.4),0 0 80px rgba(6,182,212,0.2)" }}>
                 <Icon name="ShoppingBag" size={22} />
                 Оформить займ на товар
                 <Icon name="ArrowRight" size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -119,31 +119,31 @@ export default function ShopLoanPage() {
             {/* Правая колонка — карточка условий */}
             <div className="relative">
               <div className="rounded-3xl p-8 relative overflow-hidden"
-                style={{ background: "linear-gradient(135deg,rgba(240,153,74,0.12),rgba(6,182,212,0.08),rgba(34,197,94,0.08))", border: "1px solid rgba(240,153,74,0.3)", boxShadow: "0 0 60px rgba(240,153,74,0.15)" }}>
+                style={{ background: "linear-gradient(135deg,rgba(20,184,166,0.12),rgba(6,182,212,0.08),rgba(34,197,94,0.08))", border: "1px solid rgba(20,184,166,0.3)", boxShadow: "0 0 60px rgba(20,184,166,0.15)" }}>
                 <div className="absolute top-0 right-0 w-40 h-40 rounded-full opacity-20 blur-2xl pointer-events-none"
-                  style={{ background: "radial-gradient(circle,#f0994a,transparent)" }} />
+                  style={{ background: "radial-gradient(circle,#14b8a6,transparent)" }} />
 
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                    style={{ background: "linear-gradient(135deg,#f0994a,#06b6d4)" }}>
+                    style={{ background: "linear-gradient(135deg,#14b8a6,#06b6d4)" }}>
                     <Icon name="ShoppingCart" size={24} className="text-white" />
                   </div>
                   <div>
-                    <div className="text-white font-bold text-lg">Займ на товары</div>
-                    <div className="text-white/40 text-sm">РУСФИНАНС 24</div>
+                    <div className="text-emerald-950 font-bold text-lg">Займ на товары</div>
+                    <div className="text-emerald-950/40 text-sm">РУСФИНАНС 24</div>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   {CONDITIONS.map(c => (
                     <div key={c.title} className="flex items-center justify-between p-4 rounded-xl"
-                      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                      style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.07)" }}>
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                           style={{ background: `${c.color}22` }}>
                           <Icon name={c.icon} size={16} style={{ color: c.color }} />
                         </div>
-                        <span className="text-white/60 text-sm">{c.title}</span>
+                        <span className="text-emerald-950/60 text-sm">{c.title}</span>
                       </div>
                       <span className="font-bold text-sm" style={{ color: c.color }}>{c.value}</span>
                     </div>
@@ -152,7 +152,7 @@ export default function ShopLoanPage() {
 
                 <button onClick={() => navigate("/shop-loan/apply")}
                   className="w-full mt-6 py-4 rounded-2xl font-bold text-white text-center"
-                  style={{ background: "linear-gradient(135deg,#f0994a,#06b6d4)", boxShadow: "0 4px 20px rgba(240,153,74,0.3)" }}>
+                  style={{ background: "linear-gradient(135deg,#14b8a6,#06b6d4)", boxShadow: "0 4px 20px rgba(20,184,166,0.3)" }}>
                   Получить деньги →
                 </button>
               </div>
@@ -161,8 +161,8 @@ export default function ShopLoanPage() {
                 <div className="flex items-center gap-2">
                   <Icon name="ShieldCheck" size={18} className="text-green-400" />
                   <div>
-                    <div className="text-white text-sm font-semibold">Деньги — прямо в магазин</div>
-                    <div className="text-white/40 text-xs">Без наличных и поездок</div>
+                    <div className="text-emerald-950 text-sm font-semibold">Деньги — прямо в магазин</div>
+                    <div className="text-emerald-950/40 text-xs">Без наличных и поездок</div>
                   </div>
                 </div>
               </div>
@@ -172,14 +172,14 @@ export default function ShopLoanPage() {
       </section>
 
       {/* ═══ КАК ЭТО РАБОТАЕТ ═══════════════════════════════════════════════ */}
-      <section className="py-24 px-4" style={{ background: "rgba(240,153,74,0.04)" }}>
+      <section className="py-24 px-4" style={{ background: "rgba(20,184,166,0.04)" }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <div className="inline-block px-4 py-1.5 rounded-full text-sm font-semibold mb-4"
-              style={{ background: "rgba(240,153,74,0.15)", border: "1px solid rgba(240,153,74,0.3)", color: "#fed7aa" }}>
+              style={{ background: "rgba(20,184,166,0.15)", border: "1px solid rgba(20,184,166,0.3)", color: "#6ee7b7" }}>
               Как это работает
             </div>
-            <h2 className="font-oswald text-4xl md:text-5xl font-bold text-white">
+            <h2 className="font-oswald text-4xl md:text-5xl font-bold text-emerald-950">
               5 ПРОСТЫХ <span className="gradient-text">ШАГОВ</span>
             </h2>
           </div>
@@ -187,10 +187,10 @@ export default function ShopLoanPage() {
           <div className="relative">
             {/* Линия */}
             <div className="hidden md:block absolute left-[28px] top-8 bottom-8 w-0.5"
-              style={{ background: "linear-gradient(to bottom, #f0994a, #06b6d4, #22c55e)" }} />
+              style={{ background: "linear-gradient(to bottom, #14b8a6, #06b6d4, #22c55e)" }} />
             <div className="flex flex-col gap-5">
               {HOW.map((step, i) => {
-                const colors = ["#f0994a","#ea8034","#06b6d4","#22c55e","#f59e0b"];
+                const colors = ["#14b8a6","#10b981","#06b6d4","#22c55e","#f59e0b"];
                 const c = colors[i];
                 return (
                   <div key={step.num} className="glass card-hover rounded-2xl p-5 flex gap-5 items-start md:ml-0">
@@ -201,9 +201,9 @@ export default function ShopLoanPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-1">
                         <span className="font-oswald text-xs font-bold" style={{ color: c }}>{step.num}</span>
-                        <span className="text-white font-bold text-lg">{step.title}</span>
+                        <span className="text-emerald-950 font-bold text-lg">{step.title}</span>
                       </div>
-                      <p className="text-white/50 text-sm leading-relaxed">{step.desc}</p>
+                      <p className="text-emerald-950/50 text-sm leading-relaxed">{step.desc}</p>
                     </div>
                   </div>
                 );
@@ -217,13 +217,13 @@ export default function ShopLoanPage() {
       <section className="py-24 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="font-oswald text-4xl md:text-5xl font-bold text-white">
+            <h2 className="font-oswald text-4xl md:text-5xl font-bold text-emerald-950">
               ПОЧЕМУ <span className="gradient-text">ВЫБИРАЮТ НАС</span>
             </h2>
           </div>
           <div className="grid sm:grid-cols-2 gap-5">
             {ADVANTAGES.map((a, i) => {
-              const colors = ["#f0994a","#06b6d4","#22c55e","#f59e0b"];
+              const colors = ["#14b8a6","#06b6d4","#22c55e","#f59e0b"];
               const c = colors[i % colors.length];
               return (
                 <div key={a.title} className="glass card-hover rounded-3xl p-7 relative overflow-hidden">
@@ -233,8 +233,8 @@ export default function ShopLoanPage() {
                     style={{ background: `${c}22`, border: `1px solid ${c}44` }}>
                     <Icon name={a.icon} size={26} style={{ color: c }} />
                   </div>
-                  <h3 className="font-bold text-white text-lg mb-2">{a.title}</h3>
-                  <p className="text-white/50 text-sm">{a.desc}</p>
+                  <h3 className="font-bold text-emerald-950 text-lg mb-2">{a.title}</h3>
+                  <p className="text-emerald-950/50 text-sm">{a.desc}</p>
                 </div>
               );
             })}
@@ -243,26 +243,26 @@ export default function ShopLoanPage() {
       </section>
 
       {/* ═══ ДОКУМЕНТЫ ══════════════════════════════════════════════════════ */}
-      <section className="py-20 px-4" style={{ background: "rgba(240,153,74,0.04)" }}>
+      <section className="py-20 px-4" style={{ background: "rgba(20,184,166,0.04)" }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="font-oswald text-4xl md:text-5xl font-bold text-white">
+            <h2 className="font-oswald text-4xl md:text-5xl font-bold text-emerald-950">
               ВСЕГО <span className="gradient-text">2 ДОКУМЕНТА</span>
             </h2>
-            <p className="text-white/40 mt-3">Никаких справок о доходах, поручителей и залогов</p>
+            <p className="text-emerald-950/40 mt-3">Никаких справок о доходах, поручителей и залогов</p>
           </div>
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             {DOCS.map((d, i) => (
               <div key={d.title} className="glass card-hover rounded-3xl p-8 text-center relative overflow-hidden">
-                <div className="absolute top-3 right-4 font-oswald text-6xl font-bold opacity-5 text-white">
+                <div className="absolute top-3 right-4 font-oswald text-6xl font-bold opacity-5 text-emerald-950">
                   {String(i + 1).padStart(2, "0")}
                 </div>
                 <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-5"
-                  style={{ background: "linear-gradient(135deg,rgba(240,153,74,0.2),rgba(6,182,212,0.15))", border: "1px solid rgba(240,153,74,0.3)" }}>
-                  <Icon name={d.icon} size={28} className="text-orange-400" />
+                  style={{ background: "linear-gradient(135deg,rgba(20,184,166,0.2),rgba(6,182,212,0.15))", border: "1px solid rgba(20,184,166,0.3)" }}>
+                  <Icon name={d.icon} size={28} className="text-emerald-600" />
                 </div>
-                <h3 className="font-oswald text-2xl font-bold text-white mb-2">{d.title}</h3>
-                <p className="text-white/50 text-sm">{d.desc}</p>
+                <h3 className="font-oswald text-2xl font-bold text-emerald-950 mb-2">{d.title}</h3>
+                <p className="text-emerald-950/50 text-sm">{d.desc}</p>
               </div>
             ))}
           </div>
@@ -273,16 +273,16 @@ export default function ShopLoanPage() {
       <section className="py-20 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
-            <h2 className="font-oswald text-4xl font-bold text-white">
+            <h2 className="font-oswald text-4xl font-bold text-emerald-950">
               МАГАЗИНЫ <span className="gradient-text">ПАРТНЁРЫ</span>
             </h2>
-            <p className="text-white/40 mt-2">Выбирайте товары в любимых магазинах</p>
+            <p className="text-emerald-950/40 mt-2">Выбирайте товары в любимых магазинах</p>
           </div>
           <div className="flex flex-wrap justify-center gap-4">
             {PARTNERS.map(p => (
               <div key={p.name} className="glass card-hover rounded-2xl px-6 py-4 flex items-center gap-3">
                 <span className="text-2xl">{p.emoji}</span>
-                <span className="text-white font-semibold">{p.name}</span>
+                <span className="text-emerald-950 font-semibold">{p.name}</span>
               </div>
             ))}
           </div>
@@ -293,27 +293,27 @@ export default function ShopLoanPage() {
       <section className="py-20 px-4">
         <div className="max-w-3xl mx-auto">
           <div className="rounded-3xl p-10 md:p-14 text-center relative overflow-hidden"
-            style={{ background: "linear-gradient(135deg,rgba(240,153,74,0.18),rgba(6,182,212,0.12),rgba(34,197,94,0.1))", border: "1px solid rgba(240,153,74,0.3)" }}>
+            style={{ background: "linear-gradient(135deg,rgba(20,184,166,0.18),rgba(6,182,212,0.12),rgba(34,197,94,0.1))", border: "1px solid rgba(20,184,166,0.3)" }}>
             <div className="absolute inset-0 pointer-events-none">
               <div className="absolute top-[-50px] left-[-50px] w-64 h-64 rounded-full opacity-20 blur-3xl"
-                style={{ background: "radial-gradient(circle,#f0994a,transparent)" }} />
+                style={{ background: "radial-gradient(circle,#14b8a6,transparent)" }} />
               <div className="absolute bottom-[-50px] right-[-50px] w-64 h-64 rounded-full opacity-20 blur-3xl"
                 style={{ background: "radial-gradient(circle,#06b6d4,transparent)" }} />
             </div>
             <div className="relative z-10">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl mx-auto mb-6"
-                style={{ background: "linear-gradient(135deg,#f0994a,#06b6d4)", boxShadow: "0 0 40px rgba(240,153,74,0.4)" }}>
+                style={{ background: "linear-gradient(135deg,#14b8a6,#06b6d4)", boxShadow: "0 0 40px rgba(20,184,166,0.4)" }}>
                 <Icon name="ShoppingBag" size={36} className="text-white" />
               </div>
-              <h3 className="font-oswald text-3xl md:text-4xl font-bold text-white mb-4">
+              <h3 className="font-oswald text-3xl md:text-4xl font-bold text-emerald-950 mb-4">
                 ГОТОВЫ К ПОКУПКЕ?
               </h3>
-              <p className="text-white/50 mb-8 max-w-md mx-auto leading-relaxed">
+              <p className="text-emerald-950/50 mb-8 max-w-md mx-auto leading-relaxed">
                 Оставьте заявку прямо сейчас и получите решение уже через несколько минут. Ваш товар ждёт!
               </p>
               <button onClick={() => navigate("/shop-loan/apply")}
                 className="group inline-flex items-center gap-3 px-10 py-5 rounded-2xl font-bold text-xl text-white transition-all"
-                style={{ background: "linear-gradient(135deg,#f0994a,#06b6d4)", boxShadow: "0 0 50px rgba(240,153,74,0.5),0 0 100px rgba(6,182,212,0.3)" }}>
+                style={{ background: "linear-gradient(135deg,#14b8a6,#06b6d4)", boxShadow: "0 0 50px rgba(20,184,166,0.5),0 0 100px rgba(6,182,212,0.3)" }}>
                 <Icon name="ShoppingBag" size={24} />
                 Оформить займ на товар
                 <Icon name="ArrowRight" size={20} className="group-hover:translate-x-1 transition-transform" />

@@ -4,7 +4,7 @@ import { CardRequestItem, GLASS } from "./adminTypes";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
 
-const G = { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14 };
+const G = { background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.08)", borderRadius: 14 };
 
 interface Props { token: string; }
 
@@ -70,15 +70,15 @@ export default function AdminCardRequests({ token }: Props) {
         ] as const).map(([f, label, color]) => (
           <button key={f} onClick={() => setFilter(f)}
             style={{ padding: "8px 18px", borderRadius: 12, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14,
-              background: filter === f ? color : "rgba(255,255,255,0.07)", color: filter === f ? "#0f0a1e" : "rgba(255,255,255,0.5)" }}>
+              background: filter === f ? color : "rgba(2,44,34,0.07)", color: filter === f ? "#0f0a1e" : "rgba(2,44,34,0.5)" }}>
             {label}
           </button>
         ))}
       </div>
 
-      {loading && <div style={{ textAlign: "center", padding: 60 }}><Icon name="Loader2" size={36} className="animate-spin text-orange-400" /></div>}
+      {loading && <div style={{ textAlign: "center", padding: 60 }}><Icon name="Loader2" size={36} className="animate-spin text-emerald-600" /></div>}
       {!loading && items.length === 0 && (
-        <div style={{ ...GLASS, padding: 60, textAlign: "center", color: "rgba(255,255,255,0.3)" }}>Заявок нет</div>
+        <div style={{ ...GLASS, padding: 60, textAlign: "center", color: "rgba(2,44,34,0.3)" }}>Заявок нет</div>
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -86,10 +86,10 @@ export default function AdminCardRequests({ token }: Props) {
           <div key={req.id} style={{ ...G, padding: 18 }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
               <div>
-                <div style={{ color: "white", fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{req.fullName || req.phone}</div>
-                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>{req.phone} · подана {req.createdAt}</div>
+                <div style={{ color: "#022c22", fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{req.fullName || req.phone}</div>
+                <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 13 }}>{req.phone} · подана {req.createdAt}</div>
                 {req.cardStatus !== "none" && (
-                  <div style={{ marginTop: 6, fontSize: 12, color: "#fdba74" }}>
+                  <div style={{ marginTop: 6, fontSize: 12, color: "#14b8a6" }}>
                     Уже есть карта: {req.cardStatus}{req.cardLimit ? ` · лимит ${req.cardLimit.toLocaleString("ru-RU")} ₽` : ""}
                   </div>
                 )}
@@ -105,41 +105,41 @@ export default function AdminCardRequests({ token }: Props) {
                       <input type="number" placeholder="Лимит, ₽"
                         value={form[req.id]?.limit ?? ""}
                         onChange={e => setForm(p => ({ ...p, [req.id]: { ...p[req.id], limit: e.target.value } }))}
-                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" }} />
+                        style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.4)", borderRadius: 8, padding: "8px 10px", color: "#022c22", fontSize: 13, width: "100%", boxSizing: "border-box" }} />
                       <input type="number" placeholder="Ставка %/нед." step="0.1"
                         value={form[req.id]?.rate ?? ""}
                         onChange={e => setForm(p => ({ ...p, [req.id]: { ...p[req.id], rate: e.target.value } }))}
-                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" }} />
+                        style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.4)", borderRadius: 8, padding: "8px 10px", color: "#022c22", fontSize: 13, width: "100%", boxSizing: "border-box" }} />
                       <input type="number" placeholder="Срок, дней"
                         value={form[req.id]?.days ?? ""}
                         onChange={e => setForm(p => ({ ...p, [req.id]: { ...p[req.id], days: e.target.value } }))}
-                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" }} />
+                        style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.4)", borderRadius: 8, padding: "8px 10px", color: "#022c22", fontSize: 13, width: "100%", boxSizing: "border-box" }} />
                       <button onClick={() => issueCard(req)} disabled={processing[req.id]}
-                        style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)", color: "white", border: "none", borderRadius: 8, padding: "9px", cursor: "pointer", fontWeight: 700, fontSize: 13 }}>
+                        style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)", color: "white", border: "none", borderRadius: 8, padding: "9px", cursor: "pointer", fontWeight: 700, fontSize: 13 }}>
                         {processing[req.id] ? "Выдаём..." : "Выдать карту"}
                       </button>
                       <button onClick={() => setIssueOpen(null)}
-                        style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "none", borderRadius: 8, padding: "7px", cursor: "pointer", fontSize: 12 }}>
+                        style={{ background: "rgba(16,185,129,0.07)", color: "rgba(2,44,34,0.5)", border: "none", borderRadius: 8, padding: "7px", cursor: "pointer", fontSize: 12 }}>
                         Отмена
                       </button>
                     </div>
                   ) : rejectOpen === req.id ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       <input placeholder="Причина отказа" value={rejectReason} onChange={e => setRejectReason(e.target.value)}
-                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(239,68,68,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" }} />
+                        style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(239,68,68,0.4)", borderRadius: 8, padding: "8px 10px", color: "#022c22", fontSize: 13, width: "100%", boxSizing: "border-box" }} />
                       <button onClick={() => rejectRequest(req)} disabled={processing[req.id]}
                         style={{ background: "linear-gradient(135deg,#dc2626,#ef4444)", color: "white", border: "none", borderRadius: 8, padding: "9px", cursor: "pointer", fontWeight: 700, fontSize: 13 }}>
                         {processing[req.id] ? "..." : "Отклонить"}
                       </button>
                       <button onClick={() => setRejectOpen(null)}
-                        style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "none", borderRadius: 8, padding: "7px", cursor: "pointer", fontSize: 12 }}>
+                        style={{ background: "rgba(16,185,129,0.07)", color: "rgba(2,44,34,0.5)", border: "none", borderRadius: 8, padding: "7px", cursor: "pointer", fontSize: 12 }}>
                         Отмена
                       </button>
                     </div>
                   ) : (
                     <>
                       <button onClick={() => { setIssueOpen(req.id); setForm(p => ({ ...p, [req.id]: { limit: "", rate: "24", days: "" } })); }}
-                        style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                        style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
                         <Icon name="CreditCard" size={16} />Одобрить и выдать карту
                       </button>
                       <button onClick={() => setRejectOpen(req.id)}

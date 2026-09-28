@@ -420,7 +420,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen font-golos" style={{ background: "#1e110a" }}>
+    <div className="min-h-screen font-golos" style={{ background: "#ffffff" }}>
       <DashboardNavbar user={user} onLogout={handleLogout} />
 
       <div className="max-w-4xl mx-auto px-4 pt-28 pb-16">
@@ -432,10 +432,10 @@ export default function DashboardPage() {
               <Icon name="User" size={24} className="text-white" />
             </div>
             <div>
-              <h1 className="font-oswald text-2xl font-bold text-white">
+              <h1 className="font-oswald text-2xl font-bold text-emerald-950">
                 {user.fullName ? `Здравствуйте, ${user.fullName.split(" ")[0]}!` : "Личный кабинет"}
               </h1>
-              <p className="text-white/50 text-sm">{user.phone}{user.email ? ` · ${user.email}` : ""}</p>
+              <p className="text-emerald-950/50 text-sm">{user.phone}{user.email ? ` · ${user.email}` : ""}</p>
             </div>
           </div>
         )}
@@ -443,8 +443,8 @@ export default function DashboardPage() {
         {/* СОСТОЯНИЕ ЗАГРУЗКИ */}
         {loading && (
           <div className="text-center py-20">
-            <Icon name="Loader2" size={40} className="animate-spin text-orange-400 mx-auto mb-4" />
-            <p className="text-white/50">Загружаем ваши данные...</p>
+            <Icon name="Loader2" size={40} className="animate-spin text-emerald-600 mx-auto mb-4" />
+            <p className="text-emerald-950/50">Загружаем ваши данные...</p>
           </div>
         )}
 
@@ -546,17 +546,17 @@ export default function DashboardPage() {
           <div className="mb-6">
             <div className="glass rounded-2xl overflow-hidden">
               <div className="p-5 flex items-center gap-3"
-                style={{ background: "linear-gradient(135deg,rgba(240,153,74,0.15),rgba(6,182,212,0.1))", borderBottom: "1px solid rgba(240,153,74,0.2)" }}>
+                style={{ background: "linear-gradient(135deg,rgba(20,184,166,0.15),rgba(6,182,212,0.1))", borderBottom: "1px solid rgba(20,184,166,0.2)" }}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: "linear-gradient(135deg,#f0994a,#06b6d4)" }}>
+                  style={{ background: "linear-gradient(135deg,#14b8a6,#06b6d4)" }}>
                   <Icon name="ShoppingBag" size={20} className="text-white" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-white font-bold">Займ на покупку товара</div>
-                  <div className="text-white/40 text-xs">{shopLoan.item_name || "Товар"} · #{shopLoan.id}</div>
+                  <div className="text-emerald-950 font-bold">Займ на покупку товара</div>
+                  <div className="text-emerald-950/40 text-xs">{shopLoan.item_name || "Товар"} · #{shopLoan.id}</div>
                 </div>
                 {shopLoan.status === "pending" && (
-                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(240,153,74,0.2)", color: "#fed7aa", border: "1px solid rgba(240,153,74,0.3)" }}>На рассмотрении</span>
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(20,184,166,0.2)", color: "#6ee7b7", border: "1px solid rgba(20,184,166,0.3)" }}>На рассмотрении</span>
                 )}
                 {shopLoan.status === "approved" && !shopLoan.contract_signed && (
                   <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(34,197,94,0.2)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.3)" }}>Одобрено ✓</span>
@@ -577,29 +577,29 @@ export default function DashboardPage() {
                   <div>
                     <div className="flex items-start gap-3 mb-4">
                       <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
-                        style={{ background: "rgba(240,153,74,0.15)" }}>
-                        <Icon name="Clock" size={16} className="text-orange-400" />
+                        style={{ background: "rgba(20,184,166,0.15)" }}>
+                        <Icon name="Clock" size={16} className="text-emerald-600" />
                       </div>
                       <div>
-                        <div className="text-white font-semibold mb-1">Заявка рассматривается</div>
-                        <div className="text-white/50 text-sm">Запрошено: <b className="text-white">{shopLoan.loan_amount.toLocaleString("ru-RU")} ₽</b> на <b className="text-white">{shopLoan.loan_months} мес.</b></div>
+                        <div className="text-emerald-950 font-semibold mb-1">Заявка рассматривается</div>
+                        <div className="text-emerald-950/50 text-sm">Запрошено: <b className="text-emerald-950">{shopLoan.loan_amount.toLocaleString("ru-RU")} ₽</b> на <b className="text-emerald-950">{shopLoan.loan_months} мес.</b></div>
                       </div>
                     </div>
                     <div className="rounded-2xl p-5 text-center"
-                      style={{ background: "rgba(240,153,74,0.08)", border: "1px solid rgba(240,153,74,0.25)" }}>
+                      style={{ background: "rgba(20,184,166,0.08)", border: "1px solid rgba(20,184,166,0.25)" }}>
                       {!shopTimerDone ? (
                         <>
                           <div className="font-oswald text-5xl font-bold mb-2"
-                            style={{ color: "#fed7aa", textShadow: "0 0 24px rgba(240,153,74,0.5)" }}>
+                            style={{ color: "#0d9488", textShadow: "0 0 24px rgba(20,184,166,0.5)" }}>
                             {`${Math.floor(shopTimer/60).toString().padStart(2,"0")}:${(shopTimer%60).toString().padStart(2,"0")}`}
                           </div>
-                          <div className="text-white/40 text-sm">Примерное время до ответа</div>
+                          <div className="text-emerald-950/40 text-sm">Примерное время до ответа</div>
                         </>
                       ) : (
                         <>
-                          <Icon name="FileSearch" size={28} className="text-orange-400 mx-auto mb-2" />
-                          <div className="text-white font-semibold mb-1">Заявка на рассмотрении</div>
-                          <div className="text-white/40 text-sm">Специалист свяжется с вами в ближайшее время</div>
+                          <Icon name="FileSearch" size={28} className="text-emerald-600 mx-auto mb-2" />
+                          <div className="text-emerald-950 font-semibold mb-1">Заявка на рассмотрении</div>
+                          <div className="text-emerald-950/40 text-sm">Специалист свяжется с вами в ближайшее время</div>
                         </>
                       )}
                     </div>
@@ -622,17 +622,17 @@ export default function DashboardPage() {
                           const m = shopLoan.approved_months || shopLoan.loan_months;
                           const r = (shopLoan.approved_rate || 9) / 100;
                           return `${Math.round(a * (1 + r * m)).toLocaleString("ru-RU")} ₽`;
-                        })(), c: "#fbbf7a" },
+                        })(), c: "#6ee7b7" },
                       ].map(({ l, v, c }) => (
-                        <div key={l} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                          <div className="text-white/40 text-xs mb-1">{l}</div>
+                        <div key={l} className="rounded-xl p-3" style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.07)" }}>
+                          <div className="text-emerald-950/40 text-xs mb-1">{l}</div>
                           <div className="font-bold" style={{ color: c }}>{v}</div>
                         </div>
                       ))}
                     </div>
 
                     {shopLoan.notes && (
-                      <div className="rounded-xl p-3 mb-4 text-white/50 text-sm" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                      <div className="rounded-xl p-3 mb-4 text-emerald-950/50 text-sm" style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.07)" }}>
                         📝 {shopLoan.notes}
                       </div>
                     )}
@@ -660,9 +660,9 @@ export default function DashboardPage() {
                     {!shopLoan.contract_signed ? (
                       <div>
                         <div className="rounded-xl p-4 mb-4 flex items-start gap-3"
-                          style={{ background: "rgba(240,153,74,0.08)", border: "1px solid rgba(240,153,74,0.2)" }}>
-                          <Icon name="FileText" size={16} className="text-orange-400 shrink-0 mt-0.5" />
-                          <div className="text-white/60 text-sm">
+                          style={{ background: "rgba(20,184,166,0.08)", border: "1px solid rgba(20,184,166,0.2)" }}>
+                          <Icon name="FileText" size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                          <div className="text-emerald-950/60 text-sm">
                             Нажмите кнопку ниже для подписания договора. Деньги будут переведены в магазин сразу после подписания.
                           </div>
                         </div>
@@ -671,7 +671,7 @@ export default function DashboardPage() {
                         )}
                         <button onClick={handleShopSign} disabled={shopSigning}
                           className="w-full py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2"
-                          style={{ background: "linear-gradient(135deg,#f0994a,#06b6d4)", opacity: shopSigning ? 0.7 : 1 }}>
+                          style={{ background: "linear-gradient(135deg,#14b8a6,#06b6d4)", opacity: shopSigning ? 0.7 : 1 }}>
                           {shopSigning
                             ? <><Icon name="Loader" size={18} className="animate-spin" /> Подписываем...</>
                             : <><Icon name="PenLine" size={18} /> Подписать договор</>
@@ -684,7 +684,7 @@ export default function DashboardPage() {
                           <Icon name="BadgeCheck" size={18} className="text-sky-400" />
                           <div>
                             <div className="text-sky-300 text-sm font-semibold">Займ выдан! Деньги переведены в магазин.</div>
-                            <div className="text-white/40 text-xs mt-0.5">{new Date(shopLoan.disbursed_at).toLocaleString("ru-RU")}</div>
+                            <div className="text-emerald-950/40 text-xs mt-0.5">{new Date(shopLoan.disbursed_at).toLocaleString("ru-RU")}</div>
                           </div>
                         </div>
                         {shopLoan.status === "approved" && (
@@ -698,7 +698,7 @@ export default function DashboardPage() {
                               setPayOther({ contractNumber: `Т-${String(shopLoan.id).padStart(12, "0")}`, amount: remaining });
                             }}
                             className="w-full text-white font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2"
-                            style={{ background: "linear-gradient(135deg,#f0994a,#06b6d4)" }}
+                            style={{ background: "linear-gradient(135deg,#14b8a6,#06b6d4)" }}
                           >
                             <Icon name="Banknote" size={16} />
                             Погасить займ
@@ -721,9 +721,9 @@ export default function DashboardPage() {
                       <Icon name="XCircle" size={16} className="text-red-400" />
                     </div>
                     <div>
-                      <div className="text-white font-semibold mb-1">По заявке принято отрицательное решение</div>
-                      {shopLoan.reject_reason && <div className="text-white/50 text-sm mb-1">Причина: {shopLoan.reject_reason}</div>}
-                      <div className="text-white/40 text-xs">Вы можете подать новую заявку или обратиться к нашим специалистам.</div>
+                      <div className="text-emerald-950 font-semibold mb-1">По заявке принято отрицательное решение</div>
+                      {shopLoan.reject_reason && <div className="text-emerald-950/50 text-sm mb-1">Причина: {shopLoan.reject_reason}</div>}
+                      <div className="text-emerald-950/40 text-xs">Вы можете подать новую заявку или обратиться к нашим специалистам.</div>
                     </div>
                   </div>
                 )}
@@ -743,8 +743,8 @@ export default function DashboardPage() {
                   <Icon name="Car" size={20} className="text-white" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-white font-bold">Займ под залог автомобиля</div>
-                  <div className="text-white/40 text-xs">{carLoan.car_brand} {carLoan.car_model} {carLoan.car_year} · #{carLoan.id}</div>
+                  <div className="text-emerald-950 font-bold">Займ под залог автомобиля</div>
+                  <div className="text-emerald-950/40 text-xs">{carLoan.car_brand} {carLoan.car_model} {carLoan.car_year} · #{carLoan.id}</div>
                 </div>
                 {carLoan.status === "pending" && (
                   <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(245,158,11,0.2)", color: "#fbbf24", border: "1px solid rgba(245,158,11,0.3)" }}>
@@ -782,8 +782,8 @@ export default function DashboardPage() {
                         <Icon name="Clock" size={16} className="text-yellow-400" />
                       </div>
                       <div>
-                        <div className="text-white font-semibold mb-1">Заявка рассматривается</div>
-                        <div className="text-white/50 text-sm">Запрошено: <b className="text-white">{carLoan.loan_amount.toLocaleString("ru-RU")} ₽</b> на <b className="text-white">{carLoan.loan_months} мес.</b></div>
+                        <div className="text-emerald-950 font-semibold mb-1">Заявка рассматривается</div>
+                        <div className="text-emerald-950/50 text-sm">Запрошено: <b className="text-emerald-950">{carLoan.loan_amount.toLocaleString("ru-RU")} ₽</b> на <b className="text-emerald-950">{carLoan.loan_months} мес.</b></div>
                       </div>
                     </div>
                     <div className="rounded-2xl p-5 text-center"
@@ -794,13 +794,13 @@ export default function DashboardPage() {
                             style={{ color: "#fbbf24", textShadow: "0 0 24px rgba(245,158,11,0.5)" }}>
                             {`${Math.floor(carTimer/60).toString().padStart(2,"0")}:${(carTimer%60).toString().padStart(2,"0")}`}
                           </div>
-                          <div className="text-white/40 text-sm">Примерное время до ответа</div>
+                          <div className="text-emerald-950/40 text-sm">Примерное время до ответа</div>
                         </>
                       ) : (
                         <>
                           <Icon name="FileSearch" size={28} className="text-yellow-400 mx-auto mb-2" />
-                          <div className="text-white font-semibold mb-1">Заявка на рассмотрении</div>
-                          <div className="text-white/40 text-sm">Специалист свяжется с вами в ближайшее время</div>
+                          <div className="text-emerald-950 font-semibold mb-1">Заявка на рассмотрении</div>
+                          <div className="text-emerald-950/40 text-sm">Специалист свяжется с вами в ближайшее время</div>
                         </>
                       )}
                     </div>
@@ -825,10 +825,10 @@ export default function DashboardPage() {
                             const r = (carLoan.approved_rate || 12) / 100;
                             return `${Math.round(a * (1 + r * m)).toLocaleString("ru-RU")} ₽`;
                           })(),
-                          c: "#fbbf7a" },
+                          c: "#6ee7b7" },
                       ].map(({ l, v, c }) => (
-                        <div key={l} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                          <div className="text-white/40 text-xs mb-1">{l}</div>
+                        <div key={l} className="rounded-xl p-3" style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.07)" }}>
+                          <div className="text-emerald-950/40 text-xs mb-1">{l}</div>
                           <div className="font-bold" style={{ color: c }}>{v}</div>
                         </div>
                       ))}
@@ -876,7 +876,7 @@ export default function DashboardPage() {
                         <div className="rounded-xl p-4 mb-4 flex items-start gap-3"
                           style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}>
                           <Icon name="FileText" size={16} className="text-yellow-400 shrink-0 mt-0.5" />
-                          <div className="text-white/60 text-sm">
+                          <div className="text-emerald-950/60 text-sm">
                             Нажмите кнопку ниже для подписания договора. Деньги будут переведены на ваши реквизиты сразу после подписания.
                           </div>
                         </div>
@@ -909,11 +909,11 @@ export default function DashboardPage() {
                       <Icon name="XCircle" size={16} className="text-red-400" />
                     </div>
                     <div>
-                      <div className="text-white font-semibold mb-1">По заявке принято отрицательное решение</div>
+                      <div className="text-emerald-950 font-semibold mb-1">По заявке принято отрицательное решение</div>
                       {carLoan.reject_reason && (
-                        <div className="text-white/50 text-sm mb-2">Причина: {carLoan.reject_reason}</div>
+                        <div className="text-emerald-950/50 text-sm mb-2">Причина: {carLoan.reject_reason}</div>
                       )}
-                      <div className="text-white/40 text-xs">Вы можете подать новую заявку или обратиться к нашим специалистам.</div>
+                      <div className="text-emerald-950/40 text-xs">Вы можете подать новую заявку или обратиться к нашим специалистам.</div>
                     </div>
                   </div>
                 )}

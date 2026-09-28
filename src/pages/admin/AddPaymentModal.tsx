@@ -35,33 +35,33 @@ export default function AddPaymentModal({ token, loanType, loanId, clientName, o
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
       onClick={onClose}>
-      <div style={{ background: "#301b10", border: "1px solid rgba(14,165,233,0.35)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 420 }}
+      <div style={{ background: "#ffffff", border: "1px solid rgba(14,165,233,0.35)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 420 }}
         onClick={e => e.stopPropagation()}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
           <div>
-            <div style={{ color: "white", fontWeight: 700, fontSize: 17 }}>Внести платёж</div>
-            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>{clientName} · Займ #{loanId}</div>
+            <div style={{ color: "#022c22", fontWeight: 700, fontSize: 17 }}>Внести платёж</div>
+            <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 13 }}>{clientName} · Займ #{loanId}</div>
           </div>
-          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.07)", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
+          <button onClick={onClose} style={{ background: "rgba(16,185,129,0.07)", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: "rgba(2,44,34,0.5)" }}>
             <Icon name="X" size={18} />
           </button>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div>
-            <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Сумма платежа (₽)</label>
+            <label style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Сумма платежа (₽)</label>
             <input
               type="number" autoFocus value={amount} onChange={e => setAmount(e.target.value)}
               placeholder="Например, 15000"
-              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "10px 14px", color: "white", fontSize: 15, width: "100%", outline: "none" }}
+              style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.12)", borderRadius: 10, padding: "10px 14px", color: "#022c22", fontSize: 15, width: "100%", outline: "none" }}
             />
           </div>
           <div>
-            <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Комментарий (необязательно)</label>
+            <label style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Комментарий (необязательно)</label>
             <input
               value={note} onChange={e => setNote(e.target.value)}
               placeholder="Например, оплата через кассу"
-              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "10px 14px", color: "white", fontSize: 14, width: "100%", outline: "none" }}
+              style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.12)", borderRadius: 10, padding: "10px 14px", color: "#022c22", fontSize: 14, width: "100%", outline: "none" }}
             />
           </div>
 
@@ -69,7 +69,7 @@ export default function AddPaymentModal({ token, loanType, loanId, clientName, o
 
           <div style={{ display: "flex", gap: 10 }}>
             <button onClick={onClose}
-              style={{ flex: 1, padding: "11px", borderRadius: 10, border: "none", cursor: "pointer", background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>
+              style={{ flex: 1, padding: "11px", borderRadius: 10, border: "none", cursor: "pointer", background: "rgba(16,185,129,0.07)", color: "rgba(2,44,34,0.5)", fontWeight: 600 }}>
               Отмена
             </button>
             <button onClick={submit} disabled={saving}

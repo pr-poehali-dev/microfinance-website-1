@@ -8,9 +8,9 @@ const STAGES = [
     amount: "500 — 5 000 ₽",
     term: "от 15 до 365 дней",
     desc: "Оформление карты партнёра. Первый шаг к восстановлению кредитной истории.",
-    color: "#f0994a",
-    bg: "rgba(240,153,74,0.12)",
-    border: "rgba(240,153,74,0.35)",
+    color: "#14b8a6",
+    bg: "rgba(20,184,166,0.12)",
+    border: "rgba(20,184,166,0.35)",
   },
   {
     num: "02",
@@ -57,17 +57,17 @@ export default function CreditDoctorPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen font-golos" style={{ background: "#1e110a" }}>
+    <div className="min-h-screen font-golos" style={{ background: "#ffffff" }}>
       {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass" style={{ borderBottom: "1px solid rgba(240,153,74,0.2)" }}>
+      <nav className="fixed top-0 left-0 right-0 z-50 glass" style={{ borderBottom: "1px solid rgba(20,184,166,0.2)" }}>
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <button onClick={() => navigate("/")} className="flex items-center gap-2">
             <img src="/logo-icon.png" alt="Русфинанс 24" className="w-9 h-9 rounded-xl" />
-            <span className="font-oswald text-xl font-bold tracking-wide text-white">
+            <span className="font-oswald text-xl font-bold tracking-wide text-emerald-950">
               <span className="gradient-text">РУСФИНАНС24</span>
             </span>
           </button>
-          <button onClick={() => navigate("/")} className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm">
+          <button onClick={() => navigate("/")} className="flex items-center gap-2 text-emerald-950/60 hover:text-emerald-950 transition-colors text-sm">
             <Icon name="ArrowLeft" size={16} />
             На главную
           </button>
@@ -77,18 +77,18 @@ export default function CreditDoctorPage() {
       {/* HERO */}
       <section className="hero-bg pt-32 pb-20 px-4 relative overflow-hidden">
         <div className="absolute top-20 right-10 w-72 h-72 rounded-full opacity-20 blur-3xl pointer-events-none"
-          style={{ background: "radial-gradient(circle, #F0994A, transparent)" }} />
+          style={{ background: "radial-gradient(circle, #14b8a6, transparent)" }} />
         <div className="absolute bottom-10 left-10 w-64 h-64 rounded-full opacity-10 blur-3xl pointer-events-none"
-          style={{ background: "radial-gradient(circle, #06B6D4, transparent)" }} />
+          style={{ background: "radial-gradient(circle, #06b6d4, transparent)" }} />
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-6"
-            style={{ background: "rgba(240,153,74,0.15)", border: "1px solid rgba(240,153,74,0.4)", color: "#fbbf7a" }}>
+            style={{ background: "rgba(20,184,166,0.15)", border: "1px solid rgba(20,184,166,0.4)", color: "#6ee7b7" }}>
             <Icon name="HeartPulse" size={15} />
             Специальная программа
           </div>
 
-          <h1 className="font-oswald text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+          <h1 className="font-oswald text-5xl md:text-7xl font-bold text-emerald-950 mb-6 leading-tight">
             КРЕДИТНЫЙ <span className="gradient-text">ДОКТОР</span>
           </h1>
 
@@ -98,12 +98,12 @@ export default function CreditDoctorPage() {
             <span className="text-green-300 font-bold text-xl">ОДОБРЕНИЕ 100%</span>
           </div>
 
-          <p className="text-white/60 text-lg mb-4 max-w-2xl mx-auto leading-relaxed">
-            Программа для клиентов с <span className="text-white font-semibold">плохой кредитной историей</span>.
+          <p className="text-emerald-950/60 text-lg mb-4 max-w-2xl mx-auto leading-relaxed">
+            Программа для клиентов с <span className="text-emerald-950 font-semibold">плохой кредитной историей</span>.
             Восстановите свой кредитный рейтинг поэтапно и получите доступ к большим суммам.
           </p>
-          <p className="text-white/50 text-base mb-10">
-            Сумма займа от <span className="text-orange-300 font-bold">500 ₽</span> до <span className="text-orange-300 font-bold">50 000 ₽</span>
+          <p className="text-emerald-950/50 text-base mb-10">
+            Сумма займа от <span className="text-emerald-600 font-bold">500 ₽</span> до <span className="text-emerald-600 font-bold">50 000 ₽</span>
           </p>
 
           <button
@@ -120,10 +120,10 @@ export default function CreditDoctorPage() {
       <section className="py-20 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="font-oswald text-4xl font-bold text-white mb-3">
+            <h2 className="font-oswald text-4xl font-bold text-emerald-950 mb-3">
               Этапы <span className="gradient-text">программы</span>
             </h2>
-            <p className="text-white/50">С каждым этапом ваш лимит растёт</p>
+            <p className="text-emerald-950/50">С каждым этапом ваш лимит растёт</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -138,11 +138,11 @@ export default function CreditDoctorPage() {
                     <span className="font-oswald font-bold text-lg" style={{ color: s.color }}>{s.num}</span>
                   </div>
                   <div>
-                    <div className="font-bold text-white text-lg mb-1">{s.title}</div>
+                    <div className="font-bold text-emerald-950 text-lg mb-1">{s.title}</div>
                     <div className="font-oswald text-2xl font-bold mb-2" style={{ color: s.color }}>{s.amount}</div>
                     <div className="flex flex-wrap gap-2 mb-2">
                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold"
-                        style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.6)" }}>
+                        style={{ background: "rgba(16,185,129,0.07)", color: "rgba(16,185,129,0.6)" }}>
                         <Icon name="Clock" size={11} />
                         Срок: {s.term}
                       </span>
@@ -152,7 +152,7 @@ export default function CreditDoctorPage() {
                         Без досрочного погашения
                       </span>
                     </div>
-                    <p className="text-white/50 text-sm leading-relaxed">{s.desc}</p>
+                    <p className="text-emerald-950/50 text-sm leading-relaxed">{s.desc}</p>
                   </div>
                 </div>
               </div>
@@ -161,20 +161,20 @@ export default function CreditDoctorPage() {
 
           {/* Стрелка прогресса */}
           <div className="mt-8 glass rounded-2xl p-5 flex items-center gap-4">
-            <Icon name="TrendingUp" size={24} className="text-orange-400 shrink-0" />
+            <Icon name="TrendingUp" size={24} className="text-emerald-600 shrink-0" />
             <div>
-              <div className="text-white font-semibold mb-1">Прогресс без остановок</div>
-              <div className="text-white/50 text-sm">После успешного погашения каждого этапа вы автоматически переходите на следующий уровень с увеличенным лимитом</div>
+              <div className="text-emerald-950 font-semibold mb-1">Прогресс без остановок</div>
+              <div className="text-emerald-950/50 text-sm">После успешного погашения каждого этапа вы автоматически переходите на следующий уровень с увеличенным лимитом</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* ПРЕИМУЩЕСТВА */}
-      <section className="py-20 px-4" style={{ background: "rgba(234,128,52,0.05)" }}>
+      <section className="py-20 px-4" style={{ background: "rgba(16,185,129,0.05)" }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="font-oswald text-4xl font-bold text-white mb-3">
+            <h2 className="font-oswald text-4xl font-bold text-emerald-950 mb-3">
               Условия <span className="gradient-text">программы</span>
             </h2>
           </div>
@@ -184,8 +184,8 @@ export default function CreditDoctorPage() {
                 <div className="w-11 h-11 rounded-xl btn-neon flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Icon name={f.icon} size={20} className="text-white" />
                 </div>
-                <h3 className="text-white font-semibold text-base mb-2">{f.title}</h3>
-                <p className="text-white/50 text-sm leading-relaxed">{f.desc}</p>
+                <h3 className="text-emerald-950 font-semibold text-base mb-2">{f.title}</h3>
+                <p className="text-emerald-950/50 text-sm leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -201,8 +201,8 @@ export default function CreditDoctorPage() {
               <Icon name="AlertTriangle" size={22} className="text-yellow-400 shrink-0 mt-0.5" />
               <div>
                 <div className="text-yellow-300 font-bold text-base mb-2">Важное условие программы</div>
-                <p className="text-white/60 text-sm leading-relaxed">
-                  Выдача займов по программе «Кредитный Доктор» производится <strong className="text-white">только на карту партнёра</strong>,
+                <p className="text-emerald-950/60 text-sm leading-relaxed">
+                  Выдача займов по программе «Кредитный Доктор» производится <strong className="text-emerald-950">только на карту партнёра</strong>,
                   полученную на нашем сайте. Убедитесь, что карта оформлена до подачи заявки.
                 </p>
               </div>
@@ -212,12 +212,12 @@ export default function CreditDoctorPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-4" style={{ background: "rgba(234,128,52,0.05)" }}>
+      <section className="py-20 px-4" style={{ background: "rgba(16,185,129,0.05)" }}>
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="font-oswald text-4xl font-bold text-white mb-4">
+          <h2 className="font-oswald text-4xl font-bold text-emerald-950 mb-4">
             Начните <span className="gradient-text">прямо сейчас</span>
           </h2>
-          <p className="text-white/50 mb-8">Одобряем 100% заявок. Срок рассмотрения от 1 до 30 минут.</p>
+          <p className="text-emerald-950/50 mb-8">Одобряем 100% заявок. Срок рассмотрения от 1 до 30 минут.</p>
           <button
             onClick={() => navigate("/apply", { state: { isCreditDoctor: true } })}
             className="btn-neon text-white font-bold px-10 py-5 rounded-2xl text-lg inline-flex items-center gap-3"
@@ -231,8 +231,8 @@ export default function CreditDoctorPage() {
               { icon: "Clock", text: "От 1 до 30 минут" },
               { icon: "Lock", text: "Безопасно" },
             ].map((i) => (
-              <div key={i.text} className="flex items-center gap-2 text-white/40 text-sm">
-                <Icon name={i.icon} size={14} className="text-orange-400" />
+              <div key={i.text} className="flex items-center gap-2 text-emerald-950/40 text-sm">
+                <Icon name={i.icon} size={14} className="text-emerald-600" />
                 {i.text}
               </div>
             ))}
@@ -242,7 +242,7 @@ export default function CreditDoctorPage() {
 
       {/* FOOTER */}
       <footer className="py-8 px-4 text-center">
-        <p className="text-white/20 text-sm">© 2024 РУСФИНАНС 24 · Займы от частных инвесторов</p>
+        <p className="text-emerald-950/20 text-sm">© 2024 РУСФИНАНС 24 · Займы от частных инвесторов</p>
       </footer>
     </div>
   );

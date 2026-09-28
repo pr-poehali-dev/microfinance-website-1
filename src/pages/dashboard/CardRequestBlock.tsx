@@ -38,7 +38,7 @@ export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectR
             <Icon name="Clock" size={20} className="text-yellow-400" />
           </div>
           <div>
-            <div className="text-white font-bold">Заявка на карту РУСФИНАНС 24 на рассмотрении</div>
+            <div className="text-emerald-950 font-bold">Заявка на карту РУСФИНАНС 24 на рассмотрении</div>
             <div className="text-yellow-300 text-sm mt-0.5">Мы сообщим вам, как только карта будет одобрена</div>
           </div>
         </div>
@@ -48,15 +48,15 @@ export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectR
 
   return (
     <div className="glass rounded-2xl overflow-hidden mb-6"
-      style={{ border: "1px solid rgba(234,128,52,0.35)", background: "rgba(234,128,52,0.04)" }}>
+      style={{ border: "1px solid rgba(16,185,129,0.35)", background: "rgba(16,185,129,0.04)" }}>
       <div className="px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(234,128,52,0.2)" }}>
-            <Icon name="CreditCard" size={20} className="text-orange-400" />
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(16,185,129,0.2)" }}>
+            <Icon name="CreditCard" size={20} className="text-emerald-600" />
           </div>
           <div>
-            <div className="text-white font-bold">Карта РУСФИНАНС 24</div>
-            <div className="text-white/40 text-sm">Подайте заявку и получите доступ к лимиту в любое время</div>
+            <div className="text-emerald-950 font-bold">Карта РУСФИНАНС 24</div>
+            <div className="text-emerald-950/40 text-sm">Подайте заявку и получите доступ к лимиту в любое время</div>
             {cardRequestStatus === "rejected" && (
               <div className="text-red-400 text-xs mt-1">
                 Предыдущая заявка отклонена{cardRequestRejectReason ? `: ${cardRequestRejectReason}` : ""}

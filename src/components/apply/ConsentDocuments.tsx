@@ -133,29 +133,29 @@ export default function ConsentDocuments({ consents, onChange }: Props) {
 
   return (
     <div className="space-y-2">
-      <h3 className="text-white font-bold text-base mb-1">Согласия и документы</h3>
+      <h3 className="text-emerald-950 font-bold text-base mb-1">Согласия и документы</h3>
       {DOCS.map((doc) => (
         <label
           key={doc.key}
           className="flex items-start gap-3 rounded-xl px-4 py-3 cursor-pointer transition-colors"
-          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
+          style={{ background: "rgba(16,185,129,0.03)", border: "1px solid rgba(16,185,129,0.08)" }}
         >
           <input
             type="checkbox"
             checked={consents[doc.key]}
             onChange={(e) => onChange(doc.key, e.target.checked)}
-            className="mt-0.5 w-4 h-4 shrink-0 accent-orange-500 cursor-pointer"
+            className="mt-0.5 w-4 h-4 shrink-0 accent-emerald-500 cursor-pointer"
           />
-          <span className="flex-1 text-sm text-white/70 leading-snug">
+          <span className="flex-1 text-sm text-emerald-950/70 leading-snug">
             Я даю{" "}
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); setOpenDoc(doc); }}
-              className="text-orange-400 underline underline-offset-2 hover:text-orange-300 transition-colors"
+              className="text-emerald-600 underline underline-offset-2 hover:text-emerald-700 transition-colors"
             >
               {doc.title.charAt(0).toLowerCase() + doc.title.slice(1)}
             </button>
-            {!doc.required && <span className="text-white/30"> (необязательно)</span>}
+            {!doc.required && <span className="text-emerald-950/30"> (необязательно)</span>}
           </span>
         </label>
       ))}
@@ -166,16 +166,16 @@ export default function ConsentDocuments({ consents, onChange }: Props) {
           onClick={() => setOpenDoc(null)}
         >
           <div
-            style={{ background: "#1e110a", borderRadius: 20, padding: "28px", maxWidth: 620, width: "100%", maxHeight: "80vh", overflowY: "auto", border: "1px solid rgba(240,153,74,0.35)" }}
+            style={{ background: "#ffffff", borderRadius: 20, padding: "28px", maxWidth: 620, width: "100%", maxHeight: "80vh", overflowY: "auto", border: "1px solid rgba(16,185,129,0.35)" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4 mb-4">
-              <h2 className="text-white font-bold text-lg">{openDoc.title}</h2>
-              <button onClick={() => setOpenDoc(null)} className="text-white/40 hover:text-white transition-colors shrink-0">
+              <h2 className="text-emerald-950 font-bold text-lg">{openDoc.title}</h2>
+              <button onClick={() => setOpenDoc(null)} className="text-emerald-950/40 hover:text-emerald-950 transition-colors shrink-0">
                 <Icon name="X" size={22} />
               </button>
             </div>
-            <div className="text-white/60 text-sm leading-relaxed whitespace-pre-line">{openDoc.text}</div>
+            <div className="text-emerald-950/60 text-sm leading-relaxed whitespace-pre-line">{openDoc.text}</div>
             <button
               onClick={() => { onChange(openDoc.key, true); setOpenDoc(null); }}
               className="btn-neon text-white font-semibold w-full py-3 rounded-xl mt-6 flex items-center justify-center gap-2"

@@ -50,17 +50,17 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen font-golos hero-bg flex flex-col" style={{ background: "#1e110a" }}>
+    <div className="min-h-screen font-golos hero-bg flex flex-col" style={{ background: "#ffffff" }}>
       {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass" style={{ borderBottom: "1px solid rgba(240,153,74,0.2)" }}>
+      <nav className="fixed top-0 left-0 right-0 z-50 glass" style={{ borderBottom: "1px solid rgba(20,184,166,0.2)" }}>
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <button onClick={() => navigate("/")} className="flex items-center gap-2">
             <img src="/logo-icon.png" alt="Русфинанс 24" className="w-9 h-9 rounded-xl" />
-            <span className="font-oswald text-xl font-bold tracking-wide text-white">
+            <span className="font-oswald text-xl font-bold tracking-wide text-emerald-950">
               <span className="gradient-text">РУСФИНАНС24</span>
             </span>
           </button>
-          <button onClick={() => navigate("/")} className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm">
+          <button onClick={() => navigate("/")} className="flex items-center gap-2 text-emerald-950/60 hover:text-emerald-950 transition-colors text-sm">
             <Icon name="ArrowLeft" size={16} />
             На главную
           </button>
@@ -74,19 +74,19 @@ export default function LoginPage() {
             <div className="w-16 h-16 btn-neon rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Icon name={mode === "phone_login" ? "Smartphone" : "User"} size={28} className="text-white" />
             </div>
-            <h1 className="font-oswald text-3xl font-bold text-white mb-2">{titles[mode].h}</h1>
-            <p className="text-white/50 text-sm">{titles[mode].sub}</p>
+            <h1 className="font-oswald text-3xl font-bold text-emerald-950 mb-2">{titles[mode].h}</h1>
+            <p className="text-emerald-950/50 text-sm">{titles[mode].sub}</p>
           </div>
 
           <div className="glass rounded-2xl p-6">
             {/* TABS */}
-            <div className="flex rounded-xl mb-6 p-1" style={{ background: "rgba(255,255,255,0.05)" }}>
+            <div className="flex rounded-xl mb-6 p-1" style={{ background: "rgba(16,185,129,0.05)" }}>
               {(["login", "register"] as const).map((m) => (
                 <button
                   key={m}
                   onClick={() => switchMode(m)}
                   className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all"
-                  style={mode === m ? { background: "linear-gradient(135deg,#ea8034,#f0994a)", color: "white" } : { color: "rgba(255,255,255,0.5)" }}
+                  style={mode === m ? { background: "linear-gradient(135deg,#10b981,#14b8a6)", color: "white" } : { color: "rgba(16,185,129,0.5)" }}
                 >
                   {m === "login" ? "Войти" : "Регистрация"}
                 </button>
@@ -96,53 +96,53 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === "register" && (
                 <div>
-                  <label className="text-white/70 text-sm mb-2 block">ФИО</label>
+                  <label className="text-emerald-950/70 text-sm mb-2 block">ФИО</label>
                   <input
                     type="text"
                     placeholder="Иванов Иван Иванович"
                     value={form.fullName}
                     onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                    className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors"
-                    style={{ background: "rgba(255,255,255,0.05)" }}
+                    className="w-full rounded-xl px-4 py-3.5 text-emerald-950 placeholder-emerald-900/30 outline-none border border-emerald-900/15 focus:border-emerald-500 transition-colors"
+                    style={{ background: "rgba(16,185,129,0.05)" }}
                   />
                 </div>
               )}
 
               <div>
-                <label className="text-white/70 text-sm mb-2 block">Номер телефона</label>
+                <label className="text-emerald-950/70 text-sm mb-2 block">Номер телефона</label>
                 <div className="relative">
-                  <Icon name="Phone" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
+                  <Icon name="Phone" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-950/40" />
                   <input
                     type="text"
                     placeholder="+7 (999) 000-00-00"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     required
-                    className="w-full rounded-xl pl-10 pr-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors"
-                    style={{ background: "rgba(255,255,255,0.05)" }}
+                    className="w-full rounded-xl pl-10 pr-4 py-3.5 text-emerald-950 placeholder-emerald-900/30 outline-none border border-emerald-900/15 focus:border-emerald-500 transition-colors"
+                    style={{ background: "rgba(16,185,129,0.05)" }}
                   />
                 </div>
               </div>
 
               {mode === "register" && (
                 <div>
-                  <label className="text-white/70 text-sm mb-2 block">Email (необязательно)</label>
+                  <label className="text-emerald-950/70 text-sm mb-2 block">Email (необязательно)</label>
                   <input
                     type="email"
                     placeholder="example@mail.ru"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors"
-                    style={{ background: "rgba(255,255,255,0.05)" }}
+                    className="w-full rounded-xl px-4 py-3.5 text-emerald-950 placeholder-emerald-900/30 outline-none border border-emerald-900/15 focus:border-emerald-500 transition-colors"
+                    style={{ background: "rgba(16,185,129,0.05)" }}
                   />
                 </div>
               )}
 
               {mode !== "phone_login" && (
                 <div>
-                  <label className="text-white/70 text-sm mb-2 block">Пароль</label>
+                  <label className="text-emerald-950/70 text-sm mb-2 block">Пароль</label>
                   <div className="relative">
-                    <Icon name="Lock" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
+                    <Icon name="Lock" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-950/40" />
                     <input
                       type={showPass ? "text" : "password"}
                       placeholder="Введите пароль"
@@ -150,23 +150,23 @@ export default function LoginPage() {
                       onChange={(e) => setForm({ ...form, password: e.target.value })}
                       required
                       minLength={6}
-                      className="w-full rounded-xl pl-10 pr-12 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors"
-                      style={{ background: "rgba(255,255,255,0.05)" }}
+                      className="w-full rounded-xl pl-10 pr-12 py-3.5 text-emerald-950 placeholder-emerald-900/30 outline-none border border-emerald-900/15 focus:border-emerald-500 transition-colors"
+                      style={{ background: "rgba(16,185,129,0.05)" }}
                     />
-                    <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70">
+                    <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-950/40 hover:text-emerald-950/70">
                       <Icon name={showPass ? "EyeOff" : "Eye"} size={16} />
                     </button>
                   </div>
-                  {mode === "register" && <p className="text-white/30 text-xs mt-1">Минимум 6 символов</p>}
+                  {mode === "register" && <p className="text-emerald-950/30 text-xs mt-1">Минимум 6 символов</p>}
                 </div>
               )}
 
               {/* Подсказка для phone_login */}
               {mode === "phone_login" && (
                 <div className="rounded-xl px-4 py-3 flex items-start gap-3 text-sm"
-                  style={{ background: "rgba(234,128,52,0.1)", border: "1px solid rgba(234,128,52,0.25)" }}>
-                  <Icon name="Info" size={15} className="text-orange-400 mt-0.5 shrink-0" />
-                  <p className="text-white/60">Введите номер телефона, который вы указали в заявке. Вход доступен после одобрения займа.</p>
+                  style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)" }}>
+                  <Icon name="Info" size={15} className="text-emerald-600 mt-0.5 shrink-0" />
+                  <p className="text-emerald-950/60">Введите номер телефона, который вы указали в заявке. Вход доступен после одобрения займа.</p>
                 </div>
               )}
 
@@ -182,12 +182,12 @@ export default function LoginPage() {
                     <Icon name="UserX" size={16} />
                     <span className="font-semibold">Повторная регистрация невозможна.</span>
                   </div>
-                  <p className="text-white/50 mb-3">Аккаунт с этим номером уже существует. Войдите в личный кабинет.</p>
+                  <p className="text-emerald-950/50 mb-3">Аккаунт с этим номером уже существует. Войдите в личный кабинет.</p>
                   <button
                     type="button"
                     onClick={() => switchMode("login")}
                     className="w-full py-2.5 rounded-xl font-semibold text-white text-sm"
-                    style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)" }}
+                    style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)" }}
                   >
                     Войти в кабинет
                   </button>
@@ -210,12 +210,12 @@ export default function LoginPage() {
 
             {/* Ссылка на вход по телефону */}
             {mode !== "phone_login" && (
-              <div className="mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-                <p className="text-center text-white/40 text-sm mb-3">Займ одобрен, но нет пароля?</p>
+              <div className="mt-5 pt-4" style={{ borderTop: "1px solid rgba(16,185,129,0.07)" }}>
+                <p className="text-center text-emerald-950/40 text-sm mb-3">Займ одобрен, но нет пароля?</p>
                 <button
                   onClick={() => switchMode("phone_login")}
                   className="w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-80"
-                  style={{ background: "rgba(234,128,52,0.15)", border: "1px solid rgba(234,128,52,0.3)", color: "#fbbf7a" }}
+                  style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)", color: "#6ee7b7" }}
                 >
                   <Icon name="Smartphone" size={16} />
                   Войти только по номеру телефона
@@ -224,8 +224,8 @@ export default function LoginPage() {
             )}
 
             {mode === "phone_login" && (
-              <div className="mt-5 pt-4 text-center" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-                <button onClick={() => switchMode("login")} className="text-white/40 text-sm hover:text-white/70 transition-colors">
+              <div className="mt-5 pt-4 text-center" style={{ borderTop: "1px solid rgba(16,185,129,0.07)" }}>
+                <button onClick={() => switchMode("login")} className="text-emerald-950/40 text-sm hover:text-emerald-950/70 transition-colors">
                   ← Назад к обычному входу
                 </button>
               </div>

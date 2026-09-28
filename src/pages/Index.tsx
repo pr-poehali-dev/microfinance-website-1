@@ -1,8 +1,8 @@
 import { useState, lazy, Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import HeroAboutServices from "@/components/HeroAboutServices";
+import Testimonials from "@/components/Testimonials";
 
-const CalculatorForm = lazy(() => import("@/components/CalculatorForm"));
 const FaqContactsFooter = lazy(() => import("@/components/FaqContactsFooter"));
 
 export default function Index() {
@@ -15,11 +15,11 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen font-golos" style={{ background: "#1e110a" }}>
+    <div className="min-h-screen font-golos" style={{ background: "#ffffff" }}>
       <Navbar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} scrollTo={scrollTo} />
       <HeroAboutServices scrollTo={scrollTo} />
+      <Testimonials />
       <Suspense fallback={null}>
-        <CalculatorForm />
         <FaqContactsFooter />
       </Suspense>
     </div>

@@ -5,7 +5,7 @@ import AdminLoanDetailModal from "./AdminLoanDetailModal";
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
 
 const TYPE_LABELS: Record<string, { label: string; icon: string; color: string; bg: string }> = {
-  loan:     { label: "Займ",            icon: "Banknote",    color: "#fdba74", bg: "rgba(253,186,116,0.15)" },
+  loan:     { label: "Займ",            icon: "Banknote",    color: "#14b8a6", bg: "rgba(20,184,166,0.15)" },
   carloan:  { label: "Авто займ",       icon: "Car",         color: "#fbbf24", bg: "rgba(245,158,11,0.15)" },
   shoploan: { label: "Товарный займ",   icon: "ShoppingBag", color: "#34d399", bg: "rgba(52,211,153,0.15)" },
 };
@@ -33,7 +33,7 @@ interface DisbursedItem {
   nextDueDate: string | null;
 }
 
-const G = { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14 };
+const G = { background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.08)", borderRadius: 14 };
 
 interface Props { token: string; }
 
@@ -84,7 +84,7 @@ export default function AdminDisbursed({ token }: Props) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
         {[
           { label: "Всего выдано", value: items.length, icon: "BadgeCheck", color: "#38bdf8" },
-          { label: "Займов", value: items.filter(i => i.type === "loan").length, icon: "Banknote", color: "#fdba74" },
+          { label: "Займов", value: items.filter(i => i.type === "loan").length, icon: "Banknote", color: "#14b8a6" },
           { label: "Авто займов", value: items.filter(i => i.type === "carloan").length, icon: "Car", color: "#fbbf24" },
           { label: "Товарных", value: items.filter(i => i.type === "shoploan").length, icon: "ShoppingBag", color: "#34d399" },
           { label: "Просроченных", value: overdueCount, icon: "AlertTriangle", color: "#f87171" },
@@ -94,8 +94,8 @@ export default function AdminDisbursed({ token }: Props) {
               <Icon name={s.icon} size={18} style={{ color: s.color }} />
             </div>
             <div>
-              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>{s.label}</div>
-              <div style={{ color: "white", fontWeight: 700, fontSize: 20 }}>{s.value}</div>
+              <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 11 }}>{s.label}</div>
+              <div style={{ color: "#022c22", fontWeight: 700, fontSize: 20 }}>{s.value}</div>
             </div>
           </div>
         ))}
@@ -106,8 +106,8 @@ export default function AdminDisbursed({ token }: Props) {
         <button onClick={() => setStatusFilter("all")}
           style={{
             padding: "8px 18px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 700, fontSize: 13,
-            background: statusFilter === "all" ? "linear-gradient(135deg,#0ea5e9,#38bdf8)" : "rgba(255,255,255,0.07)",
-            color: statusFilter === "all" ? "white" : "rgba(255,255,255,0.5)",
+            background: statusFilter === "all" ? "linear-gradient(135deg,#0ea5e9,#38bdf8)" : "rgba(16,185,129,0.07)",
+            color: statusFilter === "all" ? "white" : "rgba(2,44,34,0.5)",
           }}>
           Все займы
         </button>
@@ -128,8 +128,8 @@ export default function AdminDisbursed({ token }: Props) {
           <button key={t} onClick={() => setTypeFilter(t)}
             style={{
               padding: "7px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13,
-              background: typeFilter === t ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.07)",
-              color: typeFilter === t ? "white" : "rgba(255,255,255,0.5)",
+              background: typeFilter === t ? "rgba(16,185,129,0.15)" : "rgba(16,185,129,0.07)",
+              color: typeFilter === t ? "#022c22" : "rgba(2,44,34,0.5)",
             }}>
             {t === "all" ? "Все типы" : TYPE_LABELS[t].label}
           </button>
@@ -138,9 +138,9 @@ export default function AdminDisbursed({ token }: Props) {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Поиск по имени или телефону..."
-          style={{ marginLeft: "auto", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "7px 14px", color: "white", fontSize: 13, outline: "none", minWidth: 220 }}
+          style={{ marginLeft: "auto", background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.12)", borderRadius: 10, padding: "7px 14px", color: "#022c22", fontSize: 13, outline: "none", minWidth: 220 }}
         />
-        <button onClick={load} style={{ background: "rgba(255,255,255,0.07)", border: "none", borderRadius: 10, padding: "8px 12px", cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
+        <button onClick={load} style={{ background: "rgba(16,185,129,0.07)", border: "none", borderRadius: 10, padding: "8px 12px", cursor: "pointer", color: "rgba(2,44,34,0.5)" }}>
           <Icon name="RefreshCw" size={15} />
         </button>
       </div>
@@ -154,11 +154,11 @@ export default function AdminDisbursed({ token }: Props) {
       )}
 
       {loading ? (
-        <div style={{ color: "rgba(255,255,255,0.35)", textAlign: "center", padding: 48 }}>Загрузка...</div>
+        <div style={{ color: "rgba(2,44,34,0.35)", textAlign: "center", padding: 48 }}>Загрузка...</div>
       ) : filtered.length === 0 ? (
         <div style={{ ...G, padding: 48, textAlign: "center" }}>
-          <Icon name={statusFilter === "overdue" ? "CheckCircle2" : "Banknote"} size={40} style={{ color: "rgba(255,255,255,0.15)", display: "block", margin: "0 auto 12px" }} />
-          <div style={{ color: "rgba(255,255,255,0.3)" }}>{statusFilter === "overdue" ? "Просроченных займов нет" : "Выданных займов нет"}</div>
+          <Icon name={statusFilter === "overdue" ? "CheckCircle2" : "Banknote"} size={40} style={{ color: "rgba(2,44,34,0.15)", display: "block", margin: "0 auto 12px" }} />
+          <div style={{ color: "rgba(2,44,34,0.3)" }}>{statusFilter === "overdue" ? "Просроченных займов нет" : "Выданных займов нет"}</div>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -185,8 +185,8 @@ export default function AdminDisbursed({ token }: Props) {
                           <Icon name="AlertTriangle" size={12} />Просрочен
                         </span>
                       )}
-                      <span style={{ color: "white", fontWeight: 700, fontSize: 15 }}>{item.fullName || item.phone}</span>
-                      <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>#{item.id}</span>
+                      <span style={{ color: "#022c22", fontWeight: 700, fontSize: 15 }}>{item.fullName || item.phone}</span>
+                      <span style={{ color: "rgba(2,44,34,0.3)", fontSize: 12 }}>#{item.id}</span>
                     </div>
 
                     {/* Поля */}
@@ -203,8 +203,8 @@ export default function AdminDisbursed({ token }: Props) {
                         item.nextDueDate ? { l: item.isOverdue ? "Просрочен платёж" : "След. платёж", v: item.nextDueDate } : null,
                       ].filter(Boolean).map((f) => (
                         <div key={f!.l}>
-                          <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>{f!.l}</div>
-                          <div style={{ color: f!.l.includes("Просрочен") ? "#f87171" : "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: f!.l.includes("Просрочен") ? 700 : 400 }}>{f!.v}</div>
+                          <div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>{f!.l}</div>
+                          <div style={{ color: f!.l.includes("Просрочен") ? "#f87171" : "rgba(2,44,34,0.85)", fontSize: 13, fontWeight: f!.l.includes("Просрочен") ? 700 : 400 }}>{f!.v}</div>
                         </div>
                       ))}
                     </div>
@@ -226,10 +226,10 @@ export default function AdminDisbursed({ token }: Props) {
                         Займ выдан
                       </div>
                       {item.disbursedAt && (
-                        <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>{item.disbursedAt}</div>
+                        <div style={{ color: "rgba(2,44,34,0.35)", fontSize: 12 }}>{item.disbursedAt}</div>
                       )}
                     </div>
-                    <Icon name="ChevronRight" size={18} style={{ color: "rgba(255,255,255,0.25)" }} />
+                    <Icon name="ChevronRight" size={18} style={{ color: "rgba(2,44,34,0.25)" }} />
                   </div>
                 </div>
               </button>

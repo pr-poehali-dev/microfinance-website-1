@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import Navbar from "@/components/Navbar";
 
-const inputCls = "w-full bg-transparent border rounded-xl px-4 py-3 text-white placeholder-white/30 outline-none focus:ring-2 focus:ring-yellow-500/50 transition-all text-sm";
-const inputStyle = { borderColor: "rgba(255,255,255,0.12)" };
-const labelCls = "block text-white/60 text-sm mb-1.5 font-medium";
+const inputCls = "w-full bg-transparent border rounded-xl px-4 py-3 text-emerald-950 placeholder-emerald-900/30 outline-none focus:ring-2 focus:ring-yellow-500/50 transition-all text-sm";
+const inputStyle = { borderColor: "rgba(16,185,129,0.12)" };
+const labelCls = "block text-emerald-950/60 text-sm mb-1.5 font-medium";
 
 const API_URL = "https://functions.poehali.dev/651adde1-4432-4e5a-8086-3cda9898b7ac";
 
@@ -97,14 +97,14 @@ export default function CarLoanApplyPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen font-golos flex items-center justify-center px-4" style={{ background: "#1e110a" }}>
+      <div className="min-h-screen font-golos flex items-center justify-center px-4" style={{ background: "#ffffff" }}>
         <div className="max-w-md w-full text-center">
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-full mb-6"
             style={{ background: "linear-gradient(135deg, #f59e0b, #ef4444)", boxShadow: "0 0 60px rgba(245,158,11,0.4)" }}>
             <Icon name="CheckCircle" size={44} className="text-white" />
           </div>
-          <h2 className="font-oswald text-4xl font-bold text-white mb-4">ЗАЯВКА ПРИНЯТА!</h2>
-          <p className="text-white/50 mb-2 leading-relaxed">
+          <h2 className="font-oswald text-4xl font-bold text-emerald-950 mb-4">ЗАЯВКА ПРИНЯТА!</h2>
+          <p className="text-emerald-950/50 mb-2 leading-relaxed">
             Ваша заявка на займ под залог автомобиля успешно отправлена.
           </p>
           <p className="text-yellow-400 font-semibold mb-8">
@@ -122,7 +122,7 @@ export default function CarLoanApplyPage() {
   }
 
   return (
-    <div className="min-h-screen font-golos" style={{ background: "#1e110a" }}>
+    <div className="min-h-screen font-golos" style={{ background: "#ffffff" }}>
       <Navbar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} scrollTo={scrollTo} />
 
       <div className="max-w-3xl mx-auto px-4 pt-8 pb-16">
@@ -133,10 +133,10 @@ export default function CarLoanApplyPage() {
             <Icon name="Car" size={14} />
             Займ под залог автомобиля
           </div>
-          <h1 className="font-oswald text-4xl md:text-5xl font-bold text-white mb-2">
+          <h1 className="font-oswald text-4xl md:text-5xl font-bold text-emerald-950 mb-2">
             ОФОРМИТЬ <span style={{ background: "linear-gradient(135deg, #f59e0b, #ef4444)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>ЗАЯВКУ</span>
           </h1>
-          <p className="text-white/40">Заполните форму — займёт около 5 минут</p>
+          <p className="text-emerald-950/40">Заполните форму — займёт около 5 минут</p>
         </div>
 
         {/* Условия кратко */}
@@ -144,13 +144,13 @@ export default function CarLoanApplyPage() {
           {[
             { icon: "Banknote", v: "100т — 1 млн ₽", l: "сумма", color: "#f59e0b" },
             { icon: "Calendar", v: "до 36 мес.", l: "срок", color: "#06b6d4" },
-            { icon: "Percent", v: "от 12%/мес.", l: "ставка", color: "#f0994a" },
+            { icon: "Percent", v: "от 12%/мес.", l: "ставка", color: "#14b8a6" },
           ].map((c) => (
             <div key={c.l} className="rounded-2xl p-4 text-center"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.08)" }}>
               <Icon name={c.icon} size={18} style={{ color: c.color }} className="mx-auto mb-1" />
               <div className="font-bold text-sm" style={{ color: c.color }}>{c.v}</div>
-              <div className="text-white/30 text-xs">{c.l}</div>
+              <div className="text-emerald-950/30 text-xs">{c.l}</div>
             </div>
           ))}
         </div>
@@ -165,31 +165,31 @@ export default function CarLoanApplyPage() {
                 style={{ background: "linear-gradient(135deg, #f59e0b, #ef4444)" }}>
                 <Icon name="Calculator" size={16} className="text-white" />
               </div>
-              <h3 className="text-white font-bold text-lg">Параметры займа</h3>
+              <h3 className="text-emerald-950 font-bold text-lg">Параметры займа</h3>
             </div>
 
             <div>
               <div className="flex justify-between mb-2">
-                <span className="text-white/60 text-sm">Сумма займа</span>
+                <span className="text-emerald-950/60 text-sm">Сумма займа</span>
                 <span className="font-bold text-yellow-400 text-base">{loanAmount.toLocaleString("ru-RU")} ₽</span>
               </div>
               <input type="range" min={AMOUNT_MIN} max={AMOUNT_MAX} step={10000} value={loanAmount}
                 onChange={e => setLoanAmount(Number(e.target.value))}
                 className="slider-custom w-full" style={{ background: amountBg }} />
-              <div className="flex justify-between text-white/30 text-xs mt-1">
+              <div className="flex justify-between text-emerald-950/30 text-xs mt-1">
                 <span>100 000 ₽</span><span>1 000 000 ₽</span>
               </div>
             </div>
 
             <div>
               <div className="flex justify-between mb-2">
-                <span className="text-white/60 text-sm">Срок займа</span>
+                <span className="text-emerald-950/60 text-sm">Срок займа</span>
                 <span className="font-bold text-red-400 text-base">{loanMonths} мес.</span>
               </div>
               <input type="range" min={MONTHS_MIN} max={MONTHS_MAX} step={1} value={loanMonths}
                 onChange={e => setLoanMonths(Number(e.target.value))}
                 className="slider-custom w-full" style={{ background: monthsBg }} />
-              <div className="flex justify-between text-white/30 text-xs mt-1">
+              <div className="flex justify-between text-emerald-950/30 text-xs mt-1">
                 <span>1 мес.</span><span>36 мес.</span>
               </div>
             </div>
@@ -198,19 +198,19 @@ export default function CarLoanApplyPage() {
             <div className="rounded-xl p-4 grid grid-cols-2 gap-3"
               style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(245,158,11,0.2)" }}>
               <div className="text-center">
-                <div className="text-white/40 text-xs mb-1">Ставка</div>
+                <div className="text-emerald-950/40 text-xs mb-1">Ставка</div>
                 <div className="text-yellow-300 font-bold">12% / мес.</div>
               </div>
               <div className="text-center">
-                <div className="text-white/40 text-xs mb-1">Платёж / мес.</div>
-                <div className="text-white font-bold">{monthPayment.toLocaleString("ru-RU")} ₽</div>
+                <div className="text-emerald-950/40 text-xs mb-1">Платёж / мес.</div>
+                <div className="text-emerald-950 font-bold">{monthPayment.toLocaleString("ru-RU")} ₽</div>
               </div>
               <div className="text-center">
-                <div className="text-white/40 text-xs mb-1">Переплата</div>
+                <div className="text-emerald-950/40 text-xs mb-1">Переплата</div>
                 <div className="text-red-400 font-bold">{overpay.toLocaleString("ru-RU")} ₽</div>
               </div>
               <div className="text-center">
-                <div className="text-white/40 text-xs mb-1">К возврату</div>
+                <div className="text-emerald-950/40 text-xs mb-1">К возврату</div>
                 <div className="font-bold" style={{ color: "#f59e0b" }}>{totalReturn.toLocaleString("ru-RU")} ₽</div>
               </div>
             </div>
@@ -222,7 +222,7 @@ export default function CarLoanApplyPage() {
               <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center shrink-0">
                 <Icon name="User" size={16} className="text-white" />
               </div>
-              <h3 className="text-white font-bold text-lg">Личные данные</h3>
+              <h3 className="text-emerald-950 font-bold text-lg">Личные данные</h3>
             </div>
             <div>
               <label className={labelCls}>ФИО <span className="text-red-400">*</span></label>
@@ -261,7 +261,7 @@ export default function CarLoanApplyPage() {
               <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center shrink-0">
                 <Icon name="BookUser" size={16} className="text-white" />
               </div>
-              <h3 className="text-white font-bold text-lg">Паспортные данные</h3>
+              <h3 className="text-emerald-950 font-bold text-lg">Паспортные данные</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -290,7 +290,7 @@ export default function CarLoanApplyPage() {
                 style={{ background: "linear-gradient(135deg, #f59e0b, #ef4444)" }}>
                 <Icon name="Car" size={16} className="text-white" />
               </div>
-              <h3 className="text-white font-bold text-lg">Данные об автомобиле</h3>
+              <h3 className="text-emerald-950 font-bold text-lg">Данные об автомобиле</h3>
             </div>
 
             {/* Требования */}
@@ -298,12 +298,12 @@ export default function CarLoanApplyPage() {
               <div className="rounded-xl p-3 flex items-center gap-2"
                 style={{ background: "rgba(6,182,212,0.08)", border: "1px solid rgba(6,182,212,0.2)" }}>
                 <Icon name="Globe" size={14} className="text-cyan-400 shrink-0" />
-                <div className="text-xs text-white/50">Иностранное: <span className="text-cyan-400 font-semibold">не старше 10 лет</span></div>
+                <div className="text-xs text-emerald-950/50">Иностранное: <span className="text-cyan-400 font-semibold">не старше 10 лет</span></div>
               </div>
               <div className="rounded-xl p-3 flex items-center gap-2"
-                style={{ background: "rgba(240,153,74,0.08)", border: "1px solid rgba(240,153,74,0.2)" }}>
-                <Icon name="Flag" size={14} className="text-orange-400 shrink-0" />
-                <div className="text-xs text-white/50">Отечественное: <span className="text-orange-400 font-semibold">не старше 5 лет</span></div>
+                style={{ background: "rgba(20,184,166,0.08)", border: "1px solid rgba(20,184,166,0.2)" }}>
+                <Icon name="Flag" size={14} className="text-emerald-600 shrink-0" />
+                <div className="text-xs text-emerald-950/50">Отечественное: <span className="text-emerald-600 font-semibold">не старше 5 лет</span></div>
               </div>
             </div>
 
@@ -339,7 +339,7 @@ export default function CarLoanApplyPage() {
               <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center shrink-0">
                 <Icon name="CreditCard" size={16} className="text-white" />
               </div>
-              <h3 className="text-white font-bold text-lg">Реквизиты для перевода</h3>
+              <h3 className="text-emerald-950 font-bold text-lg">Реквизиты для перевода</h3>
             </div>
             <div>
               <label className={labelCls}>Контактный телефон родственника <span className="text-red-400">*</span></label>
@@ -357,7 +357,7 @@ export default function CarLoanApplyPage() {
           <div className="rounded-xl p-4 flex items-start gap-3"
             style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)" }}>
             <Icon name="ShieldCheck" size={18} className="text-yellow-400 shrink-0 mt-0.5" />
-            <p className="text-white/40 text-xs leading-relaxed">
+            <p className="text-emerald-950/40 text-xs leading-relaxed">
               Нажимая «Отправить заявку», вы соглашаетесь с обработкой персональных данных и условиями программы займа под залог транспортного средства. Ставка от 12% в месяц. Срок — до 36 месяцев. Решение — в течение 2 часов.
             </p>
           </div>
@@ -371,7 +371,7 @@ export default function CarLoanApplyPage() {
               onChange={e => setInsuranceAgreed(e.target.checked)}
               className="mt-0.5 w-4 h-4 shrink-0 accent-yellow-500 cursor-pointer"
             />
-            <span className="text-white/70 text-xs leading-relaxed">
+            <span className="text-emerald-950/70 text-xs leading-relaxed">
               Я согласен(а) на <span className="text-yellow-400 font-medium">страхование жизни и здоровья</span> в качестве обеспечения исполнения обязательств по договору займа. Страховая премия включается в общую стоимость займа.
             </span>
           </label>

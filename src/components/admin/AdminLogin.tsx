@@ -11,26 +11,26 @@ interface Props {
 
 export default function AdminLogin({ password, setPassword, loginErr, loginLoad, onSubmit, onBack }: Props) {
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "#1e110a" }}>
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "#ffffff" }}>
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="w-16 h-16 btn-neon rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Icon name="ShieldCheck" size={28} className="text-white" />
           </div>
-          <h1 className="font-oswald text-3xl font-bold text-white">Панель администратора</h1>
-          <p className="text-white/40 text-sm mt-1">Введите пароль для входа</p>
+          <h1 className="font-oswald text-3xl font-bold text-emerald-950">Панель администратора</h1>
+          <p className="text-emerald-950/40 text-sm mt-1">Введите пароль для входа</p>
         </div>
         <div className="glass rounded-2xl p-6">
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
-              <label className="text-white/60 text-sm mb-2 block">Пароль</label>
+              <label className="text-emerald-950/60 text-sm mb-2 block">Пароль</label>
               <input type="password" required value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onBlur={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
                 placeholder="Введите пароль"
-                className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors"
-                style={{ background: "rgba(255,255,255,0.05)" }} />
+                className="w-full rounded-xl px-4 py-3.5 text-emerald-950 placeholder-emerald-950/30 outline-none border border-emerald-900/15 focus:border-emerald-500 transition-colors"
+                style={{ background: "rgba(16,185,129,0.05)" }} />
             </div>
             {loginErr && <p className="text-red-400 text-sm flex items-center gap-2"><Icon name="AlertCircle" size={14} />{loginErr}</p>}
             <button type="submit" disabled={loginLoad} className="btn-neon w-full text-white font-semibold py-3.5 rounded-xl flex items-center justify-center gap-2">
@@ -38,7 +38,7 @@ export default function AdminLogin({ password, setPassword, loginErr, loginLoad,
             </button>
           </form>
         </div>
-        <button onClick={onBack} className="mt-4 w-full text-white/40 hover:text-white/70 text-sm flex items-center justify-center gap-2 transition-colors">
+        <button onClick={onBack} className="mt-4 w-full text-emerald-950/40 hover:text-emerald-950/70 text-sm flex items-center justify-center gap-2 transition-colors">
           <Icon name="ArrowLeft" size={14} />На главную
         </button>
       </div>

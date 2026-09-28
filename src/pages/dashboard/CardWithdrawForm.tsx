@@ -69,18 +69,18 @@ export default function CardWithdrawForm({ available, onSuccess }: Props) {
   return (
     <div className="rounded-xl p-5 space-y-4" style={{ background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.25)" }}>
       <div className="flex items-center justify-between">
-        <div className="text-white font-semibold flex items-center gap-2">
+        <div className="text-emerald-950 font-semibold flex items-center gap-2">
           <Icon name="Wallet" size={16} className="text-green-400" />
           Перевод с карты
         </div>
-        <button onClick={() => setOpen(false)} className="text-white/40 hover:text-white/70 transition-colors">
+        <button onClick={() => setOpen(false)} className="text-emerald-950/40 hover:text-emerald-950/70 transition-colors">
           <Icon name="X" size={18} />
         </button>
       </div>
 
       <div>
         <div className="flex justify-between mb-2">
-          <span className="text-white/60 text-sm">Сумма перевода</span>
+          <span className="text-emerald-950/60 text-sm">Сумма перевода</span>
           <span className="font-bold text-base text-green-400">{amount.toLocaleString("ru-RU")} ₽</span>
         </div>
         <input
@@ -90,7 +90,7 @@ export default function CardWithdrawForm({ available, onSuccess }: Props) {
           className="slider-custom w-full"
           style={{ background: `linear-gradient(to right, #4ade80 ${((amount - 1000) / Math.max(1, maxAmount - 1000)) * 100}%, rgba(74,222,128,0.2) ${((amount - 1000) / Math.max(1, maxAmount - 1000)) * 100}%)` }}
         />
-        <div className="flex justify-between text-white/30 text-xs mt-1">
+        <div className="flex justify-between text-emerald-950/30 text-xs mt-1">
           <span>1 000 ₽</span>
           <span>Доступно: {maxAmount.toLocaleString("ru-RU")} ₽</span>
         </div>
@@ -98,7 +98,7 @@ export default function CardWithdrawForm({ available, onSuccess }: Props) {
 
       <div>
         <div className="flex justify-between mb-2">
-          <span className="text-white/60 text-sm">Срок</span>
+          <span className="text-emerald-950/60 text-sm">Срок</span>
           <span className="font-bold text-base text-green-400">{weeks} {weeks === 1 ? "неделя" : weeks < 5 ? "недели" : "недель"}</span>
         </div>
         <input
@@ -108,23 +108,23 @@ export default function CardWithdrawForm({ available, onSuccess }: Props) {
           className="slider-custom w-full"
           style={{ background: `linear-gradient(to right, #4ade80 ${((weeks - 1) / 11) * 100}%, rgba(74,222,128,0.2) ${((weeks - 1) / 11) * 100}%)` }}
         />
-        <div className="flex justify-between text-white/30 text-xs mt-1">
+        <div className="flex justify-between text-emerald-950/30 text-xs mt-1">
           <span>1 неделя</span>
           <span>12 недель</span>
         </div>
       </div>
 
-      <div className="rounded-lg p-3 space-y-1.5" style={{ background: "rgba(255,255,255,0.05)" }}>
+      <div className="rounded-lg p-3 space-y-1.5" style={{ background: "rgba(16,185,129,0.05)" }}>
         <div className="flex justify-between text-sm">
-          <span className="text-white/50">Ставка</span>
-          <span className="text-white font-semibold">{CARD_WEEKLY_RATE}% / неделя</span>
+          <span className="text-emerald-950/50">Ставка</span>
+          <span className="text-emerald-950 font-semibold">{CARD_WEEKLY_RATE}% / неделя</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-white/50">Платёж в неделю</span>
-          <span className="text-white font-semibold">{calc.weeklyPayment.toLocaleString("ru-RU")} ₽</span>
+          <span className="text-emerald-950/50">Платёж в неделю</span>
+          <span className="text-emerald-950 font-semibold">{calc.weeklyPayment.toLocaleString("ru-RU")} ₽</span>
         </div>
-        <div className="flex justify-between text-sm pt-1.5 border-t border-white/10">
-          <span className="text-white/50">К возврату</span>
+        <div className="flex justify-between text-sm pt-1.5 border-t border-emerald-900/15">
+          <span className="text-emerald-950/50">К возврату</span>
           <span className="text-green-400 font-bold">{calc.total.toLocaleString("ru-RU")} ₽</span>
         </div>
       </div>

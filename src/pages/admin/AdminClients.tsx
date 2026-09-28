@@ -35,7 +35,7 @@ interface Props {
   onWaivePenalty: (loanId: number, mode: "full" | "amount", amount?: number) => Promise<unknown>;
 }
 
-const INPUT = { background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: "100%", boxSizing: "border-box" as const, outline: "none" };
+const INPUT = { background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.15)", borderRadius: 10, padding: "10px 12px", color: "#022c22", fontSize: 15, width: "100%", boxSizing: "border-box" as const, outline: "none" };
 
 export default function AdminClients({
   users, usersLoading, search, setSearch, filtered,
@@ -156,32 +156,32 @@ export default function AdminClients({
       {/* Левая колонка */}
       <div style={{ width: 300, flexShrink: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <h2 style={{ color: "white", fontWeight: 700, fontSize: 20, margin: 0 }}>Клиенты <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 14 }}>{filtered.length}</span></h2>
+          <h2 style={{ color: "#022c22", fontWeight: 700, fontSize: 20, margin: 0 }}>Клиенты <span style={{ color: "rgba(2,44,34,0.3)", fontSize: 14 }}>{filtered.length}</span></h2>
           <button onClick={() => { setSelUser(null); setClientView("addclient"); setActionMsg(""); setActionErr(""); }}
             style={{ ...PURPLE, color: "white", border: "none", borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
             <Icon name="UserPlus" size={14} />Добавить
           </button>
         </div>
         <input placeholder="Поиск по телефону или имени" value={search} onChange={e => setSearch(e.target.value)}
-          style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "10px 14px", color: "white", fontSize: 14, width: "100%", boxSizing: "border-box", marginBottom: 12, outline: "none" }} />
+          style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.1)", borderRadius: 12, padding: "10px 14px", color: "#022c22", fontSize: 14, width: "100%", boxSizing: "border-box", marginBottom: 12, outline: "none" }} />
         <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 220px)", display: "flex", flexDirection: "column", gap: 8 }}>
-          {usersLoading && <div style={{ textAlign: "center", padding: 40 }}><Icon name="Loader2" size={28} className="animate-spin text-orange-400" /></div>}
-          {!usersLoading && filtered.length === 0 && <p style={{ color: "rgba(255,255,255,0.3)", textAlign: "center", padding: 40 }}>Нет клиентов</p>}
+          {usersLoading && <div style={{ textAlign: "center", padding: 40 }}><Icon name="Loader2" size={28} className="animate-spin text-emerald-600" /></div>}
+          {!usersLoading && filtered.length === 0 && <p style={{ color: "rgba(2,44,34,0.3)", textAlign: "center", padding: 40 }}>Нет клиентов</p>}
           {filtered.map(u => (
             <div key={u.id} style={{ position: "relative" }}>
               <button onClick={() => { setSelUser(u); setClientView("loans"); setActionMsg(""); setActionErr(""); onLoadLoans(u.id); }}
-                style={{ ...GLASS, padding: "12px 14px", paddingRight: 40, cursor: "pointer", textAlign: "left", width: "100%", border: selUser?.id === u.id ? "1px solid rgba(234,128,52,0.6)" : "1px solid rgba(255,255,255,0.08)", borderRadius: 12 }}>
+                style={{ ...GLASS, padding: "12px 14px", paddingRight: 40, cursor: "pointer", textAlign: "left", width: "100%", border: selUser?.id === u.id ? "1px solid rgba(16,185,129,0.6)" : "1px solid rgba(16,185,129,0.08)", borderRadius: 12 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                  <span style={{ color: "white", fontWeight: 600, fontSize: 14 }}>{u.phone}</span>
-                  <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>{u.loanCount} займ.</span>
+                  <span style={{ color: "#022c22", fontWeight: 600, fontSize: 14 }}>{u.phone}</span>
+                  <span style={{ color: "rgba(2,44,34,0.3)", fontSize: 12 }}>{u.loanCount} займ.</span>
                 </div>
-                <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>{u.fullName || "—"}</div>
+                <div style={{ color: "rgba(2,44,34,0.45)", fontSize: 12 }}>{u.fullName || "—"}</div>
                 {u.debt > 0 && <div style={{ color: "#f87171", fontSize: 12, marginTop: 4 }}>Долг: {u.debt.toLocaleString("ru-RU")} ₽</div>}
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); setSelUser(u); setClientView("edit"); setActionMsg(""); setActionErr(""); }}
                 title="Редактировать клиента"
-                style={{ position: "absolute", top: 8, right: 8, background: "rgba(234,128,52,0.2)", border: "1px solid rgba(234,128,52,0.3)", borderRadius: 8, padding: "4px 6px", cursor: "pointer", color: "#fdba74", display: "flex", alignItems: "center" }}>
+                style={{ position: "absolute", top: 8, right: 8, background: "rgba(16,185,129,0.2)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 8, padding: "4px 6px", cursor: "pointer", color: "#14b8a6", display: "flex", alignItems: "center" }}>
                 <Icon name="Pencil" size={13} />
               </button>
             </div>
@@ -192,7 +192,7 @@ export default function AdminClients({
       {/* Правая колонка */}
       <div style={{ flex: 1 }}>
         {!selUser && clientView !== "addclient" ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 400, color: "rgba(255,255,255,0.3)", gap: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 400, color: "rgba(2,44,34,0.3)", gap: 16 }}>
             <Icon name="Users" size={48} />
             <p>Выберите клиента из списка</p>
           </div>
@@ -201,10 +201,10 @@ export default function AdminClients({
             {selUser && (
               <div style={{ ...GLASS, padding: "14px 20px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
-                  <div style={{ color: "white", fontWeight: 700, fontSize: 17 }}>{selUser.fullName || selUser.phone}</div>
-                  <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>{selUser.phone} · с {selUser.createdAt}</div>
+                  <div style={{ color: "#022c22", fontWeight: 700, fontSize: 17 }}>{selUser.fullName || selUser.phone}</div>
+                  <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 13 }}>{selUser.phone} · с {selUser.createdAt}</div>
                 </div>
-                <button onClick={() => setSelUser(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)" }}>
+                <button onClick={() => setSelUser(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(2,44,34,0.4)" }}>
                   <Icon name="X" size={20} />
                 </button>
               </div>
@@ -216,26 +216,26 @@ export default function AdminClients({
                 <button key={v} onClick={() => { setClientView(v); setActionMsg(""); setActionErr(""); }}
                   style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13, display: "flex", alignItems: "center", gap: 6,
                     background: clientView === v
-                      ? (v === "offer" ? "linear-gradient(135deg,#0ea5e9,#38bdf8)" : v === "edit" ? "linear-gradient(135deg,#d97706,#f59e0b)" : v === "docs" ? "linear-gradient(135deg,#059669,#10b981)" : "linear-gradient(135deg,#ea8034,#f0994a)")
-                      : "rgba(255,255,255,0.07)",
-                    color: clientView === v ? "white" : "rgba(255,255,255,0.5)" }}>
+                      ? (v === "offer" ? "linear-gradient(135deg,#0ea5e9,#38bdf8)" : v === "edit" ? "linear-gradient(135deg,#d97706,#f59e0b)" : v === "docs" ? "linear-gradient(135deg,#059669,#10b981)" : "linear-gradient(135deg,#10b981,#14b8a6)")
+                      : "rgba(16,185,129,0.07)",
+                    color: clientView === v ? "white" : "rgba(2,44,34,0.5)" }}>
                   <Icon name={icon} size={13} />{label}
                 </button>
               ))}
               {selUser && (
                 <button onClick={() => { setClientView("creditdoctor" as typeof clientView); setActionMsg(""); setActionErr(""); }}
                   style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 6,
-                    background: clientView === ("creditdoctor" as typeof clientView) ? "linear-gradient(135deg,#f0994a,#ec4899)" : "rgba(240,153,74,0.15)",
-                    color: clientView === ("creditdoctor" as typeof clientView) ? "white" : "#fed7aa",
-                    border: "1px solid rgba(240,153,74,0.35)",
-                    boxShadow: clientView === ("creditdoctor" as typeof clientView) ? "0 0 14px rgba(240,153,74,0.4)" : "none" }}>
+                    background: clientView === ("creditdoctor" as typeof clientView) ? "linear-gradient(135deg,#14b8a6,#ec4899)" : "rgba(16,185,129,0.15)",
+                    color: clientView === ("creditdoctor" as typeof clientView) ? "white" : "#0f766e",
+                    border: "1px solid rgba(16,185,129,0.35)",
+                    boxShadow: clientView === ("creditdoctor" as typeof clientView) ? "0 0 14px rgba(16,185,129,0.4)" : "none" }}>
                   💊 Кредитный Доктор
                 </button>
               )}
               <button onClick={() => { setSelUser(null); setClientView("addclient"); setActionMsg(""); setActionErr(""); }}
                 style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13, display: "flex", alignItems: "center", gap: 6,
-                  background: clientView === "addclient" ? "linear-gradient(135deg,#ea8034,#f0994a)" : "rgba(255,255,255,0.07)",
-                  color: clientView === "addclient" ? "white" : "rgba(255,255,255,0.5)" }}>
+                  background: clientView === "addclient" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)",
+                  color: clientView === "addclient" ? "white" : "rgba(2,44,34,0.5)" }}>
                 <Icon name="UserPlus" size={13} />Новый клиент
               </button>
             </div>
@@ -246,18 +246,18 @@ export default function AdminClients({
             {/* Документы клиента */}
             {clientView === "docs" && selUser && (
               <div style={{ ...GLASS, padding: 24, border: "1px solid rgba(16,185,129,0.3)" }}>
-                <h3 style={{ color: "white", fontWeight: 700, margin: "0 0 6px" }}>Загрузить документы</h3>
-                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, margin: "0 0 20px" }}>Загруженные файлы обновят документы в заявке клиента</p>
+                <h3 style={{ color: "#022c22", fontWeight: 700, margin: "0 0 6px" }}>Загрузить документы</h3>
+                <p style={{ color: "rgba(2,44,34,0.4)", fontSize: 13, margin: "0 0 20px" }}>Загруженные файлы обновят документы в заявке клиента</p>
                 <form onSubmit={handleDocsSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     {DOC_LABELS.map(({ key, label }) => (
-                      <label key={key} style={{ ...GLASS, padding: 16, borderRadius: 14, cursor: "pointer", display: "flex", flexDirection: "column", gap: 8, border: docFiles[key] ? "1px solid rgba(16,185,129,0.5)" : "1px solid rgba(255,255,255,0.1)" }}>
+                      <label key={key} style={{ ...GLASS, padding: 16, borderRadius: 14, cursor: "pointer", display: "flex", flexDirection: "column", gap: 8, border: docFiles[key] ? "1px solid rgba(16,185,129,0.5)" : "1px solid rgba(16,185,129,0.1)" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <Icon name={docFiles[key] ? "CheckCircle" : "Upload"} size={16} style={{ color: docFiles[key] ? "#10b981" : "rgba(255,255,255,0.4)" }} />
-                          <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 600 }}>{label}</span>
+                          <Icon name={docFiles[key] ? "CheckCircle" : "Upload"} size={16} style={{ color: docFiles[key] ? "#10b981" : "rgba(2,44,34,0.4)" }} />
+                          <span style={{ color: "rgba(2,44,34,0.7)", fontSize: 13, fontWeight: 600 }}>{label}</span>
                         </div>
                         {docFiles[key] && <span style={{ color: "#10b981", fontSize: 11, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{docFiles[key]!.name}</span>}
-                        {!docFiles[key] && <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>Нажмите для выбора файла</span>}
+                        {!docFiles[key] && <span style={{ color: "rgba(2,44,34,0.3)", fontSize: 11 }}>Нажмите для выбора файла</span>}
                         <input type="file" accept="image/*,.pdf" style={{ display: "none" }}
                           onChange={e => setDocFiles(p => ({ ...p, [key]: e.target.files?.[0] ?? null }))} />
                       </label>
@@ -274,18 +274,18 @@ export default function AdminClients({
 
             {/* Кредитный Доктор */}
             {(clientView as string) === "creditdoctor" && selUser && (
-              <div style={{ ...GLASS, padding: 24, border: "1px solid rgba(240,153,74,0.4)", background: "rgba(240,153,74,0.04)" }}>
+              <div style={{ ...GLASS, padding: 24, border: "1px solid rgba(16,185,129,0.4)", background: "rgba(16,185,129,0.04)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg,#f0994a,#ec4899)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>💊</div>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg,#14b8a6,#ec4899)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>💊</div>
                   <div>
-                    <h3 style={{ color: "white", fontWeight: 700, margin: 0, fontSize: 18 }}>Кредитный Доктор</h3>
-                    <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, margin: 0 }}>Одобрить займ по программе восстановления кредитной истории</p>
+                    <h3 style={{ color: "#022c22", fontWeight: 700, margin: 0, fontSize: 18 }}>Кредитный Доктор</h3>
+                    <p style={{ color: "rgba(2,44,34,0.4)", fontSize: 13, margin: 0 }}>Одобрить займ по программе восстановления кредитной истории</p>
                   </div>
                 </div>
 
-                <div style={{ background: "rgba(240,153,74,0.08)", border: "1px solid rgba(240,153,74,0.2)", borderRadius: 12, padding: "12px 16px", marginBottom: 20, marginTop: 12 }}>
-                  <div style={{ color: "#fed7aa", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>💡 Программа Кредитный Доктор</div>
-                  <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, lineHeight: 1.6 }}>
+                <div style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 12, padding: "12px 16px", marginBottom: 20, marginTop: 12 }}>
+                  <div style={{ color: "#0f766e", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>💡 Программа Кредитный Доктор</div>
+                  <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, lineHeight: 1.6 }}>
                     Займ выдаётся через карту партнёра. Клиент восстанавливает кредитную историю поэтапно:<br/>
                     Этап 1: 500–5 000 ₽ · Этап 2: до 15 000 ₽ · Этап 3: до 30 000 ₽ · Этап 4: до 50 000 ₽
                   </div>
@@ -311,10 +311,10 @@ export default function AdminClients({
                       { label: "Ставка (%/день)", key: "rate" as const, placeholder: "1.0" },
                     ].map(({ label, key, placeholder }) => (
                       <div key={key}>
-                        <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 6 }}>{label}</div>
+                        <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, marginBottom: 6 }}>{label}</div>
                         <input type="number" step="any" placeholder={placeholder} value={cdForm[key]}
                           onChange={e => setCdForm(p => ({ ...p, [key]: e.target.value }))} required
-                          style={{ ...INPUT, border: "1px solid rgba(240,153,74,0.35)" }} />
+                          style={{ ...INPUT, border: "1px solid rgba(16,185,129,0.35)" }} />
                       </div>
                     ))}
                   </div>
@@ -328,15 +328,15 @@ export default function AdminClients({
                         { l: "К возврату", v: `${Math.round(+cdForm.amount * (1 + +cdForm.rate / 100 * +cdForm.days)).toLocaleString("ru-RU")} ₽` },
                       ].map(({ l, v }) => (
                         <div key={l}>
-                          <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>{l}</div>
-                          <div style={{ color: "#fb923c", fontWeight: 700, fontSize: 14 }}>{v}</div>
+                          <div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11 }}>{l}</div>
+                          <div style={{ color: "#0f766e", fontWeight: 700, fontSize: 14 }}>{v}</div>
                         </div>
                       ))}
                     </div>
                   )}
 
                   <button type="submit" disabled={cdSaving}
-                    style={{ background: "linear-gradient(135deg,#f0994a,#ec4899)", color: "white", border: "none", borderRadius: 12, padding: "14px", cursor: cdSaving ? "not-allowed" : "pointer", fontWeight: 700, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, opacity: cdSaving ? 0.7 : 1, boxShadow: "0 0 20px rgba(240,153,74,0.3)" }}>
+                    style={{ background: "linear-gradient(135deg,#14b8a6,#ec4899)", color: "white", border: "none", borderRadius: 12, padding: "14px", cursor: cdSaving ? "not-allowed" : "pointer", fontWeight: 700, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, opacity: cdSaving ? 0.7 : 1, boxShadow: "0 0 20px rgba(16,185,129,0.3)" }}>
                     {cdSaving ? <><Icon name="Loader2" size={18} className="animate-spin" />Создаём займ...</> : <>💊 Одобрить по Кредитному Доктору</>}
                   </button>
                 </form>
@@ -346,8 +346,8 @@ export default function AdminClients({
             {/* Редактировать клиента */}
             {clientView === "edit" && selUser && (
               <div style={{ ...GLASS, padding: 24, border: "1px solid rgba(245,158,11,0.3)" }}>
-                <h3 style={{ color: "white", fontWeight: 700, margin: "0 0 6px" }}>Редактировать клиента</h3>
-                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, margin: "0 0 20px" }}>Оставьте пароль пустым, чтобы не менять его</p>
+                <h3 style={{ color: "#022c22", fontWeight: 700, margin: "0 0 6px" }}>Редактировать клиента</h3>
+                <p style={{ color: "rgba(2,44,34,0.4)", fontSize: 13, margin: "0 0 20px" }}>Оставьте пароль пустым, чтобы не менять его</p>
                 <form onSubmit={handleEditSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   {[
                     { label: "ФИО", key: "fullName" as const, placeholder: "Иванов Иван Иванович", type: "text" },
@@ -356,7 +356,7 @@ export default function AdminClients({
                     { label: "Новый пароль (необязательно)", key: "password" as const, placeholder: "Оставьте пустым чтобы не менять", type: "password" },
                   ].map(({ label, key, placeholder, type }) => (
                     <div key={key}>
-                      <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 6 }}>{label}</div>
+                      <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, marginBottom: 6 }}>{label}</div>
                       <input
                         type={type}
                         placeholder={placeholder}
@@ -378,16 +378,16 @@ export default function AdminClients({
             {/* Займы */}
             {clientView === "loans" && selUser && (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {loansLoading && <div style={{ textAlign: "center", padding: 40 }}><Icon name="Loader2" size={28} className="animate-spin text-orange-400" /></div>}
-                {!loansLoading && loans.length === 0 && <div style={{ ...GLASS, padding: 40, textAlign: "center", color: "rgba(255,255,255,0.3)" }}>У клиента нет займов</div>}
+                {loansLoading && <div style={{ textAlign: "center", padding: 40 }}><Icon name="Loader2" size={28} className="animate-spin text-emerald-600" /></div>}
+                {!loansLoading && loans.length === 0 && <div style={{ ...GLASS, padding: 40, textAlign: "center", color: "rgba(2,44,34,0.3)" }}>У клиента нет займов</div>}
                 {loans.map(loan => {
                   const st = STATUS[loan.status] || STATUS.active;
                   return (
                     <div key={loan.id} style={{ ...GLASS, padding: 18, border: loan.isOverdue ? "1px solid rgba(248,113,113,0.4)" : GLASS.border }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                         <div>
-                          <span style={{ color: "white", fontWeight: 700, fontSize: 18 }}>{loan.amount.toLocaleString("ru-RU")} ₽</span>
-                          <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, marginLeft: 12 }}>{loan.days} дн. · {loan.ratePercent}%/день</span>
+                          <span style={{ color: "#022c22", fontWeight: 700, fontSize: 18 }}>{loan.amount.toLocaleString("ru-RU")} ₽</span>
+                          <span style={{ color: "rgba(2,44,34,0.4)", fontSize: 13, marginLeft: 12 }}>{loan.days} дн. · {loan.ratePercent}%/день</span>
                         </div>
                         <span style={{ background: `${st.color}25`, color: st.color, padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>{st.label}</span>
                       </div>
@@ -422,7 +422,7 @@ export default function AdminClients({
                                       {waiveSaving ? <Icon name="Loader2" size={13} className="animate-spin" /> : "Списать всю пеню"}
                                     </button>
                                     <button disabled={waiveSaving} onClick={() => { setWaiveOpenId(null); setWaiveErr(""); }}
-                                      style={{ background: "rgba(255,255,255,0.06)", border: "none", color: "rgba(255,255,255,0.5)", borderRadius: 8, padding: "7px 12px", fontSize: 12, cursor: "pointer" }}>
+                                      style={{ background: "rgba(16,185,129,0.06)", border: "none", color: "rgba(2,44,34,0.5)", borderRadius: 8, padding: "7px 12px", fontSize: 12, cursor: "pointer" }}>
                                       Отмена
                                     </button>
                                   </div>
@@ -433,17 +433,17 @@ export default function AdminClients({
                         </div>
                       )}
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, alignSelf: "center" }}>Статус:</span>
+                        <span style={{ color: "rgba(2,44,34,0.3)", fontSize: 12, alignSelf: "center" }}>Статус:</span>
                         {Object.entries(STATUS).map(([val, cfg]) => (
                           <button key={val} onClick={() => onChangeStatus(loan.id, val)}
                             style={{ padding: "5px 12px", borderRadius: 8, border: loan.status === val ? `1px solid ${cfg.color}60` : "1px solid transparent",
-                              background: loan.status === val ? `${cfg.color}20` : "rgba(255,255,255,0.05)",
-                              color: loan.status === val ? cfg.color : "rgba(255,255,255,0.4)", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>
+                              background: loan.status === val ? `${cfg.color}20` : "rgba(16,185,129,0.05)",
+                              color: loan.status === val ? cfg.color : "rgba(2,44,34,0.4)", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>
                             {cfg.label}
                           </button>
                         ))}
                       </div>
-                      <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 11, marginTop: 8 }}>Оформлен {loan.createdAt} · #{loan.id}</div>
+                      <div style={{ color: "rgba(2,44,34,0.2)", fontSize: 11, marginTop: 8 }}>Оформлен {loan.createdAt} · #{loan.id}</div>
                     </div>
                   );
                 })}
@@ -453,13 +453,13 @@ export default function AdminClients({
             {/* Оффер */}
             {clientView === "offer" && selUser && (
               <div style={{ ...GLASS, padding: 24, border: "1px solid rgba(14,165,233,0.3)" }}>
-                <h3 style={{ color: "white", fontWeight: 700, margin: "0 0 6px" }}>Создать оффер</h3>
-                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, margin: "0 0 20px" }}>Клиент увидит условия в личном кабинете и сможет подписать</p>
+                <h3 style={{ color: "#022c22", fontWeight: 700, margin: "0 0 6px" }}>Создать оффер</h3>
+                <p style={{ color: "rgba(2,44,34,0.4)", fontSize: 13, margin: "0 0 20px" }}>Клиент увидит условия в личном кабинете и сможет подписать</p>
                 <form onSubmit={onSendOffer} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
                     {[["Одобренная сумма (₽)","amount","50000"],["Срок (дней)","days","15"],["Ставка (%/день)","rate","0.8"]].map(([label, key, ph]) => (
                       <div key={key}>
-                        <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 6 }}>{label}</div>
+                        <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, marginBottom: 6 }}>{label}</div>
                         <input type="number" required placeholder={ph} value={offer[key as keyof typeof offer]}
                           onChange={e => setOffer({ ...offer, [key]: e.target.value })}
                           style={INPUT} />
@@ -467,8 +467,8 @@ export default function AdminClients({
                     ))}
                   </div>
                   {offer.amount && offer.days && offer.rate && (
-                    <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>
-                      К возврату: <strong style={{ color: "white" }}>{Math.round(+offer.amount * (1 + +offer.rate/100 * +offer.days)).toLocaleString("ru-RU")} ₽</strong>
+                    <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 14 }}>
+                      К возврату: <strong style={{ color: "#022c22" }}>{Math.round(+offer.amount * (1 + +offer.rate/100 * +offer.days)).toLocaleString("ru-RU")} ₽</strong>
                     </div>
                   )}
                   <button type="submit"
@@ -482,12 +482,12 @@ export default function AdminClients({
             {/* Добавить займ */}
             {clientView === "addloan" && selUser && (
               <div style={{ ...GLASS, padding: 24 }}>
-                <h3 style={{ color: "white", fontWeight: 700, margin: "0 0 20px" }}>Добавить займ</h3>
+                <h3 style={{ color: "#022c22", fontWeight: 700, margin: "0 0 20px" }}>Добавить займ</h3>
                 <form onSubmit={onAddLoan} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
                     {[["Сумма (₽)","amount","50000"],["Срок (дней)","days","15"],["Ставка (%/день)","rate","0.8"]].map(([label, key, ph]) => (
                       <div key={key}>
-                        <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 6 }}>{label}</div>
+                        <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, marginBottom: 6 }}>{label}</div>
                         <input type="number" required placeholder={ph} value={newLoan[key as keyof typeof newLoan]}
                           onChange={e => setNewLoan({ ...newLoan, [key]: e.target.value })}
                           style={INPUT} />
@@ -495,8 +495,8 @@ export default function AdminClients({
                     ))}
                   </div>
                   {newLoan.amount && newLoan.days && (
-                    <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>
-                      К возврату: <strong style={{ color: "white" }}>{Math.round(+newLoan.amount * (1 + +newLoan.rate/100 * +newLoan.days)).toLocaleString("ru-RU")} ₽</strong>
+                    <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 14 }}>
+                      К возврату: <strong style={{ color: "#022c22" }}>{Math.round(+newLoan.amount * (1 + +newLoan.rate/100 * +newLoan.days)).toLocaleString("ru-RU")} ₽</strong>
                     </div>
                   )}
                   <button type="submit"
@@ -510,7 +510,7 @@ export default function AdminClients({
             {/* Новый клиент */}
             {clientView === "addclient" && (
               <div style={{ ...GLASS, padding: 24 }}>
-                <h3 style={{ color: "white", fontWeight: 700, margin: "0 0 20px" }}>Зарегистрировать клиента</h3>
+                <h3 style={{ color: "#022c22", fontWeight: 700, margin: "0 0 20px" }}>Зарегистрировать клиента</h3>
                 <form onSubmit={onAddClient} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   {[
                     { label: "Телефон", key: "phone" as const, placeholder: "+7 (999) 000-00-00" },
@@ -518,7 +518,7 @@ export default function AdminClients({
                     { label: "Пароль", key: "password" as const, placeholder: "Пароль для клиента" },
                   ].map(({ label, key, placeholder }) => (
                     <div key={key}>
-                      <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 6 }}>{label}</div>
+                      <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, marginBottom: 6 }}>{label}</div>
                       <input
                         type="text"
                         placeholder={placeholder}

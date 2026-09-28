@@ -40,8 +40,8 @@ const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }
   rejected: { label: "Отказ",           color: "#f87171", bg: "rgba(239,68,68,0.15)" },
 };
 
-const G = { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16 };
-const inp = { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "8px 12px", color: "white", fontSize: 13, width: "100%", outline: "none" };
+const G = { background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.08)", borderRadius: 16 };
+const inp = { background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.12)", borderRadius: 10, padding: "8px 12px", color: "#022c22", fontSize: 13, width: "100%", outline: "none" };
 
 interface Props { token: string; }
 
@@ -141,13 +141,13 @@ export default function AdminCarLoans({ token }: Props) {
           <button key={s} onClick={() => setStatusFilter(s)}
             style={{
               padding: "8px 18px", borderRadius: 10, border: `1px solid ${statusFilter === s ? STATUS_LABELS[s].bg : "transparent"}`, cursor: "pointer", fontWeight: 600, fontSize: 13,
-              background: statusFilter === s ? STATUS_LABELS[s].bg : "rgba(255,255,255,0.07)",
-              color: statusFilter === s ? STATUS_LABELS[s].color : "rgba(255,255,255,0.5)",
+              background: statusFilter === s ? STATUS_LABELS[s].bg : "rgba(16,185,129,0.07)",
+              color: statusFilter === s ? STATUS_LABELS[s].color : "rgba(2,44,34,0.5)",
             }}>
             {STATUS_LABELS[s].label}
           </button>
         ))}
-        <button onClick={load} style={{ marginLeft: "auto", background: "rgba(255,255,255,0.07)", border: "none", borderRadius: 10, padding: "8px 12px", cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
+        <button onClick={load} style={{ marginLeft: "auto", background: "rgba(16,185,129,0.07)", border: "none", borderRadius: 10, padding: "8px 12px", cursor: "pointer", color: "rgba(2,44,34,0.5)" }}>
           <Icon name="RefreshCw" size={15} />
         </button>
       </div>
@@ -155,9 +155,9 @@ export default function AdminCarLoans({ token }: Props) {
       {msg && <div style={{ marginBottom: 12, padding: "10px 16px", borderRadius: 10, background: "rgba(34,197,94,0.15)", color: "#4ade80", fontSize: 13 }}>{msg}</div>}
 
       {loading ? (
-        <div style={{ color: "rgba(255,255,255,0.4)", textAlign: "center", padding: 40 }}>Загрузка...</div>
+        <div style={{ color: "rgba(2,44,34,0.4)", textAlign: "center", padding: 40 }}>Загрузка...</div>
       ) : items.length === 0 ? (
-        <div style={{ ...G, padding: 40, textAlign: "center", color: "rgba(255,255,255,0.3)" }}>
+        <div style={{ ...G, padding: 40, textAlign: "center", color: "rgba(2,44,34,0.3)" }}>
           <Icon name="Car" size={40} style={{ opacity: 0.3 }} />
           <div style={{ marginTop: 12 }}>Нет заявок со статусом «{STATUS_LABELS[statusFilter].label}»</div>
         </div>
@@ -170,12 +170,12 @@ export default function AdminCarLoans({ token }: Props) {
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
-                      <span style={{ color: "white", fontWeight: 700, fontSize: 16 }}>{app.full_name}</span>
+                      <span style={{ color: "#022c22", fontWeight: 700, fontSize: 16 }}>{app.full_name}</span>
                       <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: st.bg, color: st.color }}>{st.label}</span>
                       {app.status === "approved" && app.contract_signed && (
                         <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "rgba(34,197,94,0.15)", color: "#4ade80" }}>✍️ Подписан</span>
                       )}
-                      <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>#{app.id} · {new Date(app.created_at).toLocaleDateString("ru-RU")}</span>
+                      <span style={{ color: "rgba(2,44,34,0.3)", fontSize: 12 }}>#{app.id} · {new Date(app.created_at).toLocaleDateString("ru-RU")}</span>
                     </div>
 
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "6px 16px", marginBottom: 10 }}>
@@ -190,17 +190,17 @@ export default function AdminCarLoans({ token }: Props) {
                         { l: "Контакт", v: app.contact_person || "—" },
                       ].map(({ l, v }) => (
                         <div key={l}>
-                          <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>{l}</div>
-                          <div style={{ color: "rgba(255,255,255,0.85)", fontSize: 13 }}>{v}</div>
+                          <div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>{l}</div>
+                          <div style={{ color: "rgba(2,44,34,0.85)", fontSize: 13 }}>{v}</div>
                         </div>
                       ))}
                     </div>
 
                     {(app.status === "approved" || app.status === "signing") && (app.approved_amount || app.approved_months || app.approved_rate) && (
                       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", padding: "10px 14px", borderRadius: 10, background: app.status === "approved" ? "rgba(34,197,94,0.08)" : "rgba(96,165,250,0.08)", border: `1px solid ${app.status === "approved" ? "rgba(34,197,94,0.2)" : "rgba(96,165,250,0.2)"}`, marginBottom: 8 }}>
-                        {app.approved_amount && <div><span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Одобрено</span><br /><b style={{ color: app.status === "approved" ? "#4ade80" : "#60a5fa" }}>{fmt(app.approved_amount)}</b></div>}
-                        {app.approved_months && <div><span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Срок</span><br /><b style={{ color: app.status === "approved" ? "#4ade80" : "#60a5fa" }}>{app.approved_months} мес.</b></div>}
-                        {app.approved_rate && <div><span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Ставка</span><br /><b style={{ color: app.status === "approved" ? "#4ade80" : "#60a5fa" }}>{app.approved_rate}%/мес.</b></div>}
+                        {app.approved_amount && <div><span style={{ color: "rgba(2,44,34,0.4)", fontSize: 11 }}>Одобрено</span><br /><b style={{ color: app.status === "approved" ? "#4ade80" : "#60a5fa" }}>{fmt(app.approved_amount)}</b></div>}
+                        {app.approved_months && <div><span style={{ color: "rgba(2,44,34,0.4)", fontSize: 11 }}>Срок</span><br /><b style={{ color: app.status === "approved" ? "#4ade80" : "#60a5fa" }}>{app.approved_months} мес.</b></div>}
+                        {app.approved_rate && <div><span style={{ color: "rgba(2,44,34,0.4)", fontSize: 11 }}>Ставка</span><br /><b style={{ color: app.status === "approved" ? "#4ade80" : "#60a5fa" }}>{app.approved_rate}%/мес.</b></div>}
                       </div>
                     )}
                     {app.status === "rejected" && app.reject_reason && (
@@ -209,7 +209,7 @@ export default function AdminCarLoans({ token }: Props) {
                       </div>
                     )}
                     {app.notes && (
-                      <div style={{ marginTop: 6, color: "rgba(255,255,255,0.4)", fontSize: 13 }}>📝 {app.notes}</div>
+                      <div style={{ marginTop: 6, color: "rgba(2,44,34,0.4)", fontSize: 13 }}>📝 {app.notes}</div>
                     )}
                   </div>
 
@@ -247,35 +247,35 @@ export default function AdminCarLoans({ token }: Props) {
       {editing && selected && (
         <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
           onClick={() => setEditing(false)}>
-          <div style={{ background: "#301b10", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 520, maxHeight: "90vh", overflowY: "auto" }}
+          <div style={{ background: "#ffffff", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 520, maxHeight: "90vh", overflowY: "auto" }}
             onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <div>
-                <div style={{ color: "white", fontWeight: 700, fontSize: 18 }}>Редактирование заявки #{selected.id}</div>
-                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>{selected.full_name} · {selected.phone}</div>
+                <div style={{ color: "#022c22", fontWeight: 700, fontSize: 18 }}>Редактирование заявки #{selected.id}</div>
+                <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 13 }}>{selected.full_name} · {selected.phone}</div>
               </div>
-              <button onClick={() => setEditing(false)} style={{ background: "rgba(255,255,255,0.07)", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
+              <button onClick={() => setEditing(false)} style={{ background: "rgba(16,185,129,0.07)", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: "rgba(2,44,34,0.5)" }}>
                 <Icon name="X" size={18} />
               </button>
             </div>
 
             {/* Данные авто (только чтение) */}
             <div style={{ ...G, padding: "12px 16px", marginBottom: 16 }}>
-              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 6 }}>АВТОМОБИЛЬ</div>
-              <div style={{ color: "white", fontWeight: 600 }}>{selected.car_brand} {selected.car_model} {selected.car_year}</div>
-              <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13 }}>Пробег: {selected.car_mileage ? `${selected.car_mileage.toLocaleString("ru-RU")} км` : "—"} · Запрошено: {fmt(selected.loan_amount)} на {selected.loan_months} мес.</div>
+              <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 11, marginBottom: 6 }}>АВТОМОБИЛЬ</div>
+              <div style={{ color: "#022c22", fontWeight: 600 }}>{selected.car_brand} {selected.car_model} {selected.car_year}</div>
+              <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 13 }}>Пробег: {selected.car_mileage ? `${selected.car_mileage.toLocaleString("ru-RU")} км` : "—"} · Запрошено: {fmt(selected.loan_amount)} на {selected.loan_months} мес.</div>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {/* Статус */}
               <div>
-                <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Статус заявки</label>
+                <label style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Статус заявки</label>
                 <div style={{ display: "flex", gap: 8 }}>
                   {(["pending","signing","approved","rejected"] as const).map(s => (
                     <button key={s} onClick={() => setEditForm(p => ({ ...p, status: s }))}
                       style={{ flex: 1, padding: "9px 4px", borderRadius: 9, border: editForm.status === s ? `1px solid ${STATUS_LABELS[s].bg}` : "1px solid transparent", cursor: "pointer", fontWeight: 600, fontSize: 11,
-                        background: editForm.status === s ? STATUS_LABELS[s].bg : "rgba(255,255,255,0.06)",
-                        color: editForm.status === s ? STATUS_LABELS[s].color : "rgba(255,255,255,0.4)",
+                        background: editForm.status === s ? STATUS_LABELS[s].bg : "rgba(16,185,129,0.06)",
+                        color: editForm.status === s ? STATUS_LABELS[s].color : "rgba(2,44,34,0.4)",
                       }}>
                       {STATUS_LABELS[s].label}
                     </button>
@@ -287,18 +287,18 @@ export default function AdminCarLoans({ token }: Props) {
               {(editForm.status === "approved" || editForm.status === "signing") && (
                 <>
                   <div>
-                    <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Одобренная сумма (₽)</label>
+                    <label style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Одобренная сумма (₽)</label>
                     <input style={inp} type="number" placeholder={String(selected.loan_amount)} value={editForm.approved_amount}
                       onChange={e => setEditForm(p => ({ ...p, approved_amount: e.target.value }))} />
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                     <div>
-                      <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Срок (мес.)</label>
+                      <label style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Срок (мес.)</label>
                       <input style={inp} type="number" placeholder={String(selected.loan_months)} value={editForm.approved_months}
                         onChange={e => setEditForm(p => ({ ...p, approved_months: e.target.value }))} />
                     </div>
                     <div>
-                      <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Ставка (%/мес.)</label>
+                      <label style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Ставка (%/мес.)</label>
                       <input style={inp} type="number" placeholder="12" value={editForm.approved_rate}
                         onChange={e => setEditForm(p => ({ ...p, approved_rate: e.target.value }))} />
                     </div>
@@ -309,7 +309,7 @@ export default function AdminCarLoans({ token }: Props) {
               {/* Причина отказа */}
               {editForm.status === "rejected" && (
                 <div>
-                  <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Причина отказа</label>
+                  <label style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Причина отказа</label>
                   <textarea style={{ ...inp, minHeight: 70, resize: "vertical" }} placeholder="Укажите причину..."
                     value={editForm.reject_reason} onChange={e => setEditForm(p => ({ ...p, reject_reason: e.target.value }))} />
                 </div>
@@ -317,7 +317,7 @@ export default function AdminCarLoans({ token }: Props) {
 
               {/* Заметки */}
               <div>
-                <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Заметки (внутренние)</label>
+                <label style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Заметки (внутренние)</label>
                 <textarea style={{ ...inp, minHeight: 60, resize: "vertical" }} placeholder="Заметки для администратора..."
                   value={editForm.notes} onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))} />
               </div>
@@ -326,7 +326,7 @@ export default function AdminCarLoans({ token }: Props) {
 
               <div style={{ display: "flex", gap: 10 }}>
                 <button onClick={() => setEditing(false)}
-                  style={{ flex: 1, padding: "11px", borderRadius: 10, border: "none", cursor: "pointer", background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>
+                  style={{ flex: 1, padding: "11px", borderRadius: 10, border: "none", cursor: "pointer", background: "rgba(16,185,129,0.07)", color: "rgba(2,44,34,0.5)", fontWeight: 600 }}>
                   Отмена
                 </button>
                 <button onClick={save} disabled={saving}

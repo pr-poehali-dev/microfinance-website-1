@@ -20,8 +20,8 @@ export default function RepeatLoanForm({ fullName, phone, onSuccess }: Props) {
   const calc = useMemo(() => {
     const interest = Math.round(amount * 0.008 * days);
     const total = amount + interest;
-    const amountBg = `linear-gradient(to right, #EA8034 ${((amount - 5000) / (100000 - 5000)) * 100}%, rgba(234,128,52,0.2) ${((amount - 5000) / (100000 - 5000)) * 100}%)`;
-    const daysBg = `linear-gradient(to right, #EA8034 ${((days - 5) / (365 - 5)) * 100}%, rgba(234,128,52,0.2) ${((days - 5) / (365 - 5)) * 100}%)`;
+    const amountBg = `linear-gradient(to right, #10b981 ${((amount - 5000) / (100000 - 5000)) * 100}%, rgba(16,185,129,0.2) ${((amount - 5000) / (100000 - 5000)) * 100}%)`;
+    const daysBg = `linear-gradient(to right, #10b981 ${((days - 5) / (365 - 5)) * 100}%, rgba(16,185,129,0.2) ${((days - 5) / (365 - 5)) * 100}%)`;
     return { interest, total, amountBg, daysBg };
   }, [amount, days]);
 
@@ -49,8 +49,8 @@ export default function RepeatLoanForm({ fullName, phone, onSuccess }: Props) {
         <div className="px-6 py-5 flex items-center gap-3">
           <Icon name="CheckCircle" size={24} className="text-green-400 shrink-0" />
           <div>
-            <div className="text-white font-bold">Заявка отправлена!</div>
-            <div className="text-white/50 text-sm mt-0.5">Мы свяжемся с вами в ближайшее время</div>
+            <div className="text-emerald-950 font-bold">Заявка отправлена!</div>
+            <div className="text-emerald-950/50 text-sm mt-0.5">Мы свяжемся с вами в ближайшее время</div>
           </div>
         </div>
       </div>
@@ -60,15 +60,15 @@ export default function RepeatLoanForm({ fullName, phone, onSuccess }: Props) {
   if (!open) {
     return (
       <div className="glass rounded-2xl overflow-hidden mb-6"
-        style={{ border: "1px solid rgba(234,128,52,0.35)", background: "rgba(234,128,52,0.04)" }}>
+        style={{ border: "1px solid rgba(16,185,129,0.35)", background: "rgba(16,185,129,0.04)" }}>
         <div className="px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(234,128,52,0.2)" }}>
-              <Icon name="RefreshCw" size={20} className="text-orange-400" />
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(16,185,129,0.2)" }}>
+              <Icon name="RefreshCw" size={20} className="text-emerald-600" />
             </div>
             <div>
-              <div className="text-white font-bold">Оформить новый займ</div>
-              <div className="text-white/40 text-sm">Ваши данные уже сохранены — укажите только сумму и срок</div>
+              <div className="text-emerald-950 font-bold">Оформить новый займ</div>
+              <div className="text-emerald-950/40 text-sm">Ваши данные уже сохранены — укажите только сумму и срок</div>
             </div>
           </div>
           <button
@@ -85,39 +85,39 @@ export default function RepeatLoanForm({ fullName, phone, onSuccess }: Props) {
 
   return (
     <div className="glass rounded-2xl overflow-hidden mb-6"
-      style={{ border: "1px solid rgba(234,128,52,0.4)", background: "rgba(234,128,52,0.04)" }}>
+      style={{ border: "1px solid rgba(16,185,129,0.4)", background: "rgba(16,185,129,0.04)" }}>
       <div className="px-6 py-4 flex items-center justify-between gap-3"
-        style={{ background: "linear-gradient(135deg,rgba(234,128,52,0.25),rgba(240,153,74,0.08))" }}>
+        style={{ background: "linear-gradient(135deg,rgba(16,185,129,0.25),rgba(20,184,166,0.08))" }}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(234,128,52,0.2)" }}>
-            <Icon name="Calculator" size={18} className="text-orange-300" />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(16,185,129,0.2)" }}>
+            <Icon name="Calculator" size={18} className="text-emerald-600" />
           </div>
-          <div className="text-white font-bold">Новая заявка на займ</div>
+          <div className="text-emerald-950 font-bold">Новая заявка на займ</div>
         </div>
-        <button onClick={() => setOpen(false)} className="text-white/40 hover:text-white/70 transition-colors">
+        <button onClick={() => setOpen(false)} className="text-emerald-950/40 hover:text-emerald-950/70 transition-colors">
           <Icon name="X" size={20} />
         </button>
       </div>
 
       <div className="px-6 py-5 space-y-5">
         {/* Проверка данных */}
-        <div className="rounded-xl px-4 py-3 space-y-2" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-          <div className="text-white/40 text-xs uppercase tracking-wider mb-1">Проверьте свои данные</div>
+        <div className="rounded-xl px-4 py-3 space-y-2" style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.08)" }}>
+          <div className="text-emerald-950/40 text-xs uppercase tracking-wider mb-1">Проверьте свои данные</div>
           <div className="flex justify-between text-sm">
-            <span className="text-white/50">ФИО</span>
-            <span className="text-white font-medium">{fullName || "—"}</span>
+            <span className="text-emerald-950/50">ФИО</span>
+            <span className="text-emerald-950 font-medium">{fullName || "—"}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-white/50">Телефон</span>
-            <span className="text-white font-medium">{phone}</span>
+            <span className="text-emerald-950/50">Телефон</span>
+            <span className="text-emerald-950 font-medium">{phone}</span>
           </div>
-          <div className="text-white/30 text-xs pt-1">Паспортные и рабочие данные возьмём из вашей предыдущей заявки</div>
+          <div className="text-emerald-950/30 text-xs pt-1">Паспортные и рабочие данные возьмём из вашей предыдущей заявки</div>
         </div>
 
         {/* Сумма */}
         <div>
           <div className="flex justify-between mb-2">
-            <span className="text-white/60 text-sm">Желаемая сумма</span>
+            <span className="text-emerald-950/60 text-sm">Желаемая сумма</span>
             <span className="font-bold text-base gradient-text">{amount.toLocaleString("ru-RU")} ₽</span>
           </div>
           <input
@@ -127,7 +127,7 @@ export default function RepeatLoanForm({ fullName, phone, onSuccess }: Props) {
             className="slider-custom w-full"
             style={{ background: calc.amountBg }}
           />
-          <div className="flex justify-between text-white/30 text-xs mt-1">
+          <div className="flex justify-between text-emerald-950/30 text-xs mt-1">
             <span>5 000 ₽</span>
             <span>100 000 ₽</span>
           </div>
@@ -136,7 +136,7 @@ export default function RepeatLoanForm({ fullName, phone, onSuccess }: Props) {
         {/* Срок */}
         <div>
           <div className="flex justify-between mb-2">
-            <span className="text-white/60 text-sm">Срок займа</span>
+            <span className="text-emerald-950/60 text-sm">Срок займа</span>
             <span className="font-bold text-base gradient-text">{days} дн.</span>
           </div>
           <input
@@ -146,15 +146,15 @@ export default function RepeatLoanForm({ fullName, phone, onSuccess }: Props) {
             className="slider-custom w-full"
             style={{ background: calc.daysBg }}
           />
-          <div className="flex justify-between text-white/30 text-xs mt-1">
+          <div className="flex justify-between text-emerald-950/30 text-xs mt-1">
             <span>5 дней</span>
             <span>365 дней</span>
           </div>
         </div>
 
         {/* Итог */}
-        <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ background: "rgba(234,128,52,0.1)", border: "1px solid rgba(234,128,52,0.3)" }}>
-          <span className="text-white/50 text-sm">К возврату</span>
+        <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>
+          <span className="text-emerald-950/50 text-sm">К возврату</span>
           <span className="font-bold text-xl gradient-text">{calc.total.toLocaleString("ru-RU")} ₽</span>
         </div>
 

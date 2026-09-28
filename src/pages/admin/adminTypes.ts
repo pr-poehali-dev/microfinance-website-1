@@ -46,11 +46,11 @@ export interface CardRequestItem {
 export interface User { id: number; phone: string; fullName: string; email: string; createdAt: string; loanCount: number; debt: number; }
 export interface Loan { id: number; amount: number; days: number; ratePercent: number; status: string; createdAt: string; totalDue?: number; isOverdue?: boolean; overdueDays?: number; penaltyAmount?: number; penaltyWaived?: number; }
 
-export const GLASS = { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16 };
-export const PURPLE = { background: "linear-gradient(135deg,#ea8034,#f0994a)" };
+export const GLASS = { background: "rgba(255,255,255,0.9)", border: "1px solid rgba(16,185,129,0.15)", borderRadius: 16, boxShadow: "0 4px 20px rgba(16,185,129,0.06)" };
+export const PURPLE = { background: "linear-gradient(135deg,#10b981,#14b8a6)" };
 export const STATUS: Record<string, { label: string; color: string }> = {
   active:  { label: "Активен",   color: "#4ade80" },
-  paid:    { label: "Погашен",   color: "#fdba74" },
+  paid:    { label: "Погашен",   color: "#14b8a6" },
   overdue: { label: "Просрочен", color: "#f87171" },
   review:  { label: "На рассм.", color: "#fbbf24" },
 };

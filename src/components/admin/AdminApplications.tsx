@@ -83,7 +83,7 @@ export default function AdminApplications({
           return (
             <button key={s} onClick={() => setAppsFilter(s)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-              style={appsFilter === s ? { background: cfg.grad, color: "white" } : { background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)" }}>
+              style={appsFilter === s ? { background: cfg.grad, color: "white" } : { background: "rgba(16,185,129,0.05)", color: "rgba(2,44,34,0.5)" }}>
               <Icon name={cfg.icon as "Clock"} size={14} />{cfg.label}
             </button>
           );
@@ -97,12 +97,12 @@ export default function AdminApplications({
         </div>
       )}
 
-      {appsLoading && <div className="flex items-center justify-center py-20"><Icon name="Loader2" size={32} className="animate-spin text-orange-400" /></div>}
+      {appsLoading && <div className="flex items-center justify-center py-20"><Icon name="Loader2" size={32} className="animate-spin text-emerald-600" /></div>}
 
       {!appsLoading && applications.length === 0 && (
         <div className="glass rounded-2xl p-12 text-center">
-          <Icon name="FileText" size={40} className="text-white/20 mx-auto mb-3" />
-          <p className="text-white/40">
+          <Icon name="FileText" size={40} className="text-emerald-950/20 mx-auto mb-3" />
+          <p className="text-emerald-950/40">
             {appsFilter === "pending" ? "Новых заявок нет" : appsFilter === "approved" ? "Нет одобренных заявок" : "Нет отклонённых заявок"}
           </p>
         </div>
@@ -115,30 +115,30 @@ export default function AdminApplications({
               <div className="flex-1 min-w-0">
                 {/* Заголовок */}
                 <div className="flex items-center gap-3 mb-3 flex-wrap">
-                  <span className="text-white font-bold text-lg">{app.fullName || app.phone}</span>
-                  <span className="text-white/30 text-sm">№{fmtAppId(app.id)}</span>
-                  <span className="text-white/30 text-xs">{app.createdAt}</span>
+                  <span className="text-emerald-950 font-bold text-lg">{app.fullName || app.phone}</span>
+                  <span className="text-emerald-950/30 text-sm">№{fmtAppId(app.id)}</span>
+                  <span className="text-emerald-950/30 text-xs">{app.createdAt}</span>
                   {app.telegramId && (
-                    <span className="text-orange-400 text-xs">@{app.telegramId}</span>
+                    <span className="text-emerald-600 text-xs">@{app.telegramId}</span>
                   )}
                 </div>
 
                 {/* Основные данные */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm mb-3">
-                  <div><div className="text-white/40 text-xs mb-0.5">Телефон</div><div className="text-white">{app.phone}</div></div>
-                  <div><div className="text-white/40 text-xs mb-0.5">Email</div><div className="text-white text-xs">{app.email || "—"}</div></div>
-                  <div><div className="text-white/40 text-xs mb-0.5">Сумма</div><div className="text-white font-bold">{app.amount.toLocaleString("ru-RU")} ₽</div></div>
-                  <div><div className="text-white/40 text-xs mb-0.5">Срок</div><div className="text-white">{app.days} дн.</div></div>
+                  <div><div className="text-emerald-950/40 text-xs mb-0.5">Телефон</div><div className="text-emerald-950">{app.phone}</div></div>
+                  <div><div className="text-emerald-950/40 text-xs mb-0.5">Email</div><div className="text-emerald-950 text-xs">{app.email || "—"}</div></div>
+                  <div><div className="text-emerald-950/40 text-xs mb-0.5">Сумма</div><div className="text-emerald-950 font-bold">{app.amount.toLocaleString("ru-RU")} ₽</div></div>
+                  <div><div className="text-emerald-950/40 text-xs mb-0.5">Срок</div><div className="text-emerald-950">{app.days} дн.</div></div>
                 </div>
 
                 {/* Паспортные данные */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm mb-3 p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.04)" }}>
-                  <div><div className="text-white/40 text-xs mb-0.5">Серия / Номер</div><div className="text-white">{app.passportSeries} {app.passportNumber}</div></div>
-                  <div><div className="text-white/40 text-xs mb-0.5">Дата выдачи</div><div className="text-white">{app.passportDate || "—"}</div></div>
-                  <div><div className="text-white/40 text-xs mb-0.5">Код подразделения</div><div className="text-white">{app.passportCode || "—"}</div></div>
-                  <div className="col-span-2"><div className="text-white/40 text-xs mb-0.5">Кем выдан</div><div className="text-white text-xs">{app.passportBy || "—"}</div></div>
-                  <div><div className="text-white/40 text-xs mb-0.5">Дата рождения</div><div className="text-white">{app.birthDate || "—"}</div></div>
-                  {app.birthPlace && <div className="col-span-2 sm:col-span-3"><div className="text-white/40 text-xs mb-0.5">Место рождения</div><div className="text-white text-xs">{app.birthPlace}</div></div>}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm mb-3 p-3 rounded-xl" style={{ background: "rgba(16,185,129,0.04)" }}>
+                  <div><div className="text-emerald-950/40 text-xs mb-0.5">Серия / Номер</div><div className="text-emerald-950">{app.passportSeries} {app.passportNumber}</div></div>
+                  <div><div className="text-emerald-950/40 text-xs mb-0.5">Дата выдачи</div><div className="text-emerald-950">{app.passportDate || "—"}</div></div>
+                  <div><div className="text-emerald-950/40 text-xs mb-0.5">Код подразделения</div><div className="text-emerald-950">{app.passportCode || "—"}</div></div>
+                  <div className="col-span-2"><div className="text-emerald-950/40 text-xs mb-0.5">Кем выдан</div><div className="text-emerald-950 text-xs">{app.passportBy || "—"}</div></div>
+                  <div><div className="text-emerald-950/40 text-xs mb-0.5">Дата рождения</div><div className="text-emerald-950">{app.birthDate || "—"}</div></div>
+                  {app.birthPlace && <div className="col-span-2 sm:col-span-3"><div className="text-emerald-950/40 text-xs mb-0.5">Место рождения</div><div className="text-emerald-950 text-xs">{app.birthPlace}</div></div>}
                 </div>
 
                 {/* Документы */}
@@ -151,8 +151,8 @@ export default function AdminApplications({
                       <button onClick={() => toggleDocs(app.id)}
                         className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
                         style={hasFiles
-                          ? { background: "rgba(234,128,52,0.2)", color: "#fbbf7a", border: "1px solid rgba(234,128,52,0.3)" }
-                          : { background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.25)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                          ? { background: "rgba(16,185,129,0.2)", color: "#0f766e", border: "1px solid rgba(16,185,129,0.3)" }
+                          : { background: "rgba(16,185,129,0.04)", color: "rgba(2,44,34,0.25)", border: "1px solid rgba(16,185,129,0.08)" }}>
                         <Icon name="Paperclip" size={12} />
                         Документы {hasFiles ? `(${fileCount}/${FILE_LABELS.length})` : "(не загружены)"}
                         {hasFiles && <Icon name={isOpen ? "ChevronUp" : "ChevronDown"} size={12} />}
@@ -164,11 +164,11 @@ export default function AdminApplications({
                             const url = app[key] as string;
                             return (
                               <div key={key} className="flex flex-col gap-1">
-                                <span className="text-white/40 text-xs">{label}</span>
+                                <span className="text-emerald-950/40 text-xs">{label}</span>
                                 {url ? (
                                   <button onClick={() => setLightbox(url)}
                                     className="relative group rounded-xl overflow-hidden"
-                                    style={{ aspectRatio: "4/3", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(234,128,52,0.3)" }}>
+                                    style={{ aspectRatio: "4/3", background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.3)" }}>
                                     <img src={url} alt={label}
                                       className="w-full h-full object-cover transition-transform group-hover:scale-105"
                                       onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
@@ -179,8 +179,8 @@ export default function AdminApplications({
                                   </button>
                                 ) : (
                                   <div className="rounded-xl flex items-center justify-center"
-                                    style={{ aspectRatio: "4/3", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                                    <Icon name="FileX" size={20} className="text-white/20" />
+                                    style={{ aspectRatio: "4/3", background: "rgba(16,185,129,0.03)", border: "1px solid rgba(16,185,129,0.08)" }}>
+                                    <Icon name="FileX" size={20} className="text-emerald-950/20" />
                                   </div>
                                 )}
                               </div>
@@ -216,15 +216,15 @@ export default function AdminApplications({
               <div className="mt-4 pt-4" style={{ borderTop: "1px solid rgba(74,222,128,0.2)" }}>
                 <div className="flex items-end gap-3 flex-wrap">
                   <div>
-                    <label className="text-white/50 text-xs mb-1 block">Ставка (%/день)</label>
+                    <label className="text-emerald-950/50 text-xs mb-1 block">Ставка (%/день)</label>
                     <input type="number" min="0.1" max="5" step="0.1" value={approveRate}
                       onChange={(e) => setApproveRate(e.target.value)}
-                      className="w-32 rounded-xl px-3 py-2 text-white text-sm outline-none border border-white/10 focus:border-green-500 transition-colors"
-                      style={{ background: "rgba(255,255,255,0.05)" }} />
+                      className="w-32 rounded-xl px-3 py-2 text-emerald-950 text-sm outline-none border border-emerald-900/15 focus:border-green-500 transition-colors"
+                      style={{ background: "rgba(16,185,129,0.05)" }} />
                   </div>
                   {approveRate && app.days > 0 && (
-                    <div className="text-sm text-white/50 pb-2">
-                      К возврату: <span className="text-white font-bold">
+                    <div className="text-sm text-emerald-950/50 pb-2">
+                      К возврату: <span className="text-emerald-950 font-bold">
                         {(app.amount + app.amount * (parseFloat(approveRate) / 100) * app.days).toLocaleString("ru-RU", { maximumFractionDigits: 0 })} ₽
                       </span>
                     </div>
@@ -239,8 +239,8 @@ export default function AdminApplications({
                     Подтвердить выдачу
                   </button>
                   <button onClick={() => { setAppAction(null); setSelectedApp(null); }}
-                    className="px-4 py-2.5 rounded-xl text-sm text-white/50 hover:text-white transition-colors"
-                    style={{ background: "rgba(255,255,255,0.05)" }}>
+                    className="px-4 py-2.5 rounded-xl text-sm text-emerald-950/50 hover:text-emerald-950 transition-colors"
+                    style={{ background: "rgba(16,185,129,0.05)" }}>
                     Отмена
                   </button>
                 </div>
@@ -251,11 +251,11 @@ export default function AdminApplications({
             {selectedApp?.id === app.id && appAction === "reject" && (
               <div className="mt-4 pt-4" style={{ borderTop: "1px solid rgba(239,68,68,0.2)" }}>
                 <div>
-                  <label className="text-white/50 text-xs mb-1 block">Причина отказа (необязательно)</label>
+                  <label className="text-emerald-950/50 text-xs mb-1 block">Причина отказа (необязательно)</label>
                   <input type="text" placeholder="Например: недостаточный доход"
                     value={rejectReason} onChange={(e) => setRejectReason(e.target.value)}
-                    className="w-full rounded-xl px-3 py-2 text-white text-sm outline-none border border-white/10 focus:border-red-500 transition-colors"
-                    style={{ background: "rgba(255,255,255,0.05)" }} />
+                    className="w-full rounded-xl px-3 py-2 text-emerald-950 text-sm outline-none border border-emerald-900/15 focus:border-red-500 transition-colors"
+                    style={{ background: "rgba(16,185,129,0.05)" }} />
                 </div>
                 {appErr && <p className="text-red-400 text-xs mt-2 flex items-center gap-1"><Icon name="AlertCircle" size={12} />{appErr}</p>}
                 <div className="flex gap-2 mt-3">
@@ -266,8 +266,8 @@ export default function AdminApplications({
                     Подтвердить отказ
                   </button>
                   <button onClick={() => { setAppAction(null); setSelectedApp(null); }}
-                    className="px-4 py-2.5 rounded-xl text-sm text-white/50 hover:text-white transition-colors"
-                    style={{ background: "rgba(255,255,255,0.05)" }}>
+                    className="px-4 py-2.5 rounded-xl text-sm text-emerald-950/50 hover:text-emerald-950 transition-colors"
+                    style={{ background: "rgba(16,185,129,0.05)" }}>
                     Отмена
                   </button>
                 </div>

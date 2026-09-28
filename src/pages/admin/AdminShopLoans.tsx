@@ -39,15 +39,15 @@ interface ShopApp {
 }
 
 const ST: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  pending:  { label: "На рассмотрении", color: "#fdba74", bg: "rgba(240,153,74,0.12)", border: "rgba(240,153,74,0.3)" },
+  pending:  { label: "На рассмотрении", color: "#14b8a6", bg: "rgba(16,185,129,0.12)", border: "rgba(16,185,129,0.3)" },
   signing:  { label: "На подписании",   color: "#60a5fa", bg: "rgba(96,165,250,0.12)", border: "rgba(96,165,250,0.3)" },
   approved: { label: "Одобрено",        color: "#4ade80", bg: "rgba(34,197,94,0.12)",  border: "rgba(34,197,94,0.3)" },
   rejected: { label: "Отказ",           color: "#f87171", bg: "rgba(239,68,68,0.12)",  border: "rgba(239,68,68,0.3)" },
 };
 
-const G   = { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14 };
-const INP = { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "8px 12px", color: "white", fontSize: 13, width: "100%", outline: "none" };
-const LBL = { color: "rgba(255,255,255,0.45)", fontSize: 11, display: "block" as const, marginBottom: 4 };
+const G   = { background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.08)", borderRadius: 14 };
+const INP = { background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.12)", borderRadius: 10, padding: "8px 12px", color: "#022c22", fontSize: 13, width: "100%", outline: "none" };
+const LBL = { color: "rgba(2,44,34,0.45)", fontSize: 11, display: "block" as const, marginBottom: 4 };
 
 interface Props { token: string; }
 
@@ -141,11 +141,11 @@ export default function AdminShopLoans({ token }: Props) {
         {(["pending","signing","approved","rejected"] as const).map(s => (
           <button key={s} onClick={() => setFilter(s)}
             style={{ padding: "8px 18px", borderRadius: 10, border: `1px solid ${filter === s ? ST[s].border : "transparent"}`, cursor: "pointer", fontWeight: 600, fontSize: 13,
-              background: filter === s ? ST[s].bg : "rgba(255,255,255,0.07)", color: filter === s ? ST[s].color : "rgba(255,255,255,0.5)" }}>
+              background: filter === s ? ST[s].bg : "rgba(16,185,129,0.07)", color: filter === s ? ST[s].color : "rgba(2,44,34,0.5)" }}>
             {ST[s].label}
           </button>
         ))}
-        <button onClick={load} style={{ marginLeft: "auto", background: "rgba(255,255,255,0.07)", border: "none", borderRadius: 10, padding: "8px 12px", cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
+        <button onClick={load} style={{ marginLeft: "auto", background: "rgba(16,185,129,0.07)", border: "none", borderRadius: 10, padding: "8px 12px", cursor: "pointer", color: "rgba(2,44,34,0.5)" }}>
           <Icon name="RefreshCw" size={15} />
         </button>
       </div>
@@ -155,9 +155,9 @@ export default function AdminShopLoans({ token }: Props) {
       )}
 
       {loading ? (
-        <div style={{ color: "rgba(255,255,255,0.35)", textAlign: "center", padding: 48 }}>Загрузка...</div>
+        <div style={{ color: "rgba(2,44,34,0.35)", textAlign: "center", padding: 48 }}>Загрузка...</div>
       ) : items.length === 0 ? (
-        <div style={{ ...G, padding: 48, textAlign: "center", color: "rgba(255,255,255,0.3)" }}>
+        <div style={{ ...G, padding: 48, textAlign: "center", color: "rgba(2,44,34,0.3)" }}>
           <Icon name="ShoppingBag" size={42} style={{ opacity: 0.25 }} />
           <div style={{ marginTop: 12 }}>Нет заявок со статусом «{ST[filter].label}»</div>
         </div>
@@ -171,7 +171,7 @@ export default function AdminShopLoans({ token }: Props) {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {/* Шапка */}
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
-                      <span style={{ color: "white", fontWeight: 700, fontSize: 16 }}>{app.full_name}</span>
+                      <span style={{ color: "#022c22", fontWeight: 700, fontSize: 16 }}>{app.full_name}</span>
                       <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: st.bg, color: st.color, border: `1px solid ${st.border}` }}>
                         {st.label}
                       </span>
@@ -180,7 +180,7 @@ export default function AdminShopLoans({ token }: Props) {
                           ✍️ Подписан
                         </span>
                       )}
-                      <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>#{app.id} · {new Date(app.created_at).toLocaleDateString("ru-RU")}</span>
+                      <span style={{ color: "rgba(2,44,34,0.3)", fontSize: 12 }}>#{app.id} · {new Date(app.created_at).toLocaleDateString("ru-RU")}</span>
                     </div>
 
                     {/* Поля */}
@@ -196,7 +196,7 @@ export default function AdminShopLoans({ token }: Props) {
                         { l: "Паспорт",    v: `${app.passport_series} ${app.passport_number}` },
                         { l: "Карта/СБП",  v: app.card_number || "—" },
                       ].map(({ l, v }) => (
-                        <div key={l}><div style={LBL}>{l}</div><div style={{ color: "rgba(255,255,255,0.85)", fontSize: 13 }}>{v}</div></div>
+                        <div key={l}><div style={LBL}>{l}</div><div style={{ color: "rgba(2,44,34,0.85)", fontSize: 13 }}>{v}</div></div>
                       ))}
                     </div>
 
@@ -213,7 +213,7 @@ export default function AdminShopLoans({ token }: Props) {
                         Причина: {app.reject_reason}
                       </div>
                     )}
-                    {app.notes && <div style={{ marginTop: 6, color: "rgba(255,255,255,0.4)", fontSize: 13 }}>📝 {app.notes}</div>}
+                    {app.notes && <div style={{ marginTop: 6, color: "rgba(2,44,34,0.4)", fontSize: 13 }}>📝 {app.notes}</div>}
 
                     {/* Документы */}
                     {(app.file_passport || app.file_registration || app.file_selfie || app.file_snils) && (
@@ -225,7 +225,7 @@ export default function AdminShopLoans({ token }: Props) {
                           { url: app.file_snils,        label: "СНИЛС" },
                         ].filter(d => d.url).map(d => (
                           <button key={d.label} onClick={() => setLightbox(d.url)}
-                            style={{ padding: "5px 12px", borderRadius: 8, border: "1px solid rgba(240,153,74,0.3)", background: "rgba(240,153,74,0.1)", color: "#fed7aa", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
+                            style={{ padding: "5px 12px", borderRadius: 8, border: "1px solid rgba(16,185,129,0.3)", background: "rgba(16,185,129,0.1)", color: "#0f766e", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
                             <Icon name="Image" size={12} /> {d.label}
                           </button>
                         ))}
@@ -252,7 +252,7 @@ export default function AdminShopLoans({ token }: Props) {
                       </button>
                     )}
                     <button onClick={() => openEdit(app)}
-                      style={{ padding: "8px 18px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13, background: "linear-gradient(135deg,#f0994a,#06b6d4)", color: "white", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
+                      style={{ padding: "8px 18px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13, background: "linear-gradient(135deg,#14b8a6,#06b6d4)", color: "white", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
                       <Icon name="Pencil" size={14} /> Редактировать
                     </button>
                   </div>
@@ -267,23 +267,23 @@ export default function AdminShopLoans({ token }: Props) {
       {selected && (
         <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
           onClick={() => setSelected(null)}>
-          <div style={{ background: "#301b10", border: "1px solid rgba(240,153,74,0.3)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 530, maxHeight: "90vh", overflowY: "auto" }}
+          <div style={{ background: "#ffffff", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 530, maxHeight: "90vh", overflowY: "auto" }}
             onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <div>
-                <div style={{ color: "white", fontWeight: 700, fontSize: 18 }}>Заявка #{selected.id}</div>
-                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>{selected.full_name} · {selected.phone}</div>
+                <div style={{ color: "#022c22", fontWeight: 700, fontSize: 18 }}>Заявка #{selected.id}</div>
+                <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 13 }}>{selected.full_name} · {selected.phone}</div>
               </div>
-              <button onClick={() => setSelected(null)} style={{ background: "rgba(255,255,255,0.07)", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
+              <button onClick={() => setSelected(null)} style={{ background: "rgba(16,185,129,0.07)", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: "rgba(2,44,34,0.5)" }}>
                 <Icon name="X" size={18} />
               </button>
             </div>
 
             {/* Товар (только чтение) */}
             <div style={{ ...G, padding: "12px 16px", marginBottom: 16 }}>
-              <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 4 }}>ТОВАР</div>
-              <div style={{ color: "white", fontWeight: 600, fontSize: 15 }}>{selected.item_name || "—"}</div>
-              <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>
+              <div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 4 }}>ТОВАР</div>
+              <div style={{ color: "#022c22", fontWeight: 600, fontSize: 15 }}>{selected.item_name || "—"}</div>
+              <div style={{ color: "rgba(2,44,34,0.45)", fontSize: 13 }}>
                 {selected.shop_name || "—"} · Цена: {fmt(selected.item_price)} · Запрошено: {fmt(selected.loan_amount)} на {selected.loan_months} мес.
               </div>
             </div>
@@ -296,8 +296,8 @@ export default function AdminShopLoans({ token }: Props) {
                   {(["pending","signing","approved","rejected"] as const).map(s => (
                     <button key={s} onClick={() => setEf(p => ({ ...p, status: s }))}
                       style={{ flex: 1, padding: "9px 4px", borderRadius: 9, border: `1px solid ${ef.status === s ? ST[s].border : "transparent"}`, cursor: "pointer", fontWeight: 600, fontSize: 11,
-                        background: ef.status === s ? ST[s].bg : "rgba(255,255,255,0.06)",
-                        color: ef.status === s ? ST[s].color : "rgba(255,255,255,0.4)" }}>
+                        background: ef.status === s ? ST[s].bg : "rgba(16,185,129,0.06)",
+                        color: ef.status === s ? ST[s].color : "rgba(2,44,34,0.4)" }}>
                       {ST[s].label}
                     </button>
                   ))}
@@ -346,11 +346,11 @@ export default function AdminShopLoans({ token }: Props) {
 
               <div style={{ display: "flex", gap: 10 }}>
                 <button onClick={() => setSelected(null)}
-                  style={{ flex: 1, padding: 11, borderRadius: 10, border: "none", cursor: "pointer", background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>
+                  style={{ flex: 1, padding: 11, borderRadius: 10, border: "none", cursor: "pointer", background: "rgba(16,185,129,0.07)", color: "rgba(2,44,34,0.5)", fontWeight: 600 }}>
                   Отмена
                 </button>
                 <button onClick={save} disabled={saving}
-                  style={{ flex: 2, padding: 11, borderRadius: 10, border: "none", cursor: "pointer", background: "linear-gradient(135deg,#f0994a,#06b6d4)", color: "white", fontWeight: 700, opacity: saving ? 0.7 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  style={{ flex: 2, padding: 11, borderRadius: 10, border: "none", cursor: "pointer", background: "linear-gradient(135deg,#14b8a6,#06b6d4)", color: "white", fontWeight: 700, opacity: saving ? 0.7 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                   {saving ? <><Icon name="Loader" size={14} className="animate-spin" />Сохранение...</> : <><Icon name="Check" size={14} />Сохранить</>}
                 </button>
               </div>

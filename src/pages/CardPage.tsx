@@ -52,19 +52,19 @@ export default function CardPage() {
   };
 
   return (
-    <div className="min-h-screen font-golos" style={{ background: "#1e110a" }}>
+    <div className="min-h-screen font-golos" style={{ background: "#ffffff" }}>
       {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass" style={{ borderBottom: "1px solid rgba(240,153,74,0.2)" }}>
+      <nav className="fixed top-0 left-0 right-0 z-50 glass" style={{ borderBottom: "1px solid rgba(20,184,166,0.2)" }}>
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <button onClick={() => navigate("/")} className="flex items-center gap-2">
             <img src="/logo-icon.png" alt="Русфинанс 24" className="w-9 h-9 rounded-xl" />
-            <span className="font-oswald text-xl font-bold tracking-wide text-white">
+            <span className="font-oswald text-xl font-bold tracking-wide text-emerald-950">
               <span className="gradient-text">РУСФИНАНС24</span>
             </span>
           </button>
           <button
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm"
+            className="flex items-center gap-2 text-emerald-950/60 hover:text-emerald-950 transition-colors text-sm"
           >
             <Icon name="ArrowLeft" size={16} />
             На главную
@@ -75,14 +75,14 @@ export default function CardPage() {
       {/* HERO */}
       <section className="hero-bg pt-32 pb-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6" style={{ background: "rgba(234,128,52,0.2)", border: "1px solid rgba(240,153,74,0.3)", color: "#fbbf7a" }}>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6" style={{ background: "rgba(16,185,129,0.2)", border: "1px solid rgba(20,184,166,0.3)", color: "#14b8a6" }}>
             <Icon name="CreditCard" size={14} />
             Новый продукт
           </div>
-          <h1 className="font-oswald text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+          <h1 className="font-oswald text-5xl md:text-7xl font-bold text-emerald-950 mb-6 leading-tight">
             КАРТА <span className="gradient-text">РУСФИНАНС 24</span>
           </h1>
-          <p className="text-white/60 text-lg mb-10 max-w-xl mx-auto">
+          <p className="text-emerald-950/60 text-lg mb-10 max-w-xl mx-auto">
             Кредитная карта с лимитом до 200 000 ₽, кэшбэком 1% и бесплатным обслуживанием. Оформление онлайн за 15 минут.
           </p>
           <a href="#card-form" onClick={(e) => { e.preventDefault(); document.querySelector("#card-form")?.scrollIntoView({ behavior: "smooth" }); }}
@@ -96,18 +96,18 @@ export default function CardPage() {
       {/* ПРЕИМУЩЕСТВА */}
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="font-oswald text-4xl font-bold text-white text-center mb-3">
+          <h2 className="font-oswald text-4xl font-bold text-emerald-950 text-center mb-3">
             Преимущества <span className="gradient-text">карты</span>
           </h2>
-          <p className="text-white/50 text-center mb-12">Всё что нужно — в одной карте</p>
+          <p className="text-emerald-950/50 text-center mb-12">Всё что нужно — в одной карте</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {BENEFITS.map((b) => (
               <div key={b.title} className="glass rounded-2xl p-6 hover:card-hover transition-all duration-300 group">
                 <div className="w-12 h-12 rounded-xl btn-neon flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Icon name={b.icon} size={22} className="text-white" />
                 </div>
-                <h3 className="text-white font-semibold text-lg mb-2">{b.title}</h3>
-                <p className="text-white/50 text-sm leading-relaxed">{b.desc}</p>
+                <h3 className="text-emerald-950 font-semibold text-lg mb-2">{b.title}</h3>
+                <p className="text-emerald-950/50 text-sm leading-relaxed">{b.desc}</p>
               </div>
             ))}
           </div>
@@ -115,17 +115,17 @@ export default function CardPage() {
       </section>
 
       {/* ТАРИФЫ */}
-      <section className="py-20 px-4" style={{ background: "rgba(234,128,52,0.05)" }}>
+      <section className="py-20 px-4" style={{ background: "rgba(16,185,129,0.05)" }}>
         <div className="max-w-3xl mx-auto">
-          <h2 className="font-oswald text-4xl font-bold text-white text-center mb-3">
+          <h2 className="font-oswald text-4xl font-bold text-emerald-950 text-center mb-3">
             Тарифы и <span className="gradient-text">условия</span>
           </h2>
-          <p className="text-white/50 text-center mb-12">Прозрачные условия без скрытых платежей</p>
+          <p className="text-emerald-950/50 text-center mb-12">Прозрачные условия без скрытых платежей</p>
           <div className="glass rounded-2xl overflow-hidden">
             {TARIFFS.map((t, i) => (
-              <div key={t.label} className="flex justify-between items-center px-6 py-4" style={{ background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent", borderBottom: i < TARIFFS.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
-                <span className="text-white/60">{t.label}</span>
-                <span className="text-white font-semibold gradient-text">{t.value}</span>
+              <div key={t.label} className="flex justify-between items-center px-6 py-4" style={{ background: i % 2 === 0 ? "rgba(16,185,129,0.02)" : "transparent", borderBottom: i < TARIFFS.length - 1 ? "1px solid rgba(16,185,129,0.06)" : "none" }}>
+                <span className="text-emerald-950/60">{t.label}</span>
+                <span className="text-emerald-950 font-semibold gradient-text">{t.value}</span>
               </div>
             ))}
           </div>
@@ -135,17 +135,17 @@ export default function CardPage() {
       {/* КАК ПОЛУЧИТЬ */}
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto">
-          <h2 className="font-oswald text-4xl font-bold text-white text-center mb-3">
+          <h2 className="font-oswald text-4xl font-bold text-emerald-950 text-center mb-3">
             Как <span className="gradient-text">получить</span> карту
           </h2>
-          <p className="text-white/50 text-center mb-12">4 простых шага до вашей карты</p>
+          <p className="text-emerald-950/50 text-center mb-12">4 простых шага до вашей карты</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {STEPS.map((s) => (
               <div key={s.num} className="glass rounded-2xl p-6 flex gap-4 items-start">
                 <div className="font-oswald text-4xl font-bold gradient-text shrink-0 leading-none">{s.num}</div>
                 <div>
-                  <h3 className="text-white font-semibold text-lg mb-1">{s.title}</h3>
-                  <p className="text-white/50 text-sm">{s.desc}</p>
+                  <h3 className="text-emerald-950 font-semibold text-lg mb-1">{s.title}</h3>
+                  <p className="text-emerald-950/50 text-sm">{s.desc}</p>
                 </div>
               </div>
             ))}
@@ -154,69 +154,69 @@ export default function CardPage() {
       </section>
 
       {/* ФОРМА */}
-      <section id="card-form" className="py-20 px-4" style={{ background: "rgba(234,128,52,0.05)" }}>
+      <section id="card-form" className="py-20 px-4" style={{ background: "rgba(16,185,129,0.05)" }}>
         <div className="max-w-xl mx-auto">
-          <h2 className="font-oswald text-4xl font-bold text-white text-center mb-3">
+          <h2 className="font-oswald text-4xl font-bold text-emerald-950 text-center mb-3">
             Заявка на <span className="gradient-text">карту</span>
           </h2>
-          <p className="text-white/50 text-center mb-10">Заполните форму — ответим за 15 минут</p>
+          <p className="text-emerald-950/50 text-center mb-10">Заполните форму — ответим за 15 минут</p>
 
           {submitted ? (
             <div className="glass rounded-2xl p-10 text-center">
               <div className="w-16 h-16 btn-neon rounded-2xl flex items-center justify-center mx-auto mb-5">
                 <Icon name="CheckCircle" size={32} className="text-white" />
               </div>
-              <h3 className="font-oswald text-2xl text-white font-bold mb-2">Заявка принята!</h3>
-              <p className="text-white/60">Наш специалист свяжется с вами в течение 15 минут по номеру <strong className="text-white">{form.phone}</strong></p>
+              <h3 className="font-oswald text-2xl text-emerald-950 font-bold mb-2">Заявка принята!</h3>
+              <p className="text-emerald-950/60">Наш специалист свяжется с вами в течение 15 минут по номеру <strong className="text-emerald-950">{form.phone}</strong></p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="glass rounded-2xl p-6 space-y-4">
               <div>
-                <label className="text-white/70 text-sm mb-2 block">ФИО</label>
+                <label className="text-emerald-950/70 text-sm mb-2 block">ФИО</label>
                 <input
                   type="text"
                   placeholder="Иванов Иван Иванович"
                   value={form.fullName}
                   onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                   required
-                  className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors"
-                  style={{ background: "rgba(255,255,255,0.05)" }}
+                  className="w-full rounded-xl px-4 py-3.5 text-emerald-950 placeholder-emerald-900/30 outline-none border border-emerald-900/15 focus:border-emerald-500 transition-colors"
+                  style={{ background: "rgba(16,185,129,0.05)" }}
                 />
               </div>
               <div>
-                <label className="text-white/70 text-sm mb-2 block">Телефон</label>
+                <label className="text-emerald-950/70 text-sm mb-2 block">Телефон</label>
                 <input
                   type="tel"
                   placeholder="+7 (999) 000-00-00"
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   required
-                  className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors"
-                  style={{ background: "rgba(255,255,255,0.05)" }}
+                  className="w-full rounded-xl px-4 py-3.5 text-emerald-950 placeholder-emerald-900/30 outline-none border border-emerald-900/15 focus:border-emerald-500 transition-colors"
+                  style={{ background: "rgba(16,185,129,0.05)" }}
                 />
               </div>
               <div>
-                <label className="text-white/70 text-sm mb-2 block">Email</label>
+                <label className="text-emerald-950/70 text-sm mb-2 block">Email</label>
                 <input
                   type="email"
                   placeholder="example@mail.ru"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   required
-                  className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors"
-                  style={{ background: "rgba(255,255,255,0.05)" }}
+                  className="w-full rounded-xl px-4 py-3.5 text-emerald-950 placeholder-emerald-900/30 outline-none border border-emerald-900/15 focus:border-emerald-500 transition-colors"
+                  style={{ background: "rgba(16,185,129,0.05)" }}
                 />
               </div>
-              <div className="rounded-2xl border border-orange-500/40 overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(234,128,52,0.15), rgba(240,153,74,0.08))" }}>
-                <div className="flex items-center gap-2 px-5 pt-4 pb-3 border-b border-white/10">
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(234,128,52,0.4)" }}>
-                    <Icon name="CreditCard" size={14} className="text-orange-300" />
+              <div className="rounded-2xl border border-emerald-500/40 overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.15), rgba(20,184,166,0.08))" }}>
+                <div className="flex items-center gap-2 px-5 pt-4 pb-3 border-b border-emerald-900/15">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(16,185,129,0.4)" }}>
+                    <Icon name="CreditCard" size={14} className="text-emerald-600" />
                   </div>
-                  <span className="text-white/80 text-sm font-medium">Желаемый лимит</span>
+                  <span className="text-emerald-950/80 text-sm font-medium">Желаемый лимит</span>
                 </div>
                 <div className="px-5 py-4">
                   <div className="flex justify-between mb-2">
-                    <span className="text-white/60 text-sm">Лимит карты</span>
+                    <span className="text-emerald-950/60 text-sm">Лимит карты</span>
                     <span className="font-bold text-base gradient-text">{limitVal.toLocaleString("ru-RU")} ₽</span>
                   </div>
                   <input
@@ -227,9 +227,9 @@ export default function CardPage() {
                     value={limitVal}
                     onChange={(e) => { const v = Number(e.target.value); setLimitVal(v); setForm({ ...form, limit: String(v) }); }}
                     className="slider-custom w-full"
-                    style={{ background: `linear-gradient(to right, #EA8034 ${((limitVal - 5000) / (200000 - 5000)) * 100}%, rgba(234,128,52,0.2) ${((limitVal - 5000) / (200000 - 5000)) * 100}%)` }}
+                    style={{ background: `linear-gradient(to right, #10b981 ${((limitVal - 5000) / (200000 - 5000)) * 100}%, rgba(16,185,129,0.2) ${((limitVal - 5000) / (200000 - 5000)) * 100}%)` }}
                   />
-                  <div className="flex justify-between text-xs text-white/30 mt-1">
+                  <div className="flex justify-between text-xs text-emerald-950/30 mt-1">
                     <span>5 000 ₽</span>
                     <span>200 000 ₽</span>
                   </div>
@@ -252,8 +252,8 @@ export default function CardPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="py-8 px-4 text-center border-t" style={{ borderColor: "rgba(240,153,74,0.15)" }}>
-        <p className="text-white/30 text-sm">© 2024 РУСФИНАНС 24 · Лицензия ЦБ РФ · Все права защищены</p>
+      <footer className="py-8 px-4 text-center border-t" style={{ borderColor: "rgba(20,184,166,0.15)" }}>
+        <p className="text-emerald-950/30 text-sm">© 2024 РУСФИНАНС 24 · Лицензия ЦБ РФ · Все права защищены</p>
       </footer>
     </div>
   );

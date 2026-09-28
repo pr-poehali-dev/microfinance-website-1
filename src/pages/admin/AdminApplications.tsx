@@ -147,16 +147,16 @@ export default function AdminApplications({
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
         {([
           ["pending","Ожидают","Clock","#f59e0b"],
-          ["creditdoctor","💊 Кред. Доктор","HeartPulse","linear-gradient(135deg,#f0994a,#ec4899)"],
+          ["creditdoctor","💊 Кред. Доктор","HeartPulse","linear-gradient(135deg,#14b8a6,#ec4899)"],
           ["postponed","Отложенные","PhoneMissed","#60a5fa"],
           ["approved","Одобренные","CheckCircle","#22c55e"],
-          ["paid_loans","Погашенные","BadgeCheck","#fdba74"],
+          ["paid_loans","Погашенные","BadgeCheck","#14b8a6"],
           ["rejected","Отклонённые","XCircle","#ef4444"],
         ] as const).map(([f, label, icon, color]) => (
           <button key={f} onClick={() => setAppFilter(f)}
             style={{ padding: "8px 18px", borderRadius: 12, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 8,
-              background: appFilter === f ? color : "rgba(255,255,255,0.07)", color: appFilter === f ? "white" : "rgba(255,255,255,0.5)",
-              boxShadow: appFilter === f && f === "creditdoctor" ? "0 0 14px rgba(240,153,74,0.4)" : "none" }}>
+              background: appFilter === f ? color : "rgba(2,44,34,0.07)", color: appFilter === f ? "white" : "rgba(2,44,34,0.5)",
+              boxShadow: appFilter === f && f === "creditdoctor" ? "0 0 14px rgba(16,185,129,0.4)" : "none" }}>
             <Icon name={icon} size={14} />{label}
           </button>
         ))}
@@ -164,10 +164,10 @@ export default function AdminApplications({
           placeholder="Поиск по имени, телефону, email..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "8px 14px", color: "white", fontSize: 14, outline: "none", minWidth: 220, flex: 1 }}
+          style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.12)", borderRadius: 10, padding: "8px 14px", color: "#022c22", fontSize: 14, outline: "none", minWidth: 220, flex: 1 }}
         />
         {search && (
-          <button onClick={() => setSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", padding: 4 }}>
+          <button onClick={() => setSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(2,44,34,0.4)", padding: 4 }}>
             <Icon name="X" size={16} />
           </button>
         )}
@@ -175,39 +175,39 @@ export default function AdminApplications({
 
       {/* Фильтр по дате */}
       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-        <Icon name="CalendarDays" size={15} style={{ color: "rgba(255,255,255,0.35)" }} />
+        <Icon name="CalendarDays" size={15} style={{ color: "rgba(2,44,34,0.35)" }} />
         {([["all","Все время"],["today","Сегодня"],["week","7 дней"],["month","Месяц"],["custom","Период"]] as const).map(([f, label]) => (
           <button key={f} onClick={() => setDateFilter(f)}
             style={{ padding: "6px 14px", borderRadius: 8, cursor: "pointer", fontWeight: 600, fontSize: 13,
-              background: dateFilter === f ? "rgba(234,128,52,0.4)" : "rgba(255,255,255,0.05)",
-              color: dateFilter === f ? "#e9d5ff" : "rgba(255,255,255,0.4)",
-              border: dateFilter === f ? "1px solid rgba(234,128,52,0.5)" : "1px solid transparent" }}>
+              background: dateFilter === f ? "rgba(16,185,129,0.4)" : "rgba(16,185,129,0.05)",
+              color: dateFilter === f ? "white" : "rgba(2,44,34,0.4)",
+              border: dateFilter === f ? "1px solid rgba(16,185,129,0.5)" : "1px solid transparent" }}>
             {label}
           </button>
         ))}
         {dateFilter === "custom" && (
           <>
             <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: "6px 10px", color: "white", fontSize: 13, outline: "none", colorScheme: "dark" }} />
-            <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>—</span>
+              style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.12)", borderRadius: 8, padding: "6px 10px", color: "#022c22", fontSize: 13, outline: "none", colorScheme: "dark" }} />
+            <span style={{ color: "rgba(2,44,34,0.3)", fontSize: 13 }}>—</span>
             <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: "6px 10px", color: "white", fontSize: 13, outline: "none", colorScheme: "dark" }} />
+              style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.12)", borderRadius: 8, padding: "6px 10px", color: "#022c22", fontSize: 13, outline: "none", colorScheme: "dark" }} />
           </>
         )}
         {dateFilter !== "all" && (
-          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>· {filtered.length} заявок</span>
+          <span style={{ color: "rgba(2,44,34,0.3)", fontSize: 13 }}>· {filtered.length} заявок</span>
         )}
       </div>
 
       {appMsg && <div style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)", borderRadius: 12, padding: "12px 16px", color: "#4ade80", marginBottom: 16, fontSize: 14 }}>{appMsg}</div>}
 
-      {appsLoading && <div style={{ textAlign: "center", padding: 60 }}><Icon name="Loader2" size={36} className="animate-spin text-orange-400" /></div>}
+      {appsLoading && <div style={{ textAlign: "center", padding: 60 }}><Icon name="Loader2" size={36} className="animate-spin text-emerald-600" /></div>}
 
       {!appsLoading && apps.length === 0 && (
-        <div style={{ ...GLASS, padding: 60, textAlign: "center", color: "rgba(255,255,255,0.3)" }}>Заявок нет</div>
+        <div style={{ ...GLASS, padding: 60, textAlign: "center", color: "rgba(2,44,34,0.3)" }}>Заявок нет</div>
       )}
       {!appsLoading && apps.length > 0 && filtered.length === 0 && (
-        <div style={{ ...GLASS, padding: 40, textAlign: "center", color: "rgba(255,255,255,0.3)" }}>Ничего не найдено по запросу «{search}»</div>
+        <div style={{ ...GLASS, padding: 40, textAlign: "center", color: "rgba(2,44,34,0.3)" }}>Ничего не найдено по запросу «{search}»</div>
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -216,9 +216,9 @@ export default function AdminApplications({
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
-                  <span style={{ color: "white", fontWeight: 700, fontSize: 18 }}>{app.fullName || app.phone}</span>
+                  <span style={{ color: "#022c22", fontWeight: 700, fontSize: 18 }}>{app.fullName || app.phone}</span>
                   {app.isCreditDoctor && (
-                    <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,rgba(240,153,74,0.3),rgba(236,72,153,0.25))", color: "#fb923c", border: "1px solid rgba(240,153,74,0.5)", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,rgba(16,185,129,0.3),rgba(236,72,153,0.25))", color: "#0f766e", border: "1px solid rgba(16,185,129,0.5)", display: "inline-flex", alignItems: "center", gap: 5 }}>
                       💊 Кредитный Доктор
                     </span>
                   )}
@@ -228,7 +228,7 @@ export default function AdminApplications({
                     </span>
                   )}
                   {app.loanStatus === "paid" && (
-                    <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(253,186,116,0.18)", color: "#fdba74", border: "1px solid rgba(253,186,116,0.4)", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(20,184,166,0.18)", color: "#14b8a6", border: "1px solid rgba(20,184,166,0.4)", display: "inline-flex", alignItems: "center", gap: 5 }}>
                       <Icon name="BadgeCheck" size={12} />Займ погашен
                     </span>
                   )}
@@ -240,15 +240,15 @@ export default function AdminApplications({
                       )}
                     </span>
                   )}
-                  <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>№{fmtAppId(app.id)} · {app.createdAt}</span>
-                  {app.telegramId && <span style={{ color: "#fdba74", fontSize: 13 }}>@{app.telegramId}</span>}
+                  <span style={{ color: "rgba(2,44,34,0.3)", fontSize: 13 }}>№{fmtAppId(app.id)} · {app.createdAt}</span>
+                  {app.telegramId && <span style={{ color: "#14b8a6", fontSize: 13 }}>@{app.telegramId}</span>}
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px,1fr))", gap: 12, marginBottom: 12 }}>
-                  <div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Телефон</div><div style={{ color: "white", fontWeight: 600 }}>{app.phone}</div></div>
-                  <div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Email</div><div style={{ color: "white", fontWeight: 600 }}>{app.email||"—"}</div></div>
+                  <div><div style={{ color: "rgba(2,44,34,0.4)", fontSize: 11, marginBottom: 2 }}>Телефон</div><div style={{ color: "#022c22", fontWeight: 600 }}>{app.phone}</div></div>
+                  <div><div style={{ color: "rgba(2,44,34,0.4)", fontSize: 11, marginBottom: 2 }}>Email</div><div style={{ color: "#022c22", fontWeight: 600 }}>{app.email||"—"}</div></div>
                   <div>
-                    <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Запрошено</div>
-                    <div style={{ color: "white", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 11, marginBottom: 2 }}>Запрошено</div>
+                    <div style={{ color: "#022c22", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
                       {app.amount.toLocaleString("ru-RU")} ₽
                       {app.approvedAmount !== null && app.approvedAmount !== app.amount && (
                         <span style={{ color: "#fbbf24", fontSize: 11, fontWeight: 500 }}>→ одобрено</span>
@@ -261,7 +261,7 @@ export default function AdminApplications({
                       <div style={{ color: "#fbbf24", fontWeight: 700 }}>{app.approvedAmount!.toLocaleString("ru-RU")} ₽</div>
                     </div>
                   )}
-                  <div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Срок</div><div style={{ color: "white", fontWeight: 600 }}>{app.days} дн.</div></div>
+                  <div><div style={{ color: "rgba(2,44,34,0.4)", fontSize: 11, marginBottom: 2 }}>Срок</div><div style={{ color: "#022c22", fontWeight: 600 }}>{app.days} дн.</div></div>
                 </div>
 
                 {/* История клиента — сколько раньше брал займов, как гасил */}
@@ -272,20 +272,20 @@ export default function AdminApplications({
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: 8 }}>
                       <div>
-                        <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Займов брал</div>
-                        <div style={{ color: "white", fontWeight: 700 }}>{app.prevLoansCount}</div>
+                        <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 11, marginBottom: 2 }}>Займов брал</div>
+                        <div style={{ color: "#022c22", fontWeight: 700 }}>{app.prevLoansCount}</div>
                       </div>
                       <div>
-                        <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Погашено вовремя</div>
+                        <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 11, marginBottom: 2 }}>Погашено вовремя</div>
                         <div style={{ color: "#4ade80", fontWeight: 700 }}>{app.prevPaidCount}</div>
                       </div>
                       <div>
-                        <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>С просрочкой</div>
-                        <div style={{ color: app.prevOverdueCount > 0 ? "#f87171" : "rgba(255,255,255,0.4)", fontWeight: 700 }}>{app.prevOverdueCount}</div>
+                        <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 11, marginBottom: 2 }}>С просрочкой</div>
+                        <div style={{ color: app.prevOverdueCount > 0 ? "#f87171" : "rgba(2,44,34,0.4)", fontWeight: 700 }}>{app.prevOverdueCount}</div>
                       </div>
                       <div>
-                        <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Всего занимал</div>
-                        <div style={{ color: "white", fontWeight: 700 }}>{app.totalBorrowed.toLocaleString("ru-RU")} ₽</div>
+                        <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 11, marginBottom: 2 }}>Всего занимал</div>
+                        <div style={{ color: "#022c22", fontWeight: 700 }}>{app.totalBorrowed.toLocaleString("ru-RU")} ₽</div>
                       </div>
                     </div>
                   </div>
@@ -293,8 +293,8 @@ export default function AdminApplications({
 
                 {/* Блок условий партнёра */}
                 {app.status === "partner_card" && (app.approvedAmount || app.approvedDays || app.approvedRate) && (
-                  <div style={{ background: "rgba(234,128,52,0.07)", border: "1px solid rgba(234,128,52,0.3)", borderRadius: 12, padding: "14px 16px", marginBottom: 12 }}>
-                    <div style={{ color: "#fbbf7a", fontWeight: 700, fontSize: 13, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 12, padding: "14px 16px", marginBottom: 12 }}>
+                    <div style={{ color: "#0f766e", fontWeight: 700, fontSize: 13, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
                       <Icon name="CreditCard" size={14} />Условия займа (партнёр)
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: 8 }}>
@@ -311,14 +311,14 @@ export default function AdminApplications({
                         })()],
                       ].map(([label, value]) => (
                         <div key={label}>
-                          <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>{label}</div>
-                          <div style={{ color: "#e9d5ff", fontSize: 13, fontWeight: 600 }}>{value}</div>
+                          <div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>{label}</div>
+                          <div style={{ color: "#022c22", fontSize: 13, fontWeight: 600 }}>{value}</div>
                         </div>
                       ))}
                     </div>
                     {app.partnerCardUrl && (
-                      <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(234,128,52,0.2)" }}>
-                        <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 4 }}>Ссылка на карту партнёра</div>
+                      <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(16,185,129,0.2)" }}>
+                        <div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 4 }}>Ссылка на карту партнёра</div>
                         <a href={app.partnerCardUrl} target="_blank" rel="noopener noreferrer"
                           style={{ color: "#38bdf8", fontSize: 13, fontWeight: 600, wordBreak: "break-all" }}>
                           {app.partnerCardUrl}
@@ -349,8 +349,8 @@ export default function AdminApplications({
                         ...(app.cardNumber ? [["Карта/СБП", app.cardNumber]] : []),
                       ].map(([label, value]) => (
                         <div key={label}>
-                          <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>{label}</div>
-                          <div style={{ color: "white", fontSize: 13, fontWeight: 600 }}>{value}</div>
+                          <div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>{label}</div>
+                          <div style={{ color: "#022c22", fontSize: 13, fontWeight: 600 }}>{value}</div>
                         </div>
                       ))}
                     </div>
@@ -359,13 +359,13 @@ export default function AdminApplications({
 
                 {/* Данные для входа клиента */}
                 {app.clientPassword && (
-                  <div style={{ background: "rgba(234,128,52,0.1)", border: "1px solid rgba(234,128,52,0.35)", borderRadius: 12, padding: "14px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-                    <Icon name="KeyRound" size={18} style={{ color: "#fdba74", flexShrink: 0 }} />
+                  <div style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.35)", borderRadius: 12, padding: "14px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                    <Icon name="KeyRound" size={18} style={{ color: "#14b8a6", flexShrink: 0 }} />
                     <div style={{ flex: 1 }}>
-                      <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 4 }}>Данные для входа в личный кабинет</div>
+                      <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 11, marginBottom: 4 }}>Данные для входа в личный кабинет</div>
                       <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-                        <span style={{ color: "white", fontSize: 14 }}>📞 <b>{app.phone}</b></span>
-                        <span style={{ color: "white", fontSize: 14 }}>🔑 Пароль: <b style={{ color: "#fdba74", letterSpacing: 1 }}>{app.clientPassword}</b></span>
+                        <span style={{ color: "#022c22", fontSize: 14 }}>📞 <b>{app.phone}</b></span>
+                        <span style={{ color: "#022c22", fontSize: 14 }}>🔑 Пароль: <b style={{ color: "#14b8a6", letterSpacing: 1 }}>{app.clientPassword}</b></span>
                       </div>
                     </div>
                   </div>
@@ -373,13 +373,13 @@ export default function AdminApplications({
 
                 <AdminAppTimeline app={app} />
 
-                <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 12, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px,1fr))", gap: 10, marginBottom: 12 }}>
+                <div style={{ background: "rgba(16,185,129,0.04)", borderRadius: 10, padding: 12, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px,1fr))", gap: 10, marginBottom: 12 }}>
                   {[["Серия/Номер", `${app.passportSeries} ${app.passportNumber}`], ["Дата выдачи", app.passportDate||"—"], ["Код", app.passportCode||"—"], ["Дата рождения", app.birthDate||"—"]].map(([l, v]) => (
-                    <div key={l}><div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>{l}</div><div style={{ color: "white", fontSize: 13 }}>{v}</div></div>
+                    <div key={l}><div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>{l}</div><div style={{ color: "#022c22", fontSize: 13 }}>{v}</div></div>
                   ))}
-                  {app.passportBy && <div style={{ gridColumn: "1/-1" }}><div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>Кем выдан</div><div style={{ color: "white", fontSize: 13 }}>{app.passportBy}</div></div>}
-                  {app.birthPlace && <div style={{ gridColumn: "1/-1" }}><div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>Место рождения</div><div style={{ color: "white", fontSize: 13 }}>{app.birthPlace}</div></div>}
-                  {app.snils && <div><div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>СНИЛС</div><div style={{ color: "#fbbf24", fontSize: 13, fontWeight: 600, letterSpacing: 1 }}>{app.snils}</div></div>}
+                  {app.passportBy && <div style={{ gridColumn: "1/-1" }}><div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>Кем выдан</div><div style={{ color: "#022c22", fontSize: 13 }}>{app.passportBy}</div></div>}
+                  {app.birthPlace && <div style={{ gridColumn: "1/-1" }}><div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>Место рождения</div><div style={{ color: "#022c22", fontSize: 13 }}>{app.birthPlace}</div></div>}
+                  {app.snils && <div><div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>СНИЛС</div><div style={{ color: "#fbbf24", fontSize: 13, fontWeight: 600, letterSpacing: 1 }}>{app.snils}</div></div>}
                 </div>
 
                 {/* Документы */}
@@ -388,7 +388,7 @@ export default function AdminApplications({
                     const url = app[key as keyof App] as string;
                     return url ? (
                       <button key={key} onClick={() => setLightbox(url)}
-                        style={{ background: "rgba(234,128,52,0.2)", border: "1px solid rgba(234,128,52,0.4)", borderRadius: 8, padding: "6px 12px", color: "#fbbf7a", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                        style={{ background: "rgba(16,185,129,0.2)", border: "1px solid rgba(16,185,129,0.4)", borderRadius: 8, padding: "6px 12px", color: "#0f766e", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
                         <Icon name="Image" size={12} />{label}
                       </button>
                     ) : null;
@@ -404,13 +404,13 @@ export default function AdminApplications({
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px,1fr))", gap: 8 }}>
                       {app.workPhone && (
                         <div>
-                          <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>Рабочий телефон</div>
-                          <div style={{ color: "white", fontSize: 13, fontWeight: 600 }}>{app.workPhone}</div>
+                          <div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>Рабочий телефон</div>
+                          <div style={{ color: "#022c22", fontSize: 13, fontWeight: 600 }}>{app.workPhone}</div>
                         </div>
                       )}
                       {app.cardNumberTransfer && (
                         <div style={{ gridColumn: app.workPhone ? "auto" : "1/-1" }}>
-                          <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 2 }}>Карта / СБП для перевода</div>
+                          <div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>Карта / СБП для перевода</div>
                           <div style={{ color: "#4ade80", fontSize: 13, fontWeight: 700, letterSpacing: 0.5 }}>{app.cardNumberTransfer}</div>
                         </div>
                       )}
@@ -424,7 +424,7 @@ export default function AdminApplications({
                   const set = (k: keyof SbFields) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
                     setSbEdits(p => ({ ...p, [app.id]: { ...getSb(app), [k]: e.target.value } }));
                   const inp = (style?: React.CSSProperties) => ({
-                    style: { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, padding: "7px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const, outline: "none", ...style },
+                    style: { background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.15)", borderRadius: 8, padding: "7px 10px", color: "#022c22", fontSize: 13, width: "100%", boxSizing: "border-box" as const, outline: "none", ...style },
                   });
                   return (
                     <div style={{ background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: 12, padding: 14 }}>
@@ -434,14 +434,14 @@ export default function AdminApplications({
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px,1fr))", gap: 10, marginBottom: 10 }}>
                         {([["workplace","Место работы"],["position","Должность"],["activeLoans","Действующие займы"],["salary","Зарплата (₽)"],["contactPerson","Контактное лицо"],["cardNumber","Карта / СБП"]] as [keyof SbFields, string][]).map(([k, label]) => (
                           <div key={k}>
-                            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 4 }}>{label}</div>
+                            <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 11, marginBottom: 4 }}>{label}</div>
                             <input value={sb[k]} onChange={set(k)} placeholder={label} {...inp()} />
                           </div>
                         ))}
                         <div>
-                          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 4 }}>Оценка СБ</div>
+                          <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 11, marginBottom: 4 }}>Оценка СБ</div>
                           <select value={sb.sbScore} onChange={set("sbScore")}
-                            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, padding: "7px 10px", color: "white", fontSize: 13, width: "100%", outline: "none" }}>
+                            style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.15)", borderRadius: 8, padding: "7px 10px", color: "#022c22", fontSize: 13, width: "100%", outline: "none" }}>
                             <option value="">— Не выбрано —</option>
                             <option value="✅ Одобрен">✅ Одобрен</option>
                             <option value="⚠️ Под вопросом">⚠️ Под вопросом</option>
@@ -527,7 +527,7 @@ export default function AdminApplications({
                   <AdminCardControl app={app} token={token} onDone={onRefresh} />
 
                   <button onClick={() => onRestore(app.id)}
-                    style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+                    style={{ background: "rgba(16,185,129,0.07)", color: "rgba(2,44,34,0.5)", border: "1px solid rgba(16,185,129,0.15)", borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
                     <Icon name="RotateCcw" size={14} />Вернуть в ожидание
                   </button>
                 </div>
@@ -602,7 +602,7 @@ export default function AdminApplications({
                     </button>
                   )}
                   <button onClick={() => onRestore(app.id)}
-                    style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+                    style={{ background: "rgba(16,185,129,0.07)", color: "rgba(2,44,34,0.5)", border: "1px solid rgba(16,185,129,0.15)", borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
                     <Icon name="RotateCcw" size={14} />Вернуть в ожидание
                   </button>
                 </div>
@@ -613,21 +613,21 @@ export default function AdminApplications({
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 140 }}>
                   {selApp?.id === app.id && appAction === "approve" ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>Сумма займа (₽)</label>
+                      <label style={{ color: "rgba(2,44,34,0.5)", fontSize: 12 }}>Сумма займа (₽)</label>
                       <input type="number" value={appAmount} onChange={e => setAppAmount(e.target.value)} min="1"
                         placeholder={String(app.amount)}
-                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: 130, boxSizing: "border-box" }} />
-                      <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>Срок, дней</label>
+                        style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 10, padding: "10px 12px", color: "#022c22", fontSize: 15, width: 130, boxSizing: "border-box" }} />
+                      <label style={{ color: "rgba(2,44,34,0.5)", fontSize: 12 }}>Срок, дней</label>
                       <input type="number" value={appDays} onChange={e => setAppDays(e.target.value)} min="1"
                         placeholder={String(app.days)}
-                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: 130, boxSizing: "border-box" }} />
-                      <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>Ставка %/день</label>
+                        style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 10, padding: "10px 12px", color: "#022c22", fontSize: 15, width: 130, boxSizing: "border-box" }} />
+                      <label style={{ color: "rgba(2,44,34,0.5)", fontSize: 12 }}>Ставка %/день</label>
                       <input type="number" value={appRate} onChange={e => setAppRate(e.target.value)} step="0.1" min="0.1"
-                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 15, width: 130, boxSizing: "border-box" }} />
-                      <label style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>Ссылка на карту партнёра (необязательно)</label>
+                        style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 10, padding: "10px 12px", color: "#022c22", fontSize: 15, width: 130, boxSizing: "border-box" }} />
+                      <label style={{ color: "rgba(2,44,34,0.5)", fontSize: 12 }}>Ссылка на карту партнёра (необязательно)</label>
                       <input type="text" value={appPartnerUrl} onChange={e => setAppPartnerUrl(e.target.value)}
                         placeholder="https://..."
-                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 13, width: 130, boxSizing: "border-box" }} />
+                        style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 10, padding: "10px 12px", color: "#022c22", fontSize: 13, width: 130, boxSizing: "border-box" }} />
                       {appRate && <div style={{ color: "#4ade80", fontSize: 13 }}>К возврату: {Math.round((appAmount ? +appAmount : app.amount) * (1 + +appRate/100 * (appDays ? +appDays : app.days))).toLocaleString("ru-RU")} ₽</div>}
                       {appErr2 && <p style={{ color: "#f87171", fontSize: 12, margin: 0 }}>{appErr2}</p>}
                       <button onClick={onApprove} disabled={appProcessing}
@@ -635,21 +635,21 @@ export default function AdminApplications({
                         {appProcessing ? "..." : "Подтвердить"}
                       </button>
                       <button onClick={() => { setSelApp(null); setAppAction(null); setAppAmount(""); setAppDays(""); setAppPartnerUrl(""); }}
-                        style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "none", borderRadius: 10, padding: "8px", cursor: "pointer", fontSize: 13 }}>
+                        style={{ background: "rgba(16,185,129,0.07)", color: "rgba(2,44,34,0.5)", border: "none", borderRadius: 10, padding: "8px", cursor: "pointer", fontSize: 13 }}>
                         Отмена
                       </button>
                     </div>
                   ) : selApp?.id === app.id && appAction === "reject" ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       <textarea placeholder="Причина отказа" value={rejectReason} onChange={e => setRejectReason(e.target.value)} rows={3}
-                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "10px 12px", color: "white", fontSize: 13, resize: "none", width: 130, boxSizing: "border-box" }} />
+                        style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 10, padding: "10px 12px", color: "#022c22", fontSize: 13, resize: "none", width: 130, boxSizing: "border-box" }} />
                       {appErr2 && <p style={{ color: "#f87171", fontSize: 12, margin: 0 }}>{appErr2}</p>}
                       <button onClick={onReject} disabled={appProcessing}
                         style={{ background: "linear-gradient(135deg,#dc2626,#ef4444)", color: "white", border: "none", borderRadius: 10, padding: "10px", cursor: "pointer", fontWeight: 700, fontSize: 14 }}>
                         {appProcessing ? "..." : "Отклонить"}
                       </button>
                       <button onClick={() => { setSelApp(null); setAppAction(null); }}
-                        style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "none", borderRadius: 10, padding: "8px", cursor: "pointer", fontSize: 13 }}>
+                        style={{ background: "rgba(16,185,129,0.07)", color: "rgba(2,44,34,0.5)", border: "none", borderRadius: 10, padding: "8px", cursor: "pointer", fontSize: 13 }}>
                         Отмена
                       </button>
                     </div>
@@ -661,30 +661,30 @@ export default function AdminApplications({
                       </button>
                       {cdOpen === app.id ? (
                         <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 140 }}>
-                          <div style={{ color: "#fb923c", fontSize: 12, fontWeight: 700, marginBottom: 2 }}>💊 Кредитный Доктор</div>
+                          <div style={{ color: "#0f766e", fontSize: 12, fontWeight: 700, marginBottom: 2 }}>💊 Кредитный Доктор</div>
                           <input
                             type="number" placeholder="Сумма, ₽"
                             value={cdForm[app.id]?.amount ?? ""}
                             onChange={e => setCdForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], amount: e.target.value } }))}
-                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                            style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.4)", borderRadius: 8, padding: "8px 10px", color: "#022c22", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
                           />
                           <input
                             type="number" placeholder="Срок, дней"
                             value={cdForm[app.id]?.days ?? ""}
                             onChange={e => setCdForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], days: e.target.value } }))}
-                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                            style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.4)", borderRadius: 8, padding: "8px 10px", color: "#022c22", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
                           />
                           <input
                             type="number" placeholder="Ставка %/день" step="0.1"
                             value={cdForm[app.id]?.rate ?? ""}
                             onChange={e => setCdForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], rate: e.target.value } }))}
-                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                            style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.4)", borderRadius: 8, padding: "8px 10px", color: "#022c22", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
                           />
                           <input
                             type="text" placeholder="Ссылка на карту партнёра"
                             value={cdForm[app.id]?.partnerCardUrl ?? ""}
                             onChange={e => setCdForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], partnerCardUrl: e.target.value } }))}
-                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                            style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.4)", borderRadius: 8, padding: "8px 10px", color: "#022c22", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
                           />
                           <button
                             onClick={() => {
@@ -697,11 +697,11 @@ export default function AdminApplications({
                               setCdOpen(null);
                             }}
                             disabled={appProcessing}
-                            style={{ background: "linear-gradient(135deg,#f0994a,#ec4899)", color: "white", border: "none", borderRadius: 8, padding: "9px 10px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                            style={{ background: "linear-gradient(135deg,#14b8a6,#ec4899)", color: "white", border: "none", borderRadius: 8, padding: "9px 10px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
                             <Icon name="Send" size={14} />{appProcessing ? "..." : "Одобрить"}
                           </button>
                           <button onClick={() => setCdOpen(null)}
-                            style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "none", borderRadius: 8, padding: "7px", cursor: "pointer", fontSize: 12 }}>
+                            style={{ background: "rgba(16,185,129,0.07)", color: "rgba(2,44,34,0.5)", border: "none", borderRadius: 8, padding: "7px", cursor: "pointer", fontSize: 12 }}>
                             Отмена
                           </button>
                         </div>
@@ -710,7 +710,7 @@ export default function AdminApplications({
                           setCdOpen(app.id);
                           setCdForm(prev => ({ ...prev, [app.id]: { amount: String(app.approvedAmount ?? app.amount ?? ""), days: String(app.approvedDays ?? app.days ?? ""), rate: String(app.approvedRate ? app.approvedRate * 100 : "1"), partnerCardUrl: app.partnerCardUrl || "" } }));
                         }}
-                          style={{ background: "linear-gradient(135deg,#f0994a,#ec4899)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6, boxShadow: "0 0 12px rgba(240,153,74,0.3)" }}>
+                          style={{ background: "linear-gradient(135deg,#14b8a6,#ec4899)", color: "white", border: "none", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6, boxShadow: "0 0 12px rgba(16,185,129,0.3)" }}>
                           💊 Кред. Доктор + карта партнёра
                         </button>
                       )}
@@ -721,25 +721,25 @@ export default function AdminApplications({
                             type="number" placeholder="Сумма, ₽"
                             value={paForm[app.id]?.amount ?? ""}
                             onChange={e => setPaForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], amount: e.target.value } }))}
-                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(56,189,248,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                            style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(56,189,248,0.4)", borderRadius: 8, padding: "8px 10px", color: "#022c22", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
                           />
                           <input
                             type="number" placeholder="Срок, дней"
                             value={paForm[app.id]?.days ?? ""}
                             onChange={e => setPaForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], days: e.target.value } }))}
-                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(56,189,248,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                            style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(56,189,248,0.4)", borderRadius: 8, padding: "8px 10px", color: "#022c22", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
                           />
                           <input
                             type="number" placeholder="Ставка %/день" step="0.1"
                             value={paForm[app.id]?.rate ?? ""}
                             onChange={e => setPaForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], rate: e.target.value } }))}
-                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(56,189,248,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                            style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(56,189,248,0.4)", borderRadius: 8, padding: "8px 10px", color: "#022c22", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
                           />
                           <input
                             type="text" placeholder="Ссылка на карту партнёра"
                             value={paForm[app.id]?.partnerCardUrl ?? ""}
                             onChange={e => setPaForm(prev => ({ ...prev, [app.id]: { ...prev[app.id], partnerCardUrl: e.target.value } }))}
-                            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(56,189,248,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+                            style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(56,189,248,0.4)", borderRadius: 8, padding: "8px 10px", color: "#022c22", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
                           />
                           <button
                             onClick={() => {
@@ -756,7 +756,7 @@ export default function AdminApplications({
                             <Icon name="Send" size={14} />{appProcessing ? "..." : "Одобрить"}
                           </button>
                           <button onClick={() => setPaOpen(null)}
-                            style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "none", borderRadius: 8, padding: "7px", cursor: "pointer", fontSize: 12 }}>
+                            style={{ background: "rgba(16,185,129,0.07)", color: "rgba(2,44,34,0.5)", border: "none", borderRadius: 8, padding: "7px", cursor: "pointer", fontSize: 12 }}>
                             Отмена
                           </button>
                         </div>
@@ -784,7 +784,7 @@ export default function AdminApplications({
             </div>
 
             {/* Общие служебные кнопки: видеозвонок, блокировка, удаление */}
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(16,185,129,0.08)" }}>
               {app.videoCallRequested ? (
                 <span style={{ padding: "7px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, background: "rgba(56,189,248,0.15)", color: "#38bdf8", border: "1px solid rgba(56,189,248,0.3)", display: "flex", alignItems: "center", gap: 6 }}>
                   <Icon name="Video" size={13} />Ожидает видеозвонка
@@ -804,13 +804,13 @@ export default function AdminApplications({
               ) : blockOpen === app.id ? (
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <input type="number" value={blockDays} onChange={e => setBlockDays(e.target.value)} min="1" placeholder="Дней"
-                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "6px 8px", color: "white", fontSize: 12, width: 70, boxSizing: "border-box" }} />
+                    style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 8, padding: "6px 8px", color: "#022c22", fontSize: 12, width: 70, boxSizing: "border-box" }} />
                   <button onClick={() => { const d = parseInt(blockDays || "0"); if (d > 0) { onBlockClient(app.phone, d); setBlockOpen(null); } }}
                     style={{ background: "linear-gradient(135deg,#dc2626,#ef4444)", color: "white", border: "none", borderRadius: 8, padding: "7px 10px", cursor: "pointer", fontWeight: 600, fontSize: 12 }}>
                     Заблокировать
                   </button>
                   <button onClick={() => setBlockOpen(null)}
-                    style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "none", borderRadius: 8, padding: "7px 10px", cursor: "pointer", fontSize: 12 }}>
+                    style={{ background: "rgba(16,185,129,0.07)", color: "rgba(2,44,34,0.5)", border: "none", borderRadius: 8, padding: "7px 10px", cursor: "pointer", fontSize: 12 }}>
                     Отмена
                   </button>
                 </div>
@@ -822,7 +822,7 @@ export default function AdminApplications({
               )}
 
               <button onClick={() => onDeleteApplication(app.id)}
-                style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontWeight: 600, fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                style={{ background: "rgba(16,185,129,0.05)", color: "rgba(2,44,34,0.4)", border: "1px solid rgba(16,185,129,0.12)", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontWeight: 600, fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}>
                 <Icon name="Trash2" size={13} />Удалить анкету
               </button>
             </div>

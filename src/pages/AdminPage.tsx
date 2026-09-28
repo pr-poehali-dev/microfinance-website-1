@@ -10,7 +10,7 @@ import AdminCardRequests from "./admin/AdminCardRequests";
 import { App, User, Loan, PURPLE } from "./admin/adminTypes";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
-const S = { background: "#1e110a", minHeight: "100vh" };
+const S = { background: "#ffffff", minHeight: "100vh" };
 
 export default function AdminPage() {
   const [token, setToken] = useState(localStorage.getItem("admin_token") || "");
@@ -278,45 +278,45 @@ export default function AdminPage() {
       )}
 
       {/* NAVBAR */}
-      <div style={{ background: "rgba(30,17,10,0.95)", borderBottom: "1px solid rgba(234,128,52,0.3)", padding: "12px 20px", display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
+      <div style={{ background: "rgba(255,255,255,0.95)", borderBottom: "1px solid rgba(16,185,129,0.3)", padding: "12px 20px", display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
         <div style={{ width: 36, height: 36, ...PURPLE, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Icon name="ShieldCheck" size={18} className="text-white" />
         </div>
-        <span style={{ color: "white", fontWeight: 700, fontSize: 18, flex: 1 }}>РУСФИНАНС 24 Admin</span>
+        <span style={{ color: "#022c22", fontWeight: 700, fontSize: 18, flex: 1 }}>РУСФИНАНС 24 Admin</span>
         <button onClick={() => setTab("apps")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14,
-            background: tab === "apps" ? "linear-gradient(135deg,#ea8034,#f0994a)" : "rgba(255,255,255,0.07)", color: tab === "apps" ? "white" : "rgba(255,255,255,0.5)" }}>
+            background: tab === "apps" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "apps" ? "white" : "rgba(2,44,34,0.5)" }}>
           Заявки {apps.filter(a => a.status === "pending").length > 0 && tab !== "apps" ? `(${apps.filter(a => a.status === "pending").length})` : ""}
         </button>
         <button onClick={() => setTab("clients")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14,
-            background: tab === "clients" ? "linear-gradient(135deg,#ea8034,#f0994a)" : "rgba(255,255,255,0.07)", color: tab === "clients" ? "white" : "rgba(255,255,255,0.5)" }}>
+            background: tab === "clients" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "clients" ? "white" : "rgba(2,44,34,0.5)" }}>
           Клиенты
         </button>
         <button onClick={() => setTab("carloan")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
-            background: tab === "carloan" ? "linear-gradient(135deg,#f59e0b,#ef4444)" : "rgba(255,255,255,0.07)", color: tab === "carloan" ? "white" : "rgba(255,255,255,0.5)" }}>
+            background: tab === "carloan" ? "linear-gradient(135deg,#f59e0b,#ef4444)" : "rgba(16,185,129,0.07)", color: tab === "carloan" ? "white" : "rgba(2,44,34,0.5)" }}>
           🚗 Авто-займы
         </button>
         <button onClick={() => setTab("shoploan")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
-            background: tab === "shoploan" ? "linear-gradient(135deg,#f0994a,#06b6d4)" : "rgba(255,255,255,0.07)", color: tab === "shoploan" ? "white" : "rgba(255,255,255,0.5)" }}>
+            background: tab === "shoploan" ? "linear-gradient(135deg,#14b8a6,#06b6d4)" : "rgba(16,185,129,0.07)", color: tab === "shoploan" ? "white" : "rgba(2,44,34,0.5)" }}>
           🛒 Товарные займы
         </button>
         <button onClick={() => setTab("disbursed")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
-            background: tab === "disbursed" ? "linear-gradient(135deg,#0ea5e9,#38bdf8)" : "rgba(255,255,255,0.07)", color: tab === "disbursed" ? "white" : "rgba(255,255,255,0.5)" }}>
+            background: tab === "disbursed" ? "linear-gradient(135deg,#0ea5e9,#38bdf8)" : "rgba(16,185,129,0.07)", color: tab === "disbursed" ? "white" : "rgba(2,44,34,0.5)" }}>
           💸 Выданные займы
         </button>
         <button onClick={() => setTab("cardrequests")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
-            background: tab === "cardrequests" ? "linear-gradient(135deg,#ea8034,#f0994a)" : "rgba(255,255,255,0.07)", color: tab === "cardrequests" ? "white" : "rgba(255,255,255,0.5)" }}>
+            background: tab === "cardrequests" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "cardrequests" ? "white" : "rgba(2,44,34,0.5)" }}>
           💳 Заявки на карту
         </button>
-        <button onClick={() => { loadApps(); loadUsers(); }} style={{ background: "rgba(255,255,255,0.07)", border: "none", borderRadius: 10, padding: 8, cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
+        <button onClick={() => { loadApps(); loadUsers(); }} style={{ background: "rgba(16,185,129,0.07)", border: "none", borderRadius: 10, padding: 8, cursor: "pointer", color: "rgba(2,44,34,0.5)" }}>
           <Icon name="RefreshCw" size={16} />
         </button>
-        <button onClick={logout} style={{ background: "rgba(255,255,255,0.07)", border: "none", borderRadius: 10, padding: 8, cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
+        <button onClick={logout} style={{ background: "rgba(16,185,129,0.07)", border: "none", borderRadius: 10, padding: 8, cursor: "pointer", color: "rgba(2,44,34,0.5)" }}>
           <Icon name="LogOut" size={16} />
         </button>
       </div>

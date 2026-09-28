@@ -73,35 +73,35 @@ export default function AdminCardControl({ app, token, onDone }: Props) {
   if (open) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 150 }}>
-        <div style={{ color: "#fbbf7a", fontSize: 12, fontWeight: 700, marginBottom: 2 }}>
+        <div style={{ color: "#0f766e", fontSize: 12, fontWeight: 700, marginBottom: 2 }}>
           {mode === "issue" ? "Выдать карту РУСФИНАНС 24" : "Изменить условия карты"}
         </div>
         <input
           type="number" placeholder="Лимит, ₽"
           value={limit}
           onChange={e => setLimit(e.target.value)}
-          style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+          style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.4)", borderRadius: 8, padding: "8px 10px", color: "#022c22", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
         />
         <input
           type="number" placeholder={mode === "edit" ? "Ставка %/нед. (не менять — оставить пустым)" : "Ставка %/нед."} step="0.1"
           value={rate}
           onChange={e => setRate(e.target.value)}
-          style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+          style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.4)", borderRadius: 8, padding: "8px 10px", color: "#022c22", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
         />
         <input
           type="number" placeholder="Срок, дней"
           value={days}
           onChange={e => setDays(e.target.value)}
-          style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(240,153,74,0.4)", borderRadius: 8, padding: "8px 10px", color: "white", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
+          style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.4)", borderRadius: 8, padding: "8px 10px", color: "#022c22", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
         />
         <button
           onClick={submit}
           disabled={saving}
-          style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)", color: "white", border: "none", borderRadius: 8, padding: "9px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+          style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)", color: "white", border: "none", borderRadius: 8, padding: "9px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
           {saving ? <><Icon name="Loader2" size={14} className="animate-spin" />Сохраняем...</> : <><Icon name="CreditCard" size={14} />{mode === "issue" ? "Выдать" : "Сохранить"}</>}
         </button>
         <button onClick={() => setOpen(false)}
-          style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", border: "none", borderRadius: 8, padding: "7px", cursor: "pointer", fontSize: 12 }}>
+          style={{ background: "rgba(16,185,129,0.07)", color: "rgba(2,44,34,0.5)", border: "none", borderRadius: 8, padding: "7px", cursor: "pointer", fontSize: 12 }}>
           Отмена
         </button>
       </div>
@@ -124,13 +124,13 @@ export default function AdminCardControl({ app, token, onDone }: Props) {
         </div>
       )}
       <button onClick={() => { setMode(hasCard ? "edit" : "issue"); setOpen(true); }}
-        style={{ background: "linear-gradient(135deg,#ea8034,#f0994a)", color: "white", border: "none", borderRadius: 10, padding: "9px 12px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+        style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)", color: "white", border: "none", borderRadius: 10, padding: "9px 12px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
         <Icon name={hasCard ? "Pencil" : "CreditCard"} size={14} />
         {hasCard ? "Изменить условия" : "Выдать карту РУСФИНАНС 24"}
       </button>
       {hasCard && (
         <button onClick={toggleBlock} disabled={saving}
-          style={{ background: "rgba(255,255,255,0.07)", color: app.virtualCardStatus === "blocked" ? "#4ade80" : "#f87171", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: "8px 12px", cursor: "pointer", fontWeight: 600, fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}>
+          style={{ background: "rgba(16,185,129,0.07)", color: app.virtualCardStatus === "blocked" ? "#4ade80" : "#f87171", border: "1px solid rgba(16,185,129,0.15)", borderRadius: 10, padding: "8px 12px", cursor: "pointer", fontWeight: 600, fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}>
           <Icon name={app.virtualCardStatus === "blocked" ? "Unlock" : "Lock"} size={13} />
           {app.virtualCardStatus === "blocked" ? "Разблокировать карту" : "Заблокировать карту"}
         </button>

@@ -15,8 +15,8 @@ function LoanCalculator({ amount, days, onAmountChange, onDaysChange }: LoanCalc
     const total = amount + interest;
     const amountPct = ((amount - 5000) / (100000 - 5000)) * 100;
     const daysPct = ((days - 5) / (365 - 5)) * 100;
-    const amountBg = `linear-gradient(to right, #EA8034 ${amountPct}%, rgba(234,128,52,0.2) ${amountPct}%)`;
-    const daysBg = `linear-gradient(to right, #EA8034 ${daysPct}%, rgba(234,128,52,0.2) ${daysPct}%)`;
+    const amountBg = `linear-gradient(to right, #10b981 ${amountPct}%, rgba(16,185,129,0.2) ${amountPct}%)`;
+    const daysBg = `linear-gradient(to right, #10b981 ${daysPct}%, rgba(16,185,129,0.2) ${daysPct}%)`;
     return { interest, total, amountPct, daysPct, amountBg, daysBg };
   }, [amount, days]);
 
@@ -24,10 +24,10 @@ function LoanCalculator({ amount, days, onAmountChange, onDaysChange }: LoanCalc
     <section id="calc" className="py-24">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-14">
-          <div className="inline-block glass px-4 py-1.5 rounded-full text-orange-300 text-sm mb-4">
+          <div className="inline-block glass px-4 py-1.5 rounded-full text-emerald-600 text-sm mb-4">
             Калькулятор
           </div>
-          <h2 className="font-oswald text-4xl md:text-5xl font-bold text-white">
+          <h2 className="font-oswald text-4xl md:text-5xl font-bold text-emerald-950">
             РАССЧИТАЙТЕ <span className="gradient-text">ЗАЙМ</span>
           </h2>
         </div>
@@ -38,7 +38,7 @@ function LoanCalculator({ amount, days, onAmountChange, onDaysChange }: LoanCalc
               <div className="space-y-10">
                 <div>
                   <div className="flex justify-between mb-3">
-                    <span className="text-white/60">Сумма займа</span>
+                    <span className="text-emerald-950/60">Сумма займа</span>
                     <span className="font-oswald text-2xl font-bold gradient-text">
                       {amount.toLocaleString("ru-RU")} ₽
                     </span>
@@ -53,7 +53,7 @@ function LoanCalculator({ amount, days, onAmountChange, onDaysChange }: LoanCalc
                     className="slider-custom w-full"
                     style={{ background: amountBg }}
                   />
-                  <div className="flex justify-between text-xs text-white/30 mt-1">
+                  <div className="flex justify-between text-xs text-emerald-950/30 mt-1">
                     <span>5 000 ₽</span>
                     <span>100 000 ₽</span>
                   </div>
@@ -61,7 +61,7 @@ function LoanCalculator({ amount, days, onAmountChange, onDaysChange }: LoanCalc
 
                 <div>
                   <div className="flex justify-between mb-3">
-                    <span className="text-white/60">Срок займа</span>
+                    <span className="text-emerald-950/60">Срок займа</span>
                     <span className="font-oswald text-2xl font-bold gradient-text">{days} дней</span>
                   </div>
                   <input
@@ -74,7 +74,7 @@ function LoanCalculator({ amount, days, onAmountChange, onDaysChange }: LoanCalc
                     className="slider-custom w-full"
                     style={{ background: daysBg }}
                   />
-                  <div className="flex justify-between text-xs text-white/30 mt-1">
+                  <div className="flex justify-between text-xs text-emerald-950/30 mt-1">
                     <span>5 дней</span>
                     <span>365 дней</span>
                   </div>
@@ -83,20 +83,20 @@ function LoanCalculator({ amount, days, onAmountChange, onDaysChange }: LoanCalc
 
               <div className="flex flex-col justify-center">
                 <div className="glass-light rounded-2xl p-6 space-y-1">
-                  <div className="flex justify-between py-3 border-b border-white/10">
-                    <span className="text-white/60">Сумма займа</span>
-                    <span className="text-white font-semibold">{amount.toLocaleString("ru-RU")} ₽</span>
+                  <div className="flex justify-between py-3 border-b border-emerald-900/15">
+                    <span className="text-emerald-950/60">Сумма займа</span>
+                    <span className="text-emerald-950 font-semibold">{amount.toLocaleString("ru-RU")} ₽</span>
                   </div>
-                  <div className="flex justify-between py-3 border-b border-white/10">
-                    <span className="text-white/60">Проценты ({days} дн.)</span>
+                  <div className="flex justify-between py-3 border-b border-emerald-900/15">
+                    <span className="text-emerald-950/60">Проценты ({days} дн.)</span>
                     <span className="text-yellow-400 font-semibold">{interest.toLocaleString("ru-RU")} ₽</span>
                   </div>
-                  <div className="flex justify-between py-3 border-b border-white/10">
-                    <span className="text-white/60">Ставка</span>
-                    <span className="text-white font-semibold">0.8% в день</span>
+                  <div className="flex justify-between py-3 border-b border-emerald-900/15">
+                    <span className="text-emerald-950/60">Ставка</span>
+                    <span className="text-emerald-950 font-semibold">0.8% в день</span>
                   </div>
                   <div className="flex justify-between py-3">
-                    <span className="text-white font-semibold">Итого к возврату</span>
+                    <span className="text-emerald-950 font-semibold">Итого к возврату</span>
                     <span className="font-oswald text-2xl font-bold gradient-text">
                       {total.toLocaleString("ru-RU")} ₽
                     </span>
@@ -110,7 +110,7 @@ function LoanCalculator({ amount, days, onAmountChange, onDaysChange }: LoanCalc
                   Оформить {amount.toLocaleString("ru-RU")} ₽
                 </button>
 
-                <p className="text-white/30 text-xs text-center mt-3">
+                <p className="text-emerald-950/30 text-xs text-center mt-3">
                   Расчёт является предварительным
                 </p>
               </div>

@@ -32,8 +32,8 @@ interface LoanFormFieldsProps {
   onSubmit: (e: React.FormEvent) => void;
 }
 
-const inputCls = "w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors";
-const inputStyle = { background: "rgba(255,255,255,0.05)" };
+const inputCls = "w-full rounded-xl px-4 py-3.5 text-emerald-950 placeholder-emerald-900/30 outline-none border border-emerald-900/15 focus:border-emerald-500 transition-colors";
+const inputStyle = { background: "rgba(16,185,129,0.05)" };
 
 const FILE_FIELDS = [
   { key: "passportMain", label: "Паспорт — главная страница" },
@@ -50,15 +50,15 @@ export default function LoanFormFields({
   const calc = useMemo(() => {
     const interest = Math.round(formAmount * 0.008 * formDays);
     const total = formAmount + interest;
-    const amountBg = `linear-gradient(to right, #EA8034 ${((formAmount - 5000) / (100000 - 5000)) * 100}%, rgba(234,128,52,0.2) ${((formAmount - 5000) / (100000 - 5000)) * 100}%)`;
-    const daysBg = `linear-gradient(to right, #EA8034 ${((formDays - 5) / (365 - 5)) * 100}%, rgba(234,128,52,0.2) ${((formDays - 5) / (365 - 5)) * 100}%)`;
+    const amountBg = `linear-gradient(to right, #10b981 ${((formAmount - 5000) / (100000 - 5000)) * 100}%, rgba(16,185,129,0.2) ${((formAmount - 5000) / (100000 - 5000)) * 100}%)`;
+    const daysBg = `linear-gradient(to right, #10b981 ${((formDays - 5) / (365 - 5)) * 100}%, rgba(16,185,129,0.2) ${((formDays - 5) / (365 - 5)) * 100}%)`;
     return { interest, total, amountBg, daysBg };
   }, [formAmount, formDays]);
 
   return (
     <form onSubmit={onSubmit} className="space-y-5">
       <div>
-        <label className="text-white/70 text-sm mb-2 block">Фамилия Имя Отчество</label>
+        <label className="text-emerald-950/70 text-sm mb-2 block">Фамилия Имя Отчество</label>
         <input
           type="text"
           placeholder="Иванов Иван Иванович"
@@ -70,7 +70,7 @@ export default function LoanFormFields({
         />
       </div>
       <div>
-        <label className="text-white/70 text-sm mb-2 block">Дата рождения</label>
+        <label className="text-emerald-950/70 text-sm mb-2 block">Дата рождения</label>
         <input
           type="date"
           value={form.birthDate}
@@ -81,7 +81,7 @@ export default function LoanFormFields({
         />
       </div>
       <div>
-        <label className="text-white/70 text-sm mb-2 block">Телефон</label>
+        <label className="text-emerald-950/70 text-sm mb-2 block">Телефон</label>
         <input
           type="tel"
           placeholder="+7 (900) 000-00-00"
@@ -93,7 +93,7 @@ export default function LoanFormFields({
         />
       </div>
       <div>
-        <label className="text-white/70 text-sm mb-2 block">Email</label>
+        <label className="text-emerald-950/70 text-sm mb-2 block">Email</label>
         <input
           type="email"
           placeholder="ivan@mail.ru"
@@ -105,25 +105,25 @@ export default function LoanFormFields({
         />
       </div>
       <div>
-        <label className="text-white/70 text-sm mb-2 block">
+        <label className="text-emerald-950/70 text-sm mb-2 block">
           Ваш Telegram (username или ID)
-          <span className="text-white/30 font-normal ml-1">— для получения решения</span>
+          <span className="text-emerald-950/30 font-normal ml-1">— для получения решения</span>
         </label>
         <div className="relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 text-sm">@</span>
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-950/30 text-sm">@</span>
           <input
             type="text"
             placeholder="username"
             value={form.telegramId}
             onChange={(e) => setForm({ ...form, telegramId: e.target.value.replace(/^@/, "") })}
-            className="w-full rounded-xl pl-8 pr-4 py-3.5 text-white placeholder-white/30 outline-none border border-white/10 focus:border-orange-500 transition-colors"
+            className="w-full rounded-xl pl-8 pr-4 py-3.5 text-emerald-950 placeholder-emerald-900/30 outline-none border border-emerald-900/15 focus:border-emerald-500 transition-colors"
             style={inputStyle}
           />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="text-white/70 text-sm mb-2 block">Серия паспорта</label>
+          <label className="text-emerald-950/70 text-sm mb-2 block">Серия паспорта</label>
           <input
             type="text"
             placeholder="1234"
@@ -136,7 +136,7 @@ export default function LoanFormFields({
           />
         </div>
         <div>
-          <label className="text-white/70 text-sm mb-2 block">Номер паспорта</label>
+          <label className="text-emerald-950/70 text-sm mb-2 block">Номер паспорта</label>
           <input
             type="text"
             placeholder="567890"
@@ -151,7 +151,7 @@ export default function LoanFormFields({
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="text-white/70 text-sm mb-2 block">Дата выдачи</label>
+          <label className="text-emerald-950/70 text-sm mb-2 block">Дата выдачи</label>
           <input
             type="date"
             value={form.passportDate}
@@ -162,7 +162,7 @@ export default function LoanFormFields({
           />
         </div>
         <div>
-          <label className="text-white/70 text-sm mb-2 block">Код подразделения</label>
+          <label className="text-emerald-950/70 text-sm mb-2 block">Код подразделения</label>
           <input
             type="text"
             placeholder="123-456"
@@ -175,7 +175,7 @@ export default function LoanFormFields({
         </div>
       </div>
       <div>
-        <label className="text-white/70 text-sm mb-2 block">Кем выдан</label>
+        <label className="text-emerald-950/70 text-sm mb-2 block">Кем выдан</label>
         <input
           type="text"
           placeholder="УМВД России по г. Москве"
@@ -187,7 +187,7 @@ export default function LoanFormFields({
         />
       </div>
       <div>
-        <label className="text-white/70 text-sm mb-2 block">Место рождения</label>
+        <label className="text-emerald-950/70 text-sm mb-2 block">Место рождения</label>
         <input
           type="text"
           placeholder="г. Москва"
@@ -200,17 +200,17 @@ export default function LoanFormFields({
       </div>
 
       {/* КАЛЬКУЛЯТОР */}
-      <div className="rounded-2xl border border-orange-500/40 overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(234,128,52,0.15), rgba(240,153,74,0.08))" }}>
-        <div className="flex items-center gap-2 px-5 pt-4 pb-3 border-b border-white/10">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(234,128,52,0.4)" }}>
-            <Icon name="Calculator" size={14} className="text-orange-300" />
+      <div className="rounded-2xl border border-emerald-500/40 overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.15), rgba(20,184,166,0.08))" }}>
+        <div className="flex items-center gap-2 px-5 pt-4 pb-3 border-b border-emerald-900/15">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(16,185,129,0.4)" }}>
+            <Icon name="Calculator" size={14} className="text-emerald-600" />
           </div>
-          <span className="text-white/80 text-sm font-medium">Параметры займа</span>
+          <span className="text-emerald-950/80 text-sm font-medium">Параметры займа</span>
         </div>
         <div className="px-5 py-4 space-y-5">
           <div>
             <div className="flex justify-between mb-2">
-              <span className="text-white/60 text-sm">Желаемая сумма</span>
+              <span className="text-emerald-950/60 text-sm">Желаемая сумма</span>
               <span className="font-bold text-base gradient-text">{formAmount.toLocaleString("ru-RU")} ₽</span>
             </div>
             <input
@@ -227,14 +227,14 @@ export default function LoanFormFields({
               className="slider-custom w-full"
               style={{ background: calc.amountBg }}
             />
-            <div className="flex justify-between text-xs text-white/30 mt-1">
+            <div className="flex justify-between text-xs text-emerald-950/30 mt-1">
               <span>5 000 ₽</span>
               <span>100 000 ₽</span>
             </div>
           </div>
           <div>
             <div className="flex justify-between mb-2">
-              <span className="text-white/60 text-sm">Срок займа</span>
+              <span className="text-emerald-950/60 text-sm">Срок займа</span>
               <span className="font-bold text-base gradient-text">
                 {formDays} {formDays === 1 ? "день" : formDays < 5 ? "дня" : "дней"}
               </span>
@@ -253,22 +253,22 @@ export default function LoanFormFields({
               className="slider-custom w-full"
               style={{ background: calc.daysBg }}
             />
-            <div className="flex justify-between text-xs text-white/30 mt-1">
+            <div className="flex justify-between text-xs text-emerald-950/30 mt-1">
               <span>5 дней</span>
               <span>365 дней</span>
             </div>
           </div>
           <div className="rounded-xl px-4 py-3 space-y-2" style={{ background: "rgba(0,0,0,0.25)" }}>
             <div className="flex justify-between text-sm">
-              <span className="text-white/50">Сумма займа</span>
-              <span className="text-white/80">{formAmount.toLocaleString("ru-RU")} ₽</span>
+              <span className="text-emerald-950/50">Сумма займа</span>
+              <span className="text-emerald-950/80">{formAmount.toLocaleString("ru-RU")} ₽</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-white/50">Проценты (0.8% × {formDays} дн.)</span>
-              <span className="text-white/80">{calc.interest.toLocaleString("ru-RU")} ₽</span>
+              <span className="text-emerald-950/50">Проценты (0.8% × {formDays} дн.)</span>
+              <span className="text-emerald-950/80">{calc.interest.toLocaleString("ru-RU")} ₽</span>
             </div>
-            <div className="border-t border-white/10 pt-2 flex justify-between items-center">
-              <span className="text-white font-semibold">К возврату</span>
+            <div className="border-t border-emerald-900/15 pt-2 flex justify-between items-center">
+              <span className="text-emerald-950 font-semibold">К возврату</span>
               <span className="font-bold text-2xl gradient-text">{calc.total.toLocaleString("ru-RU")} ₽</span>
             </div>
           </div>
@@ -277,19 +277,19 @@ export default function LoanFormFields({
 
       {/* FILE UPLOADS */}
       <div className="pt-2">
-        <div className="text-white/70 text-sm mb-3 font-medium">Документы (фото или скан)</div>
+        <div className="text-emerald-950/70 text-sm mb-3 font-medium">Документы (фото или скан)</div>
         <div className="space-y-3">
           {FILE_FIELDS.map(({ key, label }) => (
             <label
               key={key}
-              className="flex items-center gap-3 rounded-xl px-4 py-3 border border-white/10 cursor-pointer hover:border-orange-500 transition-colors"
-              style={{ background: "rgba(255,255,255,0.05)" }}
+              className="flex items-center gap-3 rounded-xl px-4 py-3 border border-emerald-900/15 cursor-pointer hover:border-emerald-500 transition-colors"
+              style={{ background: "rgba(16,185,129,0.05)" }}
             >
-              <div className="w-8 h-8 rounded-lg bg-orange-600/20 flex items-center justify-center shrink-0">
-                <Icon name={files[key] ? "CheckCircle" : "Upload"} size={16} className={files[key] ? "text-green-400" : "text-orange-400"} />
+              <div className="w-8 h-8 rounded-lg bg-emerald-600/10 flex items-center justify-center shrink-0">
+                <Icon name={files[key] ? "CheckCircle" : "Upload"} size={16} className={files[key] ? "text-green-400" : "text-emerald-600"} />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-white/70 text-sm">{label}</div>
+                <div className="text-emerald-950/70 text-sm">{label}</div>
                 {files[key] && (
                   <div className="text-green-400 text-xs truncate">{files[key]!.name}</div>
                 )}
@@ -318,9 +318,9 @@ export default function LoanFormFields({
         ) : "Отправить заявку"}
       </button>
       {sending && (
-        <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
+        <div className="w-full bg-emerald-900/10 rounded-full h-1.5 overflow-hidden">
           <div
-            className="h-full bg-orange-400 rounded-full animate-pulse"
+            className="h-full bg-emerald-500 rounded-full animate-pulse"
             style={{ width: sendStep.startsWith("Отправляем") ? "90%" : sendStep.includes("4") ? "75%" : sendStep.includes("3") ? "55%" : sendStep.includes("2") ? "35%" : "15%" }}
           />
         </div>
@@ -328,7 +328,7 @@ export default function LoanFormFields({
       {sendError && (
         <p className="text-red-400 text-sm text-center">{sendError}</p>
       )}
-      <p className="text-white/30 text-xs text-center">
+      <p className="text-emerald-950/30 text-xs text-center">
         Нажимая кнопку, вы соглашаетесь с политикой конфиденциальности
       </p>
     </form>

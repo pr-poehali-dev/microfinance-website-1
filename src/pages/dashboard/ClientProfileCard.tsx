@@ -51,25 +51,25 @@ export default function ClientProfileCard({ profile, phone }: Props) {
     <div className="glass rounded-2xl overflow-hidden mb-6">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full p-5 flex items-center gap-3 transition-colors hover:bg-white/5"
-        style={{ background: "linear-gradient(135deg, rgba(234,128,52,0.15), rgba(240,153,74,0.05))" }}
+        className="w-full p-5 flex items-center gap-3 transition-colors hover:bg-emerald-50"
+        style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.15), rgba(20,184,166,0.05))" }}
       >
         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 btn-neon">
           <Icon name="UserCircle" size={20} className="text-white" />
         </div>
         <div className="flex-1 text-left">
-          <div className="text-white font-bold">Моя анкета</div>
-          <div className="text-white/40 text-xs">Данные, указанные при подаче заявки</div>
+          <div className="text-emerald-950 font-bold">Моя анкета</div>
+          <div className="text-emerald-950/40 text-xs">Данные, указанные при подаче заявки</div>
         </div>
-        <Icon name={open ? "ChevronUp" : "ChevronDown"} size={18} className="text-white/40 shrink-0" />
+        <Icon name={open ? "ChevronUp" : "ChevronDown"} size={18} className="text-emerald-950/40 shrink-0" />
       </button>
 
       {open && (
         <div className="p-5 grid sm:grid-cols-2 gap-3">
           {rows.map(({ label, value }) => (
-            <div key={label} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-              <div className="text-white/40 text-xs mb-1">{label}</div>
-              <div className="text-white text-sm font-medium break-words">{value}</div>
+            <div key={label} className="rounded-xl p-3" style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.07)" }}>
+              <div className="text-emerald-950/40 text-xs mb-1">{label}</div>
+              <div className="text-emerald-950 text-sm font-medium break-words">{value}</div>
             </div>
           ))}
         </div>

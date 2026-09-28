@@ -12,9 +12,9 @@ const MONTHS_MIN = 1;
 const MONTHS_MAX = 24;
 const RATE = 0.09;
 
-const inp  = "w-full bg-transparent border rounded-xl px-4 py-3 text-white placeholder-white/30 outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-sm";
-const iSt  = { borderColor: "rgba(255,255,255,0.12)" };
-const lbl  = "block text-white/60 text-sm mb-1.5 font-medium";
+const inp  = "w-full bg-transparent border rounded-xl px-4 py-3 text-emerald-950 placeholder-emerald-900/30 outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all text-sm";
+const iSt  = { borderColor: "rgba(16,185,129,0.12)" };
+const lbl  = "block text-emerald-950/60 text-sm mb-1.5 font-medium";
 
 const FILE_FIELDS = [
   { key: "filePassport",     label: "Паспорт — главная страница",     icon: "BookUser",    required: true },
@@ -52,7 +52,7 @@ export default function ShopLoanApplyPage() {
   const totalReturn  = Math.round(amount * (1 + RATE * months));
   const monthPayment = Math.round(totalReturn / months);
 
-  const amountBg = `linear-gradient(to right,#f0994a ${((amount - AMOUNT_MIN)/(AMOUNT_MAX - AMOUNT_MIN))*100}%,rgba(240,153,74,0.2) ${((amount - AMOUNT_MIN)/(AMOUNT_MAX - AMOUNT_MIN))*100}%)`;
+  const amountBg = `linear-gradient(to right,#14b8a6 ${((amount - AMOUNT_MIN)/(AMOUNT_MAX - AMOUNT_MIN))*100}%,rgba(20,184,166,0.2) ${((amount - AMOUNT_MIN)/(AMOUNT_MAX - AMOUNT_MIN))*100}%)`;
   const monthsBg = `linear-gradient(to right,#06b6d4 ${((months - MONTHS_MIN)/(MONTHS_MAX - MONTHS_MIN))*100}%,rgba(6,182,212,0.2) ${((months - MONTHS_MIN)/(MONTHS_MAX - MONTHS_MIN))*100}%)`;
 
   const compressImage = useCallback((file: File): Promise<string> =>
@@ -153,18 +153,18 @@ export default function ShopLoanApplyPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen font-golos flex items-center justify-center px-4" style={{ background: "#1e110a" }}>
+      <div className="min-h-screen font-golos flex items-center justify-center px-4" style={{ background: "#ffffff" }}>
         <div className="max-w-md w-full text-center">
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-full mb-6"
-            style={{ background: "linear-gradient(135deg,#f0994a,#06b6d4)", boxShadow: "0 0 60px rgba(240,153,74,0.4)" }}>
+            style={{ background: "linear-gradient(135deg,#14b8a6,#06b6d4)", boxShadow: "0 0 60px rgba(20,184,166,0.4)" }}>
             <Icon name="CheckCircle" size={44} className="text-white" />
           </div>
-          <h2 className="font-oswald text-4xl font-bold text-white mb-4">ЗАЯВКА ПРИНЯТА!</h2>
-          <p className="text-white/50 mb-2 leading-relaxed">Заявка на займ для покупки товара успешно отправлена.</p>
-          <p className="text-orange-400 font-semibold mb-8">Решение — от 1 минуты до 1 часа.</p>
+          <h2 className="font-oswald text-4xl font-bold text-emerald-950 mb-4">ЗАЯВКА ПРИНЯТА!</h2>
+          <p className="text-emerald-950/50 mb-2 leading-relaxed">Заявка на займ для покупки товара успешно отправлена.</p>
+          <p className="text-emerald-600 font-semibold mb-8">Решение — от 1 минуты до 1 часа.</p>
           <button onClick={() => navigate("/")}
             className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-white"
-            style={{ background: "linear-gradient(135deg,#f0994a,#06b6d4)" }}>
+            style={{ background: "linear-gradient(135deg,#14b8a6,#06b6d4)" }}>
             <Icon name="Home" size={18} /> На главную
           </button>
         </div>
@@ -175,43 +175,43 @@ export default function ShopLoanApplyPage() {
   const sectionHdr = (icon: string, title: string, gradient?: string) => (
     <div className="flex items-center gap-3 mb-5">
       <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-        style={{ background: gradient || "linear-gradient(135deg,#f0994a,#06b6d4)" }}>
+        style={{ background: gradient || "linear-gradient(135deg,#14b8a6,#06b6d4)" }}>
         <Icon name={icon} size={16} className="text-white" />
       </div>
-      <h3 className="text-white font-bold text-lg">{title}</h3>
+      <h3 className="text-emerald-950 font-bold text-lg">{title}</h3>
     </div>
   );
 
   return (
-    <div className="min-h-screen font-golos" style={{ background: "#1e110a" }}>
+    <div className="min-h-screen font-golos" style={{ background: "#ffffff" }}>
       <Navbar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} scrollTo={scrollTo} />
 
       <div className="max-w-3xl mx-auto px-4 pt-8 pb-16">
         {/* Заголовок */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-4"
-            style={{ background: "rgba(240,153,74,0.15)", border: "1px solid rgba(240,153,74,0.4)", color: "#fed7aa" }}>
+            style={{ background: "rgba(20,184,166,0.15)", border: "1px solid rgba(20,184,166,0.4)", color: "#6ee7b7" }}>
             <Icon name="ShoppingBag" size={14} />
             Займ на покупку товаров
           </div>
-          <h1 className="font-oswald text-4xl md:text-5xl font-bold text-white mb-2">
-            ОФОРМИТЬ <span style={{ background: "linear-gradient(135deg,#f0994a,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>ЗАЯВКУ</span>
+          <h1 className="font-oswald text-4xl md:text-5xl font-bold text-emerald-950 mb-2">
+            ОФОРМИТЬ <span style={{ background: "linear-gradient(135deg,#14b8a6,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>ЗАЯВКУ</span>
           </h1>
-          <p className="text-white/40">Заполните форму — займёт около 5 минут</p>
+          <p className="text-emerald-950/40">Заполните форму — займёт около 5 минут</p>
         </div>
 
         {/* Краткие условия */}
         <div className="grid grid-cols-3 gap-3 mb-8">
           {[
-            { icon: "Banknote", v: "до 150 000 ₽", l: "сумма",    c: "#f0994a" },
+            { icon: "Banknote", v: "до 150 000 ₽", l: "сумма",    c: "#14b8a6" },
             { icon: "Calendar", v: "до 24 мес.",    l: "срок",     c: "#06b6d4" },
             { icon: "Percent",  v: "от 9%/мес.",    l: "ставка",   c: "#22c55e" },
           ].map(c => (
             <div key={c.l} className="rounded-2xl p-4 text-center"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.08)" }}>
               <Icon name={c.icon} size={18} style={{ color: c.c }} className="mx-auto mb-1" />
               <div className="font-bold text-sm" style={{ color: c.c }}>{c.v}</div>
-              <div className="text-white/30 text-xs">{c.l}</div>
+              <div className="text-emerald-950/30 text-xs">{c.l}</div>
             </div>
           ))}
         </div>
@@ -220,45 +220,45 @@ export default function ShopLoanApplyPage() {
 
           {/* ── КАЛЬКУЛЯТОР ── */}
           <div className="rounded-2xl p-6 space-y-5"
-            style={{ background: "rgba(240,153,74,0.06)", border: "1px solid rgba(240,153,74,0.25)" }}>
+            style={{ background: "rgba(20,184,166,0.06)", border: "1px solid rgba(20,184,166,0.25)" }}>
             {sectionHdr("Calculator", "Параметры займа")}
             <div>
               <div className="flex justify-between mb-2">
-                <span className="text-white/60 text-sm">Сумма займа</span>
-                <span className="font-bold text-orange-400 text-base">{amount.toLocaleString("ru-RU")} ₽</span>
+                <span className="text-emerald-950/60 text-sm">Сумма займа</span>
+                <span className="font-bold text-emerald-600 text-base">{amount.toLocaleString("ru-RU")} ₽</span>
               </div>
               <input type="range" min={AMOUNT_MIN} max={AMOUNT_MAX} step={1000} value={amount}
                 onChange={e => setAmount(Number(e.target.value))}
                 className="slider-custom w-full" style={{ background: amountBg }} />
-              <div className="flex justify-between text-white/30 text-xs mt-1"><span>3 000 ₽</span><span>150 000 ₽</span></div>
+              <div className="flex justify-between text-emerald-950/30 text-xs mt-1"><span>3 000 ₽</span><span>150 000 ₽</span></div>
             </div>
             <div>
               <div className="flex justify-between mb-2">
-                <span className="text-white/60 text-sm">Срок займа</span>
+                <span className="text-emerald-950/60 text-sm">Срок займа</span>
                 <span className="font-bold text-cyan-400 text-base">{months} мес.</span>
               </div>
               <input type="range" min={MONTHS_MIN} max={MONTHS_MAX} step={1} value={months}
                 onChange={e => setMonths(Number(e.target.value))}
                 className="slider-custom w-full" style={{ background: monthsBg }} />
-              <div className="flex justify-between text-white/30 text-xs mt-1"><span>1 мес.</span><span>24 мес.</span></div>
+              <div className="flex justify-between text-emerald-950/30 text-xs mt-1"><span>1 мес.</span><span>24 мес.</span></div>
             </div>
             <div className="rounded-xl p-4 grid grid-cols-2 gap-3"
-              style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(240,153,74,0.2)" }}>
+              style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(20,184,166,0.2)" }}>
               <div className="text-center">
-                <div className="text-white/40 text-xs mb-1">Ставка</div>
+                <div className="text-emerald-950/40 text-xs mb-1">Ставка</div>
                 <div className="text-green-400 font-bold">9% / мес.</div>
               </div>
               <div className="text-center">
-                <div className="text-white/40 text-xs mb-1">Платёж / мес.</div>
-                <div className="text-white font-bold">{monthPayment.toLocaleString("ru-RU")} ₽</div>
+                <div className="text-emerald-950/40 text-xs mb-1">Платёж / мес.</div>
+                <div className="text-emerald-950 font-bold">{monthPayment.toLocaleString("ru-RU")} ₽</div>
               </div>
               <div className="text-center">
-                <div className="text-white/40 text-xs mb-1">Переплата</div>
+                <div className="text-emerald-950/40 text-xs mb-1">Переплата</div>
                 <div className="text-red-400 font-bold">{(totalReturn - amount).toLocaleString("ru-RU")} ₽</div>
               </div>
               <div className="text-center">
-                <div className="text-white/40 text-xs mb-1">К возврату</div>
-                <div className="font-bold text-orange-400">{totalReturn.toLocaleString("ru-RU")} ₽</div>
+                <div className="text-emerald-950/40 text-xs mb-1">К возврату</div>
+                <div className="font-bold text-emerald-600">{totalReturn.toLocaleString("ru-RU")} ₽</div>
               </div>
             </div>
           </div>
@@ -355,13 +355,13 @@ export default function ShopLoanApplyPage() {
           {/* ── ДОКУМЕНТЫ — ФОТО ── */}
           <div className="glass rounded-2xl p-6 space-y-5">
             {sectionHdr("Camera", "Фотографии документов")}
-            <p className="text-white/40 text-xs -mt-3">Сфотографируйте документы при хорошем освещении. Поддерживаются JPG, PNG, HEIC.</p>
+            <p className="text-emerald-950/40 text-xs -mt-3">Сфотографируйте документы при хорошем освещении. Поддерживаются JPG, PNG, HEIC.</p>
             <div className="grid sm:grid-cols-2 gap-4">
               {FILE_FIELDS.map(f => (
                 <div key={f.key}>
                   <label className={lbl}>{f.label} {f.required && <span className="text-red-400">*</span>}</label>
                   {previews[f.key] ? (
-                    <div className="relative rounded-xl overflow-hidden" style={{ border: "1px solid rgba(240,153,74,0.4)" }}>
+                    <div className="relative rounded-xl overflow-hidden" style={{ border: "1px solid rgba(20,184,166,0.4)" }}>
                       <img src={previews[f.key]} alt={f.label} className="w-full h-36 object-cover" />
                       <button type="button" onClick={() => handleFile(f.key, null)}
                         className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center"
@@ -374,10 +374,10 @@ export default function ShopLoanApplyPage() {
                       </div>
                     </div>
                   ) : (
-                    <label className="flex flex-col items-center justify-center h-36 rounded-xl cursor-pointer transition-all hover:border-orange-500/60"
-                      style={{ background: "rgba(255,255,255,0.03)", border: "2px dashed rgba(255,255,255,0.12)" }}>
-                      <Icon name={f.icon} size={28} className="text-orange-400 mb-2" />
-                      <span className="text-white/40 text-xs text-center px-2">Нажмите для загрузки</span>
+                    <label className="flex flex-col items-center justify-center h-36 rounded-xl cursor-pointer transition-all hover:border-emerald-500/60"
+                      style={{ background: "rgba(16,185,129,0.03)", border: "2px dashed rgba(16,185,129,0.12)" }}>
+                      <Icon name={f.icon} size={28} className="text-emerald-600 mb-2" />
+                      <span className="text-emerald-950/40 text-xs text-center px-2">Нажмите для загрузки</span>
                       <input type="file" accept="image/*" className="hidden"
                         onChange={ev => handleFile(f.key, ev.target.files?.[0] || null)} />
                     </label>
@@ -404,30 +404,30 @@ export default function ShopLoanApplyPage() {
 
           {/* Согласие */}
           <div className="rounded-xl p-4 flex items-start gap-3"
-            style={{ background: "rgba(240,153,74,0.06)", border: "1px solid rgba(240,153,74,0.2)" }}>
-            <Icon name="ShieldCheck" size={18} className="text-orange-400 shrink-0 mt-0.5" />
-            <p className="text-white/40 text-xs leading-relaxed">
+            style={{ background: "rgba(20,184,166,0.06)", border: "1px solid rgba(20,184,166,0.2)" }}>
+            <Icon name="ShieldCheck" size={18} className="text-emerald-600 shrink-0 mt-0.5" />
+            <p className="text-emerald-950/40 text-xs leading-relaxed">
               Нажимая «Отправить заявку», вы соглашаетесь на обработку персональных данных. Ставка от 9% в месяц, срок до 24 месяцев. Денежные средства переводятся в магазин напрямую.
             </p>
           </div>
 
           {/* Страхование жизни и здоровья — обязательное согласие */}
           <label className="rounded-xl p-4 flex items-start gap-3 cursor-pointer transition-colors"
-            style={{ background: "rgba(240,153,74,0.06)", border: "1px solid rgba(240,153,74,0.2)" }}>
+            style={{ background: "rgba(20,184,166,0.06)", border: "1px solid rgba(20,184,166,0.2)" }}>
             <input
               type="checkbox"
               checked={insuranceAgreed}
               onChange={e => setInsuranceAgreed(e.target.checked)}
-              className="mt-0.5 w-4 h-4 shrink-0 accent-orange-500 cursor-pointer"
+              className="mt-0.5 w-4 h-4 shrink-0 accent-emerald-500 cursor-pointer"
             />
-            <span className="text-white/70 text-xs leading-relaxed">
-              Я согласен(а) на <span className="text-orange-400 font-medium">страхование жизни и здоровья</span> в качестве обеспечения исполнения обязательств по договору займа. Страховая премия включается в общую стоимость займа.
+            <span className="text-emerald-950/70 text-xs leading-relaxed">
+              Я согласен(а) на <span className="text-emerald-600 font-medium">страхование жизни и здоровья</span> в качестве обеспечения исполнения обязательств по договору займа. Страховая премия включается в общую стоимость займа.
             </span>
           </label>
 
           {sendStep && (
             <div className="rounded-xl p-3 flex items-center gap-2 text-sm"
-              style={{ background: "rgba(240,153,74,0.1)", border: "1px solid rgba(240,153,74,0.2)", color: "#fed7aa" }}>
+              style={{ background: "rgba(20,184,166,0.1)", border: "1px solid rgba(20,184,166,0.2)", color: "#6ee7b7" }}>
               <Icon name="Loader" size={15} className="animate-spin shrink-0" /> {sendStep}
             </div>
           )}
@@ -440,7 +440,7 @@ export default function ShopLoanApplyPage() {
 
           <button type="submit" disabled={sending || !insuranceAgreed}
             className="w-full py-5 rounded-2xl font-bold text-xl text-white flex items-center justify-center gap-3"
-            style={{ background: "linear-gradient(135deg,#f0994a,#06b6d4)", boxShadow: "0 0 40px rgba(240,153,74,0.4)", opacity: sending || !insuranceAgreed ? 0.6 : 1, cursor: !insuranceAgreed ? "not-allowed" : "pointer" }}>
+            style={{ background: "linear-gradient(135deg,#14b8a6,#06b6d4)", boxShadow: "0 0 40px rgba(20,184,166,0.4)", opacity: sending || !insuranceAgreed ? 0.6 : 1, cursor: !insuranceAgreed ? "not-allowed" : "pointer" }}>
             {sending
               ? <><Icon name="Loader" size={22} className="animate-spin" /> Отправляем...</>
               : <><Icon name="ShoppingBag" size={22} /> Отправить заявку</>

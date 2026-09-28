@@ -27,7 +27,7 @@ function MaintenanceBanner() {
   if (pathname === "/admin") return null;
   return (
     <div style={{
-      background: "#ea8034",
+      background: "#059669",
       color: "white",
       textAlign: "center",
       padding: "12px 16px",
@@ -38,7 +38,7 @@ function MaintenanceBanner() {
       position: "relative",
     }}>
       Уважаемые заёмщики, наша компания предоставляет займы от частных инвесторов. Перед подписанием договора просим внимательно ознакомиться с его условиями, и только после этого подписывать!
-      <div style={{ color: "#4ade80", fontWeight: 700, marginTop: 6 }}>
+      <div style={{ color: "#d1fae5", fontWeight: 700, marginTop: 6 }}>
         🎉 Мы открылись! Добро пожаловать!
       </div>
     </div>

@@ -31,23 +31,23 @@ export default function PaymentHistory({ schedule, payments, paidTotal, totalDue
   const remaining = Math.max(0, totalDue - paidTotal);
 
   return (
-    <div className="mb-4 rounded-xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+    <div className="mb-4 rounded-xl overflow-hidden" style={{ background: "rgba(16,185,129,0.03)", border: "1px solid rgba(16,185,129,0.08)" }}>
       <button
         onClick={() => setOpen(!open)}
-        className="w-full px-5 py-4 flex items-center justify-between gap-3 transition-colors hover:bg-white/5"
+        className="w-full px-5 py-4 flex items-center justify-between gap-3 transition-colors hover:bg-emerald-50"
       >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(234,128,52,0.15)" }}>
-            <Icon name="Calendar" size={16} className="text-orange-400" />
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(16,185,129,0.15)" }}>
+            <Icon name="Calendar" size={16} className="text-emerald-600" />
           </div>
           <div className="text-left">
-            <div className="text-white font-semibold text-sm">График погашения и платежи</div>
-            <div className="text-white/40 text-xs">
+            <div className="text-emerald-950 font-semibold text-sm">График погашения и платежи</div>
+            <div className="text-emerald-950/40 text-xs">
               Оплачено {paidTotal.toLocaleString("ru-RU")} ₽ из {totalDue.toLocaleString("ru-RU")} ₽
             </div>
           </div>
         </div>
-        <Icon name={open ? "ChevronUp" : "ChevronDown"} size={18} className="text-white/40 shrink-0" />
+        <Icon name={open ? "ChevronUp" : "ChevronDown"} size={18} className="text-emerald-950/40 shrink-0" />
       </button>
 
       {open && (
@@ -55,7 +55,7 @@ export default function PaymentHistory({ schedule, payments, paidTotal, totalDue
           {/* Остаток */}
           {paidTotal > 0 && (
             <div className="rounded-lg px-4 py-3 flex items-center justify-between" style={{ background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.2)" }}>
-              <span className="text-white/50 text-xs">Остаток к погашению</span>
+              <span className="text-emerald-950/50 text-xs">Остаток к погашению</span>
               <span className="text-green-400 font-bold text-sm">{remaining.toLocaleString("ru-RU")} ₽</span>
             </div>
           )}
@@ -63,18 +63,18 @@ export default function PaymentHistory({ schedule, payments, paidTotal, totalDue
           {/* График погашения */}
           {schedule.length > 0 && (
             <div>
-              <div className="text-white/40 text-xs uppercase tracking-wider mb-2">Плановый график</div>
+              <div className="text-emerald-950/40 text-xs uppercase tracking-wider mb-2">Плановый график</div>
               <div className="space-y-2">
                 {schedule.map((s, i) => (
-                  <div key={i} className="flex items-center justify-between rounded-lg px-4 py-2.5" style={{ background: "rgba(255,255,255,0.03)" }}>
+                  <div key={i} className="flex items-center justify-between rounded-lg px-4 py-2.5" style={{ background: "rgba(16,185,129,0.03)" }}>
                     <div className="flex items-center gap-2">
-                      <Icon name="Clock" size={13} className="text-white/30" />
-                      <span className="text-white/70 text-xs">
+                      <Icon name="Clock" size={13} className="text-emerald-950/30" />
+                      <span className="text-emerald-950/70 text-xs">
                         {s.month ? `${s.month}-й платёж` : s.label || "Платёж"}
                         {s.dueDate ? ` · ${s.dueDate}` : ""}
                       </span>
                     </div>
-                    <span className="text-white font-semibold text-sm">{s.amount.toLocaleString("ru-RU")} ₽</span>
+                    <span className="text-emerald-950 font-semibold text-sm">{s.amount.toLocaleString("ru-RU")} ₽</span>
                   </div>
                 ))}
               </div>
@@ -83,9 +83,9 @@ export default function PaymentHistory({ schedule, payments, paidTotal, totalDue
 
           {/* История платежей */}
           <div>
-            <div className="text-white/40 text-xs uppercase tracking-wider mb-2">История платежей</div>
+            <div className="text-emerald-950/40 text-xs uppercase tracking-wider mb-2">История платежей</div>
             {payments.length === 0 ? (
-              <div className="text-white/30 text-xs px-4 py-3 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
+              <div className="text-emerald-950/30 text-xs px-4 py-3 rounded-lg" style={{ background: "rgba(16,185,129,0.03)" }}>
                 Платежей пока не было
               </div>
             ) : (
@@ -95,8 +95,8 @@ export default function PaymentHistory({ schedule, payments, paidTotal, totalDue
                     <div className="flex items-center gap-2">
                       <Icon name="CheckCircle2" size={13} className="text-green-400" />
                       <div>
-                        <div className="text-white/80 text-xs">{p.paidAt}</div>
-                        {p.note && <div className="text-white/30 text-xs">{p.note}</div>}
+                        <div className="text-emerald-950/80 text-xs">{p.paidAt}</div>
+                        {p.note && <div className="text-emerald-950/30 text-xs">{p.note}</div>}
                       </div>
                     </div>
                     <span className="text-green-400 font-semibold text-sm">+{p.amount.toLocaleString("ru-RU")} ₽</span>

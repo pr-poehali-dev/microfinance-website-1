@@ -165,26 +165,26 @@ export default function CalculatorForm() {
         onDaysChange={setDays}
       />
 
-      <section id="form" className="py-24" style={{ background: "rgba(234,128,52,0.05)" }}>
+      <section id="form" className="py-24" style={{ background: "rgba(16,185,129,0.05)" }}>
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <div className="inline-block glass px-4 py-1.5 rounded-full text-orange-300 text-sm mb-4">
+              <div className="inline-block glass px-4 py-1.5 rounded-full text-emerald-600 text-sm mb-4">
                 Быстрая заявка
               </div>
-              <h2 className="font-oswald text-4xl md:text-5xl font-bold text-white mb-6">
+              <h2 className="font-oswald text-4xl md:text-5xl font-bold text-emerald-950 mb-6">
                 ПОЛУЧИТЕ ДЕНЬГИ <span className="gradient-text">СЕГОДНЯ</span>
               </h2>
-              <p className="text-white/60 mb-8 leading-relaxed">
+              <p className="text-emerald-950/60 mb-8 leading-relaxed">
                 Заполните короткую форму — и мы перезвоним вам в течение 15 минут. Без очередей, без лишних бумаг.
               </p>
               <div className="space-y-4">
                 {FORM_FEATURES.map((f) => (
                   <div key={f.text} className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-orange-600/20 flex items-center justify-center shrink-0">
-                      <Icon name={f.icon} size={16} className="text-orange-400" />
+                    <div className="w-8 h-8 rounded-lg bg-emerald-600/10 flex items-center justify-center shrink-0">
+                      <Icon name={f.icon} size={16} className="text-emerald-600" />
                     </div>
-                    <span className="text-white/70 text-sm">{f.text}</span>
+                    <span className="text-emerald-950/70 text-sm">{f.text}</span>
                   </div>
                 ))}
               </div>
