@@ -29,11 +29,46 @@ interface Props {
   onAddLoan: (e: React.FormEvent) => void;
   onAddClient: (e: React.SyntheticEvent) => void;
   onChangeStatus: (loanId: number, status: string) => void;
-  onUpdateUser: (userId: number, data: { fullName: string; phone: string; email: string; password: string }) => Promise<void>;
+  onUpdateUser: (userId: number, data: Record<string, string>) => Promise<void>;
+  onLoadProfile: (userId: number) => Promise<Record<string, string | boolean>>;
   onUploadDocs: (userId: number, files: Record<string, string>) => Promise<void>;
   onCreditDoctor: (userId: number, data: { amount: number; days: number; rate: number }) => Promise<void>;
   onWaivePenalty: (loanId: number, mode: "full" | "amount", amount?: number) => Promise<unknown>;
 }
+
+interface ProfileField { key: string; label: string; placeholder?: string; type?: string; wide?: boolean }
+const PROFILE_SECTIONS: { title: string; fields: ProfileField[] }[] = [
+  { title: "Личные данные", fields: [
+    { key: "fullName", label: "ФИО", placeholder: "Иванов Иван Иванович", wide: true },
+    { key: "birthDate", label: "Дата рождения", placeholder: "01.01.1990" },
+    { key: "birthPlace", label: "Место рождения" },
+    { key: "snils", label: "СНИЛС" },
+  ] },
+  { title: "Контакты и вход", fields: [
+    { key: "phone", label: "Телефон", placeholder: "+7 (999) 000-00-00" },
+    { key: "email", label: "Email", type: "email" },
+    { key: "telegramId", label: "Telegram" },
+    { key: "password", label: "Новый пароль", type: "password", placeholder: "Оставьте пустым" },
+  ] },
+  { title: "Паспорт", fields: [
+    { key: "passportSeries", label: "Серия" },
+    { key: "passportNumber", label: "Номер" },
+    { key: "passportDate", label: "Дата выдачи" },
+    { key: "passportCode", label: "Код подразделения" },
+    { key: "passportBy", label: "Кем выдан", wide: true },
+  ] },
+  { title: "Работа и доходы", fields: [
+    { key: "workplace", label: "Место работы" },
+    { key: "position", label: "Должность" },
+    { key: "workPhone", label: "Рабочий телефон" },
+    { key: "salary", label: "Зарплата, ₽" },
+    { key: "contactPerson", label: "Контактное лицо", wide: true },
+  ] },
+  { title: "Банковская карта", fields: [
+    { key: "cardNumber", label: "Карта / СБП для выплаты" },
+    { key: "cardNumberTransfer", label: "Карта для перевода" },
+  ] },
+];
 
 const INPUT = { background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.15)", borderRadius: 10, padding: "10px 12px", color: "#022c22", fontSize: 15, width: "100%", boxSizing: "border-box" as const, outline: "none" };
 
@@ -43,10 +78,12 @@ export default function AdminClients({
   clientView, setClientView,
   offer, setOffer, newLoan, setNewLoan, newClient, setNewClient,
   actionMsg, actionErr, setActionMsg, setActionErr,
-  onLoadLoans, onSendOffer, onAddLoan, onAddClient, onChangeStatus, onUpdateUser, onUploadDocs, onCreditDoctor, onWaivePenalty,
+  onLoadLoans, onSendOffer, onAddLoan, onAddClient, onChangeStatus, onUpdateUser, onLoadProfile, onUploadDocs, onCreditDoctor, onWaivePenalty,
 }: Props) {
-  const [editForm, setEditForm] = useState({ fullName: "", phone: "", email: "", password: "" });
+  const [editForm, setEditForm] = useState<Record<string, string>>({});
   const [editSaving, setEditSaving] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editHasApp, setEditHasApp] = useState(true);
 
   const [waiveOpenId, setWaiveOpenId] = useState<number | null>(null);
   const [waiveAmount, setWaiveAmount] = useState("");
@@ -131,7 +168,19 @@ export default function AdminClients({
 
   useEffect(() => {
     if (selUser && clientView === "edit") {
-      setEditForm({ fullName: selUser.fullName || "", phone: selUser.phone || "", email: selUser.email || "", password: "" });
+      setEditLoading(true);
+      onLoadProfile(selUser.id)
+        .then(p => {
+          const f: Record<string, string> = { password: "" };
+          Object.entries(p).forEach(([k, v]) => { if (typeof v === "string") f[k] = v; });
+          setEditHasApp(!!p.hasApplication);
+          setEditForm(f);
+        })
+        .catch(() => {
+          setEditForm({ fullName: selUser.fullName || "", phone: selUser.phone || "", email: selUser.email || "", password: "" });
+          setActionErr("Не удалось загрузить анкету");
+        })
+        .finally(() => setEditLoading(false));
     }
   }, [selUser, clientView]);
 
@@ -144,8 +193,8 @@ export default function AdminClients({
       await onUpdateUser(selUser.id, editForm);
       setActionMsg("Данные клиента обновлены!");
       setClientView("loans");
-    } catch {
-      setActionErr("Ошибка при сохранении");
+    } catch (err) {
+      setActionErr(err instanceof Error ? err.message : "Ошибка при сохранении");
     } finally {
       setEditSaving(false);
     }
@@ -345,33 +394,45 @@ export default function AdminClients({
 
             {/* Редактировать клиента */}
             {clientView === "edit" && selUser && (
-              <div style={{ ...GLASS, padding: 24, border: "1px solid rgba(245,158,11,0.3)" }}>
-                <h3 style={{ color: "#022c22", fontWeight: 700, margin: "0 0 6px" }}>Редактировать клиента</h3>
-                <p style={{ color: "rgba(2,44,34,0.4)", fontSize: 13, margin: "0 0 20px" }}>Оставьте пароль пустым, чтобы не менять его</p>
-                <form onSubmit={handleEditSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  {[
-                    { label: "ФИО", key: "fullName" as const, placeholder: "Иванов Иван Иванович", type: "text" },
-                    { label: "Телефон", key: "phone" as const, placeholder: "+7 (999) 000-00-00", type: "text" },
-                    { label: "Email", key: "email" as const, placeholder: "client@mail.ru", type: "email" },
-                    { label: "Новый пароль (необязательно)", key: "password" as const, placeholder: "Оставьте пустым чтобы не менять", type: "password" },
-                  ].map(({ label, key, placeholder, type }) => (
-                    <div key={key}>
-                      <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, marginBottom: 6 }}>{label}</div>
-                      <input
-                        type={type}
-                        placeholder={placeholder}
-                        value={editForm[key]}
-                        onChange={e => setEditForm({ ...editForm, [key]: e.target.value })}
-                        style={INPUT}
-                      />
+              <div style={{ ...GLASS, padding: 24, border: "1px solid rgba(16,185,129,0.3)" }}>
+                <h3 style={{ color: "#022c22", fontWeight: 700, margin: "0 0 6px" }}>Анкета клиента</h3>
+                <p style={{ color: "rgba(2,44,34,0.4)", fontSize: 13, margin: "0 0 20px" }}>Все данные можно изменить. Пароль оставьте пустым, чтобы не менять его.</p>
+                {actionErr && <p style={{ color: "#dc2626", fontSize: 13, margin: "0 0 14px" }}>{actionErr}</p>}
+                {editLoading ? (
+                  <div style={{ textAlign: "center", padding: 40 }}><Icon name="Loader2" size={28} className="animate-spin text-emerald-600" /></div>
+                ) : (
+                <form onSubmit={handleEditSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                  {!editHasApp && (
+                    <div style={{ color: "#b45309", fontSize: 13, background: "rgba(245,158,11,0.1)", borderRadius: 10, padding: "10px 14px" }}>
+                      У клиента нет анкеты — сохранятся только ФИО, телефон, email и пароль.
+                    </div>
+                  )}
+                  {PROFILE_SECTIONS.map(sec => (
+                    <div key={sec.title}>
+                      <div style={{ color: "#059669", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>{sec.title}</div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12 }}>
+                        {sec.fields.filter(f => editHasApp || ["fullName", "phone", "email", "password"].includes(f.key)).map(f => (
+                          <div key={f.key} style={f.wide ? { gridColumn: "1 / -1" } : undefined}>
+                            <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, marginBottom: 6 }}>{f.label}</div>
+                            <input
+                              type={f.type || "text"}
+                              placeholder={f.placeholder || ""}
+                              value={editForm[f.key] ?? ""}
+                              onChange={e => setEditForm({ ...editForm, [f.key]: e.target.value })}
+                              style={INPUT}
+                            />
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ))}
                   <button type="submit" disabled={editSaving}
-                    style={{ background: "linear-gradient(135deg,#d97706,#f59e0b)", color: "white", border: "none", borderRadius: 12, padding: "14px", cursor: editSaving ? "not-allowed" : "pointer", fontWeight: 700, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, opacity: editSaving ? 0.7 : 1 }}>
+                    style={{ ...PURPLE, color: "white", border: "none", borderRadius: 12, padding: "14px", cursor: editSaving ? "not-allowed" : "pointer", fontWeight: 700, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, opacity: editSaving ? 0.7 : 1 }}>
                     {editSaving ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="Save" size={18} />}
                     {editSaving ? "Сохраняем..." : "Сохранить изменения"}
                   </button>
                 </form>
+                )}
               </div>
             )}
 

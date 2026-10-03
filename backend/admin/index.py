@@ -1426,6 +1426,89 @@ def handler(event: dict, context) -> dict:
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True}, ensure_ascii=False)}
 
+    PROFILE_FIELDS = {
+        "email": "email", "birthDate": "birth_date", "birthPlace": "birth_place",
+        "passportSeries": "passport_series", "passportNumber": "passport_number",
+        "passportDate": "passport_date", "passportCode": "passport_code", "passportBy": "passport_by",
+        "snils": "snils", "workplace": "workplace", "position": "position", "workPhone": "work_phone",
+        "contactPerson": "contact_person", "cardNumber": "card_number",
+        "cardNumberTransfer": "card_number_transfer", "telegramId": "telegram_id",
+    }
+
+    # --- ПОЛНАЯ АНКЕТА КЛИЕНТА (GET, sub='client_profile', userId=...) ---
+    if sub == "client_profile" and method == "GET":
+        user_id = int(qs.get("userId", 0) or 0)
+        cur.execute(f"SELECT full_name, phone, email FROM {SCHEMA}.users WHERE id = {user_id}")
+        u = cur.fetchone()
+        if not u:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Клиент не найден"})}
+        profile = {"fullName": u[0] or "", "phone": u[1] or "", "email": u[2] or "", "hasApplication": False}
+        cols = ", ".join(PROFILE_FIELDS.values()) + ", salary, full_name"
+        cur.execute(f"SELECT {cols} FROM {SCHEMA}.applications WHERE phone = '{(u[1] or '').replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1")
+        a = cur.fetchone()
+        cur.close(); conn.close()
+        if a:
+            profile["hasApplication"] = True
+            for i, key in enumerate(PROFILE_FIELDS.keys()):
+                if key != "email" or not profile["email"]:
+                    profile[key] = a[i] or ""
+            n = len(PROFILE_FIELDS)
+            profile["salary"] = str(int(a[n])) if a[n] is not None and float(a[n]) == int(a[n]) else (str(a[n]) if a[n] is not None else "")
+            if not profile["fullName"]:
+                profile["fullName"] = a[n + 1] or ""
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps(profile, ensure_ascii=False)}
+
+    # --- СОХРАНИТЬ ПОЛНУЮ АНКЕТУ КЛИЕНТА (POST, sub='client_profile_update', userId=...) ---
+    if sub == "client_profile_update" and method == "POST":
+        user_id = int(qs.get("userId", 0) or 0)
+        cur.execute(f"SELECT phone FROM {SCHEMA}.users WHERE id = {user_id}")
+        u = cur.fetchone()
+        if not u:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Клиент не найден"})}
+        old_phone = u[0] or ""
+
+        def esc(v):
+            return str(v if v is not None else "").strip().replace("'", "''")
+
+        full_name = esc(body.get("fullName"))
+        new_phone = esc(body.get("phone")) or old_phone.replace("'", "''")
+        new_pass = (body.get("password") or "").strip()
+
+        if new_phone != old_phone.replace("'", "''"):
+            cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = '{new_phone}' AND id != {user_id}")
+            if cur.fetchone():
+                cur.close(); conn.close()
+                return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": "Этот телефон уже занят другим клиентом"})}
+
+        user_sets = [f"full_name = '{full_name}'", f"phone = '{new_phone}'", f"email = '{esc(body.get('email'))}'"]
+        if new_pass:
+            user_sets.append(f"password_hash = '{hashlib.sha256(new_pass.encode()).hexdigest()}'")
+        cur.execute(f"UPDATE {SCHEMA}.users SET {', '.join(user_sets)} WHERE id = {user_id}")
+
+        app_sets = [f"full_name = '{full_name}'", f"phone = '{new_phone}'"]
+        for key, col in PROFILE_FIELDS.items():
+            if key in body:
+                app_sets.append(f"{col} = '{esc(body.get(key))}'")
+        if "salary" in body:
+            sal = str(body.get("salary") or "").replace(" ", "").replace(",", ".")
+            try:
+                app_sets.append(f"salary = {float(sal)}" if sal else "salary = NULL")
+            except ValueError:
+                cur.close(); conn.close()
+                return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Зарплата должна быть числом"})}
+
+        old_e = old_phone.replace("'", "''")
+        cur.execute(f"SELECT id FROM {SCHEMA}.applications WHERE phone = '{old_e}' ORDER BY created_at DESC LIMIT 1")
+        latest = cur.fetchone()
+        if latest:
+            cur.execute(f"UPDATE {SCHEMA}.applications SET {', '.join(app_sets)} WHERE id = '{latest[0]}'")
+        if new_phone != old_e:
+            cur.execute(f"UPDATE {SCHEMA}.applications SET phone = '{new_phone}' WHERE phone = '{old_e}'")
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "hasApplication": bool(latest)}, ensure_ascii=False)}
+
     # --- ЗАГРУЗИТЬ ДОКУМЕНТЫ КЛИЕНТА (POST, sub='docs_upload', userId=...) ---
     if sub == "docs_upload" and method == "POST":
         import base64, boto3

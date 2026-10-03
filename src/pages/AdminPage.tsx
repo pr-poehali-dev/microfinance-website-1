@@ -196,10 +196,17 @@ export default function AdminPage() {
     loadUsers();
   }
 
-  async function updateUser(userId: number, data: { fullName: string; phone: string; email: string; password: string }) {
-    const r = await fetch(`${ADMIN_URL}?sub=user_update&userId=${userId}`, { method: "POST", headers: hdrs(), body: JSON.stringify(data) });
-    if (!r.ok) throw new Error("update failed");
+  async function updateUser(userId: number, data: Record<string, string>) {
+    const r = await fetch(`${ADMIN_URL}?sub=client_profile_update&userId=${userId}`, { method: "POST", headers: hdrs(), body: JSON.stringify(data) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || "Ошибка при сохранении");
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, fullName: data.fullName, phone: data.phone, email: data.email } : u));
+  }
+
+  async function loadClientProfile(userId: number): Promise<Record<string, string | boolean>> {
+    const r = await fetch(`${ADMIN_URL}?sub=client_profile&userId=${userId}`, { headers: hdrs() });
+    if (!r.ok) throw new Error("load failed");
+    return r.json();
   }
 
   async function creditDoctorApprove(appId: number, conditions: { amount: number; days: number; rate: number; partnerCardUrl?: string }) {
@@ -369,7 +376,7 @@ export default function AdminPage() {
             onLoadLoans={loadLoans}
             onSendOffer={sendOffer} onAddLoan={addLoan}
             onAddClient={addClient} onChangeStatus={changeStatus}
-            onUpdateUser={updateUser} onUploadDocs={uploadDocs}
+            onUpdateUser={updateUser} onLoadProfile={loadClientProfile} onUploadDocs={uploadDocs}
             onCreditDoctor={creditDoctor} onWaivePenalty={waivePenalty}
           />
         )}
