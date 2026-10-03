@@ -18,6 +18,7 @@ export interface App {
   loanStatus: string | null;
   loanDisbursedAt: string | null;
   isCreditDoctor: boolean;
+  isCardRequest?: boolean;
   videoCallRequested: boolean;
   virtualCardDays: number | null;
   blockedUntil: string | null;

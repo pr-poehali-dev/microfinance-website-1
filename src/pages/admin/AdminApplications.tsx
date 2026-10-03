@@ -217,6 +217,11 @@ export default function AdminApplications({
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
                   <span style={{ color: "#022c22", fontWeight: 700, fontSize: 18 }}>{app.fullName || app.phone}</span>
+                  {app.isCardRequest && (
+                    <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(16,185,129,0.15)", color: "#047857", border: "1px solid rgba(16,185,129,0.4)" }}>
+                      💳 Заявка на карту · лимит {app.amount.toLocaleString("ru-RU")} ₽
+                    </span>
+                  )}
                   {app.isCreditDoctor && (
                     <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,rgba(16,185,129,0.3),rgba(236,72,153,0.25))", color: "#0f766e", border: "1px solid rgba(16,185,129,0.5)", display: "inline-flex", alignItems: "center", gap: 5 }}>
                       💊 Кредитный Доктор

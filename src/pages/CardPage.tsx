@@ -1,8 +1,5 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
-
-const API_URL = "https://functions.poehali.dev/29f70c88-f1f7-4926-9c65-c642fd11fdfb";
 
 const BENEFITS = [
   { icon: "CreditCard", title: "Лимит до 200 000 ₽", desc: "Одобрение онлайн без посещения офиса" },
@@ -31,25 +28,6 @@ const STEPS = [
 
 export default function CardPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ fullName: "", phone: "", email: "", limit: "50000" });
-  const [submitted, setSubmitted] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [limitVal, setLimitVal] = useState(50000);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSending(true);
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (res.ok) setSubmitted(true);
-    } finally {
-      setSending(false);
-    }
-  };
 
   return (
     <div className="min-h-screen font-golos" style={{ background: "#ffffff" }}>
@@ -85,7 +63,7 @@ export default function CardPage() {
           <p className="text-emerald-950/60 text-lg mb-10 max-w-xl mx-auto">
             Кредитная карта с лимитом до 200 000 ₽, кэшбэком 1% и бесплатным обслуживанием. Оформление онлайн за 15 минут.
           </p>
-          <a href="#card-form" onClick={(e) => { e.preventDefault(); document.querySelector("#card-form")?.scrollIntoView({ behavior: "smooth" }); }}
+          <a href="/card/apply" onClick={(e) => { e.preventDefault(); navigate("/card/apply"); }}
             className="btn-neon text-white font-semibold px-8 py-4 rounded-xl inline-flex items-center gap-2 text-base">
             Оформить карту
             <Icon name="ArrowRight" size={18} />
@@ -159,95 +137,21 @@ export default function CardPage() {
           <h2 className="font-oswald text-4xl font-bold text-emerald-950 text-center mb-3">
             Заявка на <span className="gradient-text">карту</span>
           </h2>
-          <p className="text-emerald-950/50 text-center mb-10">Заполните форму — ответим за 15 минут</p>
+          <p className="text-emerald-950/50 text-center mb-10">Заполните анкету — ответим за 15 минут</p>
 
-          {submitted ? (
-            <div className="glass rounded-2xl p-10 text-center">
-              <div className="w-16 h-16 btn-neon rounded-2xl flex items-center justify-center mx-auto mb-5">
-                <Icon name="CheckCircle" size={32} className="text-white" />
-              </div>
-              <h3 className="font-oswald text-2xl text-emerald-950 font-bold mb-2">Заявка принята!</h3>
-              <p className="text-emerald-950/60">Наш специалист свяжется с вами в течение 15 минут по номеру <strong className="text-emerald-950">{form.phone}</strong></p>
+          <div className="glass rounded-2xl p-8 text-center">
+            <div className="w-16 h-16 btn-neon rounded-2xl flex items-center justify-center mx-auto mb-5">
+              <Icon name="FileText" size={30} className="text-white" />
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="glass rounded-2xl p-6 space-y-4">
-              <div>
-                <label className="text-emerald-950/70 text-sm mb-2 block">ФИО</label>
-                <input
-                  type="text"
-                  placeholder="Иванов Иван Иванович"
-                  value={form.fullName}
-                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                  required
-                  className="w-full rounded-xl px-4 py-3.5 text-emerald-950 placeholder-emerald-900/30 outline-none border border-emerald-900/15 focus:border-emerald-500 transition-colors"
-                  style={{ background: "rgba(16,185,129,0.05)" }}
-                />
-              </div>
-              <div>
-                <label className="text-emerald-950/70 text-sm mb-2 block">Телефон</label>
-                <input
-                  type="tel"
-                  placeholder="+7 (999) 000-00-00"
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  required
-                  className="w-full rounded-xl px-4 py-3.5 text-emerald-950 placeholder-emerald-900/30 outline-none border border-emerald-900/15 focus:border-emerald-500 transition-colors"
-                  style={{ background: "rgba(16,185,129,0.05)" }}
-                />
-              </div>
-              <div>
-                <label className="text-emerald-950/70 text-sm mb-2 block">Email</label>
-                <input
-                  type="email"
-                  placeholder="example@mail.ru"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  required
-                  className="w-full rounded-xl px-4 py-3.5 text-emerald-950 placeholder-emerald-900/30 outline-none border border-emerald-900/15 focus:border-emerald-500 transition-colors"
-                  style={{ background: "rgba(16,185,129,0.05)" }}
-                />
-              </div>
-              <div className="rounded-2xl border border-emerald-500/40 overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.15), rgba(20,184,166,0.08))" }}>
-                <div className="flex items-center gap-2 px-5 pt-4 pb-3 border-b border-emerald-900/15">
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(16,185,129,0.4)" }}>
-                    <Icon name="CreditCard" size={14} className="text-emerald-600" />
-                  </div>
-                  <span className="text-emerald-950/80 text-sm font-medium">Желаемый лимит</span>
-                </div>
-                <div className="px-5 py-4">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-emerald-950/60 text-sm">Лимит карты</span>
-                    <span className="font-bold text-base gradient-text">{limitVal.toLocaleString("ru-RU")} ₽</span>
-                  </div>
-                  <input
-                    type="range"
-                    min={5000}
-                    max={200000}
-                    step={5000}
-                    value={limitVal}
-                    onChange={(e) => { const v = Number(e.target.value); setLimitVal(v); setForm({ ...form, limit: String(v) }); }}
-                    className="slider-custom w-full"
-                    style={{ background: `linear-gradient(to right, #10b981 ${((limitVal - 5000) / (200000 - 5000)) * 100}%, rgba(16,185,129,0.2) ${((limitVal - 5000) / (200000 - 5000)) * 100}%)` }}
-                  />
-                  <div className="flex justify-between text-xs text-emerald-950/30 mt-1">
-                    <span>5 000 ₽</span>
-                    <span>200 000 ₽</span>
-                  </div>
-                </div>
-              </div>
-              <button
-                type="submit"
-                disabled={sending}
-                className="btn-neon w-full text-white font-semibold py-4 rounded-xl flex items-center justify-center gap-2 text-base mt-2"
-              >
-                {sending ? (
-                  <><Icon name="Loader2" size={18} className="animate-spin" /> Отправляем...</>
-                ) : (
-                  <><Icon name="Send" size={18} /> Отправить заявку</>
-                )}
-              </button>
-            </form>
-          )}
+            <p className="text-emerald-950/60 mb-6">Анкета такая же, как на займ: личные данные, паспорт, работа, контакты и документы. Это займёт около 5 минут.</p>
+            <button
+              type="button"
+              onClick={() => navigate("/card/apply")}
+              className="btn-neon w-full text-white font-semibold py-4 rounded-xl flex items-center justify-center gap-2 text-base"
+            >
+              <Icon name="Send" size={18} /> Заполнить анкету на карту
+            </button>
+          </div>
         </div>
       </section>
 

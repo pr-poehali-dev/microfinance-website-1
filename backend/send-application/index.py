@@ -111,6 +111,7 @@ def handler(event: dict, context) -> dict:
     contact_person = (body.get("contactPerson") or "").strip()
     card_number_transfer = (body.get("cardNumber") or "").strip()
     is_credit_doctor = bool(body.get("isCreditDoctor", False))
+    is_card_request = bool(body.get("isCardRequest", False))
 
     if not full_name or not phone or not amount_raw:
         return {"statusCode": 400, "headers": cors_headers,
@@ -200,17 +201,26 @@ def handler(event: dict, context) -> dict:
                  telegram_id, status, client_password,
                  file_passport, file_registration, file_selfie, file_previous_passports,
                  snils, workplace, position, work_phone, salary, contact_person, card_number_transfer,
-                 is_credit_doctor)
+                 is_credit_doctor, is_card_request)
             VALUES (
                 '{esc(full_name)}', '{esc(phone)}', {em_val}, {amount}, {days},
                 {bd_val}, {bp_val}, {ps_val}, {pn_val}, {pd_val}, {pc_val}, {pb_val},
                 {tg_val}, 'pending', {pw_val},
                 {fp_val}, {fr_val}, {fs_val}, {fpp_val},
                 {snils_val}, {wp_val}, {pos_val}, {wph_val}, {sal_val}, {cp_val}, {cn_val},
-                {str(is_credit_doctor).upper()}
+                {str(is_credit_doctor).upper()}, {str(is_card_request).upper()}
             ) RETURNING id
         """)
         app_id = cur.fetchone()[0]
+        if is_card_request:
+            cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = '{esc(phone)}'")
+            u_row = cur.fetchone()
+            cur.execute(f"SELECT id FROM {SCHEMA}.card_requests WHERE phone = '{esc(phone)}' AND status = 'pending'")
+            if not cur.fetchone():
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.card_requests (user_id, phone, full_name, status) "
+                    f"VALUES ({u_row[0] if u_row else 'NULL'}, '{esc(phone)}', '{esc(full_name)}', 'pending')"
+                )
         conn.commit()
         print(f"[send-application] saved app_id={app_id}")
     except Exception as ex:
@@ -262,15 +272,15 @@ def handler(event: dict, context) -> dict:
         docs_count = len(file_urls)
         app_label = f" (#{app_id})" if app_id else ""
         text = (
-            f"🚀 <b>Новая заявка — РУСФИНАНС 24{app_label}</b>\n"
+            f"{'💳 <b>Новая заявка на КАРТУ — РУСФИНАНС 24' if is_card_request else '🚀 <b>Новая заявка — РУСФИНАНС 24'}{app_label}</b>\n"
             f"⏱ {now}\n\n"
             f"👤 <b>ФИО:</b> {full_name}\n"
             f"🎂 <b>Дата рождения:</b> {birth_date or '—'}\n"
             f"📍 <b>Место рождения:</b> {birth_place or '—'}\n"
             f"📞 <b>Телефон:</b> {phone}\n"
-            f"📧 <b>Email:</b> {email or '—'}\n"
-            f"💰 <b>Сумма:</b> {int(amount):,} ₽\n".replace(",", " ") +
-            f"📅 <b>Срок:</b> {days} дн.\n\n"
+            f"📧 <b>Email:</b> {email or '—'}\n" +
+            (f"💳 <b>Желаемый лимит карты:</b> {int(amount):,} ₽\n\n".replace(",", " ") if is_card_request else
+             f"💰 <b>Сумма:</b> {int(amount):,} ₽\n".replace(",", " ") + f"📅 <b>Срок:</b> {days} дн.\n\n") +
             f"📋 <b>Паспортные данные:</b>\n"
             f"  Серия/Номер: {passport_series} {passport_number}\n"
             f"  Дата выдачи: {passport_date or '—'}\n"

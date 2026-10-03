@@ -1,0 +1,1 @@
+ALTER TABLE t_p30184577_microfinance_website.applications ADD COLUMN IF NOT EXISTS is_card_request BOOLEAN NOT NULL DEFAULT FALSE;

@@ -28,7 +28,7 @@ const SECTIONS = [
 
 type SectionId = typeof SECTIONS[number]["id"];
 
-export default function ApplyPage() {
+export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isCreditDoctor = !!(location.state as { isCreditDoctor?: boolean } | null)?.isCreditDoctor;
@@ -41,7 +41,7 @@ export default function ApplyPage() {
     contactPerson: "", cardNumber: "",
     amount: "10000", days: "30",
   });
-  const [formAmount, setFormAmount] = useState(5000);
+  const [formAmount, setFormAmount] = useState(cardMode ? 50000 : 5000);
   const [formDays, setFormDays] = useState(15);
   const [files, setFiles] = useState<{ [key: string]: File | null }>({
     passportMain: null, registration: null, selfie: null, previousPassports: null,
@@ -130,6 +130,8 @@ export default function ApplyPage() {
           amount: String(formAmount), days: String(formDays),
           ...fileUrls,
           isCreditDoctor,
+          isCardRequest: cardMode,
+          ...(cardMode ? { days: "0" } : {}),
         }),
       });
       if (res.ok) {
@@ -147,9 +149,12 @@ export default function ApplyPage() {
   };
 
   const RATE = 0.005;
-  const amountBg = `linear-gradient(to right, #10b981 ${((formAmount - 500) / (50000 - 500)) * 100}%, rgba(16,185,129,0.2) ${((formAmount - 500) / (50000 - 500)) * 100}%)`;
+  const AMT_MIN = cardMode ? 5000 : 500;
+  const AMT_MAX = cardMode ? 200000 : 50000;
+  const amountBg = `linear-gradient(to right, #10b981 ${((formAmount - AMT_MIN) / (AMT_MAX - AMT_MIN)) * 100}%, rgba(16,185,129,0.2) ${((formAmount - AMT_MIN) / (AMT_MAX - AMT_MIN)) * 100}%)`;
   const daysBg = `linear-gradient(to right, #10b981 ${((formDays - 15) / (365 - 15)) * 100}%, rgba(16,185,129,0.2) ${((formDays - 15) / (365 - 15)) * 100}%)`;
 
+  const sections = SECTIONS.map(sec => sec.id === "loan" && cardMode ? { ...sec, label: "Лимит карты", icon: "CreditCard" } : sec);
   const setF = (key: string, val: string) => setForm(p => ({ ...p, [key]: val }));
 
   if (submitted) {
@@ -206,18 +211,18 @@ export default function ApplyPage() {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-4"
               style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.35)", color: "#6ee7b7" }}>
               <Icon name="FileText" size={14} />
-              Анкета заёмщика
+              {cardMode ? "Анкета на карту" : "Анкета заёмщика"}
             </div>
           )}
           <h1 className="font-oswald text-4xl md:text-5xl font-bold text-emerald-950 mb-3">
-            ОФОРМИТЬ <span className="gradient-text">ЗАЙМ</span>
+            ОФОРМИТЬ <span className="gradient-text">{cardMode ? "КАРТУ" : "ЗАЙМ"}</span>
           </h1>
           <p className="text-emerald-950/50">Заполните все поля — это займёт около 5 минут</p>
         </div>
 
         {/* НАВИГАЦИЯ ПО СЕКЦИЯМ */}
         <div className="flex flex-wrap gap-2 mb-8 justify-center">
-          {SECTIONS.map((s) => (
+          {sections.map((s) => (
             <button key={s.id} onClick={() => setActiveSection(s.id)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
               style={{
@@ -408,7 +413,43 @@ export default function ApplyPage() {
             )}
 
             {/* ПАРАМЕТРЫ ЗАЙМА */}
-            {activeSection === "loan" && (
+            {activeSection === "loan" && cardMode && (
+              <div className="glass rounded-2xl p-6 space-y-5">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center shrink-0">
+                    <Icon name="CreditCard" size={16} className="text-white" />
+                  </div>
+                  <h3 className="text-emerald-950 font-bold text-lg">Лимит карты РУСФИНАНС 24</h3>
+                </div>
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-emerald-950/60 text-sm">Желаемый лимит</span>
+                    <span className="font-bold gradient-text text-base">{formAmount.toLocaleString("ru-RU")} ₽</span>
+                  </div>
+                  <input type="range" min={5000} max={200000} step={5000} value={formAmount}
+                    onChange={e => { const v = Number(e.target.value); setFormAmount(v); setF("amount", String(v)); }}
+                    className="slider-custom w-full" style={{ background: amountBg }} />
+                  <div className="flex justify-between text-emerald-950/30 text-xs mt-1">
+                    <span>5 000 ₽</span><span>200 000 ₽</span>
+                  </div>
+                </div>
+                <div className="rounded-xl p-4 text-sm text-emerald-950/70" style={{ background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.3)" }}>
+                  Итоговый лимит и условия определит специалист после проверки анкеты.
+                </div>
+                <div className="flex justify-between">
+                  <button type="button" onClick={() => setActiveSection("contacts")}
+                    className="glass text-emerald-950/60 font-semibold px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
+                    <Icon name="ArrowLeft" size={16} /> Назад
+                  </button>
+                  <button type="button" onClick={() => setActiveSection("docs")}
+                    className="btn-neon text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                    Далее <Icon name="ArrowRight" size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {activeSection === "loan" && !cardMode && (
               <div className="glass rounded-2xl p-6 space-y-5">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center shrink-0">
@@ -538,7 +579,7 @@ export default function ApplyPage() {
 
         {/* Прогресс */}
         <div className="mt-6 flex justify-center gap-2">
-          {SECTIONS.map((s, i) => (
+          {sections.map((s, i) => (
             <div key={s.id} onClick={() => setActiveSection(s.id)}
               className="w-2 h-2 rounded-full cursor-pointer transition-all"
               style={{
