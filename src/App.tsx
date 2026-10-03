@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import CookieBanner from "./components/CookieBanner";
+import ChatWidget from "./components/ChatWidget";
 
 const Index = lazy(() => import("./pages/Index"));
 const CardPage = lazy(() => import("./pages/CardPage"));
@@ -54,6 +55,7 @@ const App = () => (
         <MaintenanceBanner />
         <CookieBanner />
         <Suspense fallback={null}>
+          <ChatWidget />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/card" element={<CardPage />} />
