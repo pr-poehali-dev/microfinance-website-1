@@ -474,8 +474,8 @@ export default function DashboardPage() {
 
         {error && (
           <div className="glass rounded-2xl p-5 flex items-center gap-3 mb-6" style={{ border: "1px solid rgba(239,68,68,0.3)" }}>
-            <Icon name="AlertCircle" size={20} className="text-red-400 shrink-0" />
-            <p className="text-red-300">{error}</p>
+            <Icon name="AlertCircle" size={20} className="text-red-600 shrink-0" />
+            <p className="text-red-600">{error}</p>
           </div>
         )}
 
@@ -586,13 +586,13 @@ export default function DashboardPage() {
                   <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(34,197,94,0.2)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.3)" }}>Одобрено ✓</span>
                 )}
                 {shopLoan.status === "approved" && shopLoan.contract_signed && !shopLoan.disbursed_at && (
-                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(239,68,68,0.2)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>Ожидает выдачи</span>
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(239,68,68,0.2)", color: "#dc2626", border: "1px solid rgba(239,68,68,0.3)" }}>Ожидает выдачи</span>
                 )}
                 {shopLoan.status === "approved" && shopLoan.disbursed_at && (
                   <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(14,165,233,0.2)", color: "#38bdf8", border: "1px solid rgba(14,165,233,0.3)" }}>Займ выдан</span>
                 )}
                 {shopLoan.status === "rejected" && (
-                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(239,68,68,0.2)", color: "#f87171", border: "1px solid rgba(239,68,68,0.3)" }}>Отказ</span>
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(239,68,68,0.2)", color: "#dc2626", border: "1px solid rgba(239,68,68,0.3)" }}>Отказ</span>
                 )}
               </div>
 
@@ -731,8 +731,8 @@ export default function DashboardPage() {
                       </div>
                     ) : (
                       <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)" }}>
-                        <Icon name="Clock" size={18} className="text-red-400 animate-pulse" />
-                        <div className="text-red-300 text-sm font-semibold">Договор подписан! Ожидайте выдачу — деньги скоро переведутся в магазин.</div>
+                        <Icon name="Clock" size={18} className="text-red-600 animate-pulse" />
+                        <div className="text-red-600 text-sm font-semibold">Договор подписан! Ожидайте выдачу — деньги скоро переведутся в магазин.</div>
                       </div>
                     )}
                   </div>
@@ -742,7 +742,7 @@ export default function DashboardPage() {
                   <div className="flex items-start gap-3">
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
                       style={{ background: "rgba(239,68,68,0.15)" }}>
-                      <Icon name="XCircle" size={16} className="text-red-400" />
+                      <Icon name="XCircle" size={16} className="text-red-600" />
                     </div>
                     <div>
                       <div className="text-emerald-950 font-semibold mb-1">По заявке принято отрицательное решение</div>
@@ -771,7 +771,7 @@ export default function DashboardPage() {
                   <div className="text-emerald-950/40 text-xs">{carLoan.car_brand} {carLoan.car_model} {carLoan.car_year} · #{carLoan.id}</div>
                 </div>
                 {carLoan.status === "pending" && (
-                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(239,68,68,0.2)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(239,68,68,0.2)", color: "#dc2626", border: "1px solid rgba(239,68,68,0.3)" }}>
                     На рассмотрении
                   </span>
                 )}
@@ -781,7 +781,7 @@ export default function DashboardPage() {
                   </span>
                 )}
                 {carLoan.status === "approved" && carLoan.contract_signed && !carLoan.disbursed_at && (
-                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(239,68,68,0.2)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(239,68,68,0.2)", color: "#dc2626", border: "1px solid rgba(239,68,68,0.3)" }}>
                     Ожидает выдачи
                   </span>
                 )}
@@ -791,7 +791,7 @@ export default function DashboardPage() {
                   </span>
                 )}
                 {carLoan.status === "rejected" && (
-                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(239,68,68,0.2)", color: "#f87171", border: "1px solid rgba(239,68,68,0.3)" }}>
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(239,68,68,0.2)", color: "#dc2626", border: "1px solid rgba(239,68,68,0.3)" }}>
                     Отказ
                   </span>
                 )}
@@ -803,7 +803,7 @@ export default function DashboardPage() {
                     <div className="flex items-start gap-3 mb-4">
                       <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
                         style={{ background: "rgba(239,68,68,0.15)" }}>
-                        <Icon name="Clock" size={16} className="text-red-400" />
+                        <Icon name="Clock" size={16} className="text-red-600" />
                       </div>
                       <div>
                         <div className="text-emerald-950 font-semibold mb-1">Заявка рассматривается</div>
@@ -815,14 +815,14 @@ export default function DashboardPage() {
                       {!carTimerDone ? (
                         <>
                           <div className="font-oswald text-5xl font-bold mb-2"
-                            style={{ color: "#ef4444", textShadow: "0 0 24px rgba(239,68,68,0.5)" }}>
+                            style={{ color: "#dc2626", textShadow: "0 0 24px rgba(239,68,68,0.5)" }}>
                             {`${Math.floor(carTimer/60).toString().padStart(2,"0")}:${(carTimer%60).toString().padStart(2,"0")}`}
                           </div>
                           <div className="text-emerald-950/40 text-sm">Примерное время до ответа</div>
                         </>
                       ) : (
                         <>
-                          <Icon name="FileSearch" size={28} className="text-red-400 mx-auto mb-2" />
+                          <Icon name="FileSearch" size={28} className="text-red-600 mx-auto mb-2" />
                           <div className="text-emerald-950 font-semibold mb-1">Заявка на рассмотрении</div>
                           <div className="text-emerald-950/40 text-sm">Специалист свяжется с вами в ближайшее время</div>
                         </>
@@ -899,7 +899,7 @@ export default function DashboardPage() {
                       <div>
                         <div className="rounded-xl p-4 mb-4 flex items-start gap-3"
                           style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
-                          <Icon name="FileText" size={16} className="text-red-400 shrink-0 mt-0.5" />
+                          <Icon name="FileText" size={16} className="text-red-600 shrink-0 mt-0.5" />
                           <div className="text-emerald-950/60 text-sm">
                             Нажмите кнопку ниже для подписания договора. Деньги будут переведены на ваши реквизиты сразу после подписания.
                           </div>
@@ -919,8 +919,8 @@ export default function DashboardPage() {
                     ) : (
                       <div className="rounded-xl p-4 flex items-center gap-3"
                         style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)" }}>
-                        <Icon name="Clock" size={18} className="text-red-400 animate-pulse" />
-                        <div className="text-red-300 text-sm font-semibold">Договор подписан! Ожидайте выдачу — деньги скоро поступят на ваши реквизиты.</div>
+                        <Icon name="Clock" size={18} className="text-red-600 animate-pulse" />
+                        <div className="text-red-600 text-sm font-semibold">Договор подписан! Ожидайте выдачу — деньги скоро поступят на ваши реквизиты.</div>
                       </div>
                     )}
                   </div>
@@ -930,7 +930,7 @@ export default function DashboardPage() {
                   <div className="flex items-start gap-3">
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
                       style={{ background: "rgba(239,68,68,0.15)" }}>
-                      <Icon name="XCircle" size={16} className="text-red-400" />
+                      <Icon name="XCircle" size={16} className="text-red-600" />
                     </div>
                     <div>
                       <div className="text-emerald-950 font-semibold mb-1">По заявке принято отрицательное решение</div>

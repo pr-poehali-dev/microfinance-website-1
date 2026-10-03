@@ -35,11 +35,11 @@ export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectR
         style={{ border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.04)" }}>
         <div className="px-6 py-5 flex items-center gap-4">
           <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(239,68,68,0.2)" }}>
-            <Icon name="Clock" size={20} className="text-red-400" />
+            <Icon name="Clock" size={20} className="text-red-600" />
           </div>
           <div>
             <div className="text-emerald-950 font-bold">Заявка на карту РУСФИНАНС 24 на рассмотрении</div>
-            <div className="text-red-300 text-sm mt-0.5">Мы сообщим вам, как только карта будет одобрена</div>
+            <div className="text-red-600 text-sm mt-0.5">Мы сообщим вам, как только карта будет одобрена</div>
           </div>
         </div>
       </div>
@@ -58,7 +58,7 @@ export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectR
             <div className="text-emerald-950 font-bold">Карта РУСФИНАНС 24</div>
             <div className="text-emerald-950/40 text-sm">Подайте заявку и получите доступ к лимиту в любое время</div>
             {cardRequestStatus === "rejected" && (
-              <div className="text-red-400 text-xs mt-1">
+              <div className="text-red-600 text-xs mt-1">
                 Предыдущая заявка отклонена{cardRequestRejectReason ? `: ${cardRequestRejectReason}` : ""}
               </div>
             )}
@@ -75,7 +75,7 @@ export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectR
       </div>
       {error && (
         <div className="px-6 pb-5">
-          <div className="rounded-xl px-4 py-3 text-sm font-medium" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#f87171" }}>
+          <div className="rounded-xl px-4 py-3 text-sm font-medium" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#dc2626" }}>
             {error}
           </div>
         </div>

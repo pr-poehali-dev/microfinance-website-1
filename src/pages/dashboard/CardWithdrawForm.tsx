@@ -151,7 +151,7 @@ export default function CardWithdrawForm({ available, defaultCard, onSuccess }: 
       </div>
 
       {error && (
-        <div className="rounded-lg px-4 py-2.5 text-sm" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#f87171" }}>
+        <div className="rounded-lg px-4 py-2.5 text-sm" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#dc2626" }}>
           {error}
         </div>
       )}

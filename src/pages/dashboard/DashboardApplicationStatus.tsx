@@ -224,7 +224,7 @@ export default function DashboardApplicationStatus({
             style={{ background: "linear-gradient(135deg,rgba(239,68,68,0.2),rgba(239,68,68,0.05))" }}>
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
               style={{ background: "rgba(239,68,68,0.2)" }}>
-              <Icon name="Clock" size={20} className="text-red-400" />
+              <Icon name="Clock" size={20} className="text-red-600" />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
@@ -241,13 +241,13 @@ export default function DashboardApplicationStatus({
               </div>
             </div>
             <span className="text-xs px-3 py-1 rounded-full font-semibold"
-              style={{ background: "rgba(239,68,68,0.2)", color: "#ef4444" }}>На рассмотрении</span>
+              style={{ background: "rgba(239,68,68,0.2)", color: "#dc2626" }}>На рассмотрении</span>
           </div>
           <div className="px-6 py-8 flex flex-col items-center text-center">
             {!timerDone ? (
               <>
                 <div className="font-oswald text-6xl font-bold mb-3"
-                  style={{ color: "#ef4444", textShadow: "0 0 30px rgba(239,68,68,0.4)" }}>
+                  style={{ color: "#dc2626", textShadow: "0 0 30px rgba(239,68,68,0.4)" }}>
                   {fmtTimer(timerSec)}
                 </div>
                 <p className="text-emerald-950/50 text-sm">Осталось до завершения рассмотрения</p>
@@ -256,7 +256,7 @@ export default function DashboardApplicationStatus({
               <>
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3"
                   style={{ background: "rgba(239,68,68,0.2)" }}>
-                  <Icon name="FileSearch" size={26} className="text-red-400" />
+                  <Icon name="FileSearch" size={26} className="text-red-600" />
                 </div>
                 <p className="text-emerald-950 font-semibold text-lg mb-1">Ваша заявка на рассмотрении</p>
                 <p className="text-emerald-950/50 text-sm">Специалист свяжется с вами в ближайшее время</p>
@@ -358,7 +358,7 @@ export default function DashboardApplicationStatus({
                     </button>
                   )}
                 </div>
-                {cardError && <p className="text-red-400 text-xs">{cardError}</p>}
+                {cardError && <p className="text-red-600 text-xs">{cardError}</p>}
                 <p className="text-emerald-950/30 text-xs">Номер карты или номер телефона (СБП) для получения займа</p>
               </div>
 
@@ -388,8 +388,8 @@ export default function DashboardApplicationStatus({
                   return (
                     <div className="rounded-xl px-5 py-4 flex items-center gap-3"
                       style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}>
-                      <Icon name="Clock" size={20} className="text-red-400 shrink-0 animate-pulse" />
-                      <div className="text-red-300 text-sm font-medium">Договор подписан! Ожидайте выдачу займа — деньги скоро поступят на ваши реквизиты.</div>
+                      <Icon name="Clock" size={20} className="text-red-600 shrink-0 animate-pulse" />
+                      <div className="text-red-600 text-sm font-medium">Договор подписан! Ожидайте выдачу займа — деньги скоро поступят на ваши реквизиты.</div>
                     </div>
                   );
                 }
@@ -553,7 +553,7 @@ export default function DashboardApplicationStatus({
                   </button>
                 )}
               </div>
-              {cardError && <p className="text-red-400 text-xs">{cardError}</p>}
+              {cardError && <p className="text-red-600 text-xs">{cardError}</p>}
               <p className="text-emerald-950/30 text-xs">Введите номер карты или номер телефона (СБП) для получения займа</p>
             </div>
 
@@ -614,8 +614,8 @@ export default function DashboardApplicationStatus({
                 return (
                   <div className="rounded-xl px-5 py-4 flex items-center gap-3"
                     style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}>
-                    <Icon name="Clock" size={20} className="text-red-400 shrink-0 animate-pulse" />
-                    <div className="text-red-300 text-sm font-medium">Договор подписан! Ожидайте выдачу займа — деньги скоро поступят на ваши реквизиты.</div>
+                    <Icon name="Clock" size={20} className="text-red-600 shrink-0 animate-pulse" />
+                    <div className="text-red-600 text-sm font-medium">Договор подписан! Ожидайте выдачу займа — деньги скоро поступят на ваши реквизиты.</div>
                   </div>
                 );
               }
@@ -641,7 +641,7 @@ export default function DashboardApplicationStatus({
             style={{ background: "linear-gradient(135deg,rgba(220,38,38,0.25),rgba(239,68,68,0.08))" }}>
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
               style={{ background: "rgba(239,68,68,0.2)" }}>
-              <Icon name="XCircle" size={20} className="text-red-400" />
+              <Icon name="XCircle" size={20} className="text-red-600" />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
@@ -653,10 +653,10 @@ export default function DashboardApplicationStatus({
                   </span>
                 )}
               </div>
-              <div className="text-red-400 text-xs mt-0.5">Подана {application.createdAt}</div>
+              <div className="text-red-600 text-xs mt-0.5">Подана {application.createdAt}</div>
             </div>
             <span className="text-xs px-3 py-1 rounded-full font-semibold"
-              style={{ background: "rgba(239,68,68,0.2)", color: "#f87171" }}>Отказ</span>
+              style={{ background: "rgba(239,68,68,0.2)", color: "#dc2626" }}>Отказ</span>
           </div>
           <div className="px-6 py-5 space-y-3">
             {application.rejectReason && (
@@ -669,9 +669,9 @@ export default function DashboardApplicationStatus({
             {application.reapplyDaysLeft !== undefined && application.reapplyDaysLeft !== null && application.reapplyDaysLeft > 0 ? (
               <div className="rounded-xl px-4 py-3 flex items-center gap-3"
                 style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
-                <Icon name="Clock" size={18} className="text-red-400 shrink-0" />
+                <Icon name="Clock" size={18} className="text-red-600 shrink-0" />
                 <div className="text-emerald-950/70 text-sm">
-                  Повторная заявка возможна через <b className="text-red-400">{application.reapplyDaysLeft} {application.reapplyDaysLeft === 1 ? "день" : application.reapplyDaysLeft < 5 ? "дня" : "дней"}</b>
+                  Повторная заявка возможна через <b className="text-red-600">{application.reapplyDaysLeft} {application.reapplyDaysLeft === 1 ? "день" : application.reapplyDaysLeft < 5 ? "дня" : "дней"}</b>
                 </div>
               </div>
             ) : isRepeatClient ? (

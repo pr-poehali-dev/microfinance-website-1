@@ -52,9 +52,9 @@ interface Application {
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
   active:   { label: "Займ выдан",      color: "#4ade80", bg: "rgba(74,222,128,0.15)" },
   paid:     { label: "Погашен",         color: "#2dd4bf", bg: "rgba(45,212,191,0.15)" },
-  overdue:  { label: "Просрочен",       color: "#f87171", bg: "rgba(248,113,113,0.15)" },
-  review:   { label: "На рассмотрении", color: "#ef4444", bg: "rgba(239,68,68,0.15)" },
-  signed:   { label: "Ожидает выдачи",  color: "#ef4444", bg: "rgba(239,68,68,0.15)" },
+  overdue:  { label: "Просрочен",       color: "#dc2626", bg: "rgba(248,113,113,0.15)" },
+  review:   { label: "На рассмотрении", color: "#dc2626", bg: "rgba(239,68,68,0.15)" },
+  signed:   { label: "Ожидает выдачи",  color: "#dc2626", bg: "rgba(239,68,68,0.15)" },
 };
 
 interface Props {
@@ -191,9 +191,9 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                   {loan.status === "review" && loan.signed && !loan.disbursedAt && (
                     <div className="mb-4 rounded-xl px-5 py-4 flex items-center gap-3"
                       style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)" }}>
-                      <Icon name="Clock" size={22} className="text-red-400 shrink-0 animate-pulse" />
+                      <Icon name="Clock" size={22} className="text-red-600 shrink-0 animate-pulse" />
                       <div>
-                        <div className="text-red-300 font-bold text-sm">Договор подписан! Ожидайте выдачу займа</div>
+                        <div className="text-red-600 font-bold text-sm">Договор подписан! Ожидайте выдачу займа</div>
                         <div className="text-emerald-950/40 text-xs mt-0.5">Деньги скоро поступят на ваши реквизиты</div>
                       </div>
                     </div>
@@ -215,9 +215,9 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                   {loan.status === "overdue" && !!loan.overdueDays && (
                     <div className="mb-4 rounded-xl px-5 py-4 flex items-start gap-3"
                       style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.35)" }}>
-                      <Icon name="AlertTriangle" size={22} className="text-red-400 shrink-0" />
+                      <Icon name="AlertTriangle" size={22} className="text-red-600 shrink-0" />
                       <div>
-                        <div className="text-red-300 font-bold text-sm">Займ просрочен на {loan.overdueDays} {loan.overdueDays === 1 ? "день" : loan.overdueDays < 5 ? "дня" : "дней"}</div>
+                        <div className="text-red-600 font-bold text-sm">Займ просрочен на {loan.overdueDays} {loan.overdueDays === 1 ? "день" : loan.overdueDays < 5 ? "дня" : "дней"}</div>
                         <div className="text-emerald-950/50 text-xs mt-0.5">
                           Начисляется пеня {loan.penaltyRatePercent ?? 7}% в день от суммы основного долга — уже {(loan.penaltyAmount ?? 0).toLocaleString("ru-RU")} ₽. Сумма к возврату увеличивается каждый день.
                         </div>
@@ -237,7 +237,7 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                     style={{ background: loan.status === "overdue" ? "rgba(248,113,113,0.12)" : "rgba(16,185,129,0.12)", border: loan.status === "overdue" ? "1px solid rgba(248,113,113,0.35)" : "1px solid rgba(16,185,129,0.3)" }}>
                     <div>
                       <div className="text-emerald-950/50 text-sm">{loan.paidTotal ? "Остаток к возврату" : "К возврату"}</div>
-                      <div className={`font-bold text-2xl ${loan.status === "overdue" ? "text-red-400" : "gradient-text"}`}>{(loan.remaining ?? loan.total).toLocaleString("ru-RU")} ₽</div>
+                      <div className={`font-bold text-2xl ${loan.status === "overdue" ? "text-red-600" : "gradient-text"}`}>{(loan.remaining ?? loan.total).toLocaleString("ru-RU")} ₽</div>
                       <div className="text-emerald-950/30 text-xs">
                         включая {loan.interest.toLocaleString("ru-RU")} ₽ процентов
                         {!!loan.penaltyAmount && ` и ${loan.penaltyAmount.toLocaleString("ru-RU")} ₽ пени за просрочку`}
@@ -256,7 +256,7 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                       <button
                         onClick={() => onPay(loan)}
                         className="text-white font-semibold px-6 py-3 rounded-xl flex items-center gap-2"
-                        style={{ background: "linear-gradient(135deg,#dc2626,#f87171)" }}
+                        style={{ background: "linear-gradient(135deg,#dc2626,#dc2626)" }}
                       >
                         <Icon name="AlertCircle" size={16} />
                         Погасить займ
