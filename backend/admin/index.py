@@ -1820,10 +1820,12 @@ def handler(event: dict, context) -> dict:
         issued_row = cur.fetchone()
         cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_repayments WHERE application_id = '{app_id_e}'")
         repaid_sum = float(cur.fetchone()[0])
+        cur.execute(f"SELECT COALESCE(tx_id,0), due_date FROM {SCHEMA}.card_payment_notices WHERE application_id = '{app_id_e}' AND status = 'done'")
+        paid_keys = [f"{r_[0]}|{r_[1]}" for r_ in cur.fetchall()]
         cur.close(); conn.close()
         debt = max(0, sum(i["total"] for i in items if i["status"] != "cancelled") - repaid_sum)
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({
-            "transactions": items, "debt": debt,
+            "transactions": items, "debt": debt, "paidNotices": paid_keys,
             "minPaymentPercent": CARD_MIN_PAYMENT_PERCENT,
             "minPayment": round(debt * CARD_MIN_PAYMENT_PERCENT / 100),
             "paymentSchedule": card_payment_schedule(issued_row[0] if issued_row else None, debt),
@@ -1854,7 +1856,7 @@ def handler(event: dict, context) -> dict:
                 reps.setdefault(rp[1], []).append(rp)
         notices: dict = {}
         if ids:
-            cur.execute(f"SELECT id, application_id, amount, due_date, created_at, tx_id FROM {SCHEMA}.card_payment_notices WHERE application_id IN ({','.join(ids)}) AND status = 'new' ORDER BY created_at DESC")
+            cur.execute(f"SELECT id, application_id, amount, due_date, created_at, tx_id, status, resolved_at FROM {SCHEMA}.card_payment_notices WHERE application_id IN ({','.join(ids)}) ORDER BY created_at DESC")
             for n in cur.fetchall():
                 notices.setdefault(n[1], []).append(n)
         cur.close(); conn.close()
@@ -1895,7 +1897,8 @@ def handler(event: dict, context) -> dict:
                 "minPaymentPercent": CARD_MIN_PAYMENT_PERCENT, "minPayment": round(debt * CARD_MIN_PAYMENT_PERCENT / 100),
                 "paymentSchedule": card_payment_schedule(issued_at, debt) if debt > 0 else [],
                 "transactions": tx_list,
-                "notices": [{"id": n[0], "amount": float(n[2]), "dueDate": n[3], "createdAt": msk(n[4]).strftime("%d.%m.%Y в %H:%M"), "txId": n[5]} for n in notices.get(app_id, [])],
+                "notices": [{"id": n[0], "amount": float(n[2]), "dueDate": n[3], "createdAt": msk(n[4]).strftime("%d.%m.%Y в %H:%M"), "txId": n[5]} for n in notices.get(app_id, []) if n[6] == "new"],
+                "paidRows": [{"key": f"{n[5] or 0}|{n[3]}", "amount": float(n[2]), "paidAt": msk(n[7]).strftime("%d.%m.%Y в %H:%M") if n[7] else None} for n in notices.get(app_id, []) if n[6] == "done"],
                 "repayments": [{"id": x[0], "amount": float(x[2]), "note": x[3] or "", "createdAt": msk(x[4]).strftime("%d.%m.%Y в %H:%M")} for x in reps.get(app_id, [])],
             })
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"cards": cards}, ensure_ascii=False)}

@@ -21,7 +21,7 @@ export default function AdminCardControl({ app, token, onDone }: Props) {
   const [done, setDone] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
   const [scheduleLoading, setScheduleLoading] = useState(false);
-  const [schedule, setSchedule] = useState<{ debt: number; minPaymentPercent: number; minPayment: number; paymentSchedule: CardPaymentRow[] } | null>(null);
+  const [schedule, setSchedule] = useState<{ debt: number; minPaymentPercent: number; minPayment: number; paymentSchedule: CardPaymentRow[]; paidNotices?: string[] } | null>(null);
 
   async function toggleSchedule() {
     if (showSchedule) { setShowSchedule(false); return; }
@@ -174,7 +174,7 @@ export default function AdminCardControl({ app, token, onDone }: Props) {
         <div style={{ minWidth: 280 }}>
           {scheduleLoading && <div style={{ textAlign: "center", padding: 12 }}><Icon name="Loader2" size={18} className="animate-spin text-emerald-600" /></div>}
           {!scheduleLoading && schedule && (
-            <CardPaymentSchedule debt={schedule.debt} minPaymentPercent={schedule.minPaymentPercent} minPayment={schedule.minPayment} schedule={schedule.paymentSchedule} />
+            <CardPaymentSchedule debt={schedule.debt} minPaymentPercent={schedule.minPaymentPercent} minPayment={schedule.minPayment} schedule={schedule.paymentSchedule} paidNotices={schedule.paidNotices ?? []} highlightPaid />
           )}
         </div>
       )}

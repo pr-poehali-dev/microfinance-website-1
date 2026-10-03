@@ -17,6 +17,7 @@ interface Card {
   paymentSchedule: { week: number; dueDate: string; amount: number; isNext: boolean }[];
   transactions: Tx[];
   notices: { id: number; amount: number; dueDate: string; createdAt: string; txId: number | null }[];
+  paidRows: { key: string; amount: number; paidAt: string | null }[];
   repayments: { id: number; amount: number; note: string; createdAt: string }[];
 }
 
@@ -162,11 +163,18 @@ export default function AdminCards({ token, onChanged }: Props) {
                             Карта клиента для перевода: <b style={{ color: "#022c22" }}>{t.targetCard || "не указана"}</b>
                           </div>
                           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
-                            {t.schedule.map(s => (
-                              <span key={s.week} style={{ background: "rgba(16,185,129,0.08)", borderRadius: 8, padding: "4px 8px", fontSize: 12, color: "#022c22" }}>
-                                {s.dueDate} · {fmt(s.amount)}
-                              </span>
-                            ))}
+                            {t.schedule.map(s => {
+                              const paid = c.paidRows.find(p => p.key === `${t.id}|${s.dueDate}`);
+                              return (
+                                <span key={s.week} style={{
+                                  background: paid ? "rgba(14,165,233,0.18)" : "rgba(16,185,129,0.08)",
+                                  border: paid ? "1px solid rgba(14,165,233,0.6)" : "1px solid transparent",
+                                  borderRadius: 8, padding: "4px 8px", fontSize: 12, color: "#022c22" }}>
+                                  {s.dueDate} · {fmt(s.amount)}
+                                  {paid && <b style={{ color: "#0369a1", marginLeft: 6 }}>✓ Оплачен</b>}
+                                </span>
+                              );
+                            })}
                           </div>
                           {cancelled ? (
                             <div style={{ color: "#dc2626", fontSize: 13 }}>Перевод отменён</div>
@@ -199,15 +207,26 @@ export default function AdminCards({ token, onChanged }: Props) {
                     <div style={{ color: "#059669", fontSize: 12, fontWeight: 700, textTransform: "uppercase", marginBottom: 8 }}>
                       График платежей · раз в неделю · мин. {c.minPaymentPercent}% = {fmt(c.minPayment)}
                     </div>
+                    <div style={{ fontSize: 11, color: "rgba(2,44,34,0.5)", marginBottom: 8 }}>
+                      <span style={{ background: "rgba(14,165,233,0.18)", border: "1px solid rgba(14,165,233,0.6)", borderRadius: 6, padding: "1px 6px", color: "#0369a1", fontWeight: 700 }}>✓ Оплачен</span>
+                      {" "}— клиент оплатил, вы нажали «Проверено»
+                    </div>
                     {c.paymentSchedule.length === 0 ? (
                       <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 13 }}>Долга нет — платежей нет</div>
                     ) : (
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                        {c.paymentSchedule.map(s => (
-                          <span key={s.week} style={{ background: s.isNext ? "rgba(16,185,129,0.2)" : "rgba(16,185,129,0.07)", border: s.isNext ? "1px solid rgba(16,185,129,0.5)" : "1px solid transparent", borderRadius: 8, padding: "5px 10px", fontSize: 12, color: "#022c22" }}>
-                            {s.dueDate} · от {fmt(s.amount)}
-                          </span>
-                        ))}
+                        {c.paymentSchedule.map(s => {
+                          const paid = c.paidRows.find(p => p.key === `0|${s.dueDate}`);
+                          return (
+                            <span key={s.week} style={{
+                              background: paid ? "rgba(14,165,233,0.18)" : s.isNext ? "rgba(16,185,129,0.2)" : "rgba(16,185,129,0.07)",
+                              border: paid ? "1px solid rgba(14,165,233,0.6)" : s.isNext ? "1px solid rgba(16,185,129,0.5)" : "1px solid transparent",
+                              borderRadius: 8, padding: "5px 10px", fontSize: 12, color: "#022c22" }}>
+                              {s.dueDate} · от {fmt(s.amount)}
+                              {paid && <b style={{ color: "#0369a1", marginLeft: 6 }}>✓ Оплачен{paid.paidAt ? ` (${paid.paidAt})` : ""}</b>}
+                            </span>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
