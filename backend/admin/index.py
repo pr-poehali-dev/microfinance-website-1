@@ -1885,6 +1885,11 @@ def handler(event: dict, context) -> dict:
             cur.execute(f"SELECT id, application_id, amount, note, created_at FROM {SCHEMA}.card_repayments WHERE application_id IN ({','.join(ids)}) ORDER BY created_at DESC")
             for rp in cur.fetchall():
                 reps.setdefault(rp[1], []).append(rp)
+        limit_hist: dict = {}
+        if ids:
+            cur.execute(f"SELECT id, application_id, old_limit, new_limit, added_amount, created_at, seen FROM {SCHEMA}.card_limit_increases WHERE application_id IN ({','.join(ids)}) ORDER BY created_at DESC")
+            for h in cur.fetchall():
+                limit_hist.setdefault(h[1], []).append(h)
         notices: dict = {}
         if ids:
             cur.execute(f"SELECT id, application_id, amount, due_date, created_at, tx_id, status, resolved_at FROM {SCHEMA}.card_payment_notices WHERE application_id IN ({','.join(ids)}) ORDER BY created_at DESC")
@@ -1929,6 +1934,7 @@ def handler(event: dict, context) -> dict:
                 "paymentSchedule": card_payment_schedule(issued_at, debt) if debt > 0 else [],
                 "transactions": tx_list,
                 "notices": [{"id": n[0], "amount": float(n[2]), "dueDate": n[3], "createdAt": msk(n[4]).strftime("%d.%m.%Y в %H:%M"), "txId": n[5]} for n in notices.get(app_id, []) if n[6] == "new"],
+                "limitHistory": [{"id": h[0], "oldLimit": float(h[2]), "newLimit": float(h[3]), "added": float(h[4]), "createdAt": msk(h[5]).strftime("%d.%m.%Y в %H:%M"), "seen": bool(h[6])} for h in limit_hist.get(app_id, [])],
                 "paidRows": [{"key": f"{n[5] or 0}|{n[3]}", "amount": float(n[2]), "paidAt": msk(n[7]).strftime("%d.%m.%Y в %H:%M") if n[7] else None} for n in notices.get(app_id, []) if n[6] == "done"],
                 "repayments": [{"id": x[0], "amount": float(x[2]), "note": x[3] or "", "createdAt": msk(x[4]).strftime("%d.%m.%Y в %H:%M")} for x in reps.get(app_id, [])],
             })

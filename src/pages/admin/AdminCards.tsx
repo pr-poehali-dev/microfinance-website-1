@@ -17,6 +17,7 @@ interface Card {
   paymentSchedule: { week: number; dueDate: string; amount: number; isNext: boolean }[];
   transactions: Tx[];
   notices: { id: number; amount: number; dueDate: string; createdAt: string; txId: number | null }[];
+  limitHistory: { id: number; oldLimit: number; newLimit: number; added: number; createdAt: string; seen: boolean }[];
   paidRows: { key: string; amount: number; paidAt: string | null }[];
   repayments: { id: number; amount: number; note: string; createdAt: string }[];
 }
@@ -185,6 +186,19 @@ export default function AdminCards({ token, onChanged }: Props) {
                             Новый лимит: <b style={{ color: "#022c22" }}>{fmt(c.limit + Number(limitAdd[c.appId]))}</b>
                           </div>
                         )}
+                      </div>
+                    )}
+                    {c.limitHistory.length > 0 && (
+                      <div style={{ marginTop: 12, borderTop: "1px solid rgba(16,185,129,0.15)", paddingTop: 10 }}>
+                        <div style={{ color: "#059669", fontSize: 12, fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>История увеличений лимита</div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          {c.limitHistory.map(h => (
+                            <div key={h.id} style={{ fontSize: 12, color: "rgba(2,44,34,0.65)" }}>
+                              {h.createdAt} — <b style={{ color: "#047857" }}>+{fmt(h.added)}</b> ({fmt(h.oldLimit)} → {fmt(h.newLimit)})
+                              <span style={{ marginLeft: 6, color: h.seen ? "#047857" : "#b45309" }}>{h.seen ? "· клиент увидел" : "· клиент ещё не видел"}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
