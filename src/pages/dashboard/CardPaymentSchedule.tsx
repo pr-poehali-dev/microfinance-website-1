@@ -16,11 +16,13 @@ interface Props {
   schedule: CardPaymentRow[];
   cardLast4?: string;
   fullName?: string;
+  pendingNotices?: string[];
+  onReported?: () => void;
 }
 
 const fmt = (n: number) => `${n.toLocaleString("ru-RU")} ₽`;
 
-export default function CardPaymentSchedule({ debt, minPaymentPercent, minPayment, schedule, cardLast4, fullName }: Props) {
+export default function CardPaymentSchedule({ debt, minPaymentPercent, minPayment, schedule, cardLast4, fullName, pendingNotices = [], onReported }: Props) {
   const [payRow, setPayRow] = useState<CardPaymentRow | null>(null);
   return (
     <div className="rounded-xl p-4 space-y-3" style={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.2)" }}>
@@ -61,12 +63,22 @@ export default function CardPaymentSchedule({ debt, minPaymentPercent, minPaymen
                 <span className="flex items-center gap-2">
                   <span className="text-emerald-950 font-semibold text-sm">от {fmt(s.amount)}</span>
                   {cardLast4 && (
-                    <button
-                      onClick={() => setPayRow(s)}
-                      className="btn-neon text-white text-xs font-semibold px-3 py-1.5 rounded-lg"
-                    >
-                      Оплатить
-                    </button>
+                    pendingNotices.includes(s.dueDate) ? (
+                      <button
+                        onClick={() => setPayRow(s)}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                        style={{ background: "rgba(245,158,11,0.15)", color: "#b45309" }}
+                      >
+                        Оплата проверяется
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setPayRow(s)}
+                        className="btn-neon text-white text-xs font-semibold px-3 py-1.5 rounded-lg"
+                      >
+                        Оплатить
+                      </button>
+                    )
                   )}
                 </span>
               </div>
@@ -83,6 +95,8 @@ export default function CardPaymentSchedule({ debt, minPaymentPercent, minPaymen
           dueDate={payRow.dueDate}
           cardLast4={cardLast4}
           fullName={fullName}
+          alreadyReported={pendingNotices.includes(payRow.dueDate)}
+          onReported={onReported}
           onClose={() => setPayRow(null)}
         />
       )}

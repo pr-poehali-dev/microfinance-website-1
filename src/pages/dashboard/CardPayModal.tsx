@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 
+const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 const PAY_CARD_NUMBER = "2204390115539020";
 const PAY_CARD_FORMATTED = "2204 3901 1553 9020";
 
@@ -9,11 +10,37 @@ interface Props {
   dueDate: string;
   cardLast4: string;
   fullName?: string;
+  alreadyReported?: boolean;
   onClose: () => void;
+  onReported?: () => void;
 }
 
-export default function CardPayModal({ amount, dueDate, cardLast4, fullName, onClose }: Props) {
+export default function CardPayModal({ amount, dueDate, cardLast4, fullName, alreadyReported, onClose, onReported }: Props) {
   const [copied, setCopied] = useState<"card" | "last4" | null>(null);
+  const [sending, setSending] = useState(false);
+  const [reported, setReported] = useState(!!alreadyReported);
+  const [error, setError] = useState("");
+
+  const reportPaid = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setSending(true); setError("");
+    try {
+      const res = await fetch(`${LOANS_URL}?sub=card_paid`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ amount, dueDate }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(d.error || "Не удалось отправить. Попробуйте ещё раз."); return; }
+      setReported(true);
+      onReported?.();
+    } catch {
+      setError("Нет связи с сервером. Попробуйте ещё раз.");
+    } finally {
+      setSending(false);
+    }
+  };
 
   const copy = (text: string, type: "card" | "last4") => {
     navigator.clipboard.writeText(text).then(() => {
@@ -91,8 +118,27 @@ export default function CardPayModal({ amount, dueDate, cardLast4, fullName, onC
             <p className="text-emerald-950/70 text-sm">Зачисление денег происходит в течение 15 минут.</p>
           </div>
 
-          <button onClick={onClose} className="w-full btn-neon text-white font-semibold py-3.5 rounded-xl">
-            Понятно
+          {error && (
+            <div className="rounded-lg px-4 py-2.5 text-sm" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#dc2626" }}>
+              {error}
+            </div>
+          )}
+
+          {reported ? (
+            <div className="rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.35)" }}>
+              <Icon name="CheckCircle" size={20} className="text-emerald-600 shrink-0" />
+              <p className="text-emerald-950 text-sm font-medium">Спасибо! Мы получили ваше сообщение об оплате и проверим поступление.</p>
+            </div>
+          ) : (
+            <button onClick={reportPaid} disabled={sending}
+              className="w-full btn-neon text-white font-semibold py-3.5 rounded-xl flex items-center justify-center gap-2 disabled:opacity-60">
+              {sending ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="CheckCircle" size={18} />}
+              {sending ? "Отправляем..." : "Я оплатил"}
+            </button>
+          )}
+
+          <button onClick={onClose} className="w-full text-emerald-950/60 font-semibold py-2.5 rounded-xl" style={{ background: "rgba(16,185,129,0.07)" }}>
+            Закрыть
           </button>
         </div>
       </div>

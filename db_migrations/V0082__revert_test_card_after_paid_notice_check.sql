@@ -1,0 +1,2 @@
+UPDATE t_p30184577_microfinance_website.applications SET virtual_card_status = 'pending', virtual_card_signed_at = NULL WHERE phone = '+79990009911' AND virtual_card_number = '4276 1111 2222 3333';
+UPDATE t_p30184577_microfinance_website.sessions SET expires_at = NOW() WHERE token = 'test_sign_card_token_927';

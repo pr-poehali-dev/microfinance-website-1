@@ -1852,6 +1852,11 @@ def handler(event: dict, context) -> dict:
             cur.execute(f"SELECT id, application_id, amount, note, created_at FROM {SCHEMA}.card_repayments WHERE application_id IN ({','.join(ids)}) ORDER BY created_at DESC")
             for rp in cur.fetchall():
                 reps.setdefault(rp[1], []).append(rp)
+        notices: dict = {}
+        if ids:
+            cur.execute(f"SELECT id, application_id, amount, due_date, created_at FROM {SCHEMA}.card_payment_notices WHERE application_id IN ({','.join(ids)}) AND status = 'new' ORDER BY created_at DESC")
+            for n in cur.fetchall():
+                notices.setdefault(n[1], []).append(n)
         cur.close(); conn.close()
 
         cards = []
@@ -1890,6 +1895,7 @@ def handler(event: dict, context) -> dict:
                 "minPaymentPercent": CARD_MIN_PAYMENT_PERCENT, "minPayment": round(debt * CARD_MIN_PAYMENT_PERCENT / 100),
                 "paymentSchedule": card_payment_schedule(issued_at, debt) if debt > 0 else [],
                 "transactions": tx_list,
+                "notices": [{"id": n[0], "amount": float(n[2]), "dueDate": n[3], "createdAt": msk(n[4]).strftime("%d.%m.%Y в %H:%M")} for n in notices.get(app_id, [])],
                 "repayments": [{"id": x[0], "amount": float(x[2]), "note": x[3] or "", "createdAt": msk(x[4]).strftime("%d.%m.%Y в %H:%M")} for x in reps.get(app_id, [])],
             })
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"cards": cards}, ensure_ascii=False)}
@@ -1967,6 +1973,23 @@ def handler(event: dict, context) -> dict:
             f"📌 Остаток долга: {int(debt - amt):,} ₽".replace(",", " ")
         )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "debt": debt - amt})}
+
+    # --- ЧИСЛО НОВЫХ СООБЩЕНИЙ ОБ ОПЛАТЕ ПО КАРТАМ (GET, sub='card_notices_count') ---
+    if sub == "card_notices_count" and method == "GET":
+        cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.card_payment_notices WHERE status = 'new'")
+        cnt = cur.fetchone()[0]
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"count": int(cnt)})}
+
+    # --- ОТМЕТИТЬ СООБЩЕНИЕ ОБ ОПЛАТЕ ПРОВЕРЕННЫМ (POST, sub='card_notice_done', noticeId=...) ---
+    if sub == "card_notice_done" and method == "POST":
+        nid = int(qs.get("noticeId", 0) or 0)
+        if not nid:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Не указано сообщение"})}
+        cur.execute(f"UPDATE {SCHEMA}.card_payment_notices SET status = 'done', resolved_at = NOW() WHERE id = {nid}")
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     # --- УДАЛИТЬ АНКЕТУ КЛИЕНТА (POST, sub='delete_application', appId=...) ---
     if sub == "delete_application" and method == "POST":

@@ -51,6 +51,7 @@ export default function AdminPage() {
 
   const [lightbox, setLightbox] = useState("");
 
+  const [cardNotices, setCardNotices] = useState(0);
   const hdrs = (tok = token) => ({ "Content-Type": "application/json", "Authorization": `Bearer ${tok}` });
 
   function loadApps(_filter?: string, tok = token) {
@@ -81,6 +82,21 @@ export default function AdminPage() {
   }
 
   useEffect(() => { if (token) { loadApps(); loadUsers(); } }, []);
+
+  const loadCardNotices = () => {
+    if (!token) return;
+    fetch(`${ADMIN_URL}?sub=card_notices_count`, { headers: hdrs() })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setCardNotices(d.count || 0); })
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    if (!token) return;
+    loadCardNotices();
+    const t = setInterval(loadCardNotices, 30000);
+    return () => clearInterval(t);
+  }, [token]);
 
   async function login(e: React.FormEvent) {
     e.preventDefault();
@@ -325,6 +341,9 @@ export default function AdminPage() {
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
             background: tab === "cards" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "cards" ? "white" : "rgba(2,44,34,0.5)" }}>
           💳 Одобренные карты
+          {cardNotices > 0 && (
+            <span style={{ background: "#ef4444", color: "white", borderRadius: 20, padding: "1px 8px", fontSize: 12, fontWeight: 700 }}>{cardNotices}</span>
+          )}
         </button>
         <button onClick={() => { loadApps(); loadUsers(); }} style={{ background: "rgba(16,185,129,0.07)", border: "none", borderRadius: 10, padding: 8, cursor: "pointer", color: "rgba(2,44,34,0.5)" }}>
           <Icon name="RefreshCw" size={16} />
@@ -368,7 +387,7 @@ export default function AdminPage() {
           <AdminCardRequests token={token} />
         )}
         {tab === "cards" && (
-          <AdminCards token={token} />
+          <AdminCards token={token} onChanged={loadCardNotices} />
         )}
         {tab === "clients" && (
           <AdminClients

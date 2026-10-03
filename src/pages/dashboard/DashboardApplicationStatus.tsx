@@ -49,6 +49,7 @@ interface VirtualCard {
   paymentSchedule?: CardPaymentRow[];
   repaid?: number;
   repayments?: CardRepayment[];
+  pendingNotices?: string[];
 }
 
 interface CardRequest {
@@ -831,6 +832,8 @@ export default function DashboardApplicationStatus({
                   schedule={application.virtualCard.paymentSchedule ?? []}
                   cardLast4={application.virtualCard.number.replace(/\D/g, "").slice(-4)}
                   fullName={application.virtualCard.holder}
+                  pendingNotices={application.virtualCard.pendingNotices ?? []}
+                  onReported={onRefresh}
                 />
 
                 <CardRepaymentHistory

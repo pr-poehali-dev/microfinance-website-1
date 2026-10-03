@@ -259,6 +259,67 @@ def handler(event: dict, context) -> dict:
                 pass
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "requestId": req_id})}
 
+    # --- КЛИЕНТ СООБЩАЕТ ОБ ОПЛАТЕ ПО КАРТЕ (POST, ?sub=card_paid, body: {amount, dueDate}) ---
+    if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "card_paid":
+        raw_b = event.get("body") or "{}"
+        b = json.loads(raw_b) if isinstance(raw_b, str) else raw_b
+        try:
+            paid_amount = float(b.get("amount", 0))
+        except Exception:
+            paid_amount = 0
+        due_date = str(b.get("dueDate") or "").strip()[:20].replace("'", "''")
+        if paid_amount <= 0 or not due_date:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Не указан платёж"})}
+
+        ph_e = phone.replace("'", "''")
+        cur.execute(
+            f"SELECT id FROM {SCHEMA}.applications WHERE phone = '{ph_e}' AND virtual_card_status = 'active' "
+            f"ORDER BY virtual_card_issued_at DESC LIMIT 1"
+        )
+        card_row = cur.fetchone()
+        if not card_row:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Активная карта не найдена"})}
+        card_app_id = card_row[0]
+
+        cur.execute(
+            f"SELECT 1 FROM {SCHEMA}.card_payment_notices WHERE application_id = {card_app_id} "
+            f"AND due_date = '{due_date}' AND status = 'new' LIMIT 1"
+        )
+        if cur.fetchone():
+            cur.close(); conn.close()
+            return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "alreadySent": True})}
+
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.card_payment_notices (application_id, amount, due_date) "
+            f"VALUES ({card_app_id}, {paid_amount}, '{due_date}')"
+        )
+        conn.commit()
+        cur.close(); conn.close()
+
+        import urllib.request
+        tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+        if tg_token:
+            text = (
+                f"💳 <b>Клиент сообщил об оплате по карте РУСФИНАНС 24</b>\n\n"
+                f"👤 <b>ФИО:</b> {full_name or phone}\n"
+                f"📞 <b>Телефон:</b> {phone}\n"
+                f"💵 <b>Сумма:</b> {int(paid_amount):,} ₽\n".replace(",", " ") +
+                f"📅 <b>Платёж за:</b> {due_date}\n"
+                f"Проверьте поступление и отметьте оплату во вкладке «Одобренные карты»."
+            )
+            data = json.dumps({"chat_id": "8540431915", "text": text, "parse_mode": "HTML"}).encode()
+            req = urllib.request.Request(
+                f"https://api.telegram.org/bot{tg_token}/sendMessage",
+                data=data, headers={"Content-Type": "application/json"}
+            )
+            try:
+                urllib.request.urlopen(req, timeout=5)
+            except Exception:
+                pass
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     # --- ПЕРЕВОД С КАРТЫ РУСФИНАНС 24 (POST, ?sub=card_withdraw, body: {amount, weeks}) ---
     if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "card_withdraw":
         raw_b = event.get("body") or "{}"
@@ -492,6 +553,7 @@ def handler(event: dict, context) -> dict:
         vc_debt = 0.0
         vc_repaid = 0.0
         vc_repayments = []
+        vc_notices = []
         if app_row[11]:
             cur.execute(
                 f"SELECT id, amount, weeks, rate, status, created_at, disbursed_amount, disbursed_at, target_card FROM {SCHEMA}.card_transactions "
@@ -535,6 +597,10 @@ def handler(event: dict, context) -> dict:
                 "amount": float(r_amt), "note": r_note or "",
                 "createdAt": msk(r_at).strftime("%d.%m.%Y в %H:%M"),
             } for r_amt, r_note, r_at in cur.fetchall()]
+            cur.execute(
+                f"SELECT due_date FROM {SCHEMA}.card_payment_notices WHERE application_id = {app_row[0]} AND status = 'new'"
+            )
+            vc_notices = [r_[0] for r_ in cur.fetchall()]
             vc_debt = max(0.0, vc_debt - vc_repaid)
             vc_used = max(0.0, vc_used - vc_repaid)
 
@@ -569,6 +635,7 @@ def handler(event: dict, context) -> dict:
                 "debt": vc_debt,
                 "repaid": vc_repaid,
                 "repayments": vc_repayments,
+                "pendingNotices": vc_notices,
                 "minPaymentPercent": CARD_MIN_PAYMENT_PERCENT,
                 "minPayment": round(vc_debt * CARD_MIN_PAYMENT_PERCENT / 100),
                 "paymentSchedule": card_payment_schedule(app_row[39], vc_debt),

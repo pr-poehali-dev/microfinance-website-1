@@ -16,6 +16,7 @@ interface Card {
   minPaymentPercent: number; minPayment: number;
   paymentSchedule: { week: number; dueDate: string; amount: number; isNext: boolean }[];
   transactions: Tx[];
+  notices: { id: number; amount: number; dueDate: string; createdAt: string }[];
   repayments: { id: number; amount: number; note: string; createdAt: string }[];
 }
 
@@ -27,9 +28,9 @@ const STATUS: Record<string, { label: string; color: string }> = {
   blocked: { label: "Заблокирована", color: "#dc2626" },
 };
 
-interface Props { token: string }
+interface Props { token: string; onChanged?: () => void }
 
-export default function AdminCards({ token }: Props) {
+export default function AdminCards({ token, onChanged }: Props) {
   const [cards, setCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -57,11 +58,13 @@ export default function AdminCards({ token }: Props) {
     if (!r.ok) { setMsg({ ok: false, text: d.error || "Ошибка" }); return false; }
     setMsg({ ok: true, text: okText });
     await load();
+    onChanged?.();
     return true;
   }
 
   const q = search.trim().toLowerCase();
   const list = cards.filter(c => !q || c.fullName.toLowerCase().includes(q) || c.phone.includes(q));
+  const noticesTotal = cards.reduce((n, c) => n + c.notices.length, 0);
   const waiting = cards.reduce((n, c) => n + c.transactions.filter(t => t.status !== "cancelled" && t.disbursedAmount < t.amount).length, 0);
 
   return (
@@ -70,7 +73,7 @@ export default function AdminCards({ token }: Props) {
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Поиск по ФИО или телефону"
           style={{ ...INPUT, width: 280 }} />
         <div style={{ color: "rgba(2,44,34,0.6)", fontSize: 13 }}>
-          Карт: <b>{cards.length}</b> · Ждут перечисления: <b style={{ color: waiting ? "#b45309" : undefined }}>{waiting}</b>
+          Карт: <b>{cards.length}</b> · Ждут перечисления: <b style={{ color: waiting ? "#b45309" : undefined }}>{waiting}</b> · Сообщили об оплате: <b style={{ color: noticesTotal ? "#dc2626" : undefined }}>{noticesTotal}</b>
         </div>
       </div>
 
@@ -98,6 +101,7 @@ export default function AdminCards({ token }: Props) {
                   <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12 }}>{c.phone} · карта •••• {c.cardNumber.slice(-4)}</div>
                 </div>
                 <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                  {c.notices.length > 0 && <span style={{ background: "rgba(239,68,68,0.15)", color: "#dc2626", padding: "4px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700 }}>Клиент оплатил: {c.notices.length}</span>}
                   {pendingTx > 0 && <span style={{ background: "rgba(245,158,11,0.15)", color: "#b45309", padding: "4px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700 }}>Ждёт перевода: {pendingTx}</span>}
                   <span style={{ background: `${st.color}20`, color: st.color, padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>{st.label}</span>
                   <Icon name={open ? "ChevronUp" : "ChevronDown"} size={18} className="text-emerald-600" />
@@ -122,6 +126,25 @@ export default function AdminCards({ token }: Props) {
                     Выдана: {c.issuedAt || "—"} · Договор: {c.signedAt ? `подписан ${c.signedAt} (МСК)` : "не подписан"}
                     {c.clientCard && <> · Карта клиента: {c.clientCard}</>}
                   </div>
+
+                  {c.notices.length > 0 && (
+                    <div style={{ border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.06)", borderRadius: 12, padding: 12 }}>
+                      <div style={{ color: "#dc2626", fontSize: 12, fontWeight: 700, textTransform: "uppercase", marginBottom: 8 }}>Клиент сообщил об оплате — проверьте поступление</div>
+                      {c.notices.map(n => (
+                        <div key={n.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap", padding: "6px 0" }}>
+                          <div style={{ color: "#022c22", fontSize: 13 }}>
+                            <b>{fmt(n.amount)}</b> за платёж {n.dueDate} <span style={{ color: "rgba(2,44,34,0.5)", fontSize: 12 }}>· сообщено {n.createdAt}</span>
+                          </div>
+                          <button disabled={busy === `n${n.id}`}
+                            onClick={() => post(`sub=card_notice_done&noticeId=${n.id}`, {}, `n${n.id}`, "Отмечено как проверенное")}
+                            style={{ background: "rgba(16,185,129,0.12)", color: "#047857", border: "1px solid rgba(16,185,129,0.35)", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                            Проверено
+                          </button>
+                        </div>
+                      ))}
+                      <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, marginTop: 4 }}>После проверки внесите сумму кнопкой «Погасить сумму» ниже.</div>
+                    </div>
+                  )}
 
                   <div>
                     <div style={{ color: "#059669", fontSize: 12, fontWeight: 700, textTransform: "uppercase", marginBottom: 8 }}>Переводы клиента из лимита</div>
