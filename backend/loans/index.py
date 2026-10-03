@@ -606,6 +606,24 @@ def handler(event: dict, context) -> dict:
         f"WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1"
     )
     app_row = cur.fetchone()
+    card_app_id = app_row[0] if app_row else None
+    if app_row and not app_row[11]:
+        cur.execute(
+            f"SELECT id, virtual_card_number, virtual_card_expiry, virtual_card_cvv, virtual_card_holder, virtual_card_limit, "
+            f"virtual_card_rate, virtual_card_status, virtual_card_days, virtual_card_issued_at "
+            f"FROM {SCHEMA}.applications "
+            f"WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' AND virtual_card_number IS NOT NULL "
+            f"AND virtual_card_status IN ('pending','active','blocked') "
+            f"ORDER BY virtual_card_issued_at DESC NULLS LAST, created_at DESC LIMIT 1"
+        )
+        card_src = cur.fetchone()
+        if card_src:
+            merged = list(app_row)
+            merged[11], merged[12], merged[13], merged[14] = card_src[1], card_src[2], card_src[3], card_src[4]
+            merged[15], merged[16], merged[17] = card_src[5], card_src[6], card_src[7]
+            merged[36], merged[39] = card_src[8], card_src[9]
+            app_row = tuple(merged)
+            card_app_id = card_src[0]
     application = None
     if app_row:
         app_amount = float(app_row[1]) if app_row[1] else 0
@@ -637,7 +655,7 @@ def handler(event: dict, context) -> dict:
         if app_row[11]:
             cur.execute(
                 f"SELECT id, amount, weeks, rate, status, created_at, disbursed_amount, disbursed_at, target_card FROM {SCHEMA}.card_transactions "
-                f"WHERE application_id = {app_row[0]} ORDER BY created_at DESC"
+                f"WHERE application_id = {card_app_id} ORDER BY created_at DESC"
             )
             for tx_id, tx_amount, tx_weeks, tx_rate, tx_status, tx_created, tx_disb_amount, tx_disb_at, tx_target in cur.fetchall():
                 tx_amount = float(tx_amount)
@@ -667,18 +685,18 @@ def handler(event: dict, context) -> dict:
                     "disbursedAt": msk(tx_disb_at).strftime("%d.%m.%Y в %H:%M") if tx_disb_at else None,
                     "targetCard": tx_target or "",
                 })
-            cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_repayments WHERE application_id = {app_row[0]}")
+            cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_repayments WHERE application_id = {card_app_id}")
             vc_repaid = float(cur.fetchone()[0])
             cur.execute(
                 f"SELECT amount, note, created_at FROM {SCHEMA}.card_repayments "
-                f"WHERE application_id = {app_row[0]} AND amount > 0 ORDER BY created_at DESC"
+                f"WHERE application_id = {card_app_id} AND amount > 0 ORDER BY created_at DESC"
             )
             vc_repayments = [{
                 "amount": float(r_amt), "note": r_note or "",
                 "createdAt": msk(r_at).strftime("%d.%m.%Y в %H:%M"),
             } for r_amt, r_note, r_at in cur.fetchall()]
             cur.execute(
-                f"SELECT tx_id, due_date, status FROM {SCHEMA}.card_payment_notices WHERE application_id = {app_row[0]}"
+                f"SELECT tx_id, due_date, status FROM {SCHEMA}.card_payment_notices WHERE application_id = {card_app_id}"
             )
             for n_tx, n_due, n_status in cur.fetchall():
                 key_ = f"{n_tx or 0}|{n_due}"
@@ -687,7 +705,7 @@ def handler(event: dict, context) -> dict:
             vc_used = max(0.0, vc_used - vc_repaid)
             cur.execute(
                 f"SELECT added_amount, new_limit FROM {SCHEMA}.card_limit_increases "
-                f"WHERE application_id = {app_row[0]} AND seen = FALSE ORDER BY created_at ASC"
+                f"WHERE application_id = {card_app_id} AND seen = FALSE ORDER BY created_at ASC"
             )
             vc_limit_news = [{"added": float(a_), "newLimit": float(n_)} for a_, n_ in cur.fetchall()]
 
