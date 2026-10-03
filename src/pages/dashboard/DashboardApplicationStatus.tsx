@@ -829,6 +829,8 @@ export default function DashboardApplicationStatus({
                   minPaymentPercent={application.virtualCard.minPaymentPercent ?? 40}
                   minPayment={application.virtualCard.minPayment ?? 0}
                   schedule={application.virtualCard.paymentSchedule ?? []}
+                  cardLast4={application.virtualCard.number.replace(/\D/g, "").slice(-4)}
+                  fullName={application.virtualCard.holder}
                 />
 
                 <CardRepaymentHistory

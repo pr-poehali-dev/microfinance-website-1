@@ -1,4 +1,6 @@
+import { useState } from "react";
 import Icon from "@/components/ui/icon";
+import CardPayModal from "./CardPayModal";
 
 export interface CardPaymentRow {
   week: number;
@@ -12,11 +14,14 @@ interface Props {
   minPaymentPercent: number;
   minPayment: number;
   schedule: CardPaymentRow[];
+  cardLast4?: string;
+  fullName?: string;
 }
 
 const fmt = (n: number) => `${n.toLocaleString("ru-RU")} ₽`;
 
-export default function CardPaymentSchedule({ debt, minPaymentPercent, minPayment, schedule }: Props) {
+export default function CardPaymentSchedule({ debt, minPaymentPercent, minPayment, schedule, cardLast4, fullName }: Props) {
+  const [payRow, setPayRow] = useState<CardPaymentRow | null>(null);
   return (
     <div className="rounded-xl p-4 space-y-3" style={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.2)" }}>
       <div className="flex items-center gap-2">
@@ -53,7 +58,17 @@ export default function CardPaymentSchedule({ debt, minPaymentPercent, minPaymen
                   {s.week}-я неделя · {s.dueDate}
                   {s.isNext && <span className="ml-2 text-emerald-600 font-semibold">ближайший</span>}
                 </span>
-                <span className="text-emerald-950 font-semibold text-sm">от {fmt(s.amount)}</span>
+                <span className="flex items-center gap-2">
+                  <span className="text-emerald-950 font-semibold text-sm">от {fmt(s.amount)}</span>
+                  {cardLast4 && (
+                    <button
+                      onClick={() => setPayRow(s)}
+                      className="btn-neon text-white text-xs font-semibold px-3 py-1.5 rounded-lg"
+                    >
+                      Оплатить
+                    </button>
+                  )}
+                </span>
               </div>
             ))}
           </div>
@@ -61,6 +76,15 @@ export default function CardPaymentSchedule({ debt, minPaymentPercent, minPaymen
             Платёж вносится раз в неделю, не меньше {minPaymentPercent}% от общего долга по карте.
           </div>
         </>
+      )}
+      {payRow && cardLast4 && (
+        <CardPayModal
+          amount={payRow.amount}
+          dueDate={payRow.dueDate}
+          cardLast4={cardLast4}
+          fullName={fullName}
+          onClose={() => setPayRow(null)}
+        />
       )}
     </div>
   );
