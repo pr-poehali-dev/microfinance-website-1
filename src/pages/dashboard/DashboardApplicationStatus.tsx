@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import PartnerCardLinks from "./PartnerCardLinks";
 import CardWithdrawForm from "./CardWithdrawForm";
 import CardTransactionsList, { CardTransaction } from "./CardTransactionsList";
+import CardPaymentSchedule, { CardPaymentRow } from "./CardPaymentSchedule";
 import CardRequestBlock from "./CardRequestBlock";
 
 interface LoanOffer {
@@ -41,6 +42,10 @@ interface VirtualCard {
   status: string;
   days?: number | null;
   transactions: CardTransaction[];
+  debt?: number;
+  minPaymentPercent?: number;
+  minPayment?: number;
+  paymentSchedule?: CardPaymentRow[];
 }
 
 interface CardRequest {
@@ -811,6 +816,13 @@ export default function DashboardApplicationStatus({
 
                 {/* Форма перевода средств в рамках доступного лимита */}
                 <CardWithdrawForm available={application.virtualCard.available} onSuccess={onRefresh} />
+
+                <CardPaymentSchedule
+                  debt={application.virtualCard.debt ?? 0}
+                  minPaymentPercent={application.virtualCard.minPaymentPercent ?? 40}
+                  minPayment={application.virtualCard.minPayment ?? 0}
+                  schedule={application.virtualCard.paymentSchedule ?? []}
+                />
 
                 {/* История переводов с еженедельными графиками */}
                 <CardTransactionsList transactions={application.virtualCard.transactions} />

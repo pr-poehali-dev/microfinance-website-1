@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { App } from "./adminTypes";
+import CardPaymentSchedule, { CardPaymentRow } from "../dashboard/CardPaymentSchedule";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
 
@@ -18,6 +19,21 @@ export default function AdminCardControl({ app, token, onDone }: Props) {
   const [days, setDays] = useState("");
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [schedule, setSchedule] = useState<{ debt: number; minPaymentPercent: number; minPayment: number; paymentSchedule: CardPaymentRow[] } | null>(null);
+
+  async function toggleSchedule() {
+    if (showSchedule) { setShowSchedule(false); return; }
+    setShowSchedule(true);
+    setScheduleLoading(true);
+    try {
+      const r = await fetch(`${ADMIN_URL}?sub=card_transactions&appId=${app.id}`, { headers: { Authorization: `Bearer ${token}` } });
+      if (r.ok) setSchedule(await r.json());
+    } finally {
+      setScheduleLoading(false);
+    }
+  }
 
   const hasCard = !!app.virtualCardStatus && app.virtualCardStatus !== "none";
 
@@ -94,6 +110,11 @@ export default function AdminCardControl({ app, token, onDone }: Props) {
           onChange={e => setDays(e.target.value)}
           style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.4)", borderRadius: 8, padding: "8px 10px", color: "#022c22", fontSize: 13, width: "100%", boxSizing: "border-box" as const }}
         />
+        {mode === "issue" && (
+          <div style={{ color: "#059669", fontSize: 11, lineHeight: 1.4, background: "rgba(16,185,129,0.08)", borderRadius: 8, padding: "7px 9px" }}>
+            График платежей: 1 раз в неделю, минимальный платёж — 40% от общего долга по карте. Даты считаются от дня выдачи.
+          </div>
+        )}
         <button
           onClick={submit}
           disabled={saving}
@@ -128,6 +149,21 @@ export default function AdminCardControl({ app, token, onDone }: Props) {
         <Icon name={hasCard ? "Pencil" : "CreditCard"} size={14} />
         {hasCard ? "Изменить условия" : "Выдать карту РУСФИНАНС 24"}
       </button>
+      {hasCard && (
+        <button onClick={toggleSchedule}
+          style={{ background: "rgba(16,185,129,0.07)", color: "#059669", border: "1px solid rgba(16,185,129,0.25)", borderRadius: 10, padding: "8px 12px", cursor: "pointer", fontWeight: 600, fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+          <Icon name="CalendarClock" size={13} />
+          {showSchedule ? "Скрыть график платежей" : "График платежей"}
+        </button>
+      )}
+      {hasCard && showSchedule && (
+        <div style={{ minWidth: 280 }}>
+          {scheduleLoading && <div style={{ textAlign: "center", padding: 12 }}><Icon name="Loader2" size={18} className="animate-spin text-emerald-600" /></div>}
+          {!scheduleLoading && schedule && (
+            <CardPaymentSchedule debt={schedule.debt} minPaymentPercent={schedule.minPaymentPercent} minPayment={schedule.minPayment} schedule={schedule.paymentSchedule} />
+          )}
+        </div>
+      )}
       {hasCard && (
         <button onClick={toggleBlock} disabled={saving}
           style={{ background: "rgba(16,185,129,0.07)", color: app.virtualCardStatus === "blocked" ? "#4ade80" : "#f87171", border: "1px solid rgba(16,185,129,0.15)", borderRadius: 10, padding: "8px 12px", cursor: "pointer", fontWeight: 600, fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}>

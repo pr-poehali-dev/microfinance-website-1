@@ -1,0 +1,2 @@
+INSERT INTO t_p30184577_microfinance_website.card_transactions (application_id, phone, amount, weeks, rate, status) VALUES (20266348, '+79652256595', 10000, 4, 24, 'cancelled');
+UPDATE t_p30184577_microfinance_website.card_transactions SET status='active' WHERE application_id=20266348 AND status='cancelled' AND amount=10000 AND weeks=4;

@@ -1,0 +1,1 @@
+UPDATE t_p30184577_microfinance_website.card_transactions SET status = 'cancelled' WHERE application_id = 20266348 AND amount = 10000 AND weeks = 4;

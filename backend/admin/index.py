@@ -15,6 +15,28 @@ def msk(dt):
     """Переводит время из UTC (как хранится в БД) в московское (UTC+3) для показа."""
     return dt + _msk_td(hours=3) if dt else dt
 
+
+CARD_MIN_PAYMENT_PERCENT = 40
+CARD_SCHEDULE_WEEKS = 8
+
+
+def card_payment_schedule(issued_at, debt):
+    """Еженедельный график платежей по карте: даты от выдачи карты (МСК), минимальный платёж 40% от общего долга."""
+    if not issued_at:
+        return []
+    start = (issued_at + timedelta(hours=3)).date()
+    today = (datetime.utcnow() + timedelta(hours=3)).date()
+    k = 1
+    while start + timedelta(weeks=k) < today:
+        k += 1
+    min_payment = round(float(debt) * CARD_MIN_PAYMENT_PERCENT / 100)
+    return [{
+        "week": i + 1,
+        "dueDate": (start + timedelta(weeks=k + i)).strftime("%d.%m.%Y"),
+        "amount": min_payment,
+        "isNext": i == 0,
+    } for i in range(CARD_SCHEDULE_WEEKS)]
+
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
 TELEGRAM_CHAT_ID = "8540431915"
 
@@ -1793,8 +1815,16 @@ def handler(event: dict, context) -> dict:
             "status": r[4], "createdAt": msk(r[5]).strftime("%d.%m.%Y в %H:%M"),
             "total": round(float(r[1]) * (1 + float(r[3]) / 100 * r[2])),
         } for r in cur.fetchall()]
+        cur.execute(f"SELECT virtual_card_issued_at FROM {SCHEMA}.applications WHERE id = '{app_id_e}'")
+        issued_row = cur.fetchone()
         cur.close(); conn.close()
-        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"transactions": items}, ensure_ascii=False)}
+        debt = sum(i["total"] for i in items if i["status"] != "cancelled")
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({
+            "transactions": items, "debt": debt,
+            "minPaymentPercent": CARD_MIN_PAYMENT_PERCENT,
+            "minPayment": round(debt * CARD_MIN_PAYMENT_PERCENT / 100),
+            "paymentSchedule": card_payment_schedule(issued_row[0] if issued_row else None, debt),
+        }, ensure_ascii=False)}
 
     # --- УДАЛИТЬ АНКЕТУ КЛИЕНТА (POST, sub='delete_application', appId=...) ---
     if sub == "delete_application" and method == "POST":
