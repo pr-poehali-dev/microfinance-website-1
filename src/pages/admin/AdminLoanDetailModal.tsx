@@ -1,3 +1,4 @@
+import AddPaymentModal from "./AddPaymentModal";
 import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 
@@ -47,6 +48,7 @@ export default function AdminLoanDetailModal({ token, type, id, onClose }: Props
   const [lightbox, setLightbox] = useState("");
 
   const [noticeSaving, setNoticeSaving] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
 
   async function handleNoticeDone() {
     setNoticeSaving(true);
@@ -152,13 +154,31 @@ export default function AdminLoanDetailModal({ token, type, id, onClose }: Props
                   <div style={{ color: "#022c22", fontSize: 13 }}>
                     <b>{data.pendingNotice.amount.toLocaleString("ru-RU")} ₽</b> <span style={{ color: "rgba(2,44,34,0.5)", fontSize: 12 }}>· сообщено {data.pendingNotice.createdAt}</span>
                   </div>
-                  <button disabled={noticeSaving} onClick={handleNoticeDone}
-                    style={{ background: "rgba(16,185,129,0.12)", color: "#047857", border: "1px solid rgba(16,185,129,0.35)", borderRadius: 8, padding: "6px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-                    {noticeSaving ? "..." : "Проверено"}
-                  </button>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button disabled={noticeSaving} onClick={() => setPayOpen(true)}
+                      style={{ background: "rgba(16,185,129,0.12)", color: "#047857", border: "1px solid rgba(16,185,129,0.35)", borderRadius: 8, padding: "6px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                      Проверено — внести платёж
+                    </button>
+                    <button disabled={noticeSaving} onClick={handleNoticeDone}
+                      style={{ background: "rgba(2,44,34,0.05)", color: "rgba(2,44,34,0.6)", border: "1px solid rgba(2,44,34,0.15)", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                      {noticeSaving ? "..." : "Оплаты не было"}
+                    </button>
+                  </div>
                 </div>
-                <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, marginTop: 6 }}>После проверки внесите платёж кнопкой «Внести платёж».</div>
+                <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, marginTop: 6 }}>Сумма в окне платежа подставится из сообщения клиента, её можно изменить.</div>
               </div>
+            )}
+
+            {payOpen && data.pendingNotice && (
+              <AddPaymentModal
+                token={token}
+                loanType={data.type as "loan" | "carloan" | "shoploan"}
+                loanId={data.id}
+                clientName={data.fullName || data.phone}
+                initialAmount={data.pendingNotice.amount}
+                onClose={() => setPayOpen(false)}
+                onSuccess={() => { loadDetail(); }}
+              />
             )}
 
             {/* Хронология */}

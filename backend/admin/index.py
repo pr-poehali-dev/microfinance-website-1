@@ -1393,6 +1393,7 @@ def handler(event: dict, context) -> dict:
             f"VALUES ('{loan_type}', {loan_id}, {float(amount)}, {note_sql}) RETURNING id"
         )
         payment_id = cur.fetchone()[0]
+        cur.execute(f"UPDATE {SCHEMA}.loan_payment_notices SET status = 'done', resolved_at = NOW() WHERE loan_type = '{loan_type}' AND loan_id = {loan_id} AND status = 'new'")
 
         # Автопогашение: если для обычного займа сумма всех платежей покрыла долг — переводим в статус "paid"
         became_paid = False

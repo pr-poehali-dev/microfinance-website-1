@@ -8,12 +8,13 @@ interface Props {
   loanType: "loan" | "carloan" | "shoploan";
   loanId: number;
   clientName: string;
+  initialAmount?: number;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export default function AddPaymentModal({ token, loanType, loanId, clientName, onClose, onSuccess }: Props) {
-  const [amount, setAmount] = useState("");
+export default function AddPaymentModal({ token, loanType, loanId, clientName, initialAmount, onClose, onSuccess }: Props) {
+  const [amount, setAmount] = useState(initialAmount ? String(Math.round(initialAmount)) : "");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
