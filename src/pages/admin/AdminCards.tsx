@@ -38,6 +38,8 @@ export default function AdminCards({ token, onChanged }: Props) {
   const [openId, setOpenId] = useState<number | null>(null);
   const [disburse, setDisburse] = useState<Record<number, string>>({});
   const [repay, setRepay] = useState<Record<number, string>>({});
+  const [limitOpen, setLimitOpen] = useState<number | null>(null);
+  const [limitAdd, setLimitAdd] = useState<Record<number, string>>({});
   const [busy, setBusy] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -146,6 +148,46 @@ export default function AdminCards({ token, onChanged }: Props) {
                       <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, marginTop: 4 }}>После проверки внесите сумму кнопкой «Погасить сумму» ниже.</div>
                     </div>
                   )}
+
+                  <div style={{ border: "1px solid rgba(16,185,129,0.25)", borderRadius: 12, padding: 12 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <div style={{ color: "#022c22", fontSize: 13 }}>Текущий лимит: <b>{fmt(c.limit)}</b></div>
+                      <button onClick={() => setLimitOpen(limitOpen === c.appId ? null : c.appId)}
+                        style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                        <Icon name="TrendingUp" size={15} />Увеличить лимит
+                      </button>
+                    </div>
+                    {limitOpen === c.appId && (
+                      <div style={{ marginTop: 12 }}>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+                          {[5000, 10000, 20000, 30000, 50000].map(v => (
+                            <button key={v} onClick={() => setLimitAdd({ ...limitAdd, [c.appId]: String(v) })}
+                              style={{ background: limitAdd[c.appId] === String(v) ? "rgba(16,185,129,0.25)" : "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.35)", color: "#047857", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                              +{fmt(v)}
+                            </button>
+                          ))}
+                        </div>
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                          <input type="number" min={1} value={limitAdd[c.appId] || ""} placeholder="На сколько увеличить, ₽"
+                            onChange={e => setLimitAdd({ ...limitAdd, [c.appId]: e.target.value })} style={{ ...INPUT, width: 200 }} />
+                          <button disabled={busy === `l${c.appId}` || !(Number(limitAdd[c.appId]) > 0)}
+                            onClick={async () => {
+                              const ok = await post(`sub=increase_limit&appId=${c.appId}`, { amount: Number(limitAdd[c.appId]) }, `l${c.appId}`,
+                                `Лимит увеличен до ${fmt(c.limit + Number(limitAdd[c.appId]))}. Клиент увидит поздравление в кабинете`);
+                              if (ok) { setLimitAdd({ ...limitAdd, [c.appId]: "" }); setLimitOpen(null); }
+                            }}
+                            style={{ background: "rgba(16,185,129,0.15)", color: "#047857", border: "1px solid rgba(16,185,129,0.4)", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: Number(limitAdd[c.appId]) > 0 ? 1 : 0.5 }}>
+                            Увеличить
+                          </button>
+                        </div>
+                        {Number(limitAdd[c.appId]) > 0 && (
+                          <div style={{ color: "rgba(2,44,34,0.55)", fontSize: 12, marginTop: 8 }}>
+                            Новый лимит: <b style={{ color: "#022c22" }}>{fmt(c.limit + Number(limitAdd[c.appId]))}</b>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
                   <div>
                     <div style={{ color: "#059669", fontSize: 12, fontWeight: 700, textTransform: "uppercase", marginBottom: 8 }}>Переводы клиента из лимита</div>

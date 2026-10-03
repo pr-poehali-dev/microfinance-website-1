@@ -1733,6 +1733,37 @@ def handler(event: dict, context) -> dict:
         tg(f"✏️ <b>Условия карты РУСФИНАНС 24 изменены</b>\n\n👤 {full_name or phone}\n📞 {phone}")
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
+    # --- УВЕЛИЧИТЬ ЛИМИТ ВЫДАННОЙ КАРТЫ (POST, sub='increase_limit', appId=..., body: {amount}) ---
+    if sub == "increase_limit" and method == "POST":
+        app_id_e = str(qs.get("appId", "")).replace("'", "''")
+        try:
+            add_amount = float(body.get("amount", 0))
+        except Exception:
+            add_amount = 0
+        if add_amount <= 0 or add_amount > 10000000:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите сумму увеличения больше нуля"})}
+        cur.execute(
+            f"SELECT id, full_name, phone, virtual_card_limit, virtual_card_status FROM {SCHEMA}.applications "
+            f"WHERE id='{app_id_e}' AND virtual_card_number IS NOT NULL"
+        )
+        app = cur.fetchone()
+        if not app:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Карта не найдена"})}
+        inc_app_id, full_name, phone, old_limit, vc_status = app
+        old_limit = float(old_limit or 0)
+        new_limit = old_limit + add_amount
+        cur.execute(f"UPDATE {SCHEMA}.applications SET virtual_card_limit = {new_limit} WHERE id = {inc_app_id}")
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.card_limit_increases (application_id, old_limit, new_limit, added_amount) "
+            f"VALUES ({inc_app_id}, {old_limit}, {new_limit}, {add_amount})"
+        )
+        conn.commit(); cur.close(); conn.close()
+        tg(f"📈 <b>Лимит карты РУСФИНАНС 24 увеличен</b>\n\n👤 {full_name or phone}\n📞 {phone}\n"
+           f"Было: {int(old_limit):,} ₽ → стало: {int(new_limit):,} ₽ (+{int(add_amount):,} ₽)".replace(",", " "))
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "limit": new_limit})}
+
     # --- ЗАБЛОКИРОВАТЬ/РАЗБЛОКИРОВАТЬ КАРТУ (POST, sub='card_status', appId=..., body: {status: active|blocked}) ---
     if sub == "card_status" and method == "POST":
         app_id = qs.get("appId", "")

@@ -259,6 +259,20 @@ def handler(event: dict, context) -> dict:
                 pass
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "requestId": req_id})}
 
+    # --- КЛИЕНТ ЗАКРЫЛ ПЛАШКУ «ЛИМИТ УВЕЛИЧЕН» (POST, ?sub=limit_seen) ---
+    if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "limit_seen":
+        ph_e = phone.replace("'", "''")
+        cur.execute(f"SELECT id FROM {SCHEMA}.applications WHERE phone = '{ph_e}' AND virtual_card_number IS NOT NULL")
+        ids_ = [str(r_[0]) for r_ in cur.fetchall()]
+        if ids_:
+            cur.execute(
+                f"UPDATE {SCHEMA}.card_limit_increases SET seen = TRUE, seen_at = NOW() "
+                f"WHERE application_id IN ({','.join(ids_)}) AND seen = FALSE"
+            )
+            conn.commit()
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     # --- КЛИЕНТ СООБЩАЕТ ОБ ОПЛАТЕ ПО КАРТЕ (POST, ?sub=card_paid, body: {amount, dueDate}) ---
     if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "card_paid":
         raw_b = event.get("body") or "{}"
@@ -562,6 +576,7 @@ def handler(event: dict, context) -> dict:
         vc_repayments = []
         vc_notices = []
         vc_paid = []
+        vc_limit_news = []
         if app_row[11]:
             cur.execute(
                 f"SELECT id, amount, weeks, rate, status, created_at, disbursed_amount, disbursed_at, target_card FROM {SCHEMA}.card_transactions "
@@ -613,6 +628,11 @@ def handler(event: dict, context) -> dict:
                 (vc_notices if n_status == "new" else vc_paid).append(key_)
             vc_debt = max(0.0, vc_debt - vc_repaid)
             vc_used = max(0.0, vc_used - vc_repaid)
+            cur.execute(
+                f"SELECT added_amount, new_limit FROM {SCHEMA}.card_limit_increases "
+                f"WHERE application_id = {app_row[0]} AND seen = FALSE ORDER BY created_at ASC"
+            )
+            vc_limit_news = [{"added": float(a_), "newLimit": float(n_)} for a_, n_ in cur.fetchall()]
 
         vc_limit_val = float(app_row[15]) if app_row[15] else 0
         vc_available = max(0, vc_limit_val - vc_used)
@@ -647,6 +667,7 @@ def handler(event: dict, context) -> dict:
                 "repayments": vc_repayments,
                 "pendingNotices": vc_notices,
                 "paidNotices": vc_paid,
+                "limitIncreases": vc_limit_news,
                 "minPaymentPercent": CARD_MIN_PAYMENT_PERCENT,
                 "minPayment": round(vc_debt * CARD_MIN_PAYMENT_PERCENT / 100),
                 "paymentSchedule": card_payment_schedule(app_row[39], vc_debt),

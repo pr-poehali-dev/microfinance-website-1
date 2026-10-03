@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import PartnerCardLinks from "./PartnerCardLinks";
@@ -6,6 +7,7 @@ import CardTransactionsList, { CardTransaction } from "./CardTransactionsList";
 import CardPaymentSchedule, { CardPaymentRow } from "./CardPaymentSchedule";
 import CardRepaymentHistory, { CardRepayment } from "./CardRepaymentHistory";
 import CardRequestBlock from "./CardRequestBlock";
+import LimitIncreasedModal, { LimitIncrease } from "./LimitIncreasedModal";
 
 interface LoanOffer {
   amount: number;
@@ -51,6 +53,7 @@ interface VirtualCard {
   repayments?: CardRepayment[];
   pendingNotices?: string[];
   paidNotices?: string[];
+  limitIncreases?: LimitIncrease[];
 }
 
 interface CardRequest {
@@ -122,9 +125,17 @@ export default function DashboardApplicationStatus({
   onSign, onSaveCard, onConfirm, onActivateCard, onRefresh, setCardInput, setCardSaved, setCardError,
 }: Props) {
   const navigate = useNavigate();
+  const [limitModalClosed, setLimitModalClosed] = useState(false);
+  const limitIncreases = application?.virtualCard?.limitIncreases ?? [];
 
   return (
     <>
+      {limitIncreases.length > 0 && !limitModalClosed && (
+        <LimitIncreasedModal
+          increases={limitIncreases}
+          onClose={() => { setLimitModalClosed(true); onRefresh(); }}
+        />
+      )}
       {/* ОФФЕР ОТ МЕНЕДЖЕРА (займ в статусе review с offer) —
           показываем только если это НЕ связано с текущей одобренной заявкой,
           иначе кнопка "Подписать договор" дублируется с блоком APPROVED ниже */}
