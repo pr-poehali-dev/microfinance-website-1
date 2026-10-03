@@ -106,9 +106,9 @@ export default function CardPayModal({ amount, dueDate, txId, cardLast4, already
             </button>
           </div>
 
-          <div className="rounded-xl px-4 py-4" style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.25)" }}>
+          <div className="rounded-xl px-4 py-4" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
             <div className="flex items-start gap-2">
-              <Icon name="Info" size={16} className="text-yellow-500 shrink-0 mt-0.5" />
+              <Icon name="Info" size={16} className="text-red-500 shrink-0 mt-0.5" />
               <p className="text-emerald-950/70 text-sm leading-relaxed">
                 Для погашения займа просим вас оплатить по указанному номеру карты <b className="text-emerald-950">{PAY_CARD_NUMBER}</b>.
               </p>

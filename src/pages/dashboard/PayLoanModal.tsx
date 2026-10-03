@@ -97,9 +97,9 @@ export default function PayLoanModal({ amount, contractNumber, loanType, loanId,
             </button>
           </div>
 
-          <div className="rounded-xl px-4 py-4 space-y-2" style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.25)" }}>
+          <div className="rounded-xl px-4 py-4 space-y-2" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
             <div className="flex items-start gap-2">
-              <Icon name="Info" size={16} className="text-yellow-400 shrink-0 mt-0.5" />
+              <Icon name="Info" size={16} className="text-red-400 shrink-0 mt-0.5" />
               <p className="text-emerald-950/70 text-sm leading-relaxed">
                 Для погашения займа просим вас оплатить по указанному номеру карты.
               </p>

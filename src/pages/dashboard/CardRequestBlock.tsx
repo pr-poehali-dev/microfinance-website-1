@@ -32,14 +32,14 @@ export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectR
   if (justSent || cardRequestStatus === "pending") {
     return (
       <div className="glass rounded-2xl overflow-hidden mb-6"
-        style={{ border: "1px solid rgba(251,191,36,0.35)", background: "rgba(251,191,36,0.04)" }}>
+        style={{ border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.04)" }}>
         <div className="px-6 py-5 flex items-center gap-4">
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(251,191,36,0.2)" }}>
-            <Icon name="Clock" size={20} className="text-yellow-400" />
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(239,68,68,0.2)" }}>
+            <Icon name="Clock" size={20} className="text-red-400" />
           </div>
           <div>
             <div className="text-emerald-950 font-bold">Заявка на карту РУСФИНАНС 24 на рассмотрении</div>
-            <div className="text-yellow-300 text-sm mt-0.5">Мы сообщим вам, как только карта будет одобрена</div>
+            <div className="text-red-300 text-sm mt-0.5">Мы сообщим вам, как только карта будет одобрена</div>
           </div>
         </div>
       </div>

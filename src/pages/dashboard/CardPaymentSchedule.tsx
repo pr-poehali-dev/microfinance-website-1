@@ -56,7 +56,7 @@ export default function CardPaymentSchedule({ debt, minPaymentPercent, minPaymen
                 <Icon name="CheckCircle" size={16} />Полное погашение отмечено оплаченным
               </div>
             ) : pendingNotices.includes(`0|${FULL_KEY}`) ? (
-              <button onClick={() => setPayFull(true)} className="w-full text-sm font-semibold py-3 rounded-xl" style={{ background: "rgba(245,158,11,0.15)", color: "#b45309" }}>
+              <button onClick={() => setPayFull(true)} className="w-full text-sm font-semibold py-3 rounded-xl" style={{ background: "rgba(239,68,68,0.15)", color: "#b91c1c" }}>
                 Оплата полного долга проверяется
               </button>
             ) : (
@@ -94,7 +94,7 @@ export default function CardPaymentSchedule({ debt, minPaymentPercent, minPaymen
                       <button
                         onClick={() => setPayRow(s)}
                         className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-                        style={{ background: "rgba(245,158,11,0.15)", color: "#b45309" }}
+                        style={{ background: "rgba(239,68,68,0.15)", color: "#b91c1c" }}
                       >
                         Оплата проверяется
                       </button>

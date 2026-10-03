@@ -53,7 +53,7 @@ export default function CardTransactionsList({ transactions, cardLast4, fullName
               <div className="text-left">
                 <div className="text-emerald-950 font-semibold text-sm">{tx.amount.toLocaleString("ru-RU")} ₽ · {tx.weeks} нед.</div>
                 <div className="text-emerald-950/40 text-xs">{tx.createdAt} · к возврату {tx.total.toLocaleString("ru-RU")} ₽</div>
-                <div className="text-xs font-medium" style={{ color: (tx.disbursedAmount ?? 0) >= tx.amount ? "#15803d" : "#b45309" }}>
+                <div className="text-xs font-medium" style={{ color: (tx.disbursedAmount ?? 0) >= tx.amount ? "#15803d" : "#b91c1c" }}>
                   {(tx.disbursedAmount ?? 0) >= tx.amount
                     ? `Перечислено на карту: ${(tx.disbursedAmount ?? 0).toLocaleString("ru-RU")} ₽`
                     : (tx.disbursedAmount ?? 0) > 0
@@ -78,7 +78,7 @@ export default function CardTransactionsList({ transactions, cardLast4, fullName
                         </span>
                       ) : pendingNotices.includes(`${tx.id}|${s.dueDate}`) ? (
                         <button onClick={() => setPay({ txId: tx.id, amount: s.amount, dueDate: s.dueDate })}
-                          className="text-xs font-semibold px-2.5 py-1 rounded-lg" style={{ background: "rgba(245,158,11,0.15)", color: "#b45309" }}>
+                          className="text-xs font-semibold px-2.5 py-1 rounded-lg" style={{ background: "rgba(239,68,68,0.15)", color: "#b91c1c" }}>
                           Оплата проверяется
                         </button>
                       ) : (

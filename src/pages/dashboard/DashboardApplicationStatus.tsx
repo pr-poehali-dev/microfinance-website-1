@@ -219,12 +219,12 @@ export default function DashboardApplicationStatus({
       {/* БЛОК СТАТУСА ЗАЯВКИ: PENDING — таймер */}
       {application && application.status === "pending" && (
         <div className="glass rounded-2xl overflow-hidden mb-6"
-          style={{ border: "1px solid rgba(251,191,36,0.35)", background: "rgba(251,191,36,0.04)" }}>
+          style={{ border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.04)" }}>
           <div className="px-6 py-4 flex items-center gap-3"
-            style={{ background: "linear-gradient(135deg,rgba(251,191,36,0.2),rgba(251,191,36,0.05))" }}>
+            style={{ background: "linear-gradient(135deg,rgba(239,68,68,0.2),rgba(239,68,68,0.05))" }}>
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: "rgba(251,191,36,0.2)" }}>
-              <Icon name="Clock" size={20} className="text-yellow-400" />
+              style={{ background: "rgba(239,68,68,0.2)" }}>
+              <Icon name="Clock" size={20} className="text-red-400" />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
@@ -241,13 +241,13 @@ export default function DashboardApplicationStatus({
               </div>
             </div>
             <span className="text-xs px-3 py-1 rounded-full font-semibold"
-              style={{ background: "rgba(251,191,36,0.2)", color: "#fbbf24" }}>На рассмотрении</span>
+              style={{ background: "rgba(239,68,68,0.2)", color: "#ef4444" }}>На рассмотрении</span>
           </div>
           <div className="px-6 py-8 flex flex-col items-center text-center">
             {!timerDone ? (
               <>
                 <div className="font-oswald text-6xl font-bold mb-3"
-                  style={{ color: "#fbbf24", textShadow: "0 0 30px rgba(251,191,36,0.4)" }}>
+                  style={{ color: "#ef4444", textShadow: "0 0 30px rgba(239,68,68,0.4)" }}>
                   {fmtTimer(timerSec)}
                 </div>
                 <p className="text-emerald-950/50 text-sm">Осталось до завершения рассмотрения</p>
@@ -255,8 +255,8 @@ export default function DashboardApplicationStatus({
             ) : (
               <>
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3"
-                  style={{ background: "rgba(251,191,36,0.2)" }}>
-                  <Icon name="FileSearch" size={26} className="text-yellow-400" />
+                  style={{ background: "rgba(239,68,68,0.2)" }}>
+                  <Icon name="FileSearch" size={26} className="text-red-400" />
                 </div>
                 <p className="text-emerald-950 font-semibold text-lg mb-1">Ваша заявка на рассмотрении</p>
                 <p className="text-emerald-950/50 text-sm">Специалист свяжется с вами в ближайшее время</p>
@@ -387,9 +387,9 @@ export default function DashboardApplicationStatus({
                 if (isSigned) {
                   return (
                     <div className="rounded-xl px-5 py-4 flex items-center gap-3"
-                      style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)" }}>
-                      <Icon name="Clock" size={20} className="text-yellow-400 shrink-0 animate-pulse" />
-                      <div className="text-yellow-300 text-sm font-medium">Договор подписан! Ожидайте выдачу займа — деньги скоро поступят на ваши реквизиты.</div>
+                      style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}>
+                      <Icon name="Clock" size={20} className="text-red-400 shrink-0 animate-pulse" />
+                      <div className="text-red-300 text-sm font-medium">Договор подписан! Ожидайте выдачу займа — деньги скоро поступят на ваши реквизиты.</div>
                     </div>
                   );
                 }
@@ -613,9 +613,9 @@ export default function DashboardApplicationStatus({
               if (isSigned) {
                 return (
                   <div className="rounded-xl px-5 py-4 flex items-center gap-3"
-                    style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)" }}>
-                    <Icon name="Clock" size={20} className="text-yellow-400 shrink-0 animate-pulse" />
-                    <div className="text-yellow-300 text-sm font-medium">Договор подписан! Ожидайте выдачу займа — деньги скоро поступят на ваши реквизиты.</div>
+                    style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}>
+                    <Icon name="Clock" size={20} className="text-red-400 shrink-0 animate-pulse" />
+                    <div className="text-red-300 text-sm font-medium">Договор подписан! Ожидайте выдачу займа — деньги скоро поступят на ваши реквизиты.</div>
                   </div>
                 );
               }
@@ -668,10 +668,10 @@ export default function DashboardApplicationStatus({
             )}
             {application.reapplyDaysLeft !== undefined && application.reapplyDaysLeft !== null && application.reapplyDaysLeft > 0 ? (
               <div className="rounded-xl px-4 py-3 flex items-center gap-3"
-                style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.25)" }}>
-                <Icon name="Clock" size={18} className="text-yellow-400 shrink-0" />
+                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
+                <Icon name="Clock" size={18} className="text-red-400 shrink-0" />
                 <div className="text-emerald-950/70 text-sm">
-                  Повторная заявка возможна через <b className="text-yellow-400">{application.reapplyDaysLeft} {application.reapplyDaysLeft === 1 ? "день" : application.reapplyDaysLeft < 5 ? "дня" : "дней"}</b>
+                  Повторная заявка возможна через <b className="text-red-400">{application.reapplyDaysLeft} {application.reapplyDaysLeft === 1 ? "день" : application.reapplyDaysLeft < 5 ? "дня" : "дней"}</b>
                 </div>
               </div>
             ) : isRepeatClient ? (

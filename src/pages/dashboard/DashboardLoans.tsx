@@ -53,8 +53,8 @@ const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> =
   active:   { label: "Займ выдан",      color: "#4ade80", bg: "rgba(74,222,128,0.15)" },
   paid:     { label: "Погашен",         color: "#2dd4bf", bg: "rgba(45,212,191,0.15)" },
   overdue:  { label: "Просрочен",       color: "#f87171", bg: "rgba(248,113,113,0.15)" },
-  review:   { label: "На рассмотрении", color: "#fbbf24", bg: "rgba(251,191,36,0.15)" },
-  signed:   { label: "Ожидает выдачи",  color: "#fbbf24", bg: "rgba(251,191,36,0.15)" },
+  review:   { label: "На рассмотрении", color: "#ef4444", bg: "rgba(239,68,68,0.15)" },
+  signed:   { label: "Ожидает выдачи",  color: "#ef4444", bg: "rgba(239,68,68,0.15)" },
 };
 
 interface Props {
@@ -190,10 +190,10 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                   {/* Блок: Договор подписан, ожидайте выдачу */}
                   {loan.status === "review" && loan.signed && !loan.disbursedAt && (
                     <div className="mb-4 rounded-xl px-5 py-4 flex items-center gap-3"
-                      style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.3)" }}>
-                      <Icon name="Clock" size={22} className="text-yellow-400 shrink-0 animate-pulse" />
+                      style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)" }}>
+                      <Icon name="Clock" size={22} className="text-red-400 shrink-0 animate-pulse" />
                       <div>
-                        <div className="text-yellow-300 font-bold text-sm">Договор подписан! Ожидайте выдачу займа</div>
+                        <div className="text-red-300 font-bold text-sm">Договор подписан! Ожидайте выдачу займа</div>
                         <div className="text-emerald-950/40 text-xs mt-0.5">Деньги скоро поступят на ваши реквизиты</div>
                       </div>
                     </div>
