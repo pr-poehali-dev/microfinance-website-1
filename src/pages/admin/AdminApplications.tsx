@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 import { App, GLASS } from "./adminTypes";
 import AddPaymentModal from "./AddPaymentModal";
+import { waitingStyle, WAITING_BADGE_STYLE } from "./waiting";
 import AdminAppTimeline from "./AdminAppTimeline";
 import AdminCardControl from "./AdminCardControl";
 
@@ -211,12 +212,18 @@ export default function AdminApplications({
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {filtered.map(app => (
-          <div key={app.id} style={{ ...GLASS, padding: 20 }}>
+        {filtered.map(app => {
+          const waitSigned = (app.status === "approved" || app.status === "partner_card") && !!app.loanId && app.loanSigned && !disbursed[app.id] && !app.loanDisbursedAt;
+          const waitNew = app.status === "pending";
+          const waiting = waitNew || waitSigned;
+          return (
+          <div key={app.id} style={{ ...GLASS, padding: 20, ...waitingStyle(waiting) }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
                   <span style={{ color: "#022c22", fontWeight: 700, fontSize: 18 }}>{app.fullName || app.phone}</span>
+                  {waitNew && <span style={WAITING_BADGE_STYLE}>🔴 Новая заявка — клиент ждёт решения</span>}
+                  {waitSigned && <span style={WAITING_BADGE_STYLE}>🔴 Договор подписан — клиент ждёт деньги</span>}
                   {app.isCardRequest && (
                     <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(16,185,129,0.15)", color: "#047857", border: "1px solid rgba(16,185,129,0.4)" }}>
                       💳 Заявка на карту · лимит {app.amount.toLocaleString("ru-RU")} ₽
@@ -841,7 +848,7 @@ export default function AdminApplications({
               </button>
             </div>
           </div>
-        ))}
+        );})}
       </div>
 
       {paymentModalApp && paymentModalApp.loanId && (

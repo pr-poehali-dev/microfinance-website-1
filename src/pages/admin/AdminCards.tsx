@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
+import { waitingStyle } from "./waiting";
 import { GLASS, PURPLE } from "./adminTypes";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
@@ -98,7 +99,7 @@ export default function AdminCards({ token, onChanged }: Props) {
           const open = openId === c.appId;
           const pendingTx = c.transactions.filter(t => t.status !== "cancelled" && t.disbursedAmount < t.amount).length;
           return (
-            <div key={c.appId} style={{ ...GLASS, padding: 18 }}>
+            <div key={c.appId} style={{ ...GLASS, padding: 18, ...waitingStyle(pendingTx > 0 || c.notices.length > 0) }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "center", cursor: "pointer" }}
                 onClick={() => setOpenId(open ? null : c.appId)}>
                 <div>
@@ -107,7 +108,7 @@ export default function AdminCards({ token, onChanged }: Props) {
                 </div>
                 <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                   {c.notices.length > 0 && <span style={{ background: "rgba(239,68,68,0.15)", color: "#dc2626", padding: "4px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700 }}>Клиент оплатил: {c.notices.length}</span>}
-                  {pendingTx > 0 && <span style={{ background: "rgba(245,158,11,0.15)", color: "#b45309", padding: "4px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700 }}>Ждёт перевода: {pendingTx}</span>}
+                  {pendingTx > 0 && <span style={{ background: "#dc2626", color: "#ffffff", padding: "4px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700 }}>🔴 Ждёт перевода: {pendingTx}</span>}
                   <span style={{ background: `${st.color}20`, color: st.color, padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>{st.label}</span>
                   <Icon name={open ? "ChevronUp" : "ChevronDown"} size={18} className="text-emerald-600" />
                 </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
+import { waitingStyle, WAITING_BADGE_STYLE } from "./waiting";
 import { CardRequestItem, GLASS } from "./adminTypes";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
@@ -83,10 +84,10 @@ export default function AdminCardRequests({ token }: Props) {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {items.map(req => (
-          <div key={req.id} style={{ ...G, padding: 18 }}>
+          <div key={req.id} style={{ ...G, padding: 18, ...waitingStyle(req.status === "pending") }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
               <div>
-                <div style={{ color: "#022c22", fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{req.fullName || req.phone}</div>
+                <div style={{ color: "#022c22", fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{req.fullName || req.phone}{req.status === "pending" && <span style={{ ...WAITING_BADGE_STYLE, marginLeft: 10 }}>🔴 Клиент ждёт решения</span>}</div>
                 <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 13 }}>{req.phone} · подана {req.createdAt}</div>
                 {req.cardStatus !== "none" && (
                   <div style={{ marginTop: 6, fontSize: 12, color: "#14b8a6" }}>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 import AddPaymentModal from "./AddPaymentModal";
+import { waitingStyle, WAITING_BADGE_STYLE } from "./waiting";
 
 const SHOP_URL = "https://functions.poehali.dev/f0312370-20d7-488e-b072-dc4c0b2af2aa";
 
@@ -165,8 +166,10 @@ export default function AdminShopLoans({ token }: Props) {
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {items.map(app => {
             const st = ST[app.status] || ST.pending;
+            const waitNew = app.status === "pending";
+            const waitSigned = app.status === "approved" && app.contract_signed && !disbursed[app.id] && !app.disbursed_at;
             return (
-              <div key={app.id} style={{ ...G, padding: 20 }}>
+              <div key={app.id} style={{ ...G, padding: 20, ...waitingStyle(waitNew || waitSigned) }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {/* Шапка */}
@@ -175,6 +178,8 @@ export default function AdminShopLoans({ token }: Props) {
                       <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: st.bg, color: st.color, border: `1px solid ${st.border}` }}>
                         {st.label}
                       </span>
+                      {waitNew && <span style={WAITING_BADGE_STYLE}>🔴 Новая заявка — клиент ждёт решения</span>}
+                      {waitSigned && <span style={WAITING_BADGE_STYLE}>🔴 Договор подписан — клиент ждёт деньги</span>}
                       {app.contract_signed && (
                         <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "rgba(34,197,94,0.15)", color: "#4ade80" }}>
                           ✍️ Подписан
