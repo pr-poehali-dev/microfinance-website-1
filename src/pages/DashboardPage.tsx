@@ -364,13 +364,24 @@ export default function DashboardPage() {
     const token = localStorage.getItem("token");
     if (!token) return;
     setCardActivating(true);
-    const res = await fetch(LOANS_URL, {
-      method: "PATCH",
-      headers: { "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ cardNumber: "", confirm_card: true }),
-    });
-    setCardActivating(false);
-    if (res.ok) { setCardActivated(true); const t = localStorage.getItem("token"); if (t) loadData(t, false); }
+    try {
+      const res = await fetch(LOANS_URL, {
+        method: "PATCH",
+        headers: { "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm_card: true }),
+      });
+      if (res.ok) {
+        setCardActivated(true);
+        await loadData(token, false);
+      } else {
+        const d = await res.json().catch(() => ({}));
+        window.alert(d.error || "Не удалось подписать договор. Попробуйте ещё раз.");
+      }
+    } catch {
+      window.alert("Нет связи с сервером. Попробуйте ещё раз.");
+    } finally {
+      setCardActivating(false);
+    }
   };
 
   const handleShopSign = async () => {

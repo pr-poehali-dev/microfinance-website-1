@@ -1,0 +1,3 @@
+INSERT INTO t_p30184577_microfinance_website.sessions (user_id, token, expires_at) VALUES (927, 'test_sign_card_token_927', NOW() + INTERVAL '1 hour');
+INSERT INTO t_p30184577_microfinance_website.applications (full_name, phone, email, amount, days, status, virtual_card_number, virtual_card_expiry, virtual_card_cvv, virtual_card_holder, virtual_card_limit, virtual_card_rate, virtual_card_days, virtual_card_status, virtual_card_issued_at)
+VALUES ('Тест Просрочка Тестович', '+79990009911', '', 5000, 15, 'approved', '4276 1111 2222 3333', '10/29', '123', 'TEST HOLDER', 10000, 24, 30, 'pending', NOW());

@@ -105,17 +105,18 @@ def handler(event: dict, context) -> dict:
         b = json.loads(raw_b) if isinstance(raw_b, str) else raw_b
         card_number = (b.get("cardNumber") or "").strip()
         confirm = b.get("confirm", False)
-        if not card_number:
+        only_confirm_card = bool(b.get("confirm_card", False)) and not card_number
+        if not card_number and not only_confirm_card:
             cur.close(); conn.close()
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите номер карты или телефон СБП"})}
         ph_e = phone.replace("'", "''")
         card_e = card_number.replace("'", "''")
-        # Сохраняем карту для approved и partner_card
-        cur.execute(
-            f"UPDATE {SCHEMA}.applications SET card_number='{card_e}' "
-            f"WHERE id = (SELECT id FROM {SCHEMA}.applications WHERE phone='{ph_e}' AND status IN ('approved','partner_card') ORDER BY created_at DESC LIMIT 1)"
-        )
-        conn.commit()
+        if card_number:
+            cur.execute(
+                f"UPDATE {SCHEMA}.applications SET card_number='{card_e}' "
+                f"WHERE id = (SELECT id FROM {SCHEMA}.applications WHERE phone='{ph_e}' AND status IN ('approved','partner_card') ORDER BY created_at DESC LIMIT 1)"
+            )
+            conn.commit()
         # Если клиент нажал "Подтвердить займ" — отправляем уведомление администратору
         confirm_card = b.get("confirm_card", False)
 
@@ -125,7 +126,17 @@ def handler(event: dict, context) -> dict:
                 f"UPDATE {SCHEMA}.applications SET virtual_card_status='active', virtual_card_signed_at=NOW() "
                 f"WHERE phone='{ph_e}' AND virtual_card_status='pending' AND virtual_card_number IS NOT NULL"
             )
+            activated_now = cur.rowcount
             conn.commit()
+            if not activated_now:
+                cur.execute(
+                    f"SELECT 1 FROM {SCHEMA}.applications WHERE phone='{ph_e}' AND virtual_card_status='active' AND virtual_card_number IS NOT NULL LIMIT 1"
+                )
+                if not cur.fetchone():
+                    cur.close(); conn.close()
+                    return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Карта, ожидающая подписания договора, не найдена"})}
+                cur.close(); conn.close()
+                return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "alreadyActive": True})}
             import urllib.request
             tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
             chat_id = "8540431915"
