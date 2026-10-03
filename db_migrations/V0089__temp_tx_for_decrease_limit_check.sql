@@ -1,0 +1,2 @@
+INSERT INTO t_p30184577_microfinance_website.card_transactions (application_id, phone, amount, weeks, rate, status, target_card)
+VALUES (20266358, '+79990009911', 8000, 2, 24, 'active', '2200 0000 0000 0000');

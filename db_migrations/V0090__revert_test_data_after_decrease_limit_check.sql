@@ -1,0 +1,3 @@
+UPDATE t_p30184577_microfinance_website.card_transactions SET status = 'cancelled' WHERE application_id = 20266358 AND amount = 8000 AND status = 'active';
+UPDATE t_p30184577_microfinance_website.applications SET virtual_card_limit = 10000 WHERE id = 20266358;
+UPDATE t_p30184577_microfinance_website.card_limit_increases SET seen = TRUE, seen_at = NOW() WHERE application_id = 20266358 AND seen = FALSE;

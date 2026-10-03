@@ -40,6 +40,7 @@ export default function AdminCards({ token, onChanged }: Props) {
   const [disburse, setDisburse] = useState<Record<number, string>>({});
   const [repay, setRepay] = useState<Record<number, string>>({});
   const [limitOpen, setLimitOpen] = useState<number | null>(null);
+  const [limitMode, setLimitMode] = useState<"inc" | "dec">("inc");
   const [limitAdd, setLimitAdd] = useState<Record<number, string>>({});
   const [busy, setBusy] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -153,48 +154,70 @@ export default function AdminCards({ token, onChanged }: Props) {
                   <div style={{ border: "1px solid rgba(16,185,129,0.25)", borderRadius: 12, padding: 12 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <div style={{ color: "#022c22", fontSize: 13 }}>Текущий лимит: <b>{fmt(c.limit)}</b></div>
-                      <button onClick={() => setLimitOpen(limitOpen === c.appId ? null : c.appId)}
-                        style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                        <Icon name="TrendingUp" size={15} />Увеличить лимит
-                      </button>
-                    </div>
-                    {limitOpen === c.appId && (
-                      <div style={{ marginTop: 12 }}>
-                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
-                          {[5000, 10000, 20000, 30000, 50000].map(v => (
-                            <button key={v} onClick={() => setLimitAdd({ ...limitAdd, [c.appId]: String(v) })}
-                              style={{ background: limitAdd[c.appId] === String(v) ? "rgba(16,185,129,0.25)" : "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.35)", color: "#047857", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-                              +{fmt(v)}
-                            </button>
-                          ))}
-                        </div>
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                          <input type="number" min={1} value={limitAdd[c.appId] || ""} placeholder="На сколько увеличить, ₽"
-                            onChange={e => setLimitAdd({ ...limitAdd, [c.appId]: e.target.value })} style={{ ...INPUT, width: 200 }} />
-                          <button disabled={busy === `l${c.appId}` || !(Number(limitAdd[c.appId]) > 0)}
-                            onClick={async () => {
-                              const ok = await post(`sub=increase_limit&appId=${c.appId}`, { amount: Number(limitAdd[c.appId]) }, `l${c.appId}`,
-                                `Лимит увеличен до ${fmt(c.limit + Number(limitAdd[c.appId]))}. Клиент увидит поздравление в кабинете`);
-                              if (ok) { setLimitAdd({ ...limitAdd, [c.appId]: "" }); setLimitOpen(null); }
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        {(["inc", "dec"] as const).map(m => {
+                          const active = limitOpen === c.appId && limitMode === m;
+                          return (
+                            <button key={m} onClick={() => {
+                              if (active) { setLimitOpen(null); return; }
+                              setLimitMode(m); setLimitOpen(c.appId); setLimitAdd({ ...limitAdd, [c.appId]: "" });
                             }}
-                            style={{ background: "rgba(16,185,129,0.15)", color: "#047857", border: "1px solid rgba(16,185,129,0.4)", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: Number(limitAdd[c.appId]) > 0 ? 1 : 0.5 }}>
-                            Увеличить
-                          </button>
-                        </div>
-                        {Number(limitAdd[c.appId]) > 0 && (
-                          <div style={{ color: "rgba(2,44,34,0.55)", fontSize: 12, marginTop: 8 }}>
-                            Новый лимит: <b style={{ color: "#022c22" }}>{fmt(c.limit + Number(limitAdd[c.appId]))}</b>
-                          </div>
-                        )}
+                              style={m === "inc"
+                                ? { background: "linear-gradient(135deg,#10b981,#14b8a6)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, opacity: active || limitOpen !== c.appId ? 1 : 0.7 }
+                                : { background: active ? "rgba(239,68,68,0.18)" : "rgba(239,68,68,0.08)", color: "#dc2626", border: "1px solid rgba(239,68,68,0.4)", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                              <Icon name={m === "inc" ? "TrendingUp" : "TrendingDown"} size={15} />{m === "inc" ? "Увеличить лимит" : "Уменьшить лимит"}
+                            </button>
+                          );
+                        })}
                       </div>
-                    )}
+                    </div>
+                    {limitOpen === c.appId && (() => {
+                      const dec = limitMode === "dec";
+                      const val = Number(limitAdd[c.appId]) || 0;
+                      const newLimit = dec ? c.limit - val : c.limit + val;
+                      const tooLow = dec && val > 0 && newLimit < c.used;
+                      const color = dec ? "#dc2626" : "#047857";
+                      const presets = dec ? [5000, 10000, 20000, 30000] : [5000, 10000, 20000, 30000, 50000];
+                      return (
+                        <div style={{ marginTop: 12 }}>
+                          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+                            {presets.map(v => (
+                              <button key={v} onClick={() => setLimitAdd({ ...limitAdd, [c.appId]: String(v) })}
+                                style={{ background: limitAdd[c.appId] === String(v) ? (dec ? "rgba(239,68,68,0.2)" : "rgba(16,185,129,0.25)") : (dec ? "rgba(239,68,68,0.06)" : "rgba(16,185,129,0.08)"), border: `1px solid ${dec ? "rgba(239,68,68,0.35)" : "rgba(16,185,129,0.35)"}`, color, borderRadius: 8, padding: "6px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                                {dec ? "−" : "+"}{fmt(v)}
+                              </button>
+                            ))}
+                          </div>
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                            <input type="number" min={1} value={limitAdd[c.appId] || ""} placeholder={dec ? "На сколько уменьшить, ₽" : "На сколько увеличить, ₽"}
+                              onChange={e => setLimitAdd({ ...limitAdd, [c.appId]: e.target.value })} style={{ ...INPUT, width: 200 }} />
+                            <button disabled={busy === `l${c.appId}` || val <= 0 || tooLow || newLimit <= 0}
+                              onClick={async () => {
+                                const ok = await post(`sub=${dec ? "decrease" : "increase"}_limit&appId=${c.appId}`, { amount: val }, `l${c.appId}`,
+                                  dec ? `Лимит уменьшен до ${fmt(newLimit)}` : `Лимит увеличен до ${fmt(newLimit)}. Клиент увидит поздравление в кабинете`);
+                                if (ok) { setLimitAdd({ ...limitAdd, [c.appId]: "" }); setLimitOpen(null); }
+                              }}
+                              style={{ background: dec ? "rgba(239,68,68,0.12)" : "rgba(16,185,129,0.15)", color, border: `1px solid ${dec ? "rgba(239,68,68,0.4)" : "rgba(16,185,129,0.4)"}`, borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: val > 0 && !tooLow && newLimit > 0 ? 1 : 0.5 }}>
+                              {dec ? "Уменьшить" : "Увеличить"}
+                            </button>
+                          </div>
+                          {val > 0 && (
+                            <div style={{ color: tooLow ? "#dc2626" : "rgba(2,44,34,0.55)", fontSize: 12, marginTop: 8 }}>
+                              {tooLow
+                                ? <>Нельзя: клиент уже использовал <b>{fmt(c.used)}</b>. Минимальный лимит — {fmt(c.used)}</>
+                                : <>Новый лимит: <b style={{ color: "#022c22" }}>{fmt(newLimit)}</b>{dec && " · клиенту уведомление не показывается"}</>}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {c.limitHistory.length > 0 && (
                       <div style={{ marginTop: 12, borderTop: "1px solid rgba(16,185,129,0.15)", paddingTop: 10 }}>
-                        <div style={{ color: "#059669", fontSize: 12, fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>История увеличений лимита</div>
+                        <div style={{ color: "#059669", fontSize: 12, fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>История изменений лимита</div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                           {c.limitHistory.map(h => (
                             <div key={h.id} style={{ fontSize: 12, color: "rgba(2,44,34,0.65)" }}>
-                              {h.createdAt} — <b style={{ color: "#047857" }}>+{fmt(h.added)}</b> ({fmt(h.oldLimit)} → {fmt(h.newLimit)})
+                              {h.createdAt} — <b style={{ color: h.added < 0 ? "#dc2626" : "#047857" }}>{h.added < 0 ? "−" : "+"}{fmt(Math.abs(h.added))}</b> ({fmt(h.oldLimit)} → {fmt(h.newLimit)})
                               <span style={{ marginLeft: 6, color: h.seen ? "#047857" : "#b45309" }}>{h.seen ? "· клиент увидел" : "· клиент ещё не видел"}</span>
                             </div>
                           ))}

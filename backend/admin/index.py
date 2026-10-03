@@ -1764,6 +1764,49 @@ def handler(event: dict, context) -> dict:
            f"Было: {int(old_limit):,} ₽ → стало: {int(new_limit):,} ₽ (+{int(add_amount):,} ₽)".replace(",", " "))
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "limit": new_limit})}
 
+    # --- УМЕНЬШИТЬ ЛИМИТ ВЫДАННОЙ КАРТЫ (POST, sub='decrease_limit', appId=..., body: {amount}) ---
+    if sub == "decrease_limit" and method == "POST":
+        app_id_e = str(qs.get("appId", "")).replace("'", "''")
+        try:
+            sub_amount = float(body.get("amount", 0))
+        except Exception:
+            sub_amount = 0
+        if sub_amount <= 0:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите сумму уменьшения больше нуля"})}
+        cur.execute(
+            f"SELECT id, full_name, phone, virtual_card_limit FROM {SCHEMA}.applications "
+            f"WHERE id='{app_id_e}' AND virtual_card_number IS NOT NULL"
+        )
+        app = cur.fetchone()
+        if not app:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Карта не найдена"})}
+        dec_app_id, full_name, phone, old_limit = app
+        old_limit = float(old_limit or 0)
+        cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_transactions WHERE application_id = {dec_app_id} AND status <> 'cancelled'")
+        principal_sum = float(cur.fetchone()[0])
+        cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_repayments WHERE application_id = {dec_app_id}")
+        repaid_sum = float(cur.fetchone()[0])
+        used_sum = max(0.0, principal_sum - repaid_sum)
+        new_limit = old_limit - sub_amount
+        if new_limit <= 0:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Лимит не может быть нулевым. Для остановки карты используйте блокировку"})}
+        if new_limit < used_sum:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({
+                "error": f"Нельзя опустить лимит ниже уже использованной суммы ({int(used_sum):,} ₽). Минимальный лимит: {int(used_sum):,} ₽".replace(",", " ")})}
+        cur.execute(f"UPDATE {SCHEMA}.applications SET virtual_card_limit = {new_limit} WHERE id = {dec_app_id}")
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.card_limit_increases (application_id, old_limit, new_limit, added_amount, seen, seen_at) "
+            f"VALUES ({dec_app_id}, {old_limit}, {new_limit}, {-sub_amount}, TRUE, NOW())"
+        )
+        conn.commit(); cur.close(); conn.close()
+        tg(f"📉 <b>Лимит карты РУСФИНАНС 24 уменьшен</b>\n\n👤 {full_name or phone}\n📞 {phone}\n"
+           f"Было: {int(old_limit):,} ₽ → стало: {int(new_limit):,} ₽ (−{int(sub_amount):,} ₽)".replace(",", " "))
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "limit": new_limit})}
+
     # --- ЗАБЛОКИРОВАТЬ/РАЗБЛОКИРОВАТЬ КАРТУ (POST, sub='card_status', appId=..., body: {status: active|blocked}) ---
     if sub == "card_status" and method == "POST":
         app_id = qs.get("appId", "")
