@@ -82,7 +82,7 @@ export default function FaqContactsFooter() {
           <div className="grid md:grid-cols-3 gap-6 mb-10">
             {[
               { icon: "Phone", title: "Телефон", value: "+7-996-201-95-00", sub: "Бесплатно, круглосуточно", href: "tel:+79962019500" },
-              { icon: "Mail", title: "Email", value: "rusfinans24@ya.ru", sub: "Ответим в течение часа", href: "mailto:rusfinans24@ya.ru" },
+              { icon: "Mail", title: "Email", value: "support@rusfinans24.ru", sub: "Ответим в течение часа", href: "mailto:support@rusfinans24.ru" },
               { icon: "Clock", title: "Режим работы", value: "Круглосуточно", sub: "Онлайн: 24/7", href: null },
             ].map((c) => (
               <div key={c.title} className="glass card-hover rounded-2xl p-6 text-center">
