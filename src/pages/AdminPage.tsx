@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import WaitBadge from "./admin/WaitBadge";
 import Icon from "@/components/ui/icon";
 import AdminLogin from "./admin/AdminLogin";
 import AdminApplications from "./admin/AdminApplications";
@@ -84,12 +85,13 @@ export default function AdminPage() {
   useEffect(() => { if (token) { loadApps(); loadUsers(); } }, []);
 
   const [loanNotices, setLoanNotices] = useState(0);
+  const [waiting, setWaiting] = useState({ apps: 0, car: 0, shop: 0, cardReq: 0 });
 
   const loadCardNotices = () => {
     if (!token) return;
     fetch(`${ADMIN_URL}?sub=card_notices_count`, { headers: hdrs() })
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d) { setCardNotices(d.count || 0); setLoanNotices(d.loanCount || 0); } })
+      .then(d => { if (d) { setCardNotices(d.count || 0); setLoanNotices(d.loanCount || 0); setWaiting({ apps: d.appsWaiting || 0, car: d.carWaiting || 0, shop: d.shopWaiting || 0, cardReq: d.cardRequestsWaiting || 0 }); } })
       .catch(() => {});
   };
 
@@ -310,9 +312,10 @@ export default function AdminPage() {
         </div>
         <span style={{ color: "#022c22", fontWeight: 700, fontSize: 18, flex: 1 }}>РУСФИНАНС 24 Admin</span>
         <button onClick={() => setTab("apps")}
-          style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14,
+          style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
             background: tab === "apps" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "apps" ? "white" : "rgba(2,44,34,0.5)" }}>
-          Заявки {apps.filter(a => a.status === "pending").length > 0 && tab !== "apps" ? `(${apps.filter(a => a.status === "pending").length})` : ""}
+          Заявки
+          <WaitBadge n={waiting.apps} />
         </button>
         <button onClick={() => setTab("clients")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14,
@@ -323,11 +326,13 @@ export default function AdminPage() {
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
             background: tab === "carloan" ? "linear-gradient(135deg,#f59e0b,#ef4444)" : "rgba(16,185,129,0.07)", color: tab === "carloan" ? "white" : "rgba(2,44,34,0.5)" }}>
           🚗 Авто-займы
+          <WaitBadge n={waiting.car} />
         </button>
         <button onClick={() => setTab("shoploan")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
             background: tab === "shoploan" ? "linear-gradient(135deg,#14b8a6,#06b6d4)" : "rgba(16,185,129,0.07)", color: tab === "shoploan" ? "white" : "rgba(2,44,34,0.5)" }}>
           🛒 Товарные займы
+          <WaitBadge n={waiting.shop} />
         </button>
         <button onClick={() => setTab("disbursed")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
@@ -341,6 +346,7 @@ export default function AdminPage() {
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
             background: tab === "cardrequests" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "cardrequests" ? "white" : "rgba(2,44,34,0.5)" }}>
           💳 Заявки на карту
+          <WaitBadge n={waiting.cardReq} />
         </button>
         <button onClick={() => setTab("cards")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,

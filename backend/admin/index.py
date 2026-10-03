@@ -2086,8 +2086,30 @@ def handler(event: dict, context) -> dict:
         cnt = cur.fetchone()[0]
         cur.execute(f"SELECT COUNT(DISTINCT (loan_type, loan_id)) FROM {SCHEMA}.loan_payment_notices WHERE status = 'new'")
         loan_cnt = cur.fetchone()[0]
+        cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.applications WHERE status = 'pending'")
+        apps_wait = cur.fetchone()[0]
+        cur.execute(f"""
+            SELECT COUNT(*) FROM {SCHEMA}.applications a
+            JOIN LATERAL (
+                SELECT lo.signed, lo.disbursed_at FROM {SCHEMA}.loans lo
+                JOIN {SCHEMA}.users u ON u.id = lo.user_id
+                WHERE u.phone = a.phone ORDER BY lo.created_at DESC LIMIT 1
+            ) l ON true
+            WHERE a.status IN ('approved','partner_card') AND l.signed = TRUE AND l.disbursed_at IS NULL
+        """)
+        apps_wait += cur.fetchone()[0]
+        cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.car_loan_applications WHERE status = 'pending' OR (status = 'approved' AND contract_signed = TRUE AND disbursed_at IS NULL)")
+        car_wait = cur.fetchone()[0]
+        cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.shopping_loan_applications WHERE status = 'pending' OR (status = 'approved' AND contract_signed = TRUE AND disbursed_at IS NULL)")
+        shop_wait = cur.fetchone()[0]
+        cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.card_requests WHERE status = 'pending'")
+        card_req_wait = cur.fetchone()[0]
         cur.close(); conn.close()
-        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"count": int(cnt), "loanCount": int(loan_cnt)})}
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({
+            "count": int(cnt), "loanCount": int(loan_cnt),
+            "appsWaiting": int(apps_wait), "carWaiting": int(car_wait),
+            "shopWaiting": int(shop_wait), "cardRequestsWaiting": int(card_req_wait),
+        })}
 
     # --- ОТМЕТИТЬ СООБЩЕНИЕ ОБ ОПЛАТЕ ПРОВЕРЕННЫМ (POST, sub='card_notice_done', noticeId=...) ---
     if sub == "card_notice_done" and method == "POST":
