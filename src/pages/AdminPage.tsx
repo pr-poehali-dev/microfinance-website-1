@@ -83,11 +83,13 @@ export default function AdminPage() {
 
   useEffect(() => { if (token) { loadApps(); loadUsers(); } }, []);
 
+  const [loanNotices, setLoanNotices] = useState(0);
+
   const loadCardNotices = () => {
     if (!token) return;
     fetch(`${ADMIN_URL}?sub=card_notices_count`, { headers: hdrs() })
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d) setCardNotices(d.count || 0); })
+      .then(d => { if (d) { setCardNotices(d.count || 0); setLoanNotices(d.loanCount || 0); } })
       .catch(() => {});
   };
 
@@ -331,6 +333,9 @@ export default function AdminPage() {
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
             background: tab === "disbursed" ? "linear-gradient(135deg,#0ea5e9,#38bdf8)" : "rgba(16,185,129,0.07)", color: tab === "disbursed" ? "white" : "rgba(2,44,34,0.5)" }}>
           💸 Выданные займы
+          {loanNotices > 0 && (
+            <span style={{ background: "#ef4444", color: "white", borderRadius: 20, padding: "1px 8px", fontSize: 12, fontWeight: 700 }}>{loanNotices}</span>
+          )}
         </button>
         <button onClick={() => setTab("cardrequests")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,

@@ -420,6 +420,8 @@ def handler(event: dict, context) -> dict:
         """)
         rows = cur.fetchall()
         print(f"[applications] found {len(rows)} rows")
+        cur.execute(f"SELECT DISTINCT ON (loan_id) loan_id, amount, created_at FROM {SCHEMA}.loan_payment_notices WHERE loan_type = 'loan' AND status = 'new' ORDER BY loan_id, id DESC")
+        loan_notice_map = {n[0]: {"amount": float(n[1]), "createdAt": msk(n[2]).strftime("%d.%m.%Y в %H:%M")} for n in cur.fetchall()}
         cur.close(); conn.close()
         apps = [{
             "id": r[0], "fullName": r[1] or "", "phone": r[2], "email": r[3] or "",
@@ -441,6 +443,7 @@ def handler(event: dict, context) -> dict:
             "approvedRate": float(r[30]) if r[30] else None,
             "approvedDays": int(r[31]) if r[31] else None,
             "loanId": r[32],
+            "loanNotice": loan_notice_map.get(r[32]) if r[32] else None,
             "loanSigned": bool(r[33]) if r[33] is not None else False,
             "loanSignedAt": msk(r[34]).strftime("%d.%m.%Y в %H:%M") if r[34] else None,
             "loanStatus": r[35] or None,
@@ -1104,6 +1107,9 @@ def handler(event: dict, context) -> dict:
         """)
         shop_rows = cur.fetchall()
 
+        cur.execute(f"SELECT DISTINCT ON (loan_type, loan_id) loan_type, loan_id, amount, created_at FROM {SCHEMA}.loan_payment_notices WHERE status = 'new' ORDER BY loan_type, loan_id, id DESC")
+        notice_map = {(n[0], n[1]): {"amount": float(n[2]), "createdAt": msk(n[3]).strftime("%d.%m.%Y в %H:%M")} for n in cur.fetchall()}
+
         cur.close(); conn.close()
 
         all_items = []
@@ -1177,6 +1183,8 @@ def handler(event: dict, context) -> dict:
                 "nextDueDate": next_due.strftime("%d.%m.%Y") if next_due else None,
             })
 
+        for it in all_items:
+            it["pendingNotice"] = notice_map.get((it["type"], it["id"]))
         all_items.sort(key=lambda x: x["disbursedAt"] or "", reverse=True)
 
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"items": all_items, "total": len(all_items)}, ensure_ascii=False)}
@@ -2075,8 +2083,10 @@ def handler(event: dict, context) -> dict:
     if sub == "card_notices_count" and method == "GET":
         cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.card_payment_notices WHERE status = 'new'")
         cnt = cur.fetchone()[0]
+        cur.execute(f"SELECT COUNT(DISTINCT (loan_type, loan_id)) FROM {SCHEMA}.loan_payment_notices WHERE status = 'new'")
+        loan_cnt = cur.fetchone()[0]
         cur.close(); conn.close()
-        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"count": int(cnt)})}
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"count": int(cnt), "loanCount": int(loan_cnt)})}
 
     # --- ОТМЕТИТЬ СООБЩЕНИЕ ОБ ОПЛАТЕ ПРОВЕРЕННЫМ (POST, sub='card_notice_done', noticeId=...) ---
     if sub == "card_notice_done" and method == "POST":

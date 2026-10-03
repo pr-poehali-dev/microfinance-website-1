@@ -12,6 +12,7 @@ export interface App {
   approvedDays: number | null;
   clientPassword: string;
   loanId: number | null;
+  loanNotice?: { amount: number; createdAt: string } | null;
   loanSigned: boolean;
   loanSignedAt: string | null;
   loanStatus: string | null;

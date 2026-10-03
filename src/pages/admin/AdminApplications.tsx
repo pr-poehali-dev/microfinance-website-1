@@ -504,6 +504,15 @@ export default function AdminApplications({
                           {app.loanDisbursedAt && <div style={{ fontSize: 11, fontWeight: 400, opacity: 0.8 }}>{app.loanDisbursedAt}</div>}
                         </div>
                       </div>
+                      {app.loanNotice && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", padding: "8px 12px", borderRadius: 10, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.55)", boxShadow: "0 0 14px rgba(239,68,68,0.3)" }}>
+                          <span style={{ color: "#dc2626", fontSize: 13, fontWeight: 700 }}>Клиент оплатил {app.loanNotice.amount.toLocaleString("ru-RU")} ₽ · {app.loanNotice.createdAt}</span>
+                          <button onClick={() => setPaymentModalApp(app)}
+                            style={{ background: "linear-gradient(135deg,#dc2626,#ef4444)", color: "#fff", border: "none", borderRadius: 8, padding: "7px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                            <Icon name="Check" size={14} />Проверено
+                          </button>
+                        </div>
+                      )}
                       <button onClick={() => setPaymentModalApp(app)}
                         style={{ background: "rgba(34,197,94,0.12)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.35)", borderRadius: 10, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
                         <Icon name="Plus" size={15} />Внести платёж{paymentAdded[app.id] ? ` (${paymentAdded[app.id]})` : ""}
@@ -836,8 +845,9 @@ export default function AdminApplications({
           loanType="loan"
           loanId={paymentModalApp.loanId}
           clientName={paymentModalApp.fullName || paymentModalApp.phone}
+          initialAmount={paymentModalApp.loanNotice?.amount}
           onClose={() => setPaymentModalApp(null)}
-          onSuccess={() => setPaymentAdded(p => ({ ...p, [paymentModalApp.id]: (p[paymentModalApp.id] || 0) + 1 }))}
+          onSuccess={() => { setPaymentAdded(p => ({ ...p, [paymentModalApp.id]: (p[paymentModalApp.id] || 0) + 1 })); onRefresh(); }}
         />
       )}
     </div>

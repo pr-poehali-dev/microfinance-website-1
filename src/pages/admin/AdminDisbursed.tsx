@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 import AdminLoanDetailModal from "./AdminLoanDetailModal";
+import AddPaymentModal from "./AddPaymentModal";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
 
@@ -31,6 +32,7 @@ interface DisbursedItem {
   overdueDays?: number;
   penaltyAmount?: number;
   nextDueDate: string | null;
+  pendingNotice?: { amount: number; createdAt: string } | null;
 }
 
 const G = { background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.08)", borderRadius: 14 };
@@ -44,6 +46,13 @@ export default function AdminDisbursed({ token }: Props) {
   const [statusFilter, setStatusFilter] = useState<"all" | "overdue">("all");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<{ type: string; id: number } | null>(null);
+  const [payItem, setPayItem] = useState<DisbursedItem | null>(null);
+  const [onlyNotices, setOnlyNotices] = useState(false);
+
+  const closeNotice = async (item: DisbursedItem) => {
+    await fetch(`${ADMIN_URL}?sub=loan_notice_done&type=${item.type}&id=${item.id}`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+    load();
+  };
 
   const hdrs = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
 
@@ -61,10 +70,12 @@ export default function AdminDisbursed({ token }: Props) {
   const fmt = (n: number) => n ? `${n.toLocaleString("ru-RU")} ₽` : "—";
 
   const overdueCount = items.filter(i => i.isOverdue).length;
+  const noticeCount = items.filter(i => i.pendingNotice).length;
 
   const filtered = items.filter(item => {
     if (typeFilter !== "all" && item.type !== typeFilter) return false;
     if (statusFilter === "overdue" && !item.isOverdue) return false;
+    if (onlyNotices && !item.pendingNotice) return false;
     if (search) {
       const q = search.toLowerCase();
       return item.fullName.toLowerCase().includes(q) || item.phone.includes(q) || item.email.toLowerCase().includes(q);
@@ -77,7 +88,18 @@ export default function AdminDisbursed({ token }: Props) {
   return (
     <div>
       {selected && (
-        <AdminLoanDetailModal token={token} type={selected.type} id={selected.id} onClose={() => setSelected(null)} />
+        <AdminLoanDetailModal token={token} type={selected.type} id={selected.id} onClose={() => { setSelected(null); load(); }} />
+      )}
+      {payItem && (
+        <AddPaymentModal
+          token={token}
+          loanType={payItem.type as "loan" | "carloan" | "shoploan"}
+          loanId={payItem.id}
+          clientName={payItem.fullName || payItem.phone}
+          initialAmount={payItem.pendingNotice?.amount}
+          onClose={() => setPayItem(null)}
+          onSuccess={load}
+        />
       )}
 
       {/* Статистика */}
@@ -119,6 +141,15 @@ export default function AdminDisbursed({ token }: Props) {
             color: statusFilter === "overdue" ? "white" : "#f87171",
           }}>
           <Icon name="AlertTriangle" size={14} />Просроченные{overdueCount > 0 ? ` (${overdueCount})` : ""}
+        </button>
+        <button onClick={() => setOnlyNotices(v => !v)}
+          style={{
+            padding: "8px 18px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 700, fontSize: 13,
+            display: "flex", alignItems: "center", gap: 6,
+            background: onlyNotices ? "linear-gradient(135deg,#dc2626,#f87171)" : noticeCount > 0 ? "rgba(239,68,68,0.18)" : "rgba(239,68,68,0.06)",
+            color: onlyNotices ? "white" : "#dc2626",
+          }}>
+          <Icon name="BellRing" size={14} />Клиент оплатил{noticeCount > 0 ? ` (${noticeCount})` : ""}
         </button>
       </div>
 
@@ -166,11 +197,14 @@ export default function AdminDisbursed({ token }: Props) {
             const tp = TYPE_LABELS[item.type] || TYPE_LABELS.loan;
             const amount = item.approvedAmount || item.loanAmount;
             return (
-              <button
+              <div
                 key={`${item.type}-${item.id}`}
+                role="button"
                 onClick={() => setSelected({ type: item.type, id: item.id })}
                 style={{ ...G, padding: "16px 20px", textAlign: "left", cursor: "pointer", width: "100%", transition: "border-color 0.15s",
-                  border: item.isOverdue ? "1px solid rgba(239,68,68,0.4)" : G.border }}
+                  background: item.pendingNotice ? "rgba(239,68,68,0.08)" : G.background,
+                  boxShadow: item.pendingNotice ? "0 0 0 2px rgba(239,68,68,0.55), 0 0 18px rgba(239,68,68,0.3)" : undefined,
+                  border: item.pendingNotice || item.isOverdue ? "1px solid rgba(239,68,68,0.55)" : G.border }}
               >
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -208,6 +242,23 @@ export default function AdminDisbursed({ token }: Props) {
                         </div>
                       ))}
                     </div>
+                    {item.pendingNotice && (
+                      <div onClick={e => e.stopPropagation()} style={{ padding: "10px 12px", borderRadius: 10, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.5)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+                        <span style={{ color: "#dc2626", fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                          <Icon name="BellRing" size={15} />Клиент оплатил {fmt(item.pendingNotice.amount)} · {item.pendingNotice.createdAt}
+                        </span>
+                        <span style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          <button onClick={() => setPayItem(item)}
+                            style={{ background: "linear-gradient(135deg,#dc2626,#ef4444)", color: "#fff", border: "none", borderRadius: 8, padding: "7px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                            <Icon name="Check" size={14} />Проверено
+                          </button>
+                          <button onClick={() => closeNotice(item)}
+                            style={{ background: "rgba(2,44,34,0.05)", color: "rgba(2,44,34,0.6)", border: "1px solid rgba(2,44,34,0.15)", borderRadius: 8, padding: "7px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                            Оплаты не было
+                          </button>
+                        </span>
+                      </div>
+                    )}
                     {item.isOverdue && !!item.overdueDays && (
                       <div style={{ padding: "8px 12px", borderRadius: 8, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", display: "flex", alignItems: "center", gap: 6 }}>
                         <Icon name="TrendingUp" size={13} style={{ color: "#f87171", flexShrink: 0 }} />
@@ -232,7 +283,7 @@ export default function AdminDisbursed({ token }: Props) {
                     <Icon name="ChevronRight" size={18} style={{ color: "rgba(2,44,34,0.25)" }} />
                   </div>
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>
