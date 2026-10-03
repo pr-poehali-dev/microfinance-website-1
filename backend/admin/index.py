@@ -2056,6 +2056,12 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": f"Сумма больше долга ({int(debt)} ₽)"})}
         note_sql = f"'{note}'" if note else "NULL"
         cur.execute(f"INSERT INTO {SCHEMA}.card_repayments (application_id, amount, note) VALUES ({app_id}, {amt}, {note_sql})")
+        try:
+            notice_id = int(body.get("noticeId") or 0)
+        except (TypeError, ValueError):
+            notice_id = 0
+        if notice_id:
+            cur.execute(f"UPDATE {SCHEMA}.card_payment_notices SET status = 'done', resolved_at = NOW() WHERE id = {notice_id} AND application_id = {app_id}")
         conn.commit(); cur.close(); conn.close()
         tg(
             f"✅ <b>Погашение по карте РУСФИНАНС 24</b>\n\n"

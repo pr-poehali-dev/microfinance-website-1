@@ -140,14 +140,27 @@ export default function AdminCards({ token, onChanged }: Props) {
                           <div style={{ color: "#022c22", fontSize: 13 }}>
                             <b>{fmt(n.amount)}</b> за платёж {n.dueDate}{n.txId ? ` (перевод №${n.txId})` : " (график карты)"} <span style={{ color: "rgba(2,44,34,0.5)", fontSize: 12 }}>· сообщено {n.createdAt}</span>
                           </div>
-                          <button disabled={busy === `n${n.id}`}
-                            onClick={() => post(`sub=card_notice_done&noticeId=${n.id}`, {}, `n${n.id}`, "Проверено — у клиента в графике отмечено «Оплачено»")}
-                            style={{ background: "rgba(16,185,129,0.12)", color: "#047857", border: "1px solid rgba(16,185,129,0.35)", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-                            Проверено
-                          </button>
+                          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                            {c.debt > 0 && (
+                              <button disabled={busy === `n${n.id}`}
+                                onClick={() => {
+                                  const sum = Math.min(n.amount, Math.round(c.debt));
+                                  if (!window.confirm(`Внести погашение ${fmt(sum)} по карте и отметить платёж оплаченным?`)) return;
+                                  post(`sub=card_repay&appId=${c.appId}`, { amount: sum, noticeId: n.id }, `n${n.id}`, `Погашение ${fmt(sum)} внесено, у клиента отмечено «Оплачено»`);
+                                }}
+                                style={{ background: "linear-gradient(135deg,#047857,#10b981)", color: "#fff", border: "none", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                                Проверено — внести {fmt(Math.min(n.amount, Math.round(c.debt)))}
+                              </button>
+                            )}
+                            <button disabled={busy === `n${n.id}`}
+                              onClick={() => post(`sub=card_notice_done&noticeId=${n.id}`, {}, `n${n.id}`, "Отмечено «Оплачено» без внесения суммы")}
+                              style={{ background: "rgba(16,185,129,0.12)", color: "#047857", border: "1px solid rgba(16,185,129,0.35)", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                              Только отметить
+                            </button>
+                          </div>
                         </div>
                       ))}
-                      <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, marginTop: 4 }}>После проверки внесите сумму кнопкой «Погасить сумму» ниже.</div>
+                      <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, marginTop: 4 }}>Кнопка «Проверено — внести» сразу гасит долг на сумму клиента и отмечает платёж оплаченным.</div>
                     </div>
                   )}
 
