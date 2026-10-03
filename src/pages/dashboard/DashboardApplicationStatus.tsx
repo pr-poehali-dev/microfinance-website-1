@@ -4,6 +4,7 @@ import PartnerCardLinks from "./PartnerCardLinks";
 import CardWithdrawForm from "./CardWithdrawForm";
 import CardTransactionsList, { CardTransaction } from "./CardTransactionsList";
 import CardPaymentSchedule, { CardPaymentRow } from "./CardPaymentSchedule";
+import CardRepaymentHistory, { CardRepayment } from "./CardRepaymentHistory";
 import CardRequestBlock from "./CardRequestBlock";
 
 interface LoanOffer {
@@ -46,6 +47,8 @@ interface VirtualCard {
   minPaymentPercent?: number;
   minPayment?: number;
   paymentSchedule?: CardPaymentRow[];
+  repaid?: number;
+  repayments?: CardRepayment[];
 }
 
 interface CardRequest {
@@ -826,6 +829,12 @@ export default function DashboardApplicationStatus({
                   minPaymentPercent={application.virtualCard.minPaymentPercent ?? 40}
                   minPayment={application.virtualCard.minPayment ?? 0}
                   schedule={application.virtualCard.paymentSchedule ?? []}
+                />
+
+                <CardRepaymentHistory
+                  repaid={application.virtualCard.repaid ?? 0}
+                  debt={application.virtualCard.debt ?? 0}
+                  repayments={application.virtualCard.repayments ?? []}
                 />
 
                 {/* История переводов с еженедельными графиками */}

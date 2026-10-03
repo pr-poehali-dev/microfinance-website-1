@@ -480,6 +480,7 @@ def handler(event: dict, context) -> dict:
         vc_used = 0.0
         vc_debt = 0.0
         vc_repaid = 0.0
+        vc_repayments = []
         if app_row[11]:
             cur.execute(
                 f"SELECT id, amount, weeks, rate, status, created_at, disbursed_amount, disbursed_at, target_card FROM {SCHEMA}.card_transactions "
@@ -515,6 +516,14 @@ def handler(event: dict, context) -> dict:
                 })
             cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_repayments WHERE application_id = {app_row[0]}")
             vc_repaid = float(cur.fetchone()[0])
+            cur.execute(
+                f"SELECT amount, note, created_at FROM {SCHEMA}.card_repayments "
+                f"WHERE application_id = {app_row[0]} AND amount > 0 ORDER BY created_at DESC"
+            )
+            vc_repayments = [{
+                "amount": float(r_amt), "note": r_note or "",
+                "createdAt": msk(r_at).strftime("%d.%m.%Y в %H:%M"),
+            } for r_amt, r_note, r_at in cur.fetchall()]
             vc_debt = max(0.0, vc_debt - vc_repaid)
             vc_used = max(0.0, vc_used - vc_repaid)
 
@@ -548,6 +557,7 @@ def handler(event: dict, context) -> dict:
                 "transactions": vc_transactions,
                 "debt": vc_debt,
                 "repaid": vc_repaid,
+                "repayments": vc_repayments,
                 "minPaymentPercent": CARD_MIN_PAYMENT_PERCENT,
                 "minPayment": round(vc_debt * CARD_MIN_PAYMENT_PERCENT / 100),
                 "paymentSchedule": card_payment_schedule(app_row[39], vc_debt),
