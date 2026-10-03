@@ -122,7 +122,7 @@ def handler(event: dict, context) -> dict:
         if confirm_card:
             # Клиент подтвердил виртуальную карту РУСФИНАНС 24 — активируем
             cur.execute(
-                f"UPDATE {SCHEMA}.applications SET virtual_card_status='active' "
+                f"UPDATE {SCHEMA}.applications SET virtual_card_status='active', virtual_card_signed_at=NOW() "
                 f"WHERE phone='{ph_e}' AND virtual_card_status='pending' AND virtual_card_number IS NOT NULL"
             )
             conn.commit()

@@ -30,6 +30,7 @@ export interface App {
   partnerCardUrl: string;
   virtualCardStatus?: string;
   virtualCardLimit?: number | null;
+  virtualCardSignedAt?: string | null;
 }
 export interface CardRequestItem {
   id: number;

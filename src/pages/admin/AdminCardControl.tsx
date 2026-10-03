@@ -144,6 +144,20 @@ export default function AdminCardControl({ app, token, onDone }: Props) {
           {app.virtualCardLimit ? ` · ${app.virtualCardLimit.toLocaleString("ru-RU")} ₽` : ""}
         </div>
       )}
+      {hasCard && app.virtualCardStatus !== "pending" && (
+        <div style={{ borderRadius: 10, padding: "8px 12px", fontSize: 12, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", color: "#047857", display: "flex", alignItems: "flex-start", gap: 6 }}>
+          <Icon name="FileCheck" size={13} />
+          <div>
+            <div style={{ fontWeight: 700 }}>Договор подписан</div>
+            <div style={{ opacity: 0.8 }}>{app.virtualCardSignedAt ? `${app.virtualCardSignedAt} (МСК)` : "дата не зафиксирована"}</div>
+          </div>
+        </div>
+      )}
+      {hasCard && app.virtualCardStatus === "pending" && (
+        <div style={{ borderRadius: 10, padding: "8px 12px", fontSize: 12, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", color: "#b45309", display: "flex", alignItems: "center", gap: 6 }}>
+          <Icon name="Clock" size={13} />Договор не подписан
+        </div>
+      )}
       <button onClick={() => { setMode(hasCard ? "edit" : "issue"); setOpen(true); }}
         style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)", color: "white", border: "none", borderRadius: 10, padding: "9px 12px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
         <Icon name={hasCard ? "Pencil" : "CreditCard"} size={14} />

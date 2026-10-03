@@ -395,7 +395,7 @@ def handler(event: dict, context) -> dict:
                    a.reviewed_at, l.created_at AS loan_created_at,
                    COALESCE(hist.loans_count, 0), COALESCE(hist.paid_count, 0), COALESCE(hist.overdue_count, 0),
                    COALESCE(hist.total_borrowed, 0), COALESCE(hist.apps_count, 0), a.partner_card_url,
-                   a.virtual_card_status, a.virtual_card_limit
+                   a.virtual_card_status, a.virtual_card_limit, a.virtual_card_signed_at
             FROM {SCHEMA}.applications a
             LEFT JOIN LATERAL (
                 SELECT lo.id, lo.signed, lo.signed_at, lo.status, lo.disbursed_at, lo.created_at
@@ -462,6 +462,7 @@ def handler(event: dict, context) -> dict:
             "partnerCardUrl": r[51] or "",
             "virtualCardStatus": r[52] or "none",
             "virtualCardLimit": float(r[53]) if r[53] else None,
+            "virtualCardSignedAt": msk(r[54]).strftime("%d.%m.%Y в %H:%M") if r[54] else None,
         } for r in rows]
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"applications": apps}, ensure_ascii=False)}
 
@@ -1701,7 +1702,7 @@ def handler(event: dict, context) -> dict:
         if vc_status not in ("pending", "active"):
             cur.close(); conn.close()
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Карта не выдана или уже активна"})}
-        cur.execute(f"UPDATE {SCHEMA}.applications SET virtual_card_status='active' WHERE id='{app_id_e}'")
+        cur.execute(f"UPDATE {SCHEMA}.applications SET virtual_card_status='active', virtual_card_signed_at=COALESCE(virtual_card_signed_at, NOW()) WHERE id='{app_id_e}'")
         conn.commit()
         tg(f"✅ <b>Карта РУСФИНАНС 24 активирована</b>\n\n👤 {full_name or phone}\n📞 {phone}")
         cur.close(); conn.close()
