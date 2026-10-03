@@ -141,7 +141,8 @@ def handler(event: dict, context) -> dict:
                     f"👤 <b>ФИО:</b> {vc_name or phone}\n"
                     f"📞 <b>Телефон:</b> {phone}\n"
                     f"💰 <b>Лимит:</b> {int(float(vc_limit)):,} ₽\n".replace(",", " ") +
-                    f"📈 <b>Ставка:</b> {float(vc_rate)}%/день\n"
+                    f"📈 <b>Ставка:</b> {float(vc_rate)}%/нед.\n"
+                    f"📝 Кредитный договор подписан\n"
                     f"🔖 <b>Заявка №:</b> {vc_id}"
                 )
                 data = json.dumps({"chat_id": chat_id, "text": text, "parse_mode": "HTML"}).encode()

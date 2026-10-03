@@ -691,7 +691,7 @@ export default function DashboardApplicationStatus({
                 </div>
                 <div className="flex-1">
                   <div className="text-emerald-950 font-bold">Карта РУСФИНАНС 24 одобрена!</div>
-                  <div className="text-emerald-700 text-xs mt-0.5">Ознакомьтесь с условиями и подтвердите</div>
+                  <div className="text-emerald-700 text-xs mt-0.5">Ознакомьтесь с условиями и подпишите договор</div>
                 </div>
                 <span className="text-xs px-3 py-1 rounded-full font-semibold animate-pulse"
                   style={{ background: "rgba(20,184,166,0.2)", color: "#0f766e" }}>Одобрено</span>
@@ -724,22 +724,26 @@ export default function DashboardApplicationStatus({
                   </div>
                 </div>
                 {/* Условия */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   {[
-                    { label: "Лимит", value: `${application.virtualCard.limit.toLocaleString("ru-RU")} ₽`, color: "#6ee7b7" },
-                    { label: "Ставка", value: `${application.virtualCard.rate}% / день`, color: "white" },
+                    { label: "Сумма и лимит", value: `${application.virtualCard.limit.toLocaleString("ru-RU")} ₽`, color: "#059669" },
+                    { label: "Ставка", value: `${application.virtualCard.rate}% / нед.`, color: "#022c22" },
+                    { label: "Срок", value: application.virtualCard.days ? `${application.virtualCard.days} дн.` : "—", color: "#022c22" },
                   ].map(({ label, value, color }) => (
-                    <div key={label} className="rounded-xl px-4 py-3 text-center"
+                    <div key={label} className="rounded-xl px-3 py-3 text-center"
                       style={{ background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.3)" }}>
                       <div className="text-emerald-950/40 text-xs mb-1">{label}</div>
                       <div className="font-bold text-base" style={{ color }}>{value}</div>
                     </div>
                   ))}
                 </div>
+                <div className="text-emerald-950/50 text-xs leading-relaxed">
+                  Платежи по карте — раз в неделю, минимальный платёж 40% от общего долга. Нажимая кнопку ниже, вы подписываете кредитный договор на этих условиях.
+                </div>
                 <button onClick={onActivateCard} disabled={cardActivating}
                   className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-60"
                   style={{ background: "linear-gradient(135deg,#16a34a,#4ade80)", boxShadow: "0 4px 20px rgba(74,222,128,0.25)" }}>
-                  {cardActivating ? <><Icon name="Loader2" size={18} className="animate-spin" />Подтверждаем...</> : <><Icon name="CheckCircle" size={18} />Подтвердить карту</>}
+                  {cardActivating ? <><Icon name="Loader2" size={18} className="animate-spin" />Подписываем...</> : <><Icon name="FileSignature" size={18} />Подписать кредитный договор</>}
                 </button>
               </div>
             </div>
@@ -756,11 +760,11 @@ export default function DashboardApplicationStatus({
                   <Icon name="CreditCard" size={20} className="text-green-400" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-emerald-950 font-bold">Карта РУСФИНАНС 24 активна</div>
-                  <div className="text-green-300 text-xs mt-0.5">Виртуальная карта готова к использованию</div>
+                  <div className="text-emerald-950 font-bold">Карта активирована</div>
+                  <div className="text-emerald-700 text-xs mt-0.5">Договор подписан, карта РУСФИНАНС 24 готова к использованию</div>
                 </div>
                 <span className="text-xs px-3 py-1 rounded-full font-semibold"
-                  style={{ background: "rgba(74,222,128,0.2)", color: "#4ade80" }}>Активна</span>
+                  style={{ background: "rgba(74,222,128,0.2)", color: "#15803d" }}>Активирована</span>
               </div>
               <div className="px-6 py-5 space-y-4">
                 {/* Карта с данными */}
@@ -804,7 +808,7 @@ export default function DashboardApplicationStatus({
                   {[
                     { label: "Лимит карты", value: `${application.virtualCard.limit.toLocaleString("ru-RU")} ₽`, color: "#065f46" },
                     { label: "Доступно", value: `${application.virtualCard.available.toLocaleString("ru-RU")} ₽`, color: "#4ade80" },
-                    { label: "Ставка", value: "24% / нед.", color: "#065f46" },
+                    { label: "Ставка", value: `${application.virtualCard.rate || 24}% / нед.`, color: "#065f46" },
                   ].map(({ label, value, color }) => (
                     <div key={label} className="rounded-xl px-4 py-3 text-center"
                       style={{ background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.2)" }}>
