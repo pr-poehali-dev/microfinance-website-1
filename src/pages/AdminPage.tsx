@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import WaitBadge from "./admin/WaitBadge";
+import { useWaitingSound } from "./admin/useWaitingSound";
 import Icon from "@/components/ui/icon";
 import AdminLogin from "./admin/AdminLogin";
 import AdminApplications from "./admin/AdminApplications";
@@ -87,11 +88,15 @@ export default function AdminPage() {
   const [loanNotices, setLoanNotices] = useState(0);
   const [waiting, setWaiting] = useState({ apps: 0, car: 0, shop: 0, cardReq: 0 });
 
+  const [countsReady, setCountsReady] = useState(false);
+  const totalWaiting = waiting.apps + waiting.car + waiting.shop + waiting.cardReq + cardNotices + loanNotices;
+  const sound = useWaitingSound(totalWaiting, countsReady);
+
   const loadCardNotices = () => {
     if (!token) return;
     fetch(`${ADMIN_URL}?sub=card_notices_count`, { headers: hdrs() })
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d) { setCardNotices(d.count || 0); setLoanNotices(d.loanCount || 0); setWaiting({ apps: d.appsWaiting || 0, car: d.carWaiting || 0, shop: d.shopWaiting || 0, cardReq: d.cardRequestsWaiting || 0 }); } })
+      .then(d => { if (d) { setCardNotices(d.count || 0); setLoanNotices(d.loanCount || 0); setWaiting({ apps: d.appsWaiting || 0, car: d.carWaiting || 0, shop: d.shopWaiting || 0, cardReq: d.cardRequestsWaiting || 0 }); setCountsReady(true); } })
       .catch(() => {});
   };
 
@@ -358,6 +363,10 @@ export default function AdminPage() {
         </button>
         <button onClick={() => { loadApps(); loadUsers(); }} style={{ background: "rgba(16,185,129,0.07)", border: "none", borderRadius: 10, padding: 8, cursor: "pointer", color: "rgba(2,44,34,0.5)" }}>
           <Icon name="RefreshCw" size={16} />
+        </button>
+        <button onClick={sound.toggle} title={sound.enabled ? "Звук включён" : "Звук выключен"}
+          style={{ background: sound.enabled ? "rgba(16,185,129,0.15)" : "rgba(16,185,129,0.07)", border: "none", borderRadius: 10, padding: 8, cursor: "pointer", color: sound.enabled ? "#047857" : "rgba(2,44,34,0.4)" }}>
+          <Icon name={sound.enabled ? "Volume2" : "VolumeX"} size={16} />
         </button>
         <button onClick={logout} style={{ background: "rgba(16,185,129,0.07)", border: "none", borderRadius: 10, padding: 8, cursor: "pointer", color: "rgba(2,44,34,0.5)" }}>
           <Icon name="LogOut" size={16} />
