@@ -7,6 +7,14 @@ from datetime import datetime, timedelta
 import urllib.request
 import psycopg2
 
+
+from datetime import timedelta as _msk_td
+
+
+def msk(dt):
+    """Переводит время из UTC (как хранится в БД) в московское (UTC+3) для показа."""
+    return dt + _msk_td(hours=3) if dt else dt
+
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
 TELEGRAM_CHAT_ID = "8540431915"
 
@@ -218,7 +226,7 @@ def handler(event: dict, context) -> dict:
         conn.commit(); cur.close(); conn.close()
 
         interest = round(amount * rate * days)
-        now = datetime.now().strftime("%d.%m.%Y в %H:%M")
+        now = msk(datetime.now()).strftime("%d.%m.%Y в %H:%M")
         tg(
             f"💰 <b>Новый займ выдан</b>\n"
             f"⏱ {now}\n\n"
@@ -337,7 +345,7 @@ def handler(event: dict, context) -> dict:
         uid = cur.fetchone()[0]
         conn.commit(); cur.close(); conn.close()
 
-        now = datetime.now().strftime("%d.%m.%Y в %H:%M")
+        now = msk(datetime.now()).strftime("%d.%m.%Y в %H:%M")
         tg(
             f"👤 <b>Новый клиент зарегистрирован</b>\n"
             f"⏱ {now}\n\n"
@@ -396,7 +404,7 @@ def handler(event: dict, context) -> dict:
             "amount": float(r[4]) if r[4] else 0, "days": r[5] or 0,
             "birthDate": str(r[6]) if r[6] else "", "passportSeries": r[7] or "",
             "passportNumber": r[8] or "", "status": r[9],
-            "createdAt": r[10].strftime("%d.%m.%Y в %H:%M"), "rejectReason": r[11] or "",
+            "createdAt": msk(r[10]).strftime("%d.%m.%Y в %H:%M"), "rejectReason": r[11] or "",
             "telegramId": r[12] or "", "birthPlace": r[13] or "",
             "passportDate": str(r[14]) if r[14] else "", "passportCode": r[15] or "",
             "passportBy": r[16] or "",
@@ -412,18 +420,18 @@ def handler(event: dict, context) -> dict:
             "approvedDays": int(r[31]) if r[31] else None,
             "loanId": r[32],
             "loanSigned": bool(r[33]) if r[33] is not None else False,
-            "loanSignedAt": r[34].strftime("%d.%m.%Y в %H:%M") if r[34] else None,
+            "loanSignedAt": msk(r[34]).strftime("%d.%m.%Y в %H:%M") if r[34] else None,
             "loanStatus": r[35] or None,
-            "loanDisbursedAt": r[36].strftime("%d.%m.%Y в %H:%M") if r[36] else None,
+            "loanDisbursedAt": msk(r[36]).strftime("%d.%m.%Y в %H:%M") if r[36] else None,
             "snils": r[37] or "",
             "workPhone": r[38] or "",
             "cardNumberTransfer": r[39] or "",
             "isCreditDoctor": bool(r[40]) if r[40] is not None else False,
             "videoCallRequested": bool(r[41]) if r[41] is not None else False,
             "virtualCardDays": int(r[42]) if r[42] else None,
-            "blockedUntil": r[43].strftime("%d.%m.%Y %H:%M") if r[43] else None,
-            "reviewedAt": r[44].strftime("%d.%m.%Y в %H:%M") if r[44] else None,
-            "loanCreatedAt": r[45].strftime("%d.%m.%Y в %H:%M") if r[45] else None,
+            "blockedUntil": msk(r[43]).strftime("%d.%m.%Y %H:%M") if r[43] else None,
+            "reviewedAt": msk(r[44]).strftime("%d.%m.%Y в %H:%M") if r[44] else None,
+            "loanCreatedAt": msk(r[45]).strftime("%d.%m.%Y в %H:%M") if r[45] else None,
             "prevLoansCount": int(r[46]) if r[46] else 0,
             "prevPaidCount": int(r[47]) if r[47] else 0,
             "prevOverdueCount": int(r[48]) if r[48] else 0,
@@ -529,7 +537,7 @@ def handler(event: dict, context) -> dict:
 
         interest = round(debt_amount * rate * int(days))
         total = debt_amount + interest
-        now = datetime.now().strftime("%d.%m.%Y в %H:%М")
+        now = msk(datetime.now()).strftime("%d.%m.%Y в %H:%M")
 
         tg(
             f"✅ <b>Заявка одобрена</b>\n"
@@ -636,7 +644,7 @@ def handler(event: dict, context) -> dict:
         cur.execute(f"UPDATE {SCHEMA}.applications SET status='rejected', reviewed_at=NOW(), reject_reason={reason_val} WHERE id='{app_id_esc}'")
         conn.commit(); cur.close(); conn.close()
 
-        now = datetime.now().strftime("%d.%m.%Y в %H:%M")
+        now = msk(datetime.now()).strftime("%d.%m.%Y в %H:%M")
         tg(
             f"❌ <b>Заявка отклонена</b>\n"
             f"⏱ {now}\n\n"
@@ -897,7 +905,7 @@ def handler(event: dict, context) -> dict:
         name_u  = u[1] if u else phone_u
         interest = round(offer_amount * offer_rate * offer_days)
         total = int(offer_amount + interest)
-        now = datetime.now().strftime("%d.%m.%Y в %H:%M")
+        now = msk(datetime.now()).strftime("%d.%m.%Y в %H:%M")
         tg(
             f"📋 <b>Создан оффер для клиента</b>\n"
             f"⏱ {now}\n\n"
@@ -939,7 +947,7 @@ def handler(event: dict, context) -> dict:
         user_id = cur.fetchone()[0]
         conn.commit(); cur.close(); conn.close()
 
-        now = datetime.now().strftime("%d.%m.%Y в %H:%M")
+        now = msk(datetime.now()).strftime("%d.%m.%Y в %H:%M")
         tg(
             f"👤 <b>Новый клиент зарегистрирован</b>\n"
             f"⏱ {now}\n\n"
@@ -974,7 +982,7 @@ def handler(event: dict, context) -> dict:
 
         interest = round(float(amount) * float(rate) * int(days))
         total = float(amount) + interest
-        now = datetime.now().strftime("%d.%m.%Y в %H:%M")
+        now = msk(datetime.now()).strftime("%d.%m.%Y в %H:%M")
         tg(
             f"💸 <b>Займ выдан</b>\n"
             f"⏱ {now}\n\n"
@@ -1091,7 +1099,7 @@ def handler(event: dict, context) -> dict:
                 "rate": float(rate) if rate else None,
                 "approvedAmount": None,
                 "carInfo": "", "itemInfo": "",
-                "disbursedAt": disbursed_at.strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
+                "disbursedAt": msk(disbursed_at).strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
                 "createdAt": created_at.strftime("%d.%m.%Y") if created_at else "",
                 "telegramId": tg_id or "",
                 "paidTotal": paid_total,
@@ -1115,7 +1123,7 @@ def handler(event: dict, context) -> dict:
                 "rate": float(appr_rate) if appr_rate else None,
                 "approvedAmount": float(appr_amount) if appr_amount else None,
                 "carInfo": car_info or "", "itemInfo": "",
-                "disbursedAt": disbursed_at.strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
+                "disbursedAt": msk(disbursed_at).strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
                 "createdAt": created_at.strftime("%d.%m.%Y") if created_at else "",
                 "telegramId": "",
                 "paidTotal": paid_total,
@@ -1137,7 +1145,7 @@ def handler(event: dict, context) -> dict:
                 "rate": float(appr_rate) if appr_rate else None,
                 "approvedAmount": float(appr_amount) if appr_amount else None,
                 "carInfo": "", "itemInfo": item_info or "",
-                "disbursedAt": disbursed_at.strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
+                "disbursedAt": msk(disbursed_at).strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
                 "createdAt": created_at.strftime("%d.%m.%Y") if created_at else "",
                 "telegramId": "",
                 "paidTotal": paid_total,
@@ -1198,7 +1206,7 @@ def handler(event: dict, context) -> dict:
                 }
 
             cur.execute(f"SELECT amount, paid_at, note FROM {SCHEMA}.payments WHERE loan_type='loan' AND loan_id={loan_id} ORDER BY paid_at DESC")
-            payments = [{"amount": float(p[0]), "paidAt": p[1].strftime("%d.%m.%Y в %H:%M"), "note": p[2] or ""} for p in cur.fetchall()]
+            payments = [{"amount": float(p[0]), "paidAt": msk(p[1]).strftime("%d.%m.%Y в %H:%M"), "note": p[2] or ""} for p in cur.fetchall()]
             paid_total = sum(p["amount"] for p in payments)
 
             eff_status, total_due, is_overdue, overdue_days, penalty = calc_loan_penalty(
@@ -1212,9 +1220,9 @@ def handler(event: dict, context) -> dict:
                 "type": "loan", "id": loan_id,
                 "fullName": full_name or "", "phone": phone, "email": email or "",
                 "amount": float(amount), "days": days, "rate": float(rate),
-                "status": eff_status, "createdAt": created_at.strftime("%d.%m.%Y в %H:%M") if created_at else "",
-                "signed": bool(signed), "signedAt": signed_at.strftime("%d.%m.%Y в %H:%M") if signed_at else None,
-                "disbursedAt": disbursed_at.strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
+                "status": eff_status, "createdAt": msk(created_at).strftime("%d.%m.%Y в %H:%M") if created_at else "",
+                "signed": bool(signed), "signedAt": msk(signed_at).strftime("%d.%m.%Y в %H:%M") if signed_at else None,
+                "disbursedAt": msk(disbursed_at).strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
                 "totalDue": total_due, "paidTotal": paid_total, "remaining": max(0, total_due - paid_total),
                 "isOverdue": is_overdue, "overdueDays": overdue_days, "penaltyAmount": penalty,
                 "penaltyWaived": float(penalty_waived or 0),
@@ -1293,7 +1301,7 @@ def handler(event: dict, context) -> dict:
         total_due = sum(s["amount"] for s in schedule) if schedule else eff_amount
 
         cur.execute(f"SELECT amount, paid_at, note FROM {SCHEMA}.payments WHERE loan_type='{loan_type}' AND loan_id={app_id} ORDER BY paid_at DESC")
-        payments = [{"amount": float(p[0]), "paidAt": p[1].strftime("%d.%m.%Y в %H:%M"), "note": p[2] or ""} for p in cur.fetchall()]
+        payments = [{"amount": float(p[0]), "paidAt": msk(p[1]).strftime("%d.%m.%Y в %H:%M"), "note": p[2] or ""} for p in cur.fetchall()]
         paid_total = sum(p["amount"] for p in payments)
 
         cur.close(); conn.close()
@@ -1304,9 +1312,9 @@ def handler(event: dict, context) -> dict:
             "status": status, "rejectReason": reject_reason or "",
             "approvedAmount": float(approved_amount) if approved_amount else None,
             "approvedMonths": approved_months, "approvedRate": eff_rate, "notes": notes or "",
-            "createdAt": created_at.strftime("%d.%m.%Y в %H:%M") if created_at else "",
-            "signed": bool(contract_signed), "signedAt": contract_signed_at.strftime("%d.%m.%Y в %H:%M") if contract_signed_at else None,
-            "disbursedAt": disbursed_at.strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
+            "createdAt": msk(created_at).strftime("%d.%m.%Y в %H:%M") if created_at else "",
+            "signed": bool(contract_signed), "signedAt": msk(contract_signed_at).strftime("%d.%m.%Y в %H:%M") if contract_signed_at else None,
+            "disbursedAt": msk(disbursed_at).strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
             "totalDue": total_due, "paidTotal": paid_total, "remaining": max(0, total_due - paid_total),
             "schedule": schedule, "payments": payments, "profile": profile,
         }, ensure_ascii=False)}
@@ -1399,7 +1407,7 @@ def handler(event: dict, context) -> dict:
             f"WHERE loan_type = '{loan_type}' AND loan_id = {loan_id} ORDER BY paid_at DESC"
         )
         items = [
-            {"id": r[0], "amount": float(r[1]), "paidAt": r[2].strftime("%d.%m.%Y в %H:%M"), "note": r[3] or ""}
+            {"id": r[0], "amount": float(r[1]), "paidAt": msk(r[2]).strftime("%d.%m.%Y в %H:%M"), "note": r[3] or ""}
             for r in cur.fetchall()
         ]
         cur.close(); conn.close()
@@ -1738,8 +1746,8 @@ def handler(event: dict, context) -> dict:
         items = [{
             "id": r[0], "phone": r[1], "fullName": r[2] or "",
             "status": r[3], "rejectReason": r[4] or "",
-            "createdAt": r[5].strftime("%d.%m.%Y в %H:%M"),
-            "reviewedAt": r[6].strftime("%d.%m.%Y в %H:%M") if r[6] else None,
+            "createdAt": msk(r[5]).strftime("%d.%m.%Y в %H:%M"),
+            "reviewedAt": msk(r[6]).strftime("%d.%m.%Y в %H:%M") if r[6] else None,
             "appId": r[7], "cardStatus": r[8] or "none",
             "cardLimit": float(r[9]) if r[9] else None,
         } for r in cur.fetchall()]
@@ -1782,7 +1790,7 @@ def handler(event: dict, context) -> dict:
         )
         items = [{
             "id": r[0], "amount": float(r[1]), "weeks": r[2], "rate": float(r[3]),
-            "status": r[4], "createdAt": r[5].strftime("%d.%m.%Y в %H:%M"),
+            "status": r[4], "createdAt": msk(r[5]).strftime("%d.%m.%Y в %H:%M"),
             "total": round(float(r[1]) * (1 + float(r[3]) / 100 * r[2])),
         } for r in cur.fetchall()]
         cur.close(); conn.close()

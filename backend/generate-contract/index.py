@@ -7,6 +7,14 @@ from datetime import datetime, timedelta
 import psycopg2
 import boto3
 
+
+from datetime import timedelta as _msk_td
+
+
+def msk(dt):
+    """Переводит время из UTC (как хранится в БД) в московское (UTC+3) для показа."""
+    return dt + _msk_td(hours=3) if dt else dt
+
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
 
 CORS = {
@@ -97,7 +105,7 @@ def generate_contract_html(app_data: dict, loan_num: int) -> str:
     total = amount + interest
     rate_pct = round(rate * 100, 1)
 
-    today = datetime.now()
+    today = msk(datetime.now())
     date_str = today.strftime("%d.%m.%Y")
     due_date = (today + timedelta(days=days)).strftime("%d.%m.%Y")
     contract_num = f"{str(loan_num).zfill(12)}/{today.strftime('%Y')}"
@@ -265,7 +273,7 @@ def generate_contract_html(app_data: dict, loan_num: int) -> str:
 </table>
 
 <p style="margin-top:16pt;font-size:9pt;color:#555;text-align:center;">
-  Договор сформирован автоматически {datetime.now().strftime("%d.%m.%Y в %H:%M")} · {MKK["name"]} · {MKK["site"]}
+  Договор сформирован автоматически {msk(datetime.now()).strftime("%d.%m.%Y в %H:%M")} · {MKK["name"]} · {MKK["site"]}
 </p>
 
 </body>

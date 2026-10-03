@@ -4,6 +4,14 @@ import os
 from datetime import datetime, timedelta
 import psycopg2
 
+
+from datetime import timedelta as _msk_td
+
+
+def msk(dt):
+    """Переводит время из UTC (как хранится в БД) в московское (UTC+3) для показа."""
+    return dt + _msk_td(hours=3) if dt else dt
+
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
 
 CORS = {
@@ -544,7 +552,7 @@ def handler(event: dict, context) -> dict:
         for p_loan_id, p_amount, p_paid_at, p_note in cur.fetchall():
             payments_by_loan.setdefault(p_loan_id, []).append({
                 "amount": float(p_amount),
-                "paidAt": p_paid_at.strftime("%d.%m.%Y в %H:%M"),
+                "paidAt": msk(p_paid_at).strftime("%d.%m.%Y в %H:%M"),
                 "note": p_note or "",
             })
 
@@ -615,7 +623,7 @@ def handler(event: dict, context) -> dict:
             "penaltyRatePercent": round(OVERDUE_DAILY_PENALTY_RATE * 100, 1),
             "createdAt": created_at.strftime("%d.%m.%Y"),
             "signed": signed,
-            "disbursedAt": disbursed_at.strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
+            "disbursedAt": msk(disbursed_at).strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
             "payments": loan_payments,
             "paidTotal": paid_total,
             "remaining": max(0, total - paid_total),

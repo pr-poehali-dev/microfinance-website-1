@@ -7,6 +7,14 @@ from datetime import datetime, timedelta
 import psycopg2
 
 
+
+from datetime import timedelta as _msk_td
+
+
+def msk(dt):
+    """Переводит время из UTC (как хранится в БД) в московское (UTC+3) для показа."""
+    return dt + _msk_td(hours=3) if dt else dt
+
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
 
 CORS = {
@@ -52,7 +60,7 @@ def handler(event: dict, context) -> dict:
 
         if user_row[1] and user_row[1] > datetime.now():
             cur.close(); conn.close()
-            until_str = user_row[1].strftime("%d.%m.%Y %H:%M")
+            until_str = msk(user_row[1]).strftime("%d.%m.%Y %H:%M")
             return {"statusCode": 403, "headers": CORS, "body": json.dumps({"error": f"Доступ временно заблокирован до {until_str}"})}
 
         cur.execute(f"SELECT id FROM {SCHEMA}.applications WHERE phone = '{phone}' AND status IN ('approved', 'partner_card') LIMIT 1")
@@ -100,7 +108,7 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Неверный номер телефона или пароль"})}
         if row[2] and row[2] > datetime.now():
             cur.close(); conn.close()
-            until_str = row[2].strftime("%d.%m.%Y %H:%M")
+            until_str = msk(row[2]).strftime("%d.%m.%Y %H:%M")
             return {"statusCode": 403, "headers": CORS, "body": json.dumps({"error": f"Доступ временно заблокирован до {until_str}"})}
         user_id = row[0]
     else:

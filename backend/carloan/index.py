@@ -8,6 +8,14 @@ import psycopg2
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+
+from datetime import timedelta as _msk_td
+
+
+def msk(dt):
+    """Переводит время из UTC (как хранится в БД) в московское (UTC+3) для показа."""
+    return dt + _msk_td(hours=3) if dt else dt
+
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
 TELEGRAM_CHAT_ID = "8540431915"
 
@@ -211,7 +219,7 @@ def handler(event: dict, context) -> dict:
             f"WHERE loan_type = 'carloan' AND loan_id = {item['id']} ORDER BY paid_at DESC"
         )
         payments = [
-            {"amount": float(r[0]), "paidAt": r[1].strftime("%d.%m.%Y в %H:%M"), "note": r[2] or ""}
+            {"amount": float(r[0]), "paidAt": msk(r[1]).strftime("%d.%m.%Y в %H:%M"), "note": r[2] or ""}
             for r in cur.fetchall()
         ]
         item["payments"] = payments

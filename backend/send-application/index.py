@@ -6,6 +6,14 @@ from datetime import datetime
 import threading
 import psycopg2
 
+
+from datetime import timedelta as _msk_td
+
+
+def msk(dt):
+    """Переводит время из UTC (как хранится в БД) в московское (UTC+3) для показа."""
+    return dt + _msk_td(hours=3) if dt else dt
+
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
 TELEGRAM_CHAT_ID = "8540431915"
 
@@ -250,7 +258,7 @@ def handler(event: dict, context) -> dict:
             send_email(to=email, subject=f"Заявка #{app_id} принята — данные для входа в личный кабинет", html=email_html)
 
         tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-        now = datetime.now().strftime("%d.%m.%Y в %H:%M")
+        now = msk(datetime.now()).strftime("%d.%m.%Y в %H:%M")
         docs_count = len(file_urls)
         app_label = f" (#{app_id})" if app_id else ""
         text = (
