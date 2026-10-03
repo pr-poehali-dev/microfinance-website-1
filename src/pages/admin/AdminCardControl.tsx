@@ -112,7 +112,7 @@ export default function AdminCardControl({ app, token, onDone }: Props) {
         />
         {mode === "issue" && (
           <div style={{ color: "#059669", fontSize: 11, lineHeight: 1.4, background: "rgba(16,185,129,0.08)", borderRadius: 8, padding: "7px 9px" }}>
-            График платежей: 1 раз в неделю, минимальный платёж — 40% от общего долга по карте. Даты считаются от дня выдачи.
+            График платежей: 1 раз в неделю, минимальный платёж — 30% от общего долга по карте. Даты считаются от дня выдачи.
           </div>
         )}
         <button

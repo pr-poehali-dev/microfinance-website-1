@@ -42,12 +42,12 @@ def calc_penalty(amount, days, rate, disbursed_at, created_at, paid_total, db_st
     return "overdue", base_total, total_due, True, overdue_days, penalty
 
 
-CARD_MIN_PAYMENT_PERCENT = 40
+CARD_MIN_PAYMENT_PERCENT = 30
 CARD_SCHEDULE_WEEKS = 8
 
 
 def card_payment_schedule(issued_at, debt):
-    """Еженедельный график платежей по карте: даты от выдачи карты (МСК), минимальный платёж 40% от общего долга."""
+    """Еженедельный график платежей по карте: даты от выдачи карты (МСК), минимальный платёж 30% от общего долга."""
     if not issued_at:
         return []
     start = (issued_at + timedelta(hours=3)).date()

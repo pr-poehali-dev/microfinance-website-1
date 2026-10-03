@@ -754,7 +754,7 @@ export default function DashboardApplicationStatus({
                   ))}
                 </div>
                 <div className="text-emerald-950/50 text-xs leading-relaxed">
-                  Платежи по карте — раз в неделю, минимальный платёж 40% от общего долга. Нажимая кнопку ниже, вы подписываете кредитный договор на этих условиях.
+                  Платежи по карте — раз в неделю, минимальный платёж 30% от общего долга. Нажимая кнопку ниже, вы подписываете кредитный договор на этих условиях.
                 </div>
                 <button onClick={onActivateCard} disabled={cardActivating}
                   className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-60"
@@ -839,7 +839,7 @@ export default function DashboardApplicationStatus({
 
                 <CardPaymentSchedule
                   debt={application.virtualCard.debt ?? 0}
-                  minPaymentPercent={application.virtualCard.minPaymentPercent ?? 40}
+                  minPaymentPercent={application.virtualCard.minPaymentPercent ?? 30}
                   minPayment={application.virtualCard.minPayment ?? 0}
                   schedule={application.virtualCard.paymentSchedule ?? []}
                   cardLast4={application.virtualCard.number.replace(/\D/g, "").slice(-4)}

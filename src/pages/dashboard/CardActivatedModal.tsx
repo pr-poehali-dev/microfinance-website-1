@@ -14,7 +14,7 @@ export default function CardActivatedModal({ limit, rate, days, onClose }: Props
     { label: "Лимит карты", value: fmt(limit) },
     { label: "Ставка", value: `${rate || 24}% в неделю` },
     { label: "Срок", value: days ? `${days} дн.` : "—" },
-    { label: "Платежи", value: "раз в неделю, от 40% долга" },
+    { label: "Платежи", value: "раз в неделю, от 30% долга" },
   ];
 
   return (
