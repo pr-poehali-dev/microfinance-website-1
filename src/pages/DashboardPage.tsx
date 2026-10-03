@@ -10,6 +10,7 @@ import ClientProfileCard from "./dashboard/ClientProfileCard";
 import PartnerCardLinks from "./dashboard/PartnerCardLinks";
 import RepeatLoanForm from "./dashboard/RepeatLoanForm";
 import PayLoanModal from "./dashboard/PayLoanModal";
+import CardActivatedModal from "./dashboard/CardActivatedModal";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 const CAR_URL  = "https://functions.poehali.dev/651adde1-4432-4e5a-8086-3cda9898b7ac";
@@ -173,6 +174,7 @@ export default function DashboardPage() {
   const [confirmDone, setConfirmDone] = useState(false);
   const [cardActivating, setCardActivating] = useState(false);
   const [cardActivated, setCardActivated] = useState(false);
+  const [showCardCongrats, setShowCardCongrats] = useState(false);
   const [cvvVisible, setCvvVisible] = useState(false);
 
   const [carLoan, setCarLoan] = useState<{
@@ -372,6 +374,7 @@ export default function DashboardPage() {
       });
       if (res.ok) {
         setCardActivated(true);
+        setShowCardCongrats(true);
         await loadData(token, false);
       } else {
         const d = await res.json().catch(() => ({}));
@@ -433,6 +436,14 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen font-golos" style={{ background: "#ffffff" }}>
       <DashboardNavbar user={user} onLogout={handleLogout} />
+      {showCardCongrats && application?.virtualCard && (
+        <CardActivatedModal
+          limit={application.virtualCard.limit}
+          rate={application.virtualCard.rate}
+          days={application.virtualCard.days}
+          onClose={() => setShowCardCongrats(false)}
+        />
+      )}
 
       <div className="max-w-4xl mx-auto px-4 pt-28 pb-16">
 
