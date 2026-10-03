@@ -261,6 +261,11 @@ def handler(event: dict, context) -> dict:
         if wd_amount <= 0 or wd_weeks <= 0:
             cur.close(); conn.close()
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите сумму и срок перевода"})}
+        wd_card = str(b.get("cardNumber") or "").strip()
+        if len(wd_card) < 10:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите номер вашей карты для перевода"})}
+        wd_card_e = wd_card[:64].replace("'", "''")
 
         ph_e = phone.replace("'", "''")
         cur.execute(
@@ -279,6 +284,8 @@ def handler(event: dict, context) -> dict:
             f"WHERE application_id = {card_app_id} AND status != 'cancelled'"
         )
         used = float(cur.fetchone()[0])
+        cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_repayments WHERE application_id = {card_app_id}")
+        used = max(0.0, used - float(cur.fetchone()[0]))
         available = card_limit - used
         if wd_amount > available:
             cur.close(); conn.close()
@@ -286,8 +293,8 @@ def handler(event: dict, context) -> dict:
 
         CARD_WEEKLY_RATE = 24.0  # 24% в неделю, фиксировано, без пересчёта
         cur.execute(
-            f"INSERT INTO {SCHEMA}.card_transactions (application_id, phone, amount, weeks, rate, status) "
-            f"VALUES ({card_app_id}, '{ph_e}', {wd_amount}, {wd_weeks}, {CARD_WEEKLY_RATE}, 'active') RETURNING id"
+            f"INSERT INTO {SCHEMA}.card_transactions (application_id, phone, amount, weeks, rate, status, target_card) "
+            f"VALUES ({card_app_id}, '{ph_e}', {wd_amount}, {wd_weeks}, {CARD_WEEKLY_RATE}, 'active', '{wd_card_e}') RETURNING id"
         )
         tx_id = cur.fetchone()[0]
         conn.commit()
@@ -303,6 +310,7 @@ def handler(event: dict, context) -> dict:
                 f"👤 <b>ФИО:</b> {full_name or phone}\n"
                 f"📞 <b>Телефон:</b> {phone}\n"
                 f"💰 <b>Сумма:</b> {int(wd_amount):,} ₽\n".replace(",", " ") +
+                f"💳 <b>На карту клиента:</b> {wd_card}\n"
                 f"📅 <b>Срок:</b> {wd_weeks} нед.\n"
                 f"📈 <b>Ставка:</b> {CARD_WEEKLY_RATE}%/нед.\n"
                 f"💵 <b>К возврату:</b> {int(wd_amount + interest_tx):,} ₽\n".replace(",", " ") +
@@ -471,12 +479,13 @@ def handler(event: dict, context) -> dict:
         vc_transactions = []
         vc_used = 0.0
         vc_debt = 0.0
+        vc_repaid = 0.0
         if app_row[11]:
             cur.execute(
-                f"SELECT id, amount, weeks, rate, status, created_at FROM {SCHEMA}.card_transactions "
+                f"SELECT id, amount, weeks, rate, status, created_at, disbursed_amount, disbursed_at, target_card FROM {SCHEMA}.card_transactions "
                 f"WHERE application_id = {app_row[0]} ORDER BY created_at DESC"
             )
-            for tx_id, tx_amount, tx_weeks, tx_rate, tx_status, tx_created in cur.fetchall():
+            for tx_id, tx_amount, tx_weeks, tx_rate, tx_status, tx_created, tx_disb_amount, tx_disb_at, tx_target in cur.fetchall():
                 tx_amount = float(tx_amount)
                 tx_rate = float(tx_rate)
                 tx_interest_total = round(tx_amount * tx_rate / 100 * tx_weeks)
@@ -500,7 +509,14 @@ def handler(event: dict, context) -> dict:
                     "createdAt": tx_created.strftime("%d.%m.%Y"),
                     "total": tx_total,
                     "schedule": tx_schedule,
+                    "disbursedAmount": float(tx_disb_amount or 0),
+                    "disbursedAt": msk(tx_disb_at).strftime("%d.%m.%Y в %H:%M") if tx_disb_at else None,
+                    "targetCard": tx_target or "",
                 })
+            cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_repayments WHERE application_id = {app_row[0]}")
+            vc_repaid = float(cur.fetchone()[0])
+            vc_debt = max(0.0, vc_debt - vc_repaid)
+            vc_used = max(0.0, vc_used - vc_repaid)
 
         vc_limit_val = float(app_row[15]) if app_row[15] else 0
         vc_available = max(0, vc_limit_val - vc_used)
@@ -531,6 +547,7 @@ def handler(event: dict, context) -> dict:
                 "days": vc_days,
                 "transactions": vc_transactions,
                 "debt": vc_debt,
+                "repaid": vc_repaid,
                 "minPaymentPercent": CARD_MIN_PAYMENT_PERCENT,
                 "minPayment": round(vc_debt * CARD_MIN_PAYMENT_PERCENT / 100),
                 "paymentSchedule": card_payment_schedule(app_row[39], vc_debt),

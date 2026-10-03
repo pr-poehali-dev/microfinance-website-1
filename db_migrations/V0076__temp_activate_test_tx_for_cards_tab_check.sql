@@ -1,0 +1,1 @@
+UPDATE t_p30184577_microfinance_website.card_transactions SET status = 'active', target_card = '2200 0000 0000 0000' WHERE id = 2;

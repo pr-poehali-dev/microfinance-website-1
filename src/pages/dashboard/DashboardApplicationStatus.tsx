@@ -819,7 +819,7 @@ export default function DashboardApplicationStatus({
                 </div>
 
                 {/* Форма перевода средств в рамках доступного лимита */}
-                <CardWithdrawForm available={application.virtualCard.available} onSuccess={onRefresh} />
+                <CardWithdrawForm available={application.virtualCard.available} defaultCard={application.cardNumber} onSuccess={onRefresh} />
 
                 <CardPaymentSchedule
                   debt={application.virtualCard.debt ?? 0}

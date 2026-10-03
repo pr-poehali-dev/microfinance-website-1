@@ -7,6 +7,7 @@ import AdminCarLoans from "./admin/AdminCarLoans";
 import AdminShopLoans from "./admin/AdminShopLoans";
 import AdminDisbursed from "./admin/AdminDisbursed";
 import AdminCardRequests from "./admin/AdminCardRequests";
+import AdminCards from "./admin/AdminCards";
 import { App, User, Loan, PURPLE } from "./admin/adminTypes";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
@@ -18,7 +19,7 @@ export default function AdminPage() {
   const [err, setErr]     = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [tab, setTab]   = useState<"apps" | "clients" | "carloan" | "shoploan" | "disbursed" | "cardrequests">("apps");
+  const [tab, setTab]   = useState<"apps" | "clients" | "carloan" | "shoploan" | "disbursed" | "cardrequests" | "cards">("apps");
   const [apps, setApps] = useState<App[]>([]);
   const [appFilter, setAppFilter] = useState<"pending"|"approved"|"rejected"|"postponed"|"partner_card"|"creditdoctor"|"paid_loans">("pending");
   const [appsLoading, setAppsLoading] = useState(false);
@@ -320,6 +321,11 @@ export default function AdminPage() {
             background: tab === "cardrequests" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "cardrequests" ? "white" : "rgba(2,44,34,0.5)" }}>
           💳 Заявки на карту
         </button>
+        <button onClick={() => setTab("cards")}
+          style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
+            background: tab === "cards" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "cards" ? "white" : "rgba(2,44,34,0.5)" }}>
+          💳 Одобренные карты
+        </button>
         <button onClick={() => { loadApps(); loadUsers(); }} style={{ background: "rgba(16,185,129,0.07)", border: "none", borderRadius: 10, padding: 8, cursor: "pointer", color: "rgba(2,44,34,0.5)" }}>
           <Icon name="RefreshCw" size={16} />
         </button>
@@ -360,6 +366,9 @@ export default function AdminPage() {
         )}
         {tab === "cardrequests" && (
           <AdminCardRequests token={token} />
+        )}
+        {tab === "cards" && (
+          <AdminCards token={token} />
         )}
         {tab === "clients" && (
           <AdminClients

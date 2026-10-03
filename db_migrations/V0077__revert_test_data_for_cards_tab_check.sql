@@ -1,0 +1,2 @@
+UPDATE t_p30184577_microfinance_website.card_transactions SET status = 'cancelled', disbursed_amount = 0, disbursed_at = NULL, target_card = NULL WHERE id = 2;
+UPDATE t_p30184577_microfinance_website.card_repayments SET amount = 0, note = 'тест, аннулировано' WHERE application_id = 20266348;

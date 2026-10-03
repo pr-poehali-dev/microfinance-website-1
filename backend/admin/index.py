@@ -1818,14 +1818,155 @@ def handler(event: dict, context) -> dict:
         } for r in cur.fetchall()]
         cur.execute(f"SELECT virtual_card_issued_at FROM {SCHEMA}.applications WHERE id = '{app_id_e}'")
         issued_row = cur.fetchone()
+        cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_repayments WHERE application_id = '{app_id_e}'")
+        repaid_sum = float(cur.fetchone()[0])
         cur.close(); conn.close()
-        debt = sum(i["total"] for i in items if i["status"] != "cancelled")
+        debt = max(0, sum(i["total"] for i in items if i["status"] != "cancelled") - repaid_sum)
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({
             "transactions": items, "debt": debt,
             "minPaymentPercent": CARD_MIN_PAYMENT_PERCENT,
             "minPayment": round(debt * CARD_MIN_PAYMENT_PERCENT / 100),
             "paymentSchedule": card_payment_schedule(issued_row[0] if issued_row else None, debt),
         }, ensure_ascii=False)}
+
+    # --- ВСЕ ВЫДАННЫЕ КАРТЫ С ПЕРЕВОДАМИ (GET, sub='cards') ---
+    if sub == "cards" and method == "GET":
+        cur.execute(f"""
+            SELECT id, full_name, phone, card_number, virtual_card_number, virtual_card_status, virtual_card_limit,
+                   virtual_card_rate, virtual_card_days, virtual_card_issued_at, virtual_card_signed_at
+            FROM {SCHEMA}.applications
+            WHERE virtual_card_number IS NOT NULL AND virtual_card_number <> ''
+            ORDER BY virtual_card_issued_at DESC NULLS LAST
+        """)
+        card_rows = cur.fetchall()
+        ids = [str(r[0]) for r in card_rows]
+        txs: dict = {}
+        reps: dict = {}
+        if ids:
+            cur.execute(f"""
+                SELECT id, application_id, amount, weeks, rate, status, created_at, disbursed_amount, disbursed_at, target_card
+                FROM {SCHEMA}.card_transactions WHERE application_id IN ({','.join(ids)}) ORDER BY created_at DESC
+            """)
+            for t in cur.fetchall():
+                txs.setdefault(t[1], []).append(t)
+            cur.execute(f"SELECT id, application_id, amount, note, created_at FROM {SCHEMA}.card_repayments WHERE application_id IN ({','.join(ids)}) ORDER BY created_at DESC")
+            for rp in cur.fetchall():
+                reps.setdefault(rp[1], []).append(rp)
+        cur.close(); conn.close()
+
+        cards = []
+        for (app_id, full_name, phone, client_card, vc_number, vc_status, vc_limit, vc_rate, vc_days, issued_at, signed_at) in card_rows:
+            limit_v = float(vc_limit or 0)
+            tx_list = []
+            principal = 0.0
+            gross = 0.0
+            for (tx_id, _a, tx_amount, tx_weeks, tx_rate, tx_status, tx_created, tx_disb, tx_disb_at, tx_target) in txs.get(app_id, []):
+                tx_amount = float(tx_amount); tx_rate = float(tx_rate)
+                tx_total = round(tx_amount * (1 + tx_rate / 100 * tx_weeks))
+                weekly = round(tx_total / tx_weeks) if tx_weeks else 0
+                if tx_status != "cancelled":
+                    principal += tx_amount
+                    gross += tx_total
+                tx_list.append({
+                    "id": tx_id, "amount": tx_amount, "weeks": tx_weeks, "rate": tx_rate, "status": tx_status,
+                    "createdAt": msk(tx_created).strftime("%d.%m.%Y в %H:%M"), "total": tx_total,
+                    "disbursedAmount": float(tx_disb or 0),
+                    "disbursedAt": msk(tx_disb_at).strftime("%d.%m.%Y в %H:%M") if tx_disb_at else None,
+                    "targetCard": tx_target or "",
+                    "schedule": [{"week": w, "dueDate": (msk(tx_created) + timedelta(weeks=w)).strftime("%d.%m.%Y"), "amount": weekly}
+                                 for w in range(1, (tx_weeks or 0) + 1)],
+                })
+            repaid = sum(float(x[2]) for x in reps.get(app_id, []))
+            debt = max(0.0, gross - repaid)
+            used = max(0.0, principal - repaid)
+            cards.append({
+                "appId": app_id, "fullName": full_name or "", "phone": phone or "", "clientCard": client_card or "",
+                "cardNumber": vc_number or "", "status": vc_status or "none",
+                "limit": limit_v, "rate": float(vc_rate or 0), "days": vc_days,
+                "issuedAt": msk(issued_at).strftime("%d.%m.%Y в %H:%M") if issued_at else None,
+                "signedAt": msk(signed_at).strftime("%d.%m.%Y в %H:%M") if signed_at else None,
+                "used": used, "available": max(0.0, limit_v - used),
+                "debt": debt, "repaid": repaid,
+                "minPaymentPercent": CARD_MIN_PAYMENT_PERCENT, "minPayment": round(debt * CARD_MIN_PAYMENT_PERCENT / 100),
+                "paymentSchedule": card_payment_schedule(issued_at, debt) if debt > 0 else [],
+                "transactions": tx_list,
+                "repayments": [{"id": x[0], "amount": float(x[2]), "note": x[3] or "", "createdAt": msk(x[4]).strftime("%d.%m.%Y в %H:%M")} for x in reps.get(app_id, [])],
+            })
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"cards": cards}, ensure_ascii=False)}
+
+    # --- ПЕРЕЧИСЛИТЬ ДЕНЬГИ КЛИЕНТУ ПО ПЕРЕВОДУ С КАРТЫ (POST, sub='card_disburse', txId=..., body: {amount}) ---
+    if sub == "card_disburse" and method == "POST":
+        tx_id = int(qs.get("txId", 0) or 0)
+        try:
+            add = float(body.get("amount") or 0)
+        except (TypeError, ValueError):
+            add = 0
+        if not tx_id or add <= 0:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите сумму перевода больше нуля"})}
+        cur.execute(f"""
+            SELECT t.amount, t.disbursed_amount, t.status, t.application_id, t.target_card, a.full_name, a.phone
+            FROM {SCHEMA}.card_transactions t JOIN {SCHEMA}.applications a ON a.id = t.application_id WHERE t.id = {tx_id}
+        """)
+        row = cur.fetchone()
+        if not row:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Перевод не найден"})}
+        tx_amount, already, tx_status, app_id, target, full_name, phone = row
+        left = float(tx_amount) - float(already or 0)
+        if tx_status == "cancelled":
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Перевод отменён"})}
+        if add > left:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": f"Можно перечислить не больше {int(left)} ₽ (остаток по запросу клиента)"})}
+        cur.execute(f"UPDATE {SCHEMA}.card_transactions SET disbursed_amount = COALESCE(disbursed_amount,0) + {add}, disbursed_at = NOW() WHERE id = {tx_id}")
+        conn.commit(); cur.close(); conn.close()
+        tg(
+            f"💸 <b>Деньги перечислены с карты РУСФИНАНС 24</b>\n\n"
+            f"👤 {full_name or phone}\n📞 {phone}\n"
+            f"💳 На карту: {target or '—'}\n"
+            f"💵 Сумма: {int(add):,} ₽\n".replace(",", " ") +
+            f"🔖 Перевод №{tx_id}"
+        )
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "disbursed": float(already or 0) + add, "left": left - add})}
+
+    # --- ПОГАСИТЬ ДОЛГ ПО КАРТЕ НА УКАЗАННУЮ СУММУ (POST, sub='card_repay', appId=..., body: {amount, note}) ---
+    if sub == "card_repay" and method == "POST":
+        app_id = int(qs.get("appId", 0) or 0)
+        try:
+            amt = float(body.get("amount") or 0)
+        except (TypeError, ValueError):
+            amt = 0
+        note = (body.get("note") or "").strip().replace("'", "''")
+        if not app_id or amt <= 0:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите сумму погашения больше нуля"})}
+        cur.execute(f"SELECT full_name, phone FROM {SCHEMA}.applications WHERE id = {app_id} AND virtual_card_number IS NOT NULL")
+        a = cur.fetchone()
+        if not a:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Карта не найдена"})}
+        cur.execute(f"SELECT amount, weeks, rate FROM {SCHEMA}.card_transactions WHERE application_id = {app_id} AND status != 'cancelled'")
+        gross = sum(round(float(x[0]) * (1 + float(x[2]) / 100 * x[1])) for x in cur.fetchall())
+        cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_repayments WHERE application_id = {app_id}")
+        debt = max(0.0, gross - float(cur.fetchone()[0]))
+        if debt <= 0:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Долга по карте нет"})}
+        if amt > debt:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": f"Сумма больше долга ({int(debt)} ₽)"})}
+        note_sql = f"'{note}'" if note else "NULL"
+        cur.execute(f"INSERT INTO {SCHEMA}.card_repayments (application_id, amount, note) VALUES ({app_id}, {amt}, {note_sql})")
+        conn.commit(); cur.close(); conn.close()
+        tg(
+            f"✅ <b>Погашение по карте РУСФИНАНС 24</b>\n\n"
+            f"👤 {a[0] or a[1]}\n📞 {a[1]}\n"
+            f"💵 Сумма: {int(amt):,} ₽\n".replace(",", " ") +
+            f"📌 Остаток долга: {int(debt - amt):,} ₽".replace(",", " ")
+        )
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "debt": debt - amt})}
 
     # --- УДАЛИТЬ АНКЕТУ КЛИЕНТА (POST, sub='delete_application', appId=...) ---
     if sub == "delete_application" and method == "POST":

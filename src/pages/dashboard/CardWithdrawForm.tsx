@@ -6,10 +6,12 @@ const CARD_WEEKLY_RATE = 24;
 
 interface Props {
   available: number;
+  defaultCard?: string;
   onSuccess: () => void;
 }
 
-export default function CardWithdrawForm({ available, onSuccess }: Props) {
+export default function CardWithdrawForm({ available, defaultCard, onSuccess }: Props) {
+  const [cardNumber, setCardNumber] = useState(defaultCard || "");
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState(Math.min(5000, Math.max(1000, Math.round(available / 2))));
   const [weeks, setWeeks] = useState(4);
@@ -28,13 +30,14 @@ export default function CardWithdrawForm({ available, onSuccess }: Props) {
 
   async function submit() {
     if (amount <= 0 || amount > available) { setError("Проверьте сумму перевода"); return; }
+    if (cardNumber.replace(/\s/g, "").length < 10) { setError("Укажите номер вашей карты, куда перевести деньги"); return; }
     const token = localStorage.getItem("token");
     if (!token) return;
     setSending(true); setError("");
     const res = await fetch(`${LOANS_URL}?sub=card_withdraw`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}` },
-      body: JSON.stringify({ amount, weeks }),
+      body: JSON.stringify({ amount, weeks, cardNumber: cardNumber.trim() }),
     });
     const data = await res.json();
     setSending(false);
@@ -61,7 +64,7 @@ export default function CardWithdrawForm({ available, onSuccess }: Props) {
         className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90"
         style={{ background: "linear-gradient(135deg,#16a34a,#4ade80)", boxShadow: "0 4px 20px rgba(74,222,128,0.25)" }}>
         <Icon name="Wallet" size={18} />
-        Перевести деньги с карты
+        Перевести деньги на мою карту
       </button>
     );
   }
@@ -83,6 +86,13 @@ export default function CardWithdrawForm({ available, onSuccess }: Props) {
           <span className="text-emerald-950/60 text-sm">Сумма перевода</span>
           <span className="font-bold text-base text-green-400">{amount.toLocaleString("ru-RU")} ₽</span>
         </div>
+        <input
+          type="number" min={1000} max={maxAmount} value={amount}
+          onChange={(e) => setAmount(Math.min(maxAmount, Math.max(0, Number(e.target.value) || 0)))}
+          placeholder="Введите сумму"
+          className="w-full rounded-xl px-4 py-2.5 mb-3 text-emerald-950 text-sm outline-none"
+          style={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.25)" }}
+        />
         <input
           type="range" min={1000} max={maxAmount} step={500}
           value={amount}
@@ -114,6 +124,17 @@ export default function CardWithdrawForm({ available, onSuccess }: Props) {
         </div>
       </div>
 
+      <div>
+        <div className="text-emerald-950/60 text-sm mb-2">Номер вашей карты, куда перевести деньги</div>
+        <input
+          type="text" inputMode="numeric" value={cardNumber}
+          onChange={(e) => setCardNumber(e.target.value)}
+          placeholder="0000 0000 0000 0000"
+          className="w-full rounded-xl px-4 py-2.5 text-emerald-950 text-sm outline-none"
+          style={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.25)" }}
+        />
+      </div>
+
       <div className="rounded-lg p-3 space-y-1.5" style={{ background: "rgba(16,185,129,0.05)" }}>
         <div className="flex justify-between text-sm">
           <span className="text-emerald-950/50">Ставка</span>
@@ -139,7 +160,7 @@ export default function CardWithdrawForm({ available, onSuccess }: Props) {
         className="w-full flex items-center justify-center gap-3 py-3.5 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-60"
         style={{ background: "linear-gradient(135deg,#16a34a,#4ade80)" }}>
         {sending ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="CheckCircle" size={18} />}
-        {sending ? "Отправляем..." : "Подтвердить"}
+        {sending ? "Отправляем..." : "Перевести на мою карту"}
       </button>
     </div>
   );
