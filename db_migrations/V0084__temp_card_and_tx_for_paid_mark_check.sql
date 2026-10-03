@@ -1,0 +1,4 @@
+UPDATE t_p30184577_microfinance_website.applications SET virtual_card_status = 'active', virtual_card_signed_at = NOW() WHERE phone = '+79990009911' AND virtual_card_number = '4276 1111 2222 3333';
+UPDATE t_p30184577_microfinance_website.sessions SET expires_at = NOW() + INTERVAL '1 hour' WHERE token = 'test_sign_card_token_927';
+INSERT INTO t_p30184577_microfinance_website.card_transactions (application_id, phone, amount, weeks, rate, status, target_card)
+SELECT id, '+79990009911', 6000, 2, 24, 'active', '2200 0000 0000 0000' FROM t_p30184577_microfinance_website.applications WHERE phone = '+79990009911' AND virtual_card_number = '4276 1111 2222 3333';

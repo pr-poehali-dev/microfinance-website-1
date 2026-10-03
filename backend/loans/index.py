@@ -268,6 +268,12 @@ def handler(event: dict, context) -> dict:
         except Exception:
             paid_amount = 0
         due_date = str(b.get("dueDate") or "").strip()[:20].replace("'", "''")
+        try:
+            notice_tx = int(b.get("txId") or 0)
+        except Exception:
+            notice_tx = 0
+        tx_sql = str(notice_tx) if notice_tx else "NULL"
+        tx_cond = f"tx_id = {notice_tx}" if notice_tx else "tx_id IS NULL"
         if paid_amount <= 0 or not due_date:
             cur.close(); conn.close()
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Не указан платёж"})}
@@ -284,16 +290,17 @@ def handler(event: dict, context) -> dict:
         card_app_id = card_row[0]
 
         cur.execute(
-            f"SELECT 1 FROM {SCHEMA}.card_payment_notices WHERE application_id = {card_app_id} "
-            f"AND due_date = '{due_date}' AND status = 'new' LIMIT 1"
+            f"SELECT status FROM {SCHEMA}.card_payment_notices WHERE application_id = {card_app_id} "
+            f"AND due_date = '{due_date}' AND {tx_cond} ORDER BY id DESC LIMIT 1"
         )
-        if cur.fetchone():
+        prev = cur.fetchone()
+        if prev:
             cur.close(); conn.close()
-            return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "alreadySent": True})}
+            return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "alreadySent": prev[0] == "new", "alreadyPaid": prev[0] == "done"})}
 
         cur.execute(
-            f"INSERT INTO {SCHEMA}.card_payment_notices (application_id, amount, due_date) "
-            f"VALUES ({card_app_id}, {paid_amount}, '{due_date}')"
+            f"INSERT INTO {SCHEMA}.card_payment_notices (application_id, amount, due_date, tx_id) "
+            f"VALUES ({card_app_id}, {paid_amount}, '{due_date}', {tx_sql})"
         )
         conn.commit()
         cur.close(); conn.close()
@@ -554,6 +561,7 @@ def handler(event: dict, context) -> dict:
         vc_repaid = 0.0
         vc_repayments = []
         vc_notices = []
+        vc_paid = []
         if app_row[11]:
             cur.execute(
                 f"SELECT id, amount, weeks, rate, status, created_at, disbursed_amount, disbursed_at, target_card FROM {SCHEMA}.card_transactions "
@@ -598,9 +606,11 @@ def handler(event: dict, context) -> dict:
                 "createdAt": msk(r_at).strftime("%d.%m.%Y в %H:%M"),
             } for r_amt, r_note, r_at in cur.fetchall()]
             cur.execute(
-                f"SELECT due_date FROM {SCHEMA}.card_payment_notices WHERE application_id = {app_row[0]} AND status = 'new'"
+                f"SELECT tx_id, due_date, status FROM {SCHEMA}.card_payment_notices WHERE application_id = {app_row[0]}"
             )
-            vc_notices = [r_[0] for r_ in cur.fetchall()]
+            for n_tx, n_due, n_status in cur.fetchall():
+                key_ = f"{n_tx or 0}|{n_due}"
+                (vc_notices if n_status == "new" else vc_paid).append(key_)
             vc_debt = max(0.0, vc_debt - vc_repaid)
             vc_used = max(0.0, vc_used - vc_repaid)
 
@@ -636,6 +646,7 @@ def handler(event: dict, context) -> dict:
                 "repaid": vc_repaid,
                 "repayments": vc_repayments,
                 "pendingNotices": vc_notices,
+                "paidNotices": vc_paid,
                 "minPaymentPercent": CARD_MIN_PAYMENT_PERCENT,
                 "minPayment": round(vc_debt * CARD_MIN_PAYMENT_PERCENT / 100),
                 "paymentSchedule": card_payment_schedule(app_row[39], vc_debt),

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
+import CardPayModal from "./CardPayModal";
 
 interface TxSchedule {
   week: number;
@@ -23,10 +24,16 @@ export interface CardTransaction {
 
 interface Props {
   transactions: CardTransaction[];
+  cardLast4?: string;
+  fullName?: string;
+  pendingNotices?: string[];
+  paidNotices?: string[];
+  onReported?: () => void;
 }
 
-export default function CardTransactionsList({ transactions }: Props) {
+export default function CardTransactionsList({ transactions, cardLast4, fullName, pendingNotices = [], paidNotices = [], onReported }: Props) {
   const [openId, setOpenId] = useState<number | null>(null);
+  const [pay, setPay] = useState<{ txId: number; amount: number; dueDate: string } | null>(null);
 
   if (transactions.length === 0) return null;
 
@@ -62,13 +69,44 @@ export default function CardTransactionsList({ transactions }: Props) {
               {tx.schedule.map((s) => (
                 <div key={s.week} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ background: "rgba(16,185,129,0.03)" }}>
                   <span className="text-emerald-950/60 text-xs">{s.week}-я неделя · {s.dueDate}</span>
-                  <span className="text-emerald-950 font-semibold text-sm">{s.amount.toLocaleString("ru-RU")} ₽</span>
+                  <span className="flex items-center gap-2">
+                    <span className="text-emerald-950 font-semibold text-sm">{s.amount.toLocaleString("ru-RU")} ₽</span>
+                    {cardLast4 && tx.status !== "cancelled" && (
+                      paidNotices.includes(`${tx.id}|${s.dueDate}`) ? (
+                        <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg" style={{ background: "rgba(16,185,129,0.15)", color: "#047857" }}>
+                          <Icon name="CheckCircle" size={12} />Оплачено
+                        </span>
+                      ) : pendingNotices.includes(`${tx.id}|${s.dueDate}`) ? (
+                        <button onClick={() => setPay({ txId: tx.id, amount: s.amount, dueDate: s.dueDate })}
+                          className="text-xs font-semibold px-2.5 py-1 rounded-lg" style={{ background: "rgba(245,158,11,0.15)", color: "#b45309" }}>
+                          Оплата проверяется
+                        </button>
+                      ) : (
+                        <button onClick={() => setPay({ txId: tx.id, amount: s.amount, dueDate: s.dueDate })}
+                          className="btn-neon text-white text-xs font-semibold px-2.5 py-1 rounded-lg">
+                          Оплатить
+                        </button>
+                      )
+                    )}
+                  </span>
                 </div>
               ))}
             </div>
           )}
         </div>
       ))}
+      {pay && cardLast4 && (
+        <CardPayModal
+          amount={pay.amount}
+          dueDate={pay.dueDate}
+          txId={pay.txId}
+          cardLast4={cardLast4}
+          fullName={fullName}
+          alreadyReported={pendingNotices.includes(`${pay.txId}|${pay.dueDate}`)}
+          onReported={onReported}
+          onClose={() => setPay(null)}
+        />
+      )}
     </div>
   );
 }

@@ -16,7 +16,7 @@ interface Card {
   minPaymentPercent: number; minPayment: number;
   paymentSchedule: { week: number; dueDate: string; amount: number; isNext: boolean }[];
   transactions: Tx[];
-  notices: { id: number; amount: number; dueDate: string; createdAt: string }[];
+  notices: { id: number; amount: number; dueDate: string; createdAt: string; txId: number | null }[];
   repayments: { id: number; amount: number; note: string; createdAt: string }[];
 }
 
@@ -133,10 +133,10 @@ export default function AdminCards({ token, onChanged }: Props) {
                       {c.notices.map(n => (
                         <div key={n.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap", padding: "6px 0" }}>
                           <div style={{ color: "#022c22", fontSize: 13 }}>
-                            <b>{fmt(n.amount)}</b> за платёж {n.dueDate} <span style={{ color: "rgba(2,44,34,0.5)", fontSize: 12 }}>· сообщено {n.createdAt}</span>
+                            <b>{fmt(n.amount)}</b> за платёж {n.dueDate}{n.txId ? ` (перевод №${n.txId})` : " (график карты)"} <span style={{ color: "rgba(2,44,34,0.5)", fontSize: 12 }}>· сообщено {n.createdAt}</span>
                           </div>
                           <button disabled={busy === `n${n.id}`}
-                            onClick={() => post(`sub=card_notice_done&noticeId=${n.id}`, {}, `n${n.id}`, "Отмечено как проверенное")}
+                            onClick={() => post(`sub=card_notice_done&noticeId=${n.id}`, {}, `n${n.id}`, "Проверено — у клиента в графике отмечено «Оплачено»")}
                             style={{ background: "rgba(16,185,129,0.12)", color: "#047857", border: "1px solid rgba(16,185,129,0.35)", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
                             Проверено
                           </button>

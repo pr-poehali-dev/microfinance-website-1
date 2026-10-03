@@ -8,6 +8,7 @@ const PAY_CARD_FORMATTED = "2204 3901 1553 9020";
 interface Props {
   amount: number;
   dueDate: string;
+  txId?: number;
   cardLast4: string;
   fullName?: string;
   alreadyReported?: boolean;
@@ -15,7 +16,7 @@ interface Props {
   onReported?: () => void;
 }
 
-export default function CardPayModal({ amount, dueDate, cardLast4, fullName, alreadyReported, onClose, onReported }: Props) {
+export default function CardPayModal({ amount, dueDate, txId, cardLast4, fullName, alreadyReported, onClose, onReported }: Props) {
   const [copied, setCopied] = useState<"card" | "last4" | null>(null);
   const [sending, setSending] = useState(false);
   const [reported, setReported] = useState(!!alreadyReported);
@@ -29,7 +30,7 @@ export default function CardPayModal({ amount, dueDate, cardLast4, fullName, alr
       const res = await fetch(`${LOANS_URL}?sub=card_paid`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ amount, dueDate }),
+        body: JSON.stringify({ amount, dueDate, txId: txId || 0 }),
       });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) { setError(d.error || "Не удалось отправить. Попробуйте ещё раз."); return; }

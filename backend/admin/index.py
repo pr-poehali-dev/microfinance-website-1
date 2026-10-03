@@ -1854,7 +1854,7 @@ def handler(event: dict, context) -> dict:
                 reps.setdefault(rp[1], []).append(rp)
         notices: dict = {}
         if ids:
-            cur.execute(f"SELECT id, application_id, amount, due_date, created_at FROM {SCHEMA}.card_payment_notices WHERE application_id IN ({','.join(ids)}) AND status = 'new' ORDER BY created_at DESC")
+            cur.execute(f"SELECT id, application_id, amount, due_date, created_at, tx_id FROM {SCHEMA}.card_payment_notices WHERE application_id IN ({','.join(ids)}) AND status = 'new' ORDER BY created_at DESC")
             for n in cur.fetchall():
                 notices.setdefault(n[1], []).append(n)
         cur.close(); conn.close()
@@ -1895,7 +1895,7 @@ def handler(event: dict, context) -> dict:
                 "minPaymentPercent": CARD_MIN_PAYMENT_PERCENT, "minPayment": round(debt * CARD_MIN_PAYMENT_PERCENT / 100),
                 "paymentSchedule": card_payment_schedule(issued_at, debt) if debt > 0 else [],
                 "transactions": tx_list,
-                "notices": [{"id": n[0], "amount": float(n[2]), "dueDate": n[3], "createdAt": msk(n[4]).strftime("%d.%m.%Y в %H:%M")} for n in notices.get(app_id, [])],
+                "notices": [{"id": n[0], "amount": float(n[2]), "dueDate": n[3], "createdAt": msk(n[4]).strftime("%d.%m.%Y в %H:%M"), "txId": n[5]} for n in notices.get(app_id, [])],
                 "repayments": [{"id": x[0], "amount": float(x[2]), "note": x[3] or "", "createdAt": msk(x[4]).strftime("%d.%m.%Y в %H:%M")} for x in reps.get(app_id, [])],
             })
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"cards": cards}, ensure_ascii=False)}

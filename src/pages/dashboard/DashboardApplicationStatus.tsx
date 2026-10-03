@@ -50,6 +50,7 @@ interface VirtualCard {
   repaid?: number;
   repayments?: CardRepayment[];
   pendingNotices?: string[];
+  paidNotices?: string[];
 }
 
 interface CardRequest {
@@ -833,6 +834,7 @@ export default function DashboardApplicationStatus({
                   cardLast4={application.virtualCard.number.replace(/\D/g, "").slice(-4)}
                   fullName={application.virtualCard.holder}
                   pendingNotices={application.virtualCard.pendingNotices ?? []}
+                  paidNotices={application.virtualCard.paidNotices ?? []}
                   onReported={onRefresh}
                 />
 
@@ -843,7 +845,14 @@ export default function DashboardApplicationStatus({
                 />
 
                 {/* История переводов с еженедельными графиками */}
-                <CardTransactionsList transactions={application.virtualCard.transactions} />
+                <CardTransactionsList
+                  transactions={application.virtualCard.transactions}
+                  cardLast4={application.virtualCard.number.replace(/\D/g, "").slice(-4)}
+                  fullName={application.virtualCard.holder}
+                  pendingNotices={application.virtualCard.pendingNotices ?? []}
+                  paidNotices={application.virtualCard.paidNotices ?? []}
+                  onReported={onRefresh}
+                />
               </div>
             </div>
           )}

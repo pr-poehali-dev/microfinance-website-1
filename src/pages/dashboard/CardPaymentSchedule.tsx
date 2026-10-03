@@ -17,12 +17,13 @@ interface Props {
   cardLast4?: string;
   fullName?: string;
   pendingNotices?: string[];
+  paidNotices?: string[];
   onReported?: () => void;
 }
 
 const fmt = (n: number) => `${n.toLocaleString("ru-RU")} ₽`;
 
-export default function CardPaymentSchedule({ debt, minPaymentPercent, minPayment, schedule, cardLast4, fullName, pendingNotices = [], onReported }: Props) {
+export default function CardPaymentSchedule({ debt, minPaymentPercent, minPayment, schedule, cardLast4, fullName, pendingNotices = [], paidNotices = [], onReported }: Props) {
   const [payRow, setPayRow] = useState<CardPaymentRow | null>(null);
   return (
     <div className="rounded-xl p-4 space-y-3" style={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.2)" }}>
@@ -63,7 +64,11 @@ export default function CardPaymentSchedule({ debt, minPaymentPercent, minPaymen
                 <span className="flex items-center gap-2">
                   <span className="text-emerald-950 font-semibold text-sm">от {fmt(s.amount)}</span>
                   {cardLast4 && (
-                    pendingNotices.includes(s.dueDate) ? (
+                    paidNotices.includes(`0|${s.dueDate}`) ? (
+                      <span className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg" style={{ background: "rgba(16,185,129,0.15)", color: "#047857" }}>
+                        <Icon name="CheckCircle" size={13} />Оплачено
+                      </span>
+                    ) : pendingNotices.includes(`0|${s.dueDate}`) ? (
                       <button
                         onClick={() => setPayRow(s)}
                         className="text-xs font-semibold px-3 py-1.5 rounded-lg"
@@ -95,7 +100,7 @@ export default function CardPaymentSchedule({ debt, minPaymentPercent, minPaymen
           dueDate={payRow.dueDate}
           cardLast4={cardLast4}
           fullName={fullName}
-          alreadyReported={pendingNotices.includes(payRow.dueDate)}
+          alreadyReported={pendingNotices.includes(`0|${payRow.dueDate}`)}
           onReported={onReported}
           onClose={() => setPayRow(null)}
         />

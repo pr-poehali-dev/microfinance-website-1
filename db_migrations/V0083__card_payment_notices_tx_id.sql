@@ -1,0 +1,1 @@
+ALTER TABLE t_p30184577_microfinance_website.card_payment_notices ADD COLUMN IF NOT EXISTS tx_id INTEGER NULL;
