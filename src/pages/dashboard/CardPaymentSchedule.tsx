@@ -22,10 +22,12 @@ interface Props {
   onReported?: () => void;
 }
 
+const FULL_KEY = "Полное погашение";
 const fmt = (n: number) => `${n.toLocaleString("ru-RU")} ₽`;
 
 export default function CardPaymentSchedule({ debt, minPaymentPercent, minPayment, schedule, cardLast4, fullName, pendingNotices = [], paidNotices = [], highlightPaid = false, onReported }: Props) {
   const [payRow, setPayRow] = useState<CardPaymentRow | null>(null);
+  const [payFull, setPayFull] = useState(false);
   return (
     <div className="rounded-xl p-4 space-y-3" style={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.2)" }}>
       <div className="flex items-center gap-2">
@@ -47,6 +49,22 @@ export default function CardPaymentSchedule({ debt, minPaymentPercent, minPaymen
               <div className="text-emerald-600 font-bold text-sm">{fmt(minPayment)}</div>
             </div>
           </div>
+
+          {cardLast4 && (
+            paidNotices.includes(`0|${FULL_KEY}`) ? (
+              <div className="flex items-center justify-center gap-2 text-sm font-semibold py-3 rounded-xl" style={{ background: "rgba(16,185,129,0.15)", color: "#047857" }}>
+                <Icon name="CheckCircle" size={16} />Полное погашение отмечено оплаченным
+              </div>
+            ) : pendingNotices.includes(`0|${FULL_KEY}`) ? (
+              <button onClick={() => setPayFull(true)} className="w-full text-sm font-semibold py-3 rounded-xl" style={{ background: "rgba(245,158,11,0.15)", color: "#b45309" }}>
+                Оплата полного долга проверяется
+              </button>
+            ) : (
+              <button onClick={() => setPayFull(true)} className="w-full btn-neon text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2">
+                <Icon name="BadgeCheck" size={18} />Оплатить полностью · {fmt(debt)}
+              </button>
+            )
+          )}
 
           <div className="space-y-1.5">
             {schedule.map((s) => {
@@ -98,6 +116,17 @@ export default function CardPaymentSchedule({ debt, minPaymentPercent, minPaymen
             Платёж вносится раз в неделю, не меньше {minPaymentPercent}% от общего долга по карте.
           </div>
         </>
+      )}
+      {payFull && cardLast4 && (
+        <CardPayModal
+          full
+          amount={debt}
+          dueDate={FULL_KEY}
+          cardLast4={cardLast4}
+          alreadyReported={pendingNotices.includes(`0|${FULL_KEY}`)}
+          onReported={onReported}
+          onClose={() => setPayFull(false)}
+        />
       )}
       {payRow && cardLast4 && (
         <CardPayModal

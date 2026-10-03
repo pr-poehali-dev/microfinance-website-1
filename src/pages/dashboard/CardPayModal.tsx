@@ -12,11 +12,12 @@ interface Props {
   cardLast4: string;
   fullName?: string;
   alreadyReported?: boolean;
+  full?: boolean;
   onClose: () => void;
   onReported?: () => void;
 }
 
-export default function CardPayModal({ amount, dueDate, txId, cardLast4, fullName, alreadyReported, onClose, onReported }: Props) {
+export default function CardPayModal({ amount, dueDate, txId, cardLast4, alreadyReported, full, onClose, onReported }: Props) {
   const [copied, setCopied] = useState<"card" | "last4" | null>(null);
   const [sending, setSending] = useState(false);
   const [reported, setReported] = useState(!!alreadyReported);
@@ -66,8 +67,8 @@ export default function CardPayModal({ amount, dueDate, txId, cardLast4, fullNam
               <Icon name="CreditCard" size={20} className="text-emerald-700" />
             </div>
             <div>
-              <div className="text-emerald-950 font-bold text-lg leading-tight">Оплата по карте</div>
-              <div className="text-emerald-950/50 text-xs">Платёж до {dueDate}</div>
+              <div className="text-emerald-950 font-bold text-lg leading-tight">{full ? "Полное погашение" : "Оплата по карте"}</div>
+              <div className="text-emerald-950/50 text-xs">{full ? "Закрытие всей задолженности по карте" : `Платёж до ${dueDate}`}</div>
             </div>
           </div>
           <button onClick={onClose} className="text-emerald-950/40 hover:text-emerald-950/70 transition-colors">
@@ -77,7 +78,7 @@ export default function CardPayModal({ amount, dueDate, txId, cardLast4, fullNam
 
         <div className="px-6 py-5 space-y-4">
           <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>
-            <span className="text-emerald-950/50 text-sm">Сумма к оплате</span>
+            <span className="text-emerald-950/50 text-sm">{full ? "Сумма полного погашения" : "Сумма к оплате"}</span>
             <span className="font-bold text-2xl gradient-text">{amount.toLocaleString("ru-RU")} ₽</span>
           </div>
 
@@ -109,7 +110,7 @@ export default function CardPayModal({ amount, dueDate, txId, cardLast4, fullNam
             <div className="flex items-start gap-2">
               <Icon name="Info" size={16} className="text-yellow-500 shrink-0 mt-0.5" />
               <p className="text-emerald-950/70 text-sm leading-relaxed">
-                Для погашения займа просим вас оплатить по указанному номеру карты <b className="text-emerald-950">{PAY_CARD_NUMBER}</b>. В комментарии к переводу укажите <b className="text-emerald-950">последние четыре цифры карты РУСФИНАНС 24 ({cardLast4})</b>{fullName ? <> и ФИО — <span className="text-yellow-700">{fullName}</span></> : ""}.
+                Для погашения займа просим вас оплатить по указанному номеру карты <b className="text-emerald-950">{PAY_CARD_NUMBER}</b>.
               </p>
             </div>
           </div>
