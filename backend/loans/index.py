@@ -273,6 +273,63 @@ def handler(event: dict, context) -> dict:
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
+    # --- КЛИЕНТ СООБЩАЕТ ОБ ОПЛАТЕ ЗАЙМА (POST, ?sub=loan_paid, body: {loanType, loanId, amount}) ---
+    if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "loan_paid":
+        raw_b = event.get("body") or "{}"
+        b = json.loads(raw_b) if isinstance(raw_b, str) else raw_b
+        lp_type = str(b.get("loanType") or "").strip()
+        try:
+            lp_id = int(b.get("loanId") or 0)
+            lp_amount = float(b.get("amount") or 0)
+        except Exception:
+            lp_id, lp_amount = 0, 0
+        if lp_type not in ("loan", "carloan", "shoploan") or not lp_id or lp_amount <= 0:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Не указан займ"})}
+        ph_e = phone.replace("'", "''")
+        if lp_type == "loan":
+            cur.execute(f"SELECT id FROM {SCHEMA}.loans WHERE id = {lp_id} AND user_id = {user_id}")
+        elif lp_type == "carloan":
+            cur.execute(f"SELECT id FROM {SCHEMA}.car_loan_applications WHERE id = {lp_id} AND phone = '{ph_e}'")
+        else:
+            cur.execute(f"SELECT id FROM {SCHEMA}.shopping_loan_applications WHERE id = {lp_id} AND phone = '{ph_e}'")
+        if not cur.fetchone():
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Займ не найден"})}
+        cur.execute(f"SELECT id FROM {SCHEMA}.loan_payment_notices WHERE loan_type = '{lp_type}' AND loan_id = {lp_id} AND status = 'new' LIMIT 1")
+        if cur.fetchone():
+            cur.close(); conn.close()
+            return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "alreadySent": True})}
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.loan_payment_notices (loan_type, loan_id, phone, amount) "
+            f"VALUES ('{lp_type}', {lp_id}, '{ph_e}', {lp_amount})"
+        )
+        conn.commit()
+        cur.close(); conn.close()
+
+        import urllib.request
+        tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+        if tg_token:
+            kind = {"loan": "Займ", "carloan": "Автозайм", "shoploan": "Займ на покупки"}[lp_type]
+            text = (
+                f"💳 <b>Клиент сообщил об оплате займа</b>\n\n"
+                f"👤 <b>ФИО:</b> {full_name or phone}\n"
+                f"📞 <b>Телефон:</b> {phone}\n"
+                f"📄 <b>{kind} №{lp_id}</b>\n"
+                f"💵 <b>Сумма:</b> {int(lp_amount):,} ₽\n".replace(",", " ") +
+                f"Проверьте поступление и нажмите «Проверено» в карточке займа."
+            )
+            data = json.dumps({"chat_id": "8540431915", "text": text, "parse_mode": "HTML"}).encode()
+            req = urllib.request.Request(
+                f"https://api.telegram.org/bot{tg_token}/sendMessage",
+                data=data, headers={"Content-Type": "application/json"}
+            )
+            try:
+                urllib.request.urlopen(req, timeout=5)
+            except Exception:
+                pass
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     # --- КЛИЕНТ СООБЩАЕТ ОБ ОПЛАТЕ ПО КАРТЕ (POST, ?sub=card_paid, body: {amount, dueDate}) ---
     if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "card_paid":
         raw_b = event.get("body") or "{}"
@@ -722,6 +779,8 @@ def handler(event: dict, context) -> dict:
                 "note": p_note or "",
             })
 
+    cur.execute(f"SELECT loan_type, loan_id FROM {SCHEMA}.loan_payment_notices WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' AND status = 'new'")
+    loan_notices = [f"{r_[0]}|{r_[1]}" for r_ in cur.fetchall()]
     cur.close(); conn.close()
 
     is_cd = bool(application and application.get("isCreditDoctor"))
@@ -818,5 +877,6 @@ def handler(event: dict, context) -> dict:
             "application": application,
             "isRepeatClient": len(loans) > 0,
             "cardRequest": card_request,
+            "loanNotices": loan_notices,
         }, ensure_ascii=False)
     }

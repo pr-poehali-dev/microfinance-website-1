@@ -26,6 +26,7 @@ interface Detail {
   totalDue: number; paidTotal: number; remaining: number;
   isOverdue?: boolean; overdueDays?: number; penaltyAmount?: number; penaltyRatePercent?: number;
   schedule: ScheduleItem[]; payments: PaymentItem[]; profile: Profile;
+  pendingNotice?: { amount: number; createdAt: string } | null;
 }
 
 const TYPE_LABELS: Record<string, string> = { loan: "Обычный займ", carloan: "Авто займ", shoploan: "Товарный займ" };
@@ -44,6 +45,18 @@ export default function AdminLoanDetailModal({ token, type, id, onClose }: Props
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lightbox, setLightbox] = useState("");
+
+  const [noticeSaving, setNoticeSaving] = useState(false);
+
+  async function handleNoticeDone() {
+    setNoticeSaving(true);
+    try {
+      await fetch(`${ADMIN_URL}?sub=loan_notice_done&type=${type}&id=${id}`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+      await loadDetail();
+    } finally {
+      setNoticeSaving(false);
+    }
+  }
 
   const [waiveOpen, setWaiveOpen] = useState(false);
   const [waiveAmount, setWaiveAmount] = useState("");
@@ -131,6 +144,22 @@ export default function AdminLoanDetailModal({ token, type, id, onClose }: Props
                 <Icon name="X" size={18} />
               </button>
             </div>
+
+            {data.pendingNotice && (
+              <div style={{ border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.06)", borderRadius: 14, padding: 14, marginBottom: 16 }}>
+                <div style={{ color: "#dc2626", fontSize: 12, fontWeight: 700, textTransform: "uppercase", marginBottom: 8 }}>Клиент сообщил об оплате — проверьте поступление</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <div style={{ color: "#022c22", fontSize: 13 }}>
+                    <b>{data.pendingNotice.amount.toLocaleString("ru-RU")} ₽</b> <span style={{ color: "rgba(2,44,34,0.5)", fontSize: 12 }}>· сообщено {data.pendingNotice.createdAt}</span>
+                  </div>
+                  <button disabled={noticeSaving} onClick={handleNoticeDone}
+                    style={{ background: "rgba(16,185,129,0.12)", color: "#047857", border: "1px solid rgba(16,185,129,0.35)", borderRadius: 8, padding: "6px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                    {noticeSaving ? "..." : "Проверено"}
+                  </button>
+                </div>
+                <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, marginTop: 6 }}>После проверки внесите платёж кнопкой «Внести платёж».</div>
+              </div>
+            )}
 
             {/* Хронология */}
             <div style={{ ...G, padding: 16, marginBottom: 16 }}>

@@ -1238,9 +1238,12 @@ def handler(event: dict, context) -> dict:
             start = disbursed_at or created_at
             schedule = [{"dueDate": (start + timedelta(days=days)).strftime("%d.%m.%Y"), "amount": total_due, "label": "Погашение полной суммы" if not penalty else f"Погашение с пеней за просрочку ({overdue_days} дн.)"}] if start else []
 
+            cur.execute(f"SELECT amount, created_at FROM {SCHEMA}.loan_payment_notices WHERE loan_type = 'loan' AND loan_id = {loan_id} AND status = 'new' ORDER BY id DESC LIMIT 1")
+            pn = cur.fetchone()
+            pending_notice = {"amount": float(pn[0]), "createdAt": msk(pn[1]).strftime("%d.%m.%Y в %H:%M")} if pn else None
             cur.close(); conn.close()
             return {"statusCode": 200, "headers": CORS, "body": json.dumps({
-                "type": "loan", "id": loan_id,
+                "type": "loan", "id": loan_id, "pendingNotice": pending_notice,
                 "fullName": full_name or "", "phone": phone, "email": email or "",
                 "amount": float(amount), "days": days, "rate": float(rate),
                 "status": eff_status, "createdAt": msk(created_at).strftime("%d.%m.%Y в %H:%M") if created_at else "",
@@ -1327,8 +1330,12 @@ def handler(event: dict, context) -> dict:
         payments = [{"amount": float(p[0]), "paidAt": msk(p[1]).strftime("%d.%m.%Y в %H:%M"), "note": p[2] or ""} for p in cur.fetchall()]
         paid_total = sum(p["amount"] for p in payments)
 
+        cur.execute(f"SELECT amount, created_at FROM {SCHEMA}.loan_payment_notices WHERE loan_type = '{loan_type}' AND loan_id = {item_id} AND status = 'new' ORDER BY id DESC LIMIT 1")
+        pn = cur.fetchone()
+        pending_notice = {"amount": float(pn[0]), "createdAt": msk(pn[1]).strftime("%d.%m.%Y в %H:%M")} if pn else None
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({
+            "pendingNotice": pending_notice,
             "type": loan_type, "id": app_id,
             "fullName": full_name or "", "phone": phone, "email": email or "",
             "amount": float(loan_amount) if loan_amount else 0, "days": eff_months, "rate": eff_rate,
@@ -2071,6 +2078,20 @@ def handler(event: dict, context) -> dict:
             cur.close(); conn.close()
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Не указано сообщение"})}
         cur.execute(f"UPDATE {SCHEMA}.card_payment_notices SET status = 'done', resolved_at = NOW() WHERE id = {nid}")
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    # --- ЗАЙМ: ПРОВЕРЕНО (POST, sub='loan_notice_done', type=..., id=...) ---
+    if sub == "loan_notice_done" and method == "POST":
+        ln_type = (qs.get("type") or "").strip()
+        try:
+            ln_id = int(qs.get("id", 0) or 0)
+        except Exception:
+            ln_id = 0
+        if ln_type not in ("loan", "carloan", "shoploan") or not ln_id:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Некорректные параметры"})}
+        cur.execute(f"UPDATE {SCHEMA}.loan_payment_notices SET status = 'done', resolved_at = NOW() WHERE loan_type = '{ln_type}' AND loan_id = {ln_id} AND status = 'new'")
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 

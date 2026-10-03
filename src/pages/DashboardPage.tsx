@@ -154,7 +154,8 @@ export default function DashboardPage() {
   const [cardRequest, setCardRequest] = useState<CardRequest | null>(null);
   const [isRepeatClient, setIsRepeatClient] = useState(false);
   const [payLoan, setPayLoan] = useState<Loan | null>(null);
-  const [payOther, setPayOther] = useState<{ contractNumber: string; amount: number } | null>(null);
+  const [payOther, setPayOther] = useState<{ contractNumber: string; amount: number; loanType: "carloan" | "shoploan"; loanId: number } | null>(null);
+  const [loanNotices, setLoanNotices] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [signingId, setSigningId] = useState<number | null>(null);
@@ -228,6 +229,7 @@ export default function DashboardPage() {
         }
         setUser(data.user);
         setLoans(data.loans || []);
+        setLoanNotices(data.loanNotices || []);
         setIsRepeatClient(!!data.isRepeatClient);
         const app = data.application || null;
         setApplication(app);
@@ -717,7 +719,7 @@ export default function DashboardPage() {
                               const r = (shopLoan.approved_rate || 9) / 100;
                               const totalDue = Math.round(a * (1 + r * m));
                               const remaining = Math.max(0, totalDue - (shopLoan.paidTotal || 0));
-                              setPayOther({ contractNumber: `Т-${String(shopLoan.id).padStart(12, "0")}`, amount: remaining });
+                              setPayOther({ contractNumber: `Т-${String(shopLoan.id).padStart(12, "0")}`, amount: remaining, loanType: "shoploan", loanId: shopLoan.id });
                             }}
                             className="w-full text-white font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2"
                             style={{ background: "linear-gradient(135deg,#14b8a6,#06b6d4)" }}
@@ -883,7 +885,7 @@ export default function DashboardPage() {
                               const r = (carLoan.approved_rate || 12) / 100;
                               const totalDue = Math.round(a * (1 + r * m));
                               const remaining = Math.max(0, totalDue - (carLoan.paidTotal || 0));
-                              setPayOther({ contractNumber: `А-${String(carLoan.id).padStart(12, "0")}`, amount: remaining });
+                              setPayOther({ contractNumber: `А-${String(carLoan.id).padStart(12, "0")}`, amount: remaining, loanType: "carloan", loanId: carLoan.id });
                             }}
                             className="w-full text-white font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2"
                             style={{ background: "linear-gradient(135deg,#f59e0b,#ef4444)" }}
@@ -951,7 +953,10 @@ export default function DashboardPage() {
         <PayLoanModal
           contractNumber={fmtAppId(payLoan.id)}
           amount={payLoan.remaining ?? payLoan.total}
-          fullName={user?.fullName || ""}
+          loanType="loan"
+          loanId={payLoan.id}
+          alreadyReported={loanNotices.includes(`loan|${payLoan.id}`)}
+          onReported={() => { const t = localStorage.getItem("token"); if (t) loadData(t); }}
           onClose={() => setPayLoan(null)}
         />
       )}
@@ -960,7 +965,10 @@ export default function DashboardPage() {
         <PayLoanModal
           contractNumber={payOther.contractNumber}
           amount={payOther.amount}
-          fullName={user?.fullName || ""}
+          loanType={payOther.loanType}
+          loanId={payOther.loanId}
+          alreadyReported={loanNotices.includes(`${payOther.loanType}|${payOther.loanId}`)}
+          onReported={() => { const t = localStorage.getItem("token"); if (t) loadData(t); }}
           onClose={() => setPayOther(null)}
         />
       )}
