@@ -9,6 +9,7 @@ import PaymentHistory from "./dashboard/PaymentHistory";
 import ClientProfileCard from "./dashboard/ClientProfileCard";
 import PartnerCardLinks from "./dashboard/PartnerCardLinks";
 import RepeatLoanForm from "./dashboard/RepeatLoanForm";
+import PromoCodeCard from "./dashboard/PromoCodeCard";
 import PayLoanModal from "./dashboard/PayLoanModal";
 import CardActivatedModal from "./dashboard/CardActivatedModal";
 
@@ -156,6 +157,7 @@ export default function DashboardPage() {
   const [payLoan, setPayLoan] = useState<Loan | null>(null);
   const [payOther, setPayOther] = useState<{ contractNumber: string; amount: number; loanType: "carloan" | "shoploan"; loanId: number } | null>(null);
   const [loanNotices, setLoanNotices] = useState<string[]>([]);
+  const [promo, setPromo] = useState<{ code: string; discount: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [signingId, setSigningId] = useState<number | null>(null);
@@ -230,6 +232,7 @@ export default function DashboardPage() {
         setUser(data.user);
         setLoans(data.loans || []);
         setLoanNotices(data.loanNotices || []);
+        setPromo(data.promo || null);
         setIsRepeatClient(!!data.isRepeatClient);
         const app = data.application || null;
         setApplication(app);
@@ -508,12 +511,17 @@ export default function DashboardPage() {
 
         {/* ПОВТОРНАЯ ЗАЯВКА: клиент уже брал займ раньше и сейчас свободен от активной заявки
             (нет заявки, отказ, либо предыдущий займ уже полностью погашен) */}
+        {!loading && !error && user && (
+          <PromoCodeCard promo={promo} onApplied={() => { const t = localStorage.getItem("token"); if (t) loadData(t, false); }} />
+        )}
+
         {!loading && !error && user && isRepeatClient && (
           !application ||
           application.status === "rejected" ||
           ((application.status === "approved" || application.status === "partner_card") && loans[0]?.status === "paid")
         ) && (
           <RepeatLoanForm
+            promo={promo}
             fullName={user.fullName}
             phone={user.phone}
             onSuccess={() => { const t = localStorage.getItem("token"); if (t) loadData(t, false); }}

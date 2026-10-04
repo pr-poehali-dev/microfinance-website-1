@@ -55,6 +55,20 @@ def s(val) -> str:
     return (str(val) if val is not None else "").replace("'", "''")
 
 
+def redeem_promo(cur, code: str, phone: str, used_for: str):
+    """Погашает одноразовый промокод. Возвращает (код, скидка%) или None."""
+    c = code.strip().upper().replace("'", "''")
+    if not c:
+        return None
+    ph = phone.replace("'", "''")
+    cur.execute(
+        f"UPDATE {SCHEMA}.promo_codes SET used_at=NOW(), used_phone='{ph}', used_for='{used_for}' "
+        f"WHERE code='{c}' AND used_at IS NULL RETURNING code, discount_percent"
+    )
+    r = cur.fetchone()
+    return (r[0], int(r[1])) if r else None
+
+
 def handler(event: dict, context) -> dict:
     """Займ на покупку товаров: публичный приём заявок, управление для администратора, статус для клиента."""
     method = event.get("httpMethod", "GET")
@@ -104,19 +118,35 @@ def handler(event: dict, context) -> dict:
         loan_months = int(loan_months_raw)  if loan_months_raw is not None else 12
         bd_val = f"'{birth_date}'" if birth_date else "NULL"
 
+        promo_in = (b.get("promoCode") or "").strip()
+        promo_code_v, promo_disc_v = None, 0
+        if promo_in:
+            red = redeem_promo(cur, promo_in, b.get("phone") or "", "shoploan")
+            if not red:
+                conn.rollback(); cur.close(); conn.close()
+                return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Промокод недействителен или уже использован"}, ensure_ascii=False)}
+            promo_code_v, promo_disc_v = red
+        else:
+            cur.execute(f"SELECT promo_code, promo_discount FROM {SCHEMA}.users WHERE phone = '{phone}' AND promo_code IS NOT NULL")
+            sv = cur.fetchone()
+            if sv:
+                promo_code_v, promo_disc_v = sv[0], int(sv[1])
+                cur.execute(f"UPDATE {SCHEMA}.users SET promo_code=NULL, promo_discount=0 WHERE phone = '{phone}'")
+        promo_sql = f"'{promo_code_v}'" if promo_code_v else "NULL"
+
         cur.execute(
             f"INSERT INTO {SCHEMA}.shopping_loan_applications "
             f"(full_name, phone, email, birth_date, address, passport_series, passport_number, "
             f" passport_date, passport_by, snils, shop_name, item_name, item_price, "
             f" loan_amount, loan_months, contact_person, card_number, "
             f" file_passport, file_registration, file_selfie, file_snils, "
-            f" status, created_at, updated_at) "
+            f" status, created_at, updated_at, promo_code, promo_discount) "
             f"VALUES ('{full_name}','{phone}','{email}',{bd_val},'{address}',"
             f"'{passport_series}','{passport_number}','{passport_date}','{passport_by}',"
             f"'{snils}','{shop_name}','{item_name}',{item_price},"
             f"{loan_amount},{loan_months},'{contact_person}','{card_number}',"
             f"'{file_passport}','{file_registration}','{file_selfie}','{file_snils}',"
-            f"'pending',NOW(),NOW()) RETURNING id"
+            f"'pending',NOW(),NOW(),{promo_sql},{promo_disc_v}) RETURNING id"
         )
         new_id = cur.fetchone()[0]
 
@@ -179,7 +209,7 @@ def handler(event: dict, context) -> dict:
             f"loan_amount, loan_months, contact_person, card_number, "
             f"file_passport, file_registration, file_selfie, file_snils, "
             f"status, reject_reason, approved_amount, approved_months, approved_rate, "
-            f"notes, contract_signed, contract_signed_at, created_at, updated_at, disbursed_at "
+            f"notes, contract_signed, contract_signed_at, created_at, updated_at, disbursed_at, promo_code, promo_discount "
             f"FROM {SCHEMA}.shopping_loan_applications WHERE {where} ORDER BY created_at DESC"
         )
         cols = [d[0] for d in cur.description]
@@ -211,7 +241,7 @@ def handler(event: dict, context) -> dict:
             f"approved_months, approved_rate, notes, shop_name, item_name, item_price, "
             f"contract_signed, contract_signed_at, created_at, disbursed_at, "
             f"full_name, email, birth_date, address, passport_series, passport_number, passport_date, "
-            f"passport_by, snils, contact_person, card_number "
+            f"passport_by, snils, contact_person, card_number, promo_code, promo_discount "
             f"FROM {SCHEMA}.shopping_loan_applications WHERE phone = '{phone_q}' ORDER BY created_at DESC LIMIT 1"
         )
         row = cur.fetchone()
@@ -222,7 +252,7 @@ def handler(event: dict, context) -> dict:
                 "approved_months","approved_rate","notes","shop_name","item_name","item_price",
                 "contract_signed","contract_signed_at","created_at","disbursed_at",
                 "full_name","email","birth_date","address","passport_series","passport_number","passport_date",
-                "passport_by","snils","contact_person","card_number"]
+                "passport_by","snils","contact_person","card_number","promo_code","promo_discount"]
         item = {}
         for k, v in zip(keys, row):
             if hasattr(v, "isoformat"):
@@ -249,6 +279,10 @@ def handler(event: dict, context) -> dict:
         eff_amount = item.get("approved_amount") or item.get("loan_amount")
         eff_months = item.get("approved_months") or item.get("loan_months")
         eff_rate = item.get("approved_rate")
+        promo_d = int(item.get("promo_discount") or 0)
+        if eff_rate and promo_d:
+            eff_rate = round(float(eff_rate) * (100 - promo_d) / 100, 4)
+        item["effective_rate"] = eff_rate
         if item["status"] in ("approved", "signing") and eff_amount and eff_months and eff_rate:
             monthly_principal = float(eff_amount) / int(eff_months)
             remaining = float(eff_amount)

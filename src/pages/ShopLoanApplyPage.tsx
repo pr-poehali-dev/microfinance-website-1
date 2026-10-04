@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import PromoCodeField from "@/components/PromoCodeField";
 import Icon from "@/components/ui/icon";
 import Navbar from "@/components/Navbar";
 
@@ -42,6 +43,7 @@ export default function ShopLoanApplyPage() {
   });
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
   const [sending, setSending] = useState(false);
   const [sendStep, setSendStep] = useState("");
   const [sendError, setSendError] = useState("");
@@ -130,6 +132,7 @@ export default function ShopLoanApplyPage() {
           loanMonths: months,
           itemPrice: form.itemPrice ? parseInt(form.itemPrice) : null,
           ...fileUrls,
+          promoCode: promoCode.trim(),
         }),
       });
 
@@ -142,7 +145,8 @@ export default function ShopLoanApplyPage() {
           setSubmitted(true);
         }
       } else {
-        setSendError("Ошибка при отправке. Попробуйте ещё раз.");
+        const errData = await res.json().catch(() => ({}));
+        setSendError(errData.error || "Ошибка при отправке. Попробуйте ещё раз.");
       }
     } catch {
       setSendError("Нет связи с сервером. Попробуйте позже.");
@@ -424,6 +428,8 @@ export default function ShopLoanApplyPage() {
               Я согласен(а) на <span className="text-emerald-600 font-medium">страхование жизни и здоровья</span> в качестве обеспечения исполнения обязательств по договору займа. Страховая премия включается в общую стоимость займа.
             </span>
           </label>
+
+          <PromoCodeField value={promoCode} onChange={setPromoCode} />
 
           {sendStep && (
             <div className="rounded-xl p-3 flex items-center gap-2 text-sm"

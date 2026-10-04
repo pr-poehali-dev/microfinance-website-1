@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import PromoCodeField from "@/components/PromoCodeField";
 import Icon from "@/components/ui/icon";
 import Navbar from "@/components/Navbar";
 
@@ -33,6 +34,7 @@ export default function CarLoanApplyPage() {
     address: "", contactPerson: "", cardNumber: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
   const [insuranceAgreed, setInsuranceAgreed] = useState(false);
@@ -73,6 +75,7 @@ export default function CarLoanApplyPage() {
           carMileage: form.carMileage ? parseInt(form.carMileage) : null,
           contactPerson: form.contactPerson,
           cardNumber: form.cardNumber,
+          promoCode: promoCode.trim(),
           loanAmount,
           loanMonths,
         }),
@@ -86,7 +89,8 @@ export default function CarLoanApplyPage() {
           setSubmitted(true);
         }
       } else {
-        setSendError("Ошибка при отправке. Попробуйте ещё раз.");
+        const errData = await res.json().catch(() => ({}));
+        setSendError(errData.error || "Ошибка при отправке. Попробуйте ещё раз.");
       }
     } catch {
       setSendError("Нет связи с сервером. Попробуйте позже.");
@@ -375,6 +379,8 @@ export default function CarLoanApplyPage() {
               Я согласен(а) на <span className="text-yellow-400 font-medium">страхование жизни и здоровья</span> в качестве обеспечения исполнения обязательств по договору займа. Страховая премия включается в общую стоимость займа.
             </span>
           </label>
+
+          <PromoCodeField value={promoCode} onChange={setPromoCode} />
 
           {sendError && (
             <div className="rounded-xl p-4 text-red-400 text-sm text-center"

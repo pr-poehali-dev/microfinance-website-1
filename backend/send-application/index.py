@@ -76,6 +76,19 @@ def send_email(to: str, subject: str, html: str):
         print(f"[send-email] error: {ex}")
 
 
+def redeem_promo(cur, code: str, phone: str, used_for: str):
+    """Погашает одноразовый промокод. Возвращает (код, скидка%) или None."""
+    c = esc(code.strip().upper())
+    if not c:
+        return None
+    cur.execute(
+        f"UPDATE {SCHEMA}.promo_codes SET used_at=NOW(), used_phone='{esc(phone)}', used_for='{used_for}' "
+        f"WHERE code='{c}' AND used_at IS NULL RETURNING code, discount_percent"
+    )
+    r = cur.fetchone()
+    return (r[0], int(r[1])) if r else None
+
+
 def handler(event: dict, context) -> dict:
     """Приём заявки на займ: данные + параллельная загрузка фото в S3."""
     cors_headers = {
@@ -89,6 +102,20 @@ def handler(event: dict, context) -> dict:
 
     raw_body = event.get("body") or "{}"
     body = json.loads(raw_body) if isinstance(raw_body, str) else raw_body
+
+    if body.get("action") == "check_promo":
+        _c = psycopg2.connect(os.environ["DATABASE_URL"])
+        _cur = _c.cursor()
+        _cur.execute(
+            f"SELECT discount_percent FROM {SCHEMA}.promo_codes "
+            f"WHERE code='{esc(str(body.get('code') or '').strip().upper())}' AND used_at IS NULL"
+        )
+        _r = _cur.fetchone()
+        _cur.close(); _c.close()
+        if not _r:
+            return {"statusCode": 200, "headers": cors_headers,
+                    "body": json.dumps({"valid": False, "error": "Промокод недействителен или уже использован"}, ensure_ascii=False)}
+        return {"statusCode": 200, "headers": cors_headers, "body": json.dumps({"valid": True, "discount": int(_r[0])})}
 
     full_name = (body.get("fullName") or "").strip()
     phone = (body.get("phone") or "").strip()
@@ -112,6 +139,7 @@ def handler(event: dict, context) -> dict:
     card_number_transfer = (body.get("cardNumber") or "").strip()
     is_credit_doctor = bool(body.get("isCreditDoctor", False))
     is_card_request = bool(body.get("isCardRequest", False))
+    promo_input = (body.get("promoCode") or "").strip()
 
     if not full_name or not phone or not amount_raw:
         return {"statusCode": 400, "headers": cors_headers,
@@ -150,6 +178,20 @@ def handler(event: dict, context) -> dict:
             "".join(_s.choice(_str.ascii_letters + _str.digits) for _ in range(3))
         )
         pw_hash = _h.sha256(plain_password.encode()).hexdigest()
+        promo_code_val, promo_discount_val = None, 0
+        if promo_input:
+            redeemed = redeem_promo(cur, promo_input, phone, "loan")
+            if not redeemed:
+                conn.rollback(); cur.close(); conn.close()
+                return {"statusCode": 400, "headers": cors_headers,
+                        "body": json.dumps({"error": "Промокод недействителен или уже использован"}, ensure_ascii=False)}
+            promo_code_val, promo_discount_val = redeemed
+        else:
+            cur.execute(f"SELECT promo_code, promo_discount FROM {SCHEMA}.users WHERE phone = '{esc(phone)}' AND promo_code IS NOT NULL")
+            saved = cur.fetchone()
+            if saved:
+                promo_code_val, promo_discount_val = saved[0], int(saved[1])
+                cur.execute(f"UPDATE {SCHEMA}.users SET promo_code=NULL, promo_discount=0 WHERE phone = '{esc(phone)}'")
         cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = '{esc(phone)}'")
         if not cur.fetchone():
             cur.execute(
@@ -201,14 +243,15 @@ def handler(event: dict, context) -> dict:
                  telegram_id, status, client_password,
                  file_passport, file_registration, file_selfie, file_previous_passports,
                  snils, workplace, position, work_phone, salary, contact_person, card_number_transfer,
-                 is_credit_doctor, is_card_request)
+                 is_credit_doctor, is_card_request, promo_code, promo_discount)
             VALUES (
                 '{esc(full_name)}', '{esc(phone)}', {em_val}, {amount}, {days},
                 {bd_val}, {bp_val}, {ps_val}, {pn_val}, {pd_val}, {pc_val}, {pb_val},
                 {tg_val}, 'pending', {pw_val},
                 {fp_val}, {fr_val}, {fs_val}, {fpp_val},
                 {snils_val}, {wp_val}, {pos_val}, {wph_val}, {sal_val}, {cp_val}, {cn_val},
-                {str(is_credit_doctor).upper()}, {str(is_card_request).upper()}
+                {str(is_credit_doctor).upper()}, {str(is_card_request).upper()},
+                {("'" + esc(promo_code_val) + "'") if promo_code_val else 'NULL'}, {promo_discount_val}
             ) RETURNING id
         """)
         app_id = cur.fetchone()[0]

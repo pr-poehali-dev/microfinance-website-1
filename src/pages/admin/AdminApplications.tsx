@@ -224,6 +224,11 @@ export default function AdminApplications({
                   <span style={{ color: "#022c22", fontWeight: 700, fontSize: 18 }}>{app.fullName || app.phone}</span>
                   {waitNew && <span style={WAITING_BADGE_STYLE}>🔴 Новая заявка — клиент ждёт решения</span>}
                   {waitSigned && <span style={WAITING_BADGE_STYLE}>🔴 Договор подписан — клиент ждёт деньги</span>}
+                  {!!app.promoCode && (
+                    <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(16,185,129,0.15)", color: "#047857", border: "1px solid rgba(16,185,129,0.4)" }}>
+                      🎟 Промокод {app.promoCode} · скидка {app.promoDiscount}% на проценты
+                    </span>
+                  )}
                   {app.isCardRequest && (
                     <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(16,185,129,0.15)", color: "#047857", border: "1px solid rgba(16,185,129,0.4)" }}>
                       💳 Заявка на карту · лимит {app.amount.toLocaleString("ru-RU")} ₽

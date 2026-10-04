@@ -125,6 +125,16 @@ def get_conn():
     return psycopg2.connect(os.environ["DATABASE_URL"])
 
 
+def promo_rate(cur, app_id_e: str, rate):
+    """Снижает ставку на процент скидки промокода заявки (скидка действует на проценты)."""
+    if rate is None:
+        return rate
+    cur.execute(f"SELECT promo_discount FROM {SCHEMA}.applications WHERE id='{app_id_e}'")
+    r = cur.fetchone()
+    d = int(r[0]) if r and r[0] else 0
+    return round(float(rate) * (100 - d) / 100, 5) if d else rate
+
+
 def check_admin_token(cur, token: str) -> bool:
     t = token.replace("'", "''")
     cur.execute(
@@ -395,7 +405,8 @@ def handler(event: dict, context) -> dict:
                    a.reviewed_at, l.created_at AS loan_created_at,
                    COALESCE(hist.loans_count, 0), COALESCE(hist.paid_count, 0), COALESCE(hist.overdue_count, 0),
                    COALESCE(hist.total_borrowed, 0), COALESCE(hist.apps_count, 0), a.partner_card_url,
-                   a.virtual_card_status, a.virtual_card_limit, a.virtual_card_signed_at, a.is_card_request
+                   a.virtual_card_status, a.virtual_card_limit, a.virtual_card_signed_at, a.is_card_request,
+                   a.promo_code, a.promo_discount
             FROM {SCHEMA}.applications a
             LEFT JOIN LATERAL (
                 SELECT lo.id, lo.signed, lo.signed_at, lo.status, lo.disbursed_at, lo.created_at
@@ -453,6 +464,8 @@ def handler(event: dict, context) -> dict:
             "cardNumberTransfer": r[39] or "",
             "isCreditDoctor": bool(r[40]) if r[40] is not None else False,
             "isCardRequest": bool(r[55]) if len(r) > 55 and r[55] else False,
+            "promoCode": r[56] if len(r) > 56 and r[56] else "",
+            "promoDiscount": int(r[57]) if len(r) > 57 and r[57] else 0,
             "videoCallRequested": bool(r[41]) if r[41] is not None else False,
             "virtualCardDays": int(r[42]) if r[42] else None,
             "blockedUntil": msk(r[43]).strftime("%d.%m.%Y %H:%M") if r[43] else None,
@@ -489,6 +502,7 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена или уже обработана"})}
 
         full_name, phone, amount, days, tg_username, client_email = app
+        rate = promo_rate(cur, app_id_esc, rate)
         # Используем сумму и срок от администратора если указаны, иначе из заявки
         if approved_amount:
             amount = float(approved_amount)
@@ -714,6 +728,51 @@ def handler(event: dict, context) -> dict:
             )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
+    # --- ПРОМОКОДЫ: список (GET, sub='promo_codes') ---
+    if sub == "promo_codes" and method == "GET":
+        cur.execute(
+            f"SELECT id, code, discount_percent, created_at, used_at, used_phone, used_for "
+            f"FROM {SCHEMA}.promo_codes ORDER BY (used_at IS NOT NULL), discount_percent, id DESC"
+        )
+        rows = cur.fetchall()
+        cur.close(); conn.close()
+        codes = [{
+            "id": r[0], "code": r[1], "discount": r[2],
+            "createdAt": msk(r[3]).strftime("%d.%m.%Y %H:%M"),
+            "usedAt": msk(r[4]).strftime("%d.%m.%Y %H:%M") if r[4] else None,
+            "usedPhone": r[5] or "", "usedFor": r[6] or "",
+        } for r in rows]
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"codes": codes}, ensure_ascii=False)}
+
+    # --- ПРОМОКОДЫ: создать пачку (POST, sub='promo_generate', body: {discount, count}) ---
+    if sub == "promo_generate" and method == "POST":
+        disc = int(body.get("discount", 0) or 0)
+        cnt = int(body.get("count", 1) or 1)
+        if disc not in (10, 20, 30, 40, 50) or cnt < 1 or cnt > 50:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Скидка 10-50%, количество 1-50"})}
+        alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+        created = []
+        for _ in range(cnt):
+            for _try in range(10):
+                code = "".join(secrets.choice(alphabet) for _ in range(8))
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.promo_codes (code, discount_percent) VALUES ('{code}', {disc}) "
+                    f"ON CONFLICT (code) DO NOTHING RETURNING code"
+                )
+                if cur.fetchone():
+                    created.append(code)
+                    break
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "codes": created})}
+
+    # --- ПРОМОКОДЫ: удалить неиспользованный (POST, sub='promo_delete', id=...) ---
+    if sub == "promo_delete" and method == "POST":
+        pid = int(qs.get("id", 0) or 0)
+        cur.execute(f"DELETE FROM {SCHEMA}.promo_codes WHERE id={pid} AND used_at IS NULL")
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     # --- ОТЛОЖИТЬ ЗАЯВКУ (POST, sub='postpone', appId=...) ---
     if sub == "postpone" and method == "POST":
         app_id = qs.get("appId", "")
@@ -737,6 +796,7 @@ def handler(event: dict, context) -> dict:
             cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
         full_name, phone, tg_username, client_email = app
+        p_rate = promo_rate(cur, app_id_e, p_rate)
         # Страхование жизни и здоровья: 50% от суммы, выдаваемой клиенту на руки.
         p_insurance = round(p_amount * 0.5) if p_amount else None
         p_debt = (p_amount + p_insurance) if p_amount else None
@@ -812,6 +872,7 @@ def handler(event: dict, context) -> dict:
             cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
         full_name, phone, tg_username, client_email = app
+        p_rate = promo_rate(cur, app_id_e, p_rate)
         # Страхование жизни и здоровья: 50% от суммы, выдаваемой клиенту на руки.
         p_insurance = round(p_amount * 0.5) if p_amount else None
         p_debt = (p_amount + p_insurance) if p_amount else None

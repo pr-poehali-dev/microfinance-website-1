@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import PromoCodeField from "@/components/PromoCodeField";
 import Icon from "@/components/ui/icon";
 import ConsentDocuments, { ConsentState, DEFAULT_CONSENTS, REQUIRED_CONSENT_KEYS } from "@/components/apply/ConsentDocuments";
 
@@ -51,6 +52,7 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
   const [sendError, setSendError] = useState("");
   const [consents, setConsents] = useState<ConsentState>(DEFAULT_CONSENTS);
   const [submitted, setSubmitted] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
   const [timerSec, setTimerSec] = useState(15 * 60);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -131,6 +133,7 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
           ...fileUrls,
           isCreditDoctor,
           isCardRequest: cardMode,
+          promoCode: promoCode.trim(),
           ...(cardMode ? { days: "0" } : {}),
         }),
       });
@@ -139,7 +142,8 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
         if (data.token) localStorage.setItem("token", data.token);
         setSubmitted(true);
       } else {
-        setSendError("Ошибка при отправке. Попробуйте ещё раз.");
+        const errData = await res.json().catch(() => ({}));
+        setSendError(errData.error || "Ошибка при отправке. Попробуйте ещё раз.");
       }
     } catch {
       setSendError("Нет связи с сервером. Попробуйте позже.");
@@ -544,6 +548,8 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
                     </div>
                   ))}
                 </div>
+
+                {!cardMode && <PromoCodeField value={promoCode} onChange={setPromoCode} />}
 
                 <ConsentDocuments
                   consents={consents}

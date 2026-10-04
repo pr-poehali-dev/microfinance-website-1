@@ -4,12 +4,13 @@ import Icon from "@/components/ui/icon";
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 
 interface Props {
+  promo?: { code: string; discount: number } | null;
   fullName: string;
   phone: string;
   onSuccess: () => void;
 }
 
-export default function RepeatLoanForm({ fullName, phone, onSuccess }: Props) {
+export default function RepeatLoanForm({ promo, fullName, phone, onSuccess }: Props) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState(20000);
   const [days, setDays] = useState(30);
@@ -18,12 +19,12 @@ export default function RepeatLoanForm({ fullName, phone, onSuccess }: Props) {
   const [done, setDone] = useState(false);
 
   const calc = useMemo(() => {
-    const interest = Math.round(amount * 0.008 * days);
+    const interest = Math.round(amount * 0.008 * days * (100 - (promo?.discount || 0)) / 100);
     const total = amount + interest;
     const amountBg = `linear-gradient(to right, #10b981 ${((amount - 5000) / (100000 - 5000)) * 100}%, rgba(16,185,129,0.2) ${((amount - 5000) / (100000 - 5000)) * 100}%)`;
     const daysBg = `linear-gradient(to right, #10b981 ${((days - 5) / (365 - 5)) * 100}%, rgba(16,185,129,0.2) ${((days - 5) / (365 - 5)) * 100}%)`;
     return { interest, total, amountBg, daysBg };
-  }, [amount, days]);
+  }, [amount, days, promo]);
 
   async function submit() {
     const token = localStorage.getItem("token");
@@ -151,6 +152,12 @@ export default function RepeatLoanForm({ fullName, phone, onSuccess }: Props) {
             <span>365 дней</span>
           </div>
         </div>
+
+        {promo && (
+          <div className="rounded-xl px-4 py-3 text-sm text-emerald-950" style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)" }}>
+            Применён промокод <b>{promo.code}</b>: скидка {promo.discount}% на проценты
+          </div>
+        )}
 
         {/* Итог */}
         <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>

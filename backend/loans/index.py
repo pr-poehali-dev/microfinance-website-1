@@ -215,6 +215,28 @@ def handler(event: dict, context) -> dict:
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
+    # --- КЛИЕНТ АКТИВИРУЕТ ПРОМОКОД НА СЛЕДУЮЩИЙ ЗАЙМ (POST, ?sub=promo_apply, body: {code}) ---
+    if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "promo_apply":
+        raw_b = event.get("body") or "{}"
+        b = json.loads(raw_b) if isinstance(raw_b, str) else raw_b
+        code_e = (b.get("code") or "").strip().upper().replace("'", "''")
+        ph_e = phone.replace("'", "''")
+        cur.execute(f"SELECT promo_code FROM {SCHEMA}.users WHERE id = {user_id} AND promo_code IS NOT NULL")
+        if cur.fetchone():
+            cur.close(); conn.close()
+            return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": "У вас уже есть активный промокод. Он применится к следующему займу"}, ensure_ascii=False)}
+        cur.execute(
+            f"UPDATE {SCHEMA}.promo_codes SET used_at=NOW(), used_phone='{ph_e}', used_for='cabinet' "
+            f"WHERE code='{code_e}' AND used_at IS NULL RETURNING code, discount_percent"
+        )
+        r_ = cur.fetchone()
+        if not code_e or not r_:
+            conn.rollback(); cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Промокод недействителен или уже использован"}, ensure_ascii=False)}
+        cur.execute(f"UPDATE {SCHEMA}.users SET promo_code='{r_[0]}', promo_discount={int(r_[1])} WHERE id = {user_id}")
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "code": r_[0], "discount": int(r_[1])})}
+
     # --- ПОДАТЬ ЗАЯВКУ НА КАРТУ РУСФИНАНС 24 (POST, ?sub=card_request) ---
     if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "card_request":
         ph_e = phone.replace("'", "''")
@@ -498,6 +520,26 @@ def handler(event: dict, context) -> dict:
             cur.close(); conn.close()
             return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": "У вас уже есть заявка на рассмотрении"})}
 
+        promo_in = (b.get("promoCode") or "").strip().upper().replace("'", "''")
+        promo_code_v, promo_disc_v = None, 0
+        if promo_in:
+            cur.execute(
+                f"UPDATE {SCHEMA}.promo_codes SET used_at=NOW(), used_phone='{ph_e}', used_for='loan' "
+                f"WHERE code='{promo_in}' AND used_at IS NULL RETURNING code, discount_percent"
+            )
+            red = cur.fetchone()
+            if not red:
+                conn.rollback(); cur.close(); conn.close()
+                return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Промокод недействителен или уже использован"}, ensure_ascii=False)}
+            promo_code_v, promo_disc_v = red[0], int(red[1])
+        else:
+            cur.execute(f"SELECT promo_code, promo_discount FROM {SCHEMA}.users WHERE id = {user_id} AND promo_code IS NOT NULL")
+            sv = cur.fetchone()
+            if sv:
+                promo_code_v, promo_disc_v = sv[0], int(sv[1])
+                cur.execute(f"UPDATE {SCHEMA}.users SET promo_code=NULL, promo_discount=0 WHERE id = {user_id}")
+        promo_sql = f"'{promo_code_v}'" if promo_code_v else "NULL"
+
         # Берём анкетные данные из последней заявки клиента, чтобы не заставлять
         # заново вводить паспорт/работу — это же наш повторный клиент.
         cur.execute(f"""
@@ -533,12 +575,14 @@ def handler(event: dict, context) -> dict:
                 (full_name, phone, email, amount, days, birth_date, birth_place,
                  passport_series, passport_number, passport_date, passport_code, passport_by,
                  telegram_id, status, file_passport, file_registration, file_selfie, file_previous_passports,
-                 snils, workplace, position, work_phone, salary, contact_person, card_number_transfer)
+                 snils, workplace, position, work_phone, salary, contact_person, card_number_transfer,
+                 promo_code, promo_discount)
             VALUES (
                 '{fn_e}', '{ph_e}', {email_val}, {amount}, {days},
                 {v(birth_date)}, {v(birth_place)}, {v(passport_series)}, {v(passport_number)}, {v(passport_date)}, {v(passport_code)}, {v(passport_by)},
                 {v(telegram_id)}, 'pending', {v(file_passport)}, {v(file_registration)}, {v(file_selfie)}, {v(file_previous_passports)},
-                {v(snils)}, {v(workplace)}, {v(position)}, {v(work_phone)}, {salary_val}, {v(contact_person)}, {v(card_number_transfer)}
+                {v(snils)}, {v(workplace)}, {v(position)}, {v(work_phone)}, {salary_val}, {v(contact_person)}, {v(card_number_transfer)},
+                {promo_sql}, {promo_disc_v}
             ) RETURNING id
         """)
         new_app_id = cur.fetchone()[0]
@@ -554,8 +598,9 @@ def handler(event: dict, context) -> dict:
                 f"👤 <b>ФИО:</b> {full_name or phone}\n"
                 f"📞 <b>Телефон:</b> {phone}\n"
                 f"💰 <b>Сумма:</b> {int(amount):,} ₽\n".replace(",", " ") +
-                f"📅 <b>Срок:</b> {days} дн.\n\n"
-                f"Клиент уже брал займ ранее — заявка подана через личный кабинет."
+                f"📅 <b>Срок:</b> {days} дн.\n" +
+                (f"🎟 <b>Промокод:</b> {promo_code_v} (−{promo_disc_v}% на проценты)\n" if promo_code_v else "") +
+                f"\nКлиент уже брал займ ранее — заявка подана через личный кабинет."
             )
             data = json.dumps({"chat_id": chat_id, "text": text, "parse_mode": "HTML"}).encode()
             req = urllib.request.Request(
@@ -625,7 +670,13 @@ def handler(event: dict, context) -> dict:
             app_row = tuple(merged)
             card_app_id = card_src[0]
     application = None
+    app_promo_discount = 0
+    app_promo_code = ""
     if app_row:
+        cur.execute(f"SELECT promo_code, promo_discount FROM {SCHEMA}.applications WHERE id = {int(app_row[0])}")
+        _ap = cur.fetchone()
+        app_promo_discount = int(_ap[1]) if _ap and _ap[1] else 0
+        app_promo_code = _ap[0] if _ap and _ap[0] else ""
         app_amount = float(app_row[1]) if app_row[1] else 0
         app_days = app_row[2] or 0
         approved_amount = float(app_row[5]) if app_row[5] else None
@@ -721,6 +772,8 @@ def handler(event: dict, context) -> dict:
             "approvedAmount": approved_amount,
             "approvedRate": approved_rate,
             "approvedRatePercent": round(approved_rate * 100, 1),
+            "promoCode": app_promo_code,
+            "promoDiscount": app_promo_discount,
             "approvedDays": approved_days,
             "approvedTotal": approved_total,
             "rejectReason": app_row[8] or "",
@@ -796,6 +849,10 @@ def handler(event: dict, context) -> dict:
                 "paidAt": msk(p_paid_at).strftime("%d.%m.%Y в %H:%M"),
                 "note": p_note or "",
             })
+
+    cur.execute(f"SELECT promo_code, promo_discount FROM {SCHEMA}.users WHERE id = {user_id}")
+    _pr = cur.fetchone()
+    user_promo = {"code": _pr[0], "discount": int(_pr[1])} if _pr and _pr[0] else None
 
     cur.execute(f"SELECT loan_type, loan_id FROM {SCHEMA}.loan_payment_notices WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' AND status = 'new'")
     loan_notices = [f"{r_[0]}|{r_[1]}" for r_ in cur.fetchall()]
@@ -896,5 +953,6 @@ def handler(event: dict, context) -> dict:
             "isRepeatClient": len(loans) > 0,
             "cardRequest": card_request,
             "loanNotices": loan_notices,
+            "promo": user_promo,
         }, ensure_ascii=False)
     }
