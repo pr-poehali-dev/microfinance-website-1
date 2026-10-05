@@ -330,10 +330,10 @@ BACKFILL_WHERE = f"""
 def store_contract_file(html: str, app_id: str, now_ts: str):
     """PDF, а если конвертер недоступен — готовая HTML-страница договора."""
     try:
-        return f"contracts/contract_{app_id}_{now_ts}_v2.pdf", html_to_pdf_bytes(html), "application/pdf"
+        return f"contracts/contract_{app_id}_{now_ts}_v3.pdf", html_to_pdf_bytes(html), "application/pdf"
     except Exception as ex:
         print(f"[contract] pdf unavailable, saving html: {ex}")
-        return f"contracts/contract_{app_id}_{now_ts}_v2.html", html.encode("utf-8"), "text/html; charset=utf-8"
+        return f"contracts/contract_{app_id}_{now_ts}_v3.html", html.encode("utf-8"), "text/html; charset=utf-8"
 
 
 def build_and_store(cur, app_id: str, loan_id: int) -> str:
@@ -367,7 +367,7 @@ def build_and_store(cur, app_id: str, loan_id: int) -> str:
 REFRESH_WHERE = f"""
     a.status IN ('approved','partner_card')
     AND a.contract_url IS NOT NULL AND a.contract_url <> ''
-    AND a.contract_url NOT LIKE '%v2.pdf' AND a.contract_url NOT LIKE '%v2.html'
+    AND a.contract_url NOT LIKE '%v3.pdf' AND a.contract_url NOT LIKE '%v3.html'
     AND a.id = (SELECT x.id FROM {SCHEMA}.applications x WHERE x.phone = a.phone ORDER BY x.created_at DESC LIMIT 1)
     AND COALESCE((SELECT lo.signed FROM {SCHEMA}.loans lo JOIN {SCHEMA}.users u ON u.id = lo.user_id
                   WHERE u.phone = a.phone ORDER BY lo.created_at DESC LIMIT 1), FALSE) = FALSE
@@ -557,7 +557,8 @@ def build_card_contract(cur, app_id: str) -> str:
 
 CARD_BACKFILL_WHERE = """
     a.virtual_card_number IS NOT NULL AND a.virtual_card_status IN ('pending','active','blocked')
-    AND (a.card_contract_url IS NULL OR a.card_contract_url = '')
+    AND (a.card_contract_url IS NULL OR a.card_contract_url = ''
+         OR (a.card_contract_url NOT LIKE '%v3.pdf' AND a.card_contract_url NOT LIKE '%v3.html'))
 """
 
 
