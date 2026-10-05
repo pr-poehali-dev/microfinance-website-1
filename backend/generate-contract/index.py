@@ -39,6 +39,11 @@ MKK = {
 }
 
 
+from seal_data import SEAL_B64
+
+SEAL_IMG = f'<img src="data:image/png;base64,{SEAL_B64}" style="width:120pt;height:120pt;position:absolute;left:34pt;top:-30pt;" alt="">'
+
+
 def get_conn():
     return psycopg2.connect(os.environ["DATABASE_URL"])
 
@@ -278,7 +283,7 @@ def generate_contract_html(app_data: dict, loan_num: int) -> str:
       <p>Директор:</p>
       <p>{MKK["director"]}</p>
       <p><span class="sign-line"></span></p>
-      <p style="margin-top:8pt;">М.П.</p>
+      <p style="margin-top:8pt;position:relative;height:90pt;">М.П.{SEAL_IMG}</p>
     </td>
     <td>
       <p class="bold">ЗАЁМЩИК:</p>
@@ -501,7 +506,7 @@ def generate_card_contract_html(d: dict, num: int) -> str:
       <p>Директор:</p>
       <p>{MKK["director"]}</p>
       <p><span class="sign-line"></span></p>
-      <p style="margin-top:8pt;">М.П.</p>
+      <p style="margin-top:8pt;position:relative;height:90pt;">М.П.{SEAL_IMG}</p>
     </td>
     <td>
       <p class="bold">ЗАЁМЩИК:</p>
