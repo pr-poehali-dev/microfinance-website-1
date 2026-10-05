@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
+import OfferDialog from "@/components/OfferDialog";
 
 const FAQ_ITEMS = [
   {
@@ -26,6 +27,7 @@ const FAQ_ITEMS = [
 
 export default function FaqContactsFooter() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [offerOpen, setOfferOpen] = useState(false);
 
   return (
     <>
@@ -156,9 +158,13 @@ export default function FaqContactsFooter() {
                 {l}
               </button>
             ))}
+            <button onClick={() => setOfferOpen(true)} className="text-emerald-950/40 hover:text-emerald-600 text-sm transition-colors">
+              Оферта
+            </button>
           </div>
         </div>
       </footer>
+      <OfferDialog open={offerOpen} onOpenChange={setOfferOpen} />
     </>
   );
 }
