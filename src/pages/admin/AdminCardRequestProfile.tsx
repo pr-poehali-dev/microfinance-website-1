@@ -36,12 +36,36 @@ const SECTIONS: { title: string; fields: Field[] }[] = [
   ] },
 ];
 
-const PHOTOS: { key: string; label: string }[] = [
-  { key: "filePassport", label: "Паспорт" },
-  { key: "fileRegistration", label: "Прописка" },
-  { key: "fileSelfie", label: "Селфи с паспортом" },
-  { key: "filePreviousPassports", label: "Ранее выданные паспорта" },
+const PHOTOS: { key: string; upKey: string; label: string }[] = [
+  { key: "filePassport", upKey: "passportMain", label: "Паспорт" },
+  { key: "fileRegistration", upKey: "registration", label: "Прописка" },
+  { key: "fileSelfie", upKey: "selfie", label: "Селфи с паспортом" },
+  { key: "filePreviousPassports", upKey: "previousPassports", label: "Ранее выданные паспорта" },
 ];
+
+const compress = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const MAX = 1200;
+        let { width, height } = img;
+        if (width > MAX || height > MAX) {
+          if (width > height) { height = Math.round((height * MAX) / width); width = MAX; }
+          else { width = Math.round((width * MAX) / height); height = MAX; }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width; canvas.height = height;
+        canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/webp", 0.7).split(",")[1]);
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
 
 const INPUT = { background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 10, padding: "9px 12px", color: "#022c22", fontSize: 14, width: "100%", boxSizing: "border-box" as const };
 
@@ -58,20 +82,43 @@ export default function AdminCardRequestProfile({ token, userId, onClose }: Prop
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [zoom, setZoom] = useState("");
+  const [uploading, setUploading] = useState("");
 
   const hdrs = useCallback(() => ({ "Content-Type": "application/json", "Authorization": `Bearer ${token}` }), [token]);
 
-  useEffect(() => {
-    fetch(`${ADMIN_URL}?sub=client_profile&userId=${userId}`, { headers: hdrs() })
+  const loadProfile = useCallback(() => {
+    return fetch(`${ADMIN_URL}?sub=client_profile&userId=${userId}`, { headers: hdrs() })
       .then(r => r.json())
       .then(p => {
         const f: Record<string, string> = {};
         Object.entries(p).forEach(([k, v]) => { if (typeof v === "string") f[k] = v; });
         setData(f);
-      })
+      });
+  }, [userId, hdrs]);
+
+  useEffect(() => {
+    loadProfile()
       .catch(() => setErr("Не удалось загрузить анкету"))
       .finally(() => setLoading(false));
-  }, [userId, hdrs]);
+  }, [loadProfile]);
+
+  async function replacePhoto(ph: { key: string; upKey: string }, file: File | undefined) {
+    if (!file) return;
+    setUploading(ph.key); setMsg(""); setErr("");
+    try {
+      const b64 = await compress(file);
+      const r = await fetch(`${ADMIN_URL}?sub=docs_upload&userId=${userId}`, {
+        method: "POST", headers: hdrs(), body: JSON.stringify({ [ph.upKey]: b64 }),
+      });
+      if (!r.ok) throw new Error("upload");
+      await loadProfile();
+      setMsg("Фото обновлено");
+    } catch {
+      setErr("Не удалось загрузить фото");
+    } finally {
+      setUploading("");
+    }
+  }
 
   async function save() {
     setSaving(true); setMsg(""); setErr("");
@@ -117,15 +164,23 @@ export default function AdminCardRequestProfile({ token, userId, onClose }: Prop
           <div style={{ marginBottom: 14 }}>
             <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Фото документов</div>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              {PHOTOS.map(ph => data[ph.key] ? (
-                <button key={ph.key} onClick={() => setZoom(data[ph.key])}
-                  style={{ border: "1px solid rgba(16,185,129,0.3)", borderRadius: 10, padding: 4, background: "#fff", cursor: "pointer" }}>
-                  <img src={data[ph.key]} alt={ph.label} style={{ width: 96, height: 96, objectFit: "cover", borderRadius: 8, display: "block" }} />
-                  <div style={{ fontSize: 11, color: "rgba(2,44,34,0.6)", marginTop: 4, maxWidth: 96 }}>{ph.label}</div>
-                </button>
-              ) : (
-                <div key={ph.key} style={{ width: 104, fontSize: 11, color: "rgba(2,44,34,0.35)", padding: 8, border: "1px dashed rgba(16,185,129,0.25)", borderRadius: 10 }}>
-                  {ph.label}: нет фото
+              {PHOTOS.map(ph => (
+                <div key={ph.key} style={{ width: 112, border: "1px solid rgba(16,185,129,0.3)", borderRadius: 10, padding: 4, background: "#fff" }}>
+                  {data[ph.key] ? (
+                    <button onClick={() => setZoom(data[ph.key])} style={{ border: "none", padding: 0, background: "none", cursor: "zoom-in", display: "block" }}>
+                      <img src={data[ph.key]} alt={ph.label} style={{ width: 102, height: 96, objectFit: "cover", borderRadius: 8, display: "block" }} />
+                    </button>
+                  ) : (
+                    <div style={{ width: 102, height: 96, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "rgba(2,44,34,0.35)", background: "rgba(16,185,129,0.05)", borderRadius: 8 }}>
+                      нет фото
+                    </div>
+                  )}
+                  <div style={{ fontSize: 11, color: "rgba(2,44,34,0.6)", margin: "4px 0" }}>{ph.label}</div>
+                  <label style={{ display: "block", textAlign: "center", fontSize: 12, fontWeight: 600, color: "#047857", background: "rgba(16,185,129,0.1)", borderRadius: 6, padding: "5px 0", cursor: "pointer" }}>
+                    {uploading === ph.key ? "Загрузка..." : data[ph.key] ? "Заменить" : "Загрузить"}
+                    <input type="file" accept="image/*" style={{ display: "none" }} disabled={!!uploading}
+                      onChange={e => { replacePhoto(ph, e.target.files?.[0]); e.target.value = ""; }} />
+                  </label>
                 </div>
               ))}
             </div>
