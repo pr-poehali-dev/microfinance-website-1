@@ -578,7 +578,7 @@ def handler(event: dict, context) -> dict:
                 headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"},
                 method="POST"
             )
-            _ur.urlopen(contract_req, timeout=3)
+            _ur.urlopen(contract_req, timeout=25)
             print(f"[admin] contract generated for app_id={app_id}")
         except Exception as ex:
             print(f"[admin] contract generation error (non-blocking): {ex}")

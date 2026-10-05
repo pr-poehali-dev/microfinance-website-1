@@ -602,6 +602,63 @@ def backfill_card_contracts(cur, conn) -> dict:
     }
 
 
+def ensure_client_contracts(cur, conn, token_e: str) -> dict:
+    """Клиент запрашивает свои недостающие договоры (займ и карта) — создаются сразу."""
+    cur.execute(
+        f"SELECT u.id, u.phone FROM {SCHEMA}.sessions s JOIN {SCHEMA}.users u ON u.id = s.user_id "
+        f"WHERE s.token = '{token_e}' AND s.expires_at > NOW()"
+    )
+    u = cur.fetchone()
+    if not u:
+        cur.close(); conn.close()
+        return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
+    user_id, phone = u
+    ph = str(phone).replace("'", "''")
+    created = {"loan": False, "card": False}
+
+    cur.execute(
+        f"SELECT id FROM {SCHEMA}.applications WHERE phone = '{ph}' "
+        f"ORDER BY created_at DESC LIMIT 1"
+    )
+    last = cur.fetchone()
+    if last:
+        cur.execute(
+            f"SELECT id FROM {SCHEMA}.applications WHERE id = {int(last[0])} "
+            f"AND status IN ('approved','partner_card') AND (contract_url IS NULL OR contract_url = '') "
+            f"AND COALESCE(approved_amount, amount) >= 1"
+        )
+        need = cur.fetchone()
+        if need:
+            cur.execute(f"SELECT id FROM {SCHEMA}.loans WHERE user_id = {int(user_id)} ORDER BY created_at DESC LIMIT 1")
+            lr = cur.fetchone()
+            try:
+                build_and_store(cur, str(need[0]), int(lr[0]) if lr else 0)
+                conn.commit()
+                created["loan"] = True
+            except Exception as ex:
+                conn.rollback()
+                print(f"[ensure] loan contract error: {ex}")
+
+    cur.execute(
+        f"SELECT id FROM {SCHEMA}.applications WHERE phone = '{ph}' AND virtual_card_number IS NOT NULL "
+        f"AND virtual_card_status IN ('pending','active','blocked') "
+        f"AND (card_contract_url IS NULL OR card_contract_url = '') "
+        f"ORDER BY virtual_card_issued_at DESC NULLS LAST LIMIT 1"
+    )
+    cr = cur.fetchone()
+    if cr:
+        try:
+            build_card_contract(cur, str(cr[0]))
+            conn.commit()
+            created["card"] = True
+        except Exception as ex:
+            conn.rollback()
+            print(f"[ensure] card contract error: {ex}")
+
+    cur.close(); conn.close()
+    return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "created": created})}
+
+
 def handler(event: dict, context) -> dict:
     """Генерация PDF договора займа и сохранение в S3. Вызывается из admin при одобрении заявки."""
     if event.get("httpMethod") == "OPTIONS":
@@ -615,15 +672,19 @@ def handler(event: dict, context) -> dict:
     conn = get_conn()
     cur = conn.cursor()
 
-    # Проверяем admin-токен
+    raw = event.get("body") or "{}"
+    body = json.loads(raw) if isinstance(raw, str) else raw
+
     t = token.replace("'", "''")
+
+    if body.get("ensure"):
+        return ensure_client_contracts(cur, conn, t)
+
+    # Проверяем admin-токен
     cur.execute(f"SELECT id FROM {SCHEMA}.admin_sessions WHERE token = '{t}' AND expires_at > NOW()")
     if not cur.fetchone():
         cur.close(); conn.close()
         return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
-
-    raw = event.get("body") or "{}"
-    body = json.loads(raw) if isinstance(raw, str) else raw
 
     if body.get("cardBackfill"):
         return backfill_card_contracts(cur, conn)

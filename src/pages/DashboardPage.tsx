@@ -17,6 +17,7 @@ import CardActivatedModal from "./dashboard/CardActivatedModal";
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 const CAR_URL  = "https://functions.poehali.dev/651adde1-4432-4e5a-8086-3cda9898b7ac";
 const SHOP_URL = "https://functions.poehali.dev/f0312370-20d7-488e-b072-dc4c0b2af2aa";
+const CONTRACT_URL = "https://functions.poehali.dev/9cdc3bea-1348-49df-a7a3-4aeef6088ff3";
 
 const fmtAppId = (id: number) => String(id).padStart(12, "0");
 
@@ -91,6 +92,7 @@ interface CardTransaction {
 }
 
 interface VirtualCard {
+  contractUrl?: string;
   number: string;
   expiry: string;
   cvv: string;
@@ -169,6 +171,8 @@ export default function DashboardPage() {
   const [timerSec, setTimerSec] = useState(5 * 60);
   const [timerDone, setTimerDone] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const ensuringRef = useRef(false);
+  const contractsPendingRef = useRef(false);
 
   // Карта/СБП для approved и partner_card
   const [cardInput, setCardInput] = useState("");
@@ -239,6 +243,21 @@ export default function DashboardPage() {
         setIsRepeatClient(!!data.isRepeatClient);
         const app = data.application || null;
         setApplication(app);
+        contractsPendingRef.current = (!!app && (app.status === "approved" || app.status === "partner_card") && !app.contractUrl) || (!!app?.virtualCard && !app.virtualCard.contractUrl);
+        const needLoanContract = !!app && (app.status === "approved" || app.status === "partner_card") && !app.contractUrl;
+        const needCardContract = !!app?.virtualCard && !app.virtualCard.contractUrl;
+        if ((needLoanContract || needCardContract) && !ensuringRef.current) {
+          ensuringRef.current = true;
+          fetch(CONTRACT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}` },
+            body: JSON.stringify({ ensure: true }),
+          })
+            .then(r => r.ok ? r.json() : null)
+            .then(d => { if (d?.created?.loan || d?.created?.card) loadData(token, false); })
+            .catch(() => {})
+            .finally(() => { ensuringRef.current = false; });
+        }
         setCardRequest(data.cardRequest || null);
         if (app?.cardNumber) {
           setCardInput(app.cardNumber);
@@ -272,7 +291,11 @@ export default function DashboardPage() {
       const t = localStorage.getItem("token");
       if (t) loadData(t, false);
     }, 60000);
-    return () => clearInterval(interval);
+    const fast = setInterval(() => {
+      const t = localStorage.getItem("token");
+      if (t && contractsPendingRef.current) loadData(t, false);
+    }, 4000);
+    return () => { clearInterval(interval); clearInterval(fast); };
   }, [navigate]);
 
   // Таймер для авто-займа (pending)
