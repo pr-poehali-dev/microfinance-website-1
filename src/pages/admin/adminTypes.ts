@@ -21,6 +21,7 @@ export interface App {
   isCardRequest?: boolean;
   promoCode?: string;
   promoDiscount?: number;
+  profileUpdatedAt?: string | null;
   videoCallRequested: boolean;
   virtualCardDays: number | null;
   blockedUntil: string | null;

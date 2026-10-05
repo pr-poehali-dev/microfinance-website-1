@@ -305,6 +305,7 @@ def handler(event: dict, context) -> dict:
         if not latest:
             conn.rollback(); cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Анкета не найдена"}, ensure_ascii=False)}
+        sets.append("profile_updated_at = NOW()")
         cur.execute(f"UPDATE {SCHEMA}.applications SET {', '.join(sets)} WHERE id = {int(latest[0])}")
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
@@ -639,7 +640,7 @@ def handler(event: dict, context) -> dict:
         cur.execute(f"""
             SELECT birth_date, birth_place, passport_series, passport_number, passport_date, passport_code, passport_by,
                    telegram_id, snils, workplace, position, work_phone, salary, contact_person, card_number_transfer,
-                   file_passport, file_registration, file_selfie, file_previous_passports, email
+                   file_passport, file_registration, file_selfie, file_previous_passports, email, profile_updated_at
             FROM {SCHEMA}.applications WHERE phone = '{ph_e}' ORDER BY created_at DESC LIMIT 1
         """)
         prev = cur.fetchone()
@@ -652,13 +653,14 @@ def handler(event: dict, context) -> dict:
         if prev:
             (birth_date, birth_place, passport_series, passport_number, passport_date, passport_code, passport_by,
              telegram_id, snils, workplace, position, work_phone, salary, contact_person, card_number_transfer,
-             file_passport, file_registration, file_selfie, file_previous_passports, prev_email) = prev
+             file_passport, file_registration, file_selfie, file_previous_passports, prev_email, prev_profile_updated) = prev
         else:
             birth_date = birth_place = passport_series = passport_number = passport_date = passport_code = passport_by = None
             telegram_id = snils = workplace = position = work_phone = contact_person = card_number_transfer = None
             file_passport = file_registration = file_selfie = file_previous_passports = None
             salary = None
             prev_email = None
+            prev_profile_updated = None
 
         salary_val = str(float(salary)) if salary is not None else "NULL"
         email_val = v(email or prev_email)
@@ -670,13 +672,13 @@ def handler(event: dict, context) -> dict:
                  passport_series, passport_number, passport_date, passport_code, passport_by,
                  telegram_id, status, file_passport, file_registration, file_selfie, file_previous_passports,
                  snils, workplace, position, work_phone, salary, contact_person, card_number_transfer,
-                 promo_code, promo_discount)
+                 promo_code, promo_discount, profile_updated_at)
             VALUES (
                 '{fn_e}', '{ph_e}', {email_val}, {amount}, {days},
                 {v(birth_date)}, {v(birth_place)}, {v(passport_series)}, {v(passport_number)}, {v(passport_date)}, {v(passport_code)}, {v(passport_by)},
                 {v(telegram_id)}, 'pending', {v(file_passport)}, {v(file_registration)}, {v(file_selfie)}, {v(file_previous_passports)},
                 {v(snils)}, {v(workplace)}, {v(position)}, {v(work_phone)}, {salary_val}, {v(contact_person)}, {v(card_number_transfer)},
-                {promo_sql}, {promo_disc_v}
+                {promo_sql}, {promo_disc_v}, {v(prev_profile_updated)}
             ) RETURNING id
         """)
         new_app_id = cur.fetchone()[0]
@@ -693,6 +695,7 @@ def handler(event: dict, context) -> dict:
                 f"📞 <b>Телефон:</b> {phone}\n"
                 f"💰 <b>Сумма:</b> {int(amount):,} ₽\n".replace(",", " ") +
                 f"📅 <b>Срок:</b> {days} дн.\n" +
+                ("✏️ <b>Клиент обновил анкету</b>\n" if prev_profile_updated else "") +
                 (f"🎟 <b>Промокод:</b> {promo_code_v} (−{promo_disc_v}% на проценты)\n" if promo_code_v else "") +
                 f"\nКлиент уже брал займ ранее — заявка подана через личный кабинет."
             )
