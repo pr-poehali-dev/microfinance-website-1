@@ -40,6 +40,7 @@ interface VirtualCard {
   cvv: string;
   holder: string;
   limit: number;
+  contractUrl?: string;
   available: number;
   rate: number;
   status: string;
@@ -767,6 +768,18 @@ export default function DashboardApplicationStatus({
                     </div>
                   ))}
                 </div>
+                {application.virtualCard.contractUrl ? (
+                  <a href={application.virtualCard.contractUrl} target="_blank" rel="noopener noreferrer"
+                    className="w-full flex items-center justify-center gap-3 py-3 rounded-xl font-bold text-white transition-all hover:opacity-90"
+                    style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)", textDecoration: "none" }}>
+                    <Icon name="FileDown" size={18} />Договор займа по карте
+                  </a>
+                ) : (
+                  <div className="rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)" }}>
+                    <Icon name="Loader2" size={16} className="text-emerald-600 animate-spin shrink-0" />
+                    <div className="text-emerald-950/50 text-sm">Договор формируется, появится в течение минуты...</div>
+                  </div>
+                )}
                 <div className="text-emerald-950/50 text-xs leading-relaxed">
                   Платежи по карте — раз в неделю, минимальный платёж 30% от общего долга. Нажимая кнопку ниже, вы подписываете кредитный договор на этих условиях.
                 </div>
@@ -848,6 +861,18 @@ export default function DashboardApplicationStatus({
                   ))}
                 </div>
 
+                {application.virtualCard.contractUrl ? (
+                  <a href={application.virtualCard.contractUrl} target="_blank" rel="noopener noreferrer"
+                    className="w-full flex items-center justify-center gap-3 py-3 rounded-xl font-bold text-white transition-all hover:opacity-90"
+                    style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)", textDecoration: "none" }}>
+                    <Icon name="FileDown" size={18} />Договор займа по карте
+                  </a>
+                ) : (
+                  <div className="rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)" }}>
+                    <Icon name="Loader2" size={16} className="text-emerald-600 animate-spin shrink-0" />
+                    <div className="text-emerald-950/50 text-sm">Договор формируется, появится в течение минуты...</div>
+                  </div>
+                )}
                 {/* Форма перевода средств в рамках доступного лимита */}
                 <CardWithdrawForm available={application.virtualCard.available} defaultCard={application.cardNumber} onSuccess={onRefresh} />
 

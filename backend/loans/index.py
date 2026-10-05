@@ -807,6 +807,11 @@ def handler(event: dict, context) -> dict:
             merged[36], merged[39] = card_src[8], card_src[9]
             app_row = tuple(merged)
             card_app_id = card_src[0]
+    card_contract_url = ""
+    if card_app_id:
+        cur.execute(f"SELECT card_contract_url FROM {SCHEMA}.applications WHERE id = {int(card_app_id)}")
+        _cc = cur.fetchone()
+        card_contract_url = _cc[0] if _cc and _cc[0] else ""
     application = None
     app_promo_discount = 0
     app_promo_code = ""
@@ -934,6 +939,7 @@ def handler(event: dict, context) -> dict:
                 "cvv": app_row[13] or "",
                 "holder": app_row[14] or "",
                 "limit": vc_limit_val,
+                "contractUrl": card_contract_url,
                 "available": vc_available,
                 "rate": float(app_row[16]) if app_row[16] else 0,
                 "status": app_row[17] or "none",

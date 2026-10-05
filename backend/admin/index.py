@@ -1775,6 +1775,17 @@ def handler(event: dict, context) -> dict:
             f"🔖 <b>Заявка №:</b> {app_id}"
         )
         cur.close(); conn.close()
+        try:
+            import urllib.request as _ur
+            _req = _ur.Request(
+                "https://functions.poehali.dev/9cdc3bea-1348-49df-a7a3-4aeef6088ff3",
+                data=json.dumps({"cardAppId": int(app_id)}).encode(),
+                headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"},
+                method="POST",
+            )
+            _ur.urlopen(_req, timeout=15)
+        except Exception as ex:
+            print(f"[admin] card contract error (non-blocking): {ex}")
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     # --- ПОДТВЕРДИТЬ/АКТИВИРОВАТЬ КАРТУ (POST, sub='activate_card', appId=...) ---

@@ -12,7 +12,7 @@ export default function AdminContractsRepair({ token }: Props) {
   const [failed, setFailed] = useState(0);
   const [done, setDone] = useState(false);
 
-  async function run(refresh: boolean) {
+  async function run(refresh: boolean, card = false) {
     setRunning(true); setDone(false); setCreated(0); setFailed(0);
     let guard = 0;
     let totalCreated = 0;
@@ -21,7 +21,7 @@ export default function AdminContractsRepair({ token }: Props) {
       const r = await fetch(CONTRACT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ backfill: true, refresh }),
+        body: JSON.stringify(card ? { cardBackfill: true } : { backfill: true, refresh }),
       }).catch(() => null);
       if (!r || !r.ok) break;
       const d = await r.json();
@@ -43,6 +43,10 @@ export default function AdminContractsRepair({ token }: Props) {
           {!running && !done && "Нажмите, чтобы пересоздать договоры у клиентов, которые ждут подписания."}
         </div>
       </div>
+      <button onClick={() => run(false, true)} disabled={running}
+        style={{ background: "rgba(16,185,129,0.15)", color: "#047857", border: "1px solid rgba(16,185,129,0.5)", borderRadius: 10, padding: "10px 18px", cursor: running ? "default" : "pointer", fontWeight: 700, fontSize: 14, opacity: running ? 0.7 : 1 }}>
+        Договоры по картам
+      </button>
       <button onClick={() => run(true)} disabled={running}
         style={{ background: "rgba(245,158,11,0.15)", color: "#92400e", border: "1px solid rgba(245,158,11,0.5)", borderRadius: 10, padding: "10px 18px", cursor: running ? "default" : "pointer", fontWeight: 700, fontSize: 14, opacity: running ? 0.7 : 1 }}>
         Обновить реквизиты

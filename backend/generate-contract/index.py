@@ -23,6 +23,8 @@ CORS = {
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Authorization",
 }
 
+CARD_MIN_PAYMENT_PERCENT = 30
+
 MKK = {
     "name": "Русфинанс 24",
     "address": "г. Москва, Проспект Мира д.112",
@@ -48,6 +50,30 @@ def s3_client():
         aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
         aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
     )
+
+
+CONTRACT_CSS = """
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: #000; background: #fff; padding: 20mm 20mm 20mm 25mm; }
+    h1 { font-size: 16pt; text-align: center; font-weight: bold; margin-bottom: 6pt; text-transform: uppercase; }
+    h2 { font-size: 13pt; text-align: center; font-weight: bold; margin-bottom: 16pt; }
+    h3 { font-size: 12pt; font-weight: bold; margin: 14pt 0 6pt; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 3pt; }
+    p { margin-bottom: 6pt; line-height: 1.5; text-align: justify; }
+    .center { text-align: center; }
+    .right { text-align: right; }
+    table.params { width: 100%; border-collapse: collapse; margin: 10pt 0; }
+    table.params td { padding: 5pt 8pt; border: 1pt solid #000; font-size: 11pt; }
+    table.params td.label { width: 55%; background: #f5f5f5; font-weight: bold; }
+    table.params td.value { width: 45%; }
+    table.sign { width: 100%; border-collapse: collapse; margin-top: 20pt; }
+    table.sign td { padding: 4pt 8pt; vertical-align: top; width: 50%; }
+    .highlight { background: #fffde7; border: 1pt solid #f9a825; padding: 6pt 10pt; margin: 8pt 0; }
+    .underline { text-decoration: underline; }
+    .bold { font-weight: bold; }
+    hr { border: none; border-top: 1pt solid #000; margin: 12pt 0; }
+    .sign-line { border-bottom: 1pt solid #000; display: inline-block; width: 160pt; }
+    .num { font-size: 11pt; color: #555; margin-bottom: 12pt; }
+    """
 
 
 def _plural(n: int, one: str, few: str, many: str) -> str:
@@ -141,28 +167,7 @@ def generate_contract_html(app_data: dict, loan_num: int) -> str:
     if passport_code:
         passport_str += f", код {passport_code}"
 
-    css = """
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: #000; background: #fff; padding: 20mm 20mm 20mm 25mm; }
-    h1 { font-size: 16pt; text-align: center; font-weight: bold; margin-bottom: 6pt; text-transform: uppercase; }
-    h2 { font-size: 13pt; text-align: center; font-weight: bold; margin-bottom: 16pt; }
-    h3 { font-size: 12pt; font-weight: bold; margin: 14pt 0 6pt; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 3pt; }
-    p { margin-bottom: 6pt; line-height: 1.5; text-align: justify; }
-    .center { text-align: center; }
-    .right { text-align: right; }
-    table.params { width: 100%; border-collapse: collapse; margin: 10pt 0; }
-    table.params td { padding: 5pt 8pt; border: 1pt solid #000; font-size: 11pt; }
-    table.params td.label { width: 55%; background: #f5f5f5; font-weight: bold; }
-    table.params td.value { width: 45%; }
-    table.sign { width: 100%; border-collapse: collapse; margin-top: 20pt; }
-    table.sign td { padding: 4pt 8pt; vertical-align: top; width: 50%; }
-    .highlight { background: #fffde7; border: 1pt solid #f9a825; padding: 6pt 10pt; margin: 8pt 0; }
-    .underline { text-decoration: underline; }
-    .bold { font-weight: bold; }
-    hr { border: none; border-top: 1pt solid #000; margin: 12pt 0; }
-    .sign-line { border-bottom: 1pt solid #000; display: inline-block; width: 160pt; }
-    .num { font-size: 11pt; color: #555; margin-bottom: 12pt; }
-    """
+    css = CONTRACT_CSS
 
     html = f"""<!DOCTYPE html>
 <html lang="ru">
@@ -393,6 +398,186 @@ def backfill_contracts(cur, conn, refresh: bool = False) -> dict:
     }
 
 
+def generate_card_contract_html(d: dict, num: int) -> str:
+    full_name = d.get("full_name", "")
+    phone = d.get("phone", "")
+    email = d.get("email", "")
+    birth_date = d.get("birth_date", "")
+    birth_place = d.get("birth_place", "")
+    passport_str = f"{d.get('passport_series', '')} {d.get('passport_number', '')}"
+    if d.get("passport_date"):
+        passport_str += f", выдан {d['passport_date']}"
+    if d.get("passport_by"):
+        passport_str += f" {d['passport_by']}"
+    if d.get("passport_code"):
+        passport_str += f", код {d['passport_code']}"
+    limit = float(d.get("limit", 0))
+    rate_w = float(d.get("rate", 24) or 24)
+    days = int(d.get("days", 0) or 0)
+    card_last4 = str(d.get("card_number", ""))[-4:]
+    issued = d.get("issued_at") or datetime.now()
+    date_str = msk(issued).strftime("%d.%m.%Y")
+    contract_num = f"К-{str(num).zfill(10)}/{msk(issued).strftime('%Y')}"
+    limit_words = num_to_words(int(limit))
+    term_row = f'<tr><td class="label">Срок действия лимита</td><td class="value"><span class="bold">{days} календарных дней</span></td></tr>' if days else ""
+
+    html = f"""<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Договор займа по карте №{contract_num}</title>
+<style>{CONTRACT_CSS}</style>
+</head>
+<body>
+
+<h1>Договор потребительского займа</h1>
+<h2>(кредитный лимит по карте РУСФИНАНС 24) № {contract_num}</h2>
+<p class="center num">г. Москва &nbsp;&nbsp;&nbsp; {date_str}</p>
+
+<p><span class="bold">{MKK["name"]}</span>, именуемое в дальнейшем <span class="bold">«Займодавец»</span>, в лице директора {MKK["director"]}, действующего на основании Устава, с одной стороны, и</p>
+
+<p><span class="bold">{full_name}</span>, дата рождения: {birth_date or "—"}, место рождения: {birth_place or "—"}, паспорт: {passport_str}, именуемый(-ая) в дальнейшем <span class="bold">«Заёмщик»</span>, с другой стороны, заключили настоящий Договор о нижеследующем:</p>
+
+<h3>1. Индивидуальные условия</h3>
+
+<table class="params">
+  <tr><td class="label">Карта</td><td class="value">Виртуальная карта РУСФИНАНС 24 •••• {card_last4}</td></tr>
+  <tr><td class="label">Лимит займа по карте</td><td class="value"><span class="bold">{int(limit):,} ₽</span> ({limit_words} рублей 00 копеек)</td></tr>
+  <tr><td class="label">Процентная ставка</td><td class="value"><span class="bold">{rate_w:g}% в неделю</span></td></tr>
+  {term_row}
+  <tr><td class="label">Порядок погашения</td><td class="value">Еженедельные платежи, минимальный платёж — {CARD_MIN_PAYMENT_PERCENT}% от общей суммы задолженности</td></tr>
+  <tr><td class="label">Способ получения средств</td><td class="value">Перевод из доступного лимита на банковскую карту / СБП Заёмщика</td></tr>
+  <tr><td class="label">Контактный телефон Заёмщика</td><td class="value">{phone}</td></tr>
+  {f'<tr><td class="label">Email Заёмщика</td><td class="value">{email}</td></tr>' if email else ''}
+</table>
+
+<h3>2. Предмет договора</h3>
+
+<p>2.1. Займодавец открывает Заёмщику возобновляемый лимит займа по карте в размере, указанном в п. 1, а Заёмщик обязуется возвращать полученные суммы и уплачивать проценты в порядке, установленном настоящим Договором.</p>
+
+<p>2.2. Заёмщик самостоятельно в личном кабинете определяет сумму и срок каждого перевода в пределах доступного остатка лимита. Доступный остаток увеличивается на сумму возвращённой задолженности.</p>
+
+<p>2.3. Заём предоставляется на потребительские нужды, не связанные с предпринимательской деятельностью.</p>
+
+<h3>3. Проценты и погашение</h3>
+
+<p>3.1. За пользование суммами займа Заёмщик уплачивает проценты по ставке <span class="bold">{rate_w:g}% в неделю</span> от суммы использованного лимита.</p>
+
+<p>3.2. Погашение производится еженедельно по графику, отображаемому в личном кабинете. Минимальный платёж составляет {CARD_MIN_PAYMENT_PERCENT}% от общей суммы задолженности; Заёмщик вправе погасить задолженность полностью в любой момент.</p>
+
+<p>3.3. Платёж может быть внесён по реквизитам Займодавца, указанным в разделе 6. В комментарии к платежу необходимо указывать номер настоящего договора.</p>
+
+<h3>4. Права и обязанности сторон</h3>
+
+<p>4.1. Заёмщик обязуется своевременно вносить платежи, сообщать об изменении контактных данных и не передавать данные карты третьим лицам.</p>
+
+<p>4.2. Займодавец вправе заблокировать карту и потребовать досрочного возврата задолженности при нарушении Заёмщиком условий настоящего Договора, а также передать право требования третьим лицам в порядке, предусмотренном законодательством РФ.</p>
+
+<p>4.3. Заёмщик несёт ответственность за достоверность предоставленных данных. При просрочке платежей Займодавец вправе начислять неустойку в соответствии с действующим законодательством и Общими условиями.</p>
+
+<h3>5. Заключительные положения</h3>
+
+<p>5.1. Подписывая настоящий Договор, Заёмщик даёт согласие на обработку персональных данных в целях исполнения договора и на передачу информации в бюро кредитных историй.</p>
+
+<p>5.2. Договор вступает в силу с момента его подписания Заёмщиком простой электронной подписью в личном кабинете и действует до полного исполнения обязательств.</p>
+
+<p>5.3. Споры разрешаются путём переговоров, а при недостижении согласия — в судебном порядке по месту нахождения Займодавца. Во всём остальном Стороны руководствуются Федеральным законом от 21.12.2013 № 353-ФЗ «О потребительском кредите (займе)».</p>
+
+<h3>6. Реквизиты и подписи сторон</h3>
+
+<table class="sign">
+  <tr>
+    <td>
+      <p class="bold">ЗАЙМОДАВЕЦ:</p>
+      <p>{MKK["name"]}</p>
+      <p>Адрес: {MKK["address"]}</p>
+      <p>Банк: {MKK["bank"]}</p>
+      <p>р/с: {MKK["rs"]}</p>
+      <p>к/с: {MKK["ks"]}</p>
+      <p>БИК: {MKK["bik"]}</p>
+      <p style="font-size:10pt;">(Если у вас оплата по реквизитам, обязательно указывайте в комментарии свой номер договора)</p>
+      <p>Тел.: {MKK["phone"]}</p>
+      <br>
+      <p>Директор:</p>
+      <p>{MKK["director"]}</p>
+      <p><span class="sign-line"></span></p>
+      <p style="margin-top:8pt;">М.П.</p>
+    </td>
+    <td>
+      <p class="bold">ЗАЁМЩИК:</p>
+      <p>{full_name}</p>
+      <p>Дата рождения: {birth_date or "—"}</p>
+      <p>Паспорт: {passport_str}</p>
+      <p>Тел.: {phone}</p>
+      {f'<p>Email: {email}</p>' if email else ''}
+      <br>
+      <p>Подпись: <span class="sign-line"></span></p>
+      <p style="margin-top:4pt;font-size:10pt;">({full_name})</p>
+      <br>
+      <p>Дата: {date_str}</p>
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>"""
+    return html
+
+
+def build_card_contract(cur, app_id: str) -> str:
+    app_id_e = str(app_id).replace("'", "''")
+    cur.execute(f"""
+        SELECT full_name, phone, email, birth_date, birth_place,
+               passport_series, passport_number, passport_date, passport_code, passport_by,
+               virtual_card_limit, virtual_card_rate, virtual_card_days, virtual_card_number, virtual_card_issued_at, id
+        FROM {SCHEMA}.applications WHERE id = '{app_id_e}'
+    """)
+    r = cur.fetchone()
+    d = {
+        "full_name": r[0] or "", "phone": r[1] or "", "email": r[2] or "",
+        "birth_date": str(r[3]) if r[3] else "", "birth_place": r[4] or "",
+        "passport_series": r[5] or "", "passport_number": r[6] or "",
+        "passport_date": str(r[7]) if r[7] else "", "passport_code": r[8] or "", "passport_by": r[9] or "",
+        "limit": float(r[10] or 0), "rate": float(r[11] or 24), "days": r[12] or 0,
+        "card_number": r[13] or "", "issued_at": r[14],
+    }
+    html = generate_card_contract_html(d, int(r[15]))
+    now_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    ext_key, body_bytes, ctype = store_contract_file(html, f"card_{app_id}", now_ts)
+    s3_client().put_object(Bucket="files", Key=ext_key, Body=body_bytes, ContentType=ctype)
+    url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{ext_key}"
+    cur.execute(f"UPDATE {SCHEMA}.applications SET card_contract_url='{url.replace(chr(39), chr(39)*2)}' WHERE id='{app_id_e}'")
+    return url
+
+
+CARD_BACKFILL_WHERE = """
+    a.virtual_card_number IS NOT NULL AND a.virtual_card_status IN ('pending','active','blocked')
+    AND (a.card_contract_url IS NULL OR a.card_contract_url = '')
+"""
+
+
+def backfill_card_contracts(cur, conn) -> dict:
+    cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.applications a WHERE {CARD_BACKFILL_WHERE}")
+    total_before = cur.fetchone()[0]
+    cur.execute(f"SELECT a.id FROM {SCHEMA}.applications a WHERE {CARD_BACKFILL_WHERE} ORDER BY a.id DESC LIMIT 3")
+    done, failed = 0, 0
+    for (app_id,) in cur.fetchall():
+        try:
+            build_card_contract(cur, str(app_id))
+            conn.commit()
+            done += 1
+        except Exception as ex:
+            conn.rollback()
+            failed += 1
+            print(f"[card-backfill] app_id={app_id} error: {ex}")
+    cur.close(); conn.close()
+    return {
+        "statusCode": 200, "headers": CORS,
+        "body": json.dumps({"ok": True, "created": done, "failed": failed,
+                            "remaining": max(0, total_before - done)}, ensure_ascii=False),
+    }
+
+
 def handler(event: dict, context) -> dict:
     """Генерация PDF договора займа и сохранение в S3. Вызывается из admin при одобрении заявки."""
     if event.get("httpMethod") == "OPTIONS":
@@ -415,6 +600,14 @@ def handler(event: dict, context) -> dict:
 
     raw = event.get("body") or "{}"
     body = json.loads(raw) if isinstance(raw, str) else raw
+
+    if body.get("cardBackfill"):
+        return backfill_card_contracts(cur, conn)
+
+    if body.get("cardAppId"):
+        url = build_card_contract(cur, str(body["cardAppId"]))
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "contractUrl": url}, ensure_ascii=False)}
 
     if body.get("backfill"):
         return backfill_contracts(cur, conn, bool(body.get("refresh")))
