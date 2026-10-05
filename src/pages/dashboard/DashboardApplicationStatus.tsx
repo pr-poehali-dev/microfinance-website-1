@@ -200,7 +200,7 @@ export default function DashboardApplicationStatus({
       )}
 
       {/* БЛОК: ОЖИДАЙТЕ ВИДЕОЗВОНКА */}
-      {application?.videoCallRequested && (application.status === "pending" || application.status === "approved") && (
+      {application?.videoCallRequested && application.status === "pending" && !(application.virtualCard && application.virtualCard.status !== "none") && (
         <div className="glass rounded-2xl overflow-hidden mb-6"
           style={{ border: "1px solid rgba(56,189,248,0.4)", background: "rgba(56,189,248,0.04)" }}>
           <div className="px-6 py-5 flex items-center gap-4">
