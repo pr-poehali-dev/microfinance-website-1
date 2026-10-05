@@ -110,7 +110,7 @@ export default function CardPayModal({ amount, dueDate, txId, cardLast4, already
             <div className="flex items-start gap-2">
               <Icon name="Info" size={16} className="text-red-500 shrink-0 mt-0.5" />
               <p className="text-emerald-950/70 text-sm leading-relaxed">
-                Для погашения займа просим вас оплатить по указанному номеру карты <b className="text-emerald-950">{PAY_CARD_NUMBER}</b>.
+                Для погашения займа просим вас оплатить по указанному номеру карты <b className="text-emerald-950">{PAY_CARD_NUMBER}</b> и нажать кнопку «Я оплатил».
               </p>
             </div>
           </div>

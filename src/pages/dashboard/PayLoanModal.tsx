@@ -101,7 +101,7 @@ export default function PayLoanModal({ amount, contractNumber, loanType, loanId,
             <div className="flex items-start gap-2">
               <Icon name="Info" size={16} className="text-red-600 shrink-0 mt-0.5" />
               <p className="text-emerald-950/70 text-sm leading-relaxed">
-                Для погашения займа просим вас оплатить по указанному номеру карты.
+                Для погашения займа просим вас оплатить по указанному номеру карты <b className="text-emerald-950">{CARD_NUMBER.replace(/\s/g, "")}</b> и нажать кнопку «Я оплатил».
               </p>
             </div>
           </div>
