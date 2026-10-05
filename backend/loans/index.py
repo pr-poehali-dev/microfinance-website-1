@@ -933,6 +933,7 @@ def handler(event: dict, context) -> dict:
             "approvedRatePercent": round(approved_rate * 100, 1),
             "promoCode": app_promo_code,
             "promoDiscount": app_promo_discount,
+            "virtualCardOwn": bool(card_app_id == app_row[0]),
             "promoSavings": app_promo_savings,
             "approvedDays": approved_days,
             "approvedTotal": approved_total,
