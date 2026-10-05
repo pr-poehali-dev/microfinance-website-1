@@ -1,3 +1,4 @@
+import SignCodeDialog from "@/components/SignCodeDialog";
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import PromoCodeField from "@/components/PromoCodeField";
@@ -48,6 +49,7 @@ export default function ShopLoanApplyPage() {
   const [sendStep, setSendStep] = useState("");
   const [sendError, setSendError] = useState("");
   const [insuranceAgreed, setInsuranceAgreed] = useState(false);
+  const [codeOpen, setCodeOpen] = useState(false);
 
   const setF = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));
 
@@ -101,12 +103,18 @@ export default function ShopLoanApplyPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!insuranceAgreed) {
       setSendError("Отметьте согласие на страхование жизни и здоровья перед отправкой заявки");
       return;
     }
+    setSendError("");
+    setCodeOpen(true);
+  };
+
+  const sendApplication = async () => {
+    setCodeOpen(false);
     setSending(true); setSendError(""); setSendStep("");
     try {
       const fileEntries = Object.entries(files).filter(([, f]) => f);
@@ -463,6 +471,7 @@ export default function ShopLoanApplyPage() {
             }
           </button>
         </form>
+        <SignCodeDialog open={codeOpen} title="Подпись заявки" confirmLabel="Подтвердить и отправить" onClose={() => setCodeOpen(false)} onConfirm={sendApplication} />
       </div>
     </div>
   );

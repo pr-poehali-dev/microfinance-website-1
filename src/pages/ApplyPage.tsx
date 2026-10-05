@@ -1,3 +1,4 @@
+import SignCodeDialog from "@/components/SignCodeDialog";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import PromoCodeField from "@/components/PromoCodeField";
@@ -54,6 +55,7 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
   const [submitted, setSubmitted] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [sameAddress, setSameAddress] = useState(false);
+  const [codeOpen, setCodeOpen] = useState(false);
   const [timerSec, setTimerSec] = useState(15 * 60);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -104,13 +106,19 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
     return (await res.json()).url as string;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const allRequiredChecked = REQUIRED_CONSENT_KEYS.every((k) => consents[k]);
     if (!allRequiredChecked) {
       setSendError("Отметьте все обязательные согласия перед отправкой заявки");
       return;
     }
+    setSendError("");
+    setCodeOpen(true);
+  };
+
+  const sendApplication = async () => {
+    setCodeOpen(false);
     setSending(true); setSendError(""); setSendStep("");
     try {
       const fileEntries = Object.entries(files).filter(([, f]) => f);
@@ -599,6 +607,7 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
 
           </div>
         </form>
+        <SignCodeDialog open={codeOpen} title="Подпись заявки" confirmLabel="Подтвердить и отправить" onClose={() => setCodeOpen(false)} onConfirm={sendApplication} />
 
         {/* Прогресс */}
         <div className="mt-6 flex justify-center gap-2">

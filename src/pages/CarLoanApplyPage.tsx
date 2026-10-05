@@ -1,3 +1,4 @@
+import SignCodeDialog from "@/components/SignCodeDialog";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PromoCodeField from "@/components/PromoCodeField";
@@ -38,6 +39,7 @@ export default function CarLoanApplyPage() {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
   const [insuranceAgreed, setInsuranceAgreed] = useState(false);
+  const [codeOpen, setCodeOpen] = useState(false);
 
   const setF = (key: string, val: string) => setForm(p => ({ ...p, [key]: val }));
 
@@ -48,12 +50,18 @@ export default function CarLoanApplyPage() {
   const amountBg = `linear-gradient(to right, #f59e0b ${((loanAmount - AMOUNT_MIN) / (AMOUNT_MAX - AMOUNT_MIN)) * 100}%, rgba(245,158,11,0.2) ${((loanAmount - AMOUNT_MIN) / (AMOUNT_MAX - AMOUNT_MIN)) * 100}%)`;
   const monthsBg = `linear-gradient(to right, #ef4444 ${((loanMonths - MONTHS_MIN) / (MONTHS_MAX - MONTHS_MIN)) * 100}%, rgba(239,68,68,0.2) ${((loanMonths - MONTHS_MIN) / (MONTHS_MAX - MONTHS_MIN)) * 100}%)`;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!insuranceAgreed) {
       setSendError("Отметьте согласие на страхование жизни и здоровья перед отправкой заявки");
       return;
     }
+    setSendError("");
+    setCodeOpen(true);
+  };
+
+  const sendApplication = async () => {
+    setCodeOpen(false);
     setSending(true);
     setSendError("");
     try {
@@ -416,6 +424,7 @@ export default function CarLoanApplyPage() {
             )}
           </button>
         </form>
+        <SignCodeDialog open={codeOpen} title="Подпись заявки" confirmLabel="Подтвердить и отправить" onClose={() => setCodeOpen(false)} onConfirm={sendApplication} />
       </div>
     </div>
   );

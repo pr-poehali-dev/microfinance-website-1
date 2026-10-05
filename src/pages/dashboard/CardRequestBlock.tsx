@@ -1,3 +1,4 @@
+import SignCodeDialog from "@/components/SignCodeDialog";
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 
@@ -13,8 +14,12 @@ export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectR
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [justSent, setJustSent] = useState(false);
+  const [codeOpen, setCodeOpen] = useState(false);
 
-  async function submit() {
+  function submit() { setCodeOpen(true); }
+
+  async function doSubmit() {
+    setCodeOpen(false);
     const token = localStorage.getItem("token");
     if (!token) return;
     setSending(true); setError("");
@@ -80,6 +85,7 @@ export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectR
           </div>
         </div>
       )}
+      <SignCodeDialog open={codeOpen} title="Подпись заявки на карту" confirmLabel="Подтвердить и отправить" onClose={() => setCodeOpen(false)} onConfirm={doSubmit} />
     </div>
   );
 }

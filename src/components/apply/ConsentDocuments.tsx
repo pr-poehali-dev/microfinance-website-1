@@ -172,14 +172,6 @@ export default function ConsentDocuments({ consents, onChange }: Props) {
         </label>
       ))}
 
-      <div className="rounded-xl px-4 py-3 mt-3" style={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.15)" }}>
-        <div className="text-emerald-950 font-bold text-sm mb-1">ЗАЙМОДАВЕЦ</div>
-        {LENDER_LINES.map((l) => (
-          <div key={l} className="text-emerald-950/70 text-sm leading-snug">{l}</div>
-        ))}
-        <div className="text-emerald-950/50 text-xs mt-2">({LENDER_NOTE})</div>
-      </div>
-
       {openDoc && (
         <div
           style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}

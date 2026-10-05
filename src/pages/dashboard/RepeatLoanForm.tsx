@@ -1,3 +1,4 @@
+import SignCodeDialog from "@/components/SignCodeDialog";
 import { useMemo, useState } from "react";
 import Icon from "@/components/ui/icon";
 import ProfileEditForm from "./ProfileEditForm";
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function RepeatLoanForm({ promo, profile, profileEditable = false, onProfileSaved, fullName, phone, onSuccess }: Props) {
+  const [codeOpen, setCodeOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState(20000);
   const [days, setDays] = useState(30);
@@ -32,7 +34,10 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
     return { interest, total, amountBg, daysBg };
   }, [amount, days, promo]);
 
-  async function submit() {
+  function submit() { setCodeOpen(true); }
+
+  async function doSubmit() {
+    setCodeOpen(false);
     const token = localStorage.getItem("token");
     if (!token) return;
     setSending(true);
@@ -202,6 +207,7 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
         </button>
       </div>
       )}
+      <SignCodeDialog open={codeOpen} title="Подпись заявки" confirmLabel="Подтвердить и отправить" onClose={() => setCodeOpen(false)} onConfirm={doSubmit} />
     </div>
   );
 }

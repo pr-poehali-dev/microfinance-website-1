@@ -1,3 +1,4 @@
+import SignCodeDialog from "@/components/SignCodeDialog";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
@@ -330,11 +331,22 @@ export default function DashboardPage() {
     navigate("/login");
   };
 
+  const [signAction, setSignAction] = useState<null | (() => void)>(null);
+  const askCode = (fn: () => void) => setSignAction(() => fn);
+  const handleSign = (loan: Loan) => askCode(() => doSign(loan));
+  const handleActivateCard = () => askCode(() => doActivateCard());
+  const handleShopSign = () => askCode(() => doShopSign());
+  const handleCarSign = () => askCode(() => doCarSign());
+  const handleConfirm = () => {
+    if (!cardInput.trim()) { setCardError("Введите номер карты или телефон СБП для подтверждения займа"); return; }
+    askCode(() => doConfirm());
+  };
+
   const handlePay = (loan: Loan) => {
     setPayLoan(loan);
   };
 
-  const handleSign = async (loan: Loan) => {
+  const doSign = async (loan: Loan) => {
     const token = localStorage.getItem("token");
     if (!token) return;
     setSigningId(loan.id);
@@ -369,7 +381,7 @@ export default function DashboardPage() {
     setCardSaved(true);
   };
 
-  const handleActivateCard = async () => {
+  const doActivateCard = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
     setCardActivating(true);
@@ -394,7 +406,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleShopSign = async () => {
+  const doShopSign = async () => {
     if (!shopLoan) return;
     setShopSigning(true); setShopSignMsg("");
     const r = await fetch(`${SHOP_URL}?sub=sign&id=${shopLoan.id}`, { method: "PUT", headers: { "Content-Type": "application/json" } });
@@ -407,7 +419,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleCarSign = async () => {
+  const doCarSign = async () => {
     if (!carLoan) return;
     setCarSigning(true); setCarSignMsg("");
     const r = await fetch(`${CAR_URL}?sub=sign&id=${carLoan.id}`, { method: "PUT", headers: { "Content-Type": "application/json" } });
@@ -420,8 +432,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleConfirm = async () => {
-    if (!cardInput.trim()) { setCardError("Введите номер карты или телефон СБП для подтверждения займа"); return; }
+  const doConfirm = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
     setConfirming(true);
@@ -985,6 +996,13 @@ export default function DashboardPage() {
           onClose={() => setPayOther(null)}
         />
       )}
+      <SignCodeDialog
+        open={!!signAction}
+        title="Подпись договора"
+        confirmLabel="Подтвердить"
+        onClose={() => setSignAction(null)}
+        onConfirm={() => { const fn = signAction; setSignAction(null); fn?.(); }}
+      />
     </div>
   );
 }
