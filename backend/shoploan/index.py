@@ -96,6 +96,8 @@ def handler(event: dict, context) -> dict:
         email          = s(b.get("email"))
         birth_date     = s(b.get("birthDate"))
         address        = s(b.get("address"))
+        living_address = s(b.get("livingAddress"))
+        work_address   = s(b.get("workAddress"))
         passport_series = s(b.get("passportSeries"))
         passport_number = s(b.get("passportNumber"))
         passport_date  = s(b.get("passportDate"))
@@ -140,13 +142,13 @@ def handler(event: dict, context) -> dict:
             f" passport_date, passport_by, snils, shop_name, item_name, item_price, "
             f" loan_amount, loan_months, contact_person, card_number, "
             f" file_passport, file_registration, file_selfie, file_snils, "
-            f" status, created_at, updated_at, promo_code, promo_discount) "
+            f" status, created_at, updated_at, promo_code, promo_discount, living_address, work_address) "
             f"VALUES ('{full_name}','{phone}','{email}',{bd_val},'{address}',"
             f"'{passport_series}','{passport_number}','{passport_date}','{passport_by}',"
             f"'{snils}','{shop_name}','{item_name}',{item_price},"
             f"{loan_amount},{loan_months},'{contact_person}','{card_number}',"
             f"'{file_passport}','{file_registration}','{file_selfie}','{file_snils}',"
-            f"'pending',NOW(),NOW(),{promo_sql},{promo_disc_v}) RETURNING id"
+            f"'pending',NOW(),NOW(),{promo_sql},{promo_disc_v},'{living_address}','{work_address}') RETURNING id"
         )
         new_id = cur.fetchone()[0]
 
@@ -209,7 +211,8 @@ def handler(event: dict, context) -> dict:
             f"loan_amount, loan_months, contact_person, card_number, "
             f"file_passport, file_registration, file_selfie, file_snils, "
             f"status, reject_reason, approved_amount, approved_months, approved_rate, "
-            f"notes, contract_signed, contract_signed_at, created_at, updated_at, disbursed_at, promo_code, promo_discount "
+            f"notes, contract_signed, contract_signed_at, created_at, updated_at, disbursed_at, promo_code, promo_discount, "
+            f"living_address, work_address "
             f"FROM {SCHEMA}.shopping_loan_applications WHERE {where} ORDER BY created_at DESC"
         )
         cols = [d[0] for d in cur.description]

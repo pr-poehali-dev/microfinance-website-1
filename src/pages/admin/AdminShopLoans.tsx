@@ -12,6 +12,8 @@ interface ShopApp {
   email: string;
   birth_date: string;
   address: string;
+  living_address?: string;
+  work_address?: string;
   passport_series: string;
   passport_number: string;
   passport_date: string;
@@ -199,6 +201,9 @@ export default function AdminShopLoans({ token }: Props) {
                         { l: "Срок",       v: `${app.loan_months} мес.` },
                         { l: "СНИЛС",      v: app.snils || "—" },
                         { l: "Паспорт",    v: `${app.passport_series} ${app.passport_number}` },
+                        { l: "Адрес регистрации", v: app.address || "—" },
+                        { l: "Адрес проживания", v: app.living_address || "—" },
+                        { l: "Адрес организации", v: app.work_address || "—" },
                         { l: "Карта/СБП",  v: app.card_number || "—" },
                       ].map(({ l, v }) => (
                         <div key={l}><div style={LBL}>{l}</div><div style={{ color: "rgba(2,44,34,0.85)", fontSize: 13 }}>{v}</div></div>

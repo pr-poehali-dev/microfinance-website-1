@@ -12,6 +12,8 @@ interface CarApp {
   email: string;
   birth_date: string;
   address: string;
+  living_address?: string;
+  work_address?: string;
   passport_serial: string;
   passport_num: string;
   passport_issued: string;
@@ -191,6 +193,9 @@ export default function AdminCarLoans({ token }: Props) {
                         { l: "Запрошено", v: fmt(app.loan_amount) },
                         { l: "Срок", v: `${app.loan_months} мес.` },
                         { l: "Паспорт", v: `${app.passport_serial} ${app.passport_num}` },
+                        { l: "Адрес регистрации", v: app.address || "—" },
+                        { l: "Адрес проживания", v: app.living_address || "—" },
+                        { l: "Адрес организации", v: app.work_address || "—" },
                         { l: "Карта/СБП", v: app.card_number || "—" },
                         { l: "Контакт", v: app.contact_person || "—" },
                       ].map(({ l, v }) => (

@@ -18,9 +18,12 @@ const FIELDS: { key: Key; label: string; type?: string }[] = [
   { key: "passportCode", label: "Код подразделения" },
   { key: "passportBy", label: "Кем выдан" },
   { key: "snils", label: "СНИЛС" },
+  { key: "regAddress", label: "Адрес регистрации" },
+  { key: "livingAddress", label: "Адрес проживания" },
   { key: "workplace", label: "Место работы" },
   { key: "position", label: "Должность" },
   { key: "workPhone", label: "Рабочий телефон" },
+  { key: "workAddress", label: "Адрес организации" },
   { key: "salary", label: "Зарплата, ₽" },
   { key: "contactPerson", label: "Контактное лицо" },
 ];

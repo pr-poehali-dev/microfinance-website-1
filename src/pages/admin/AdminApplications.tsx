@@ -401,6 +401,9 @@ export default function AdminApplications({
                   ))}
                   {app.passportBy && <div style={{ gridColumn: "1/-1" }}><div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>Кем выдан</div><div style={{ color: "#022c22", fontSize: 13 }}>{app.passportBy}</div></div>}
                   {app.birthPlace && <div style={{ gridColumn: "1/-1" }}><div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>Место рождения</div><div style={{ color: "#022c22", fontSize: 13 }}>{app.birthPlace}</div></div>}
+                  {([["Адрес регистрации", app.regAddress], ["Адрес проживания", app.livingAddress], ["Адрес организации", app.workAddress]] as [string, string | undefined][]).filter(([, v]) => v).map(([l, v]) => (
+                    <div key={l} style={{ gridColumn: "1/-1" }}><div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>{l}</div><div style={{ color: "#022c22", fontSize: 13 }}>{v}</div></div>
+                  ))}
                   {app.snils && <div><div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>СНИЛС</div><div style={{ color: "#fbbf24", fontSize: 13, fontWeight: 600, letterSpacing: 1 }}>{app.snils}</div></div>}
                 </div>
 

@@ -37,6 +37,9 @@ export interface App {
   virtualCardStatus?: string;
   virtualCardLimit?: number | null;
   cardContractUrl?: string;
+  regAddress?: string;
+  livingAddress?: string;
+  workAddress?: string;
   virtualCardSignedAt?: string | null;
 }
 export interface CardRequestItem {

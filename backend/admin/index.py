@@ -406,7 +406,8 @@ def handler(event: dict, context) -> dict:
                    COALESCE(hist.loans_count, 0), COALESCE(hist.paid_count, 0), COALESCE(hist.overdue_count, 0),
                    COALESCE(hist.total_borrowed, 0), COALESCE(hist.apps_count, 0), a.partner_card_url,
                    a.virtual_card_status, a.virtual_card_limit, a.virtual_card_signed_at, a.is_card_request,
-                   a.promo_code, a.promo_discount, a.profile_updated_at, a.profile_changes, a.card_contract_url
+                   a.promo_code, a.promo_discount, a.profile_updated_at, a.profile_changes, a.card_contract_url,
+                   a.reg_address, a.living_address, a.work_address
             FROM {SCHEMA}.applications a
             LEFT JOIN LATERAL (
                 SELECT lo.id, lo.signed, lo.signed_at, lo.status, lo.disbursed_at, lo.created_at
@@ -469,6 +470,9 @@ def handler(event: dict, context) -> dict:
             "profileUpdatedAt": msk(r[58]).strftime("%d.%m.%Y в %H:%M") if len(r) > 58 and r[58] else None,
             "profileChanges": r[59] if len(r) > 59 and r[59] else "",
             "cardContractUrl": r[60] if len(r) > 60 and r[60] else "",
+            "regAddress": r[61] if len(r) > 61 and r[61] else "",
+            "livingAddress": r[62] if len(r) > 62 and r[62] else "",
+            "workAddress": r[63] if len(r) > 63 and r[63] else "",
             "videoCallRequested": bool(r[41]) if r[41] is not None else False,
             "virtualCardDays": int(r[42]) if r[42] else None,
             "blockedUntil": msk(r[43]).strftime("%d.%m.%Y %H:%M") if r[43] else None,
@@ -1280,7 +1284,7 @@ def handler(event: dict, context) -> dict:
                 SELECT amount, days, birth_date, birth_place, passport_series, passport_number, passport_date,
                        passport_code, passport_by, workplace, position, work_phone, salary, contact_person, snils,
                        card_number, file_passport, file_registration, file_selfie, file_previous_passports,
-                       telegram_id
+                       telegram_id, reg_address, living_address, work_address
                 FROM {SCHEMA}.applications WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1
             """)
             app_row = cur.fetchone()
@@ -1288,7 +1292,8 @@ def handler(event: dict, context) -> dict:
             if app_row:
                 (req_amount, req_days, birth_date, birth_place, passport_series, passport_number, passport_date,
                  passport_code, passport_by, workplace, position, work_phone, salary, contact_person, snils,
-                 card_number, file_passport, file_registration, file_selfie, file_previous_passports, telegram_id) = app_row
+                 card_number, file_passport, file_registration, file_selfie, file_previous_passports, telegram_id,
+                 reg_address, living_address, work_address) = app_row
                 profile = {
                     "birthDate": birth_date or "", "birthPlace": birth_place or "",
                     "passportSeries": passport_series or "", "passportNumber": passport_number or "",
@@ -1296,6 +1301,7 @@ def handler(event: dict, context) -> dict:
                     "workplace": workplace or "", "position": position or "", "workPhone": work_phone or "",
                     "salary": float(salary) if salary else None, "contactPerson": contact_person or "", "snils": snils or "",
                     "cardNumber": card_number or "",
+                    "regAddress": reg_address or "", "livingAddress": living_address or "", "workAddress": work_address or "",
                     "filePassport": file_passport or "", "fileRegistration": file_registration or "",
                     "fileSelfie": file_selfie or "", "filePreviousPassports": file_previous_passports or "",
                     "telegramId": telegram_id or "",
@@ -1545,6 +1551,7 @@ def handler(event: dict, context) -> dict:
         "snils": "snils", "workplace": "workplace", "position": "position", "workPhone": "work_phone",
         "contactPerson": "contact_person", "cardNumber": "card_number",
         "cardNumberTransfer": "card_number_transfer", "telegramId": "telegram_id",
+        "regAddress": "reg_address", "livingAddress": "living_address", "workAddress": "work_address",
     }
 
     # --- ПОЛНАЯ АНКЕТА КЛИЕНТА (GET, sub='client_profile', userId=...) ---

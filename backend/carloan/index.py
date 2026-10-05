@@ -94,6 +94,8 @@ def handler(event: dict, context) -> dict:
         email           = s("email")
         birth_date      = s("birthDate")
         address         = s("address")
+        living_address  = s("livingAddress")
+        work_address    = s("workAddress")
         passport_serial = s("passportSerial")
         passport_num    = s("passportNum")
         passport_issued = s("passportIssued")
@@ -128,10 +130,10 @@ def handler(event: dict, context) -> dict:
             f"INSERT INTO {SCHEMA}.car_loan_applications "
             f"(full_name, phone, email, birth_date, address, passport_serial, passport_num, passport_issued, "
             f" car_brand, car_model, car_year, car_mileage, contact_person, card_number, loan_amount, loan_months, "
-            f" status, created_at, updated_at, promo_code, promo_discount) "
+            f" status, created_at, updated_at, promo_code, promo_discount, living_address, work_address) "
             f"VALUES ('{full_name}','{phone}','{email}',{bd_val},'{address}','{passport_serial}','{passport_num}',"
             f"'{passport_issued}','{car_brand}','{car_model}',{car_year},{car_mileage},'{contact_person}',"
-            f"'{card_number}',{loan_amount},{loan_months},'pending',NOW(),NOW(),{promo_sql},{promo_disc_v}) RETURNING id"
+            f"'{card_number}',{loan_amount},{loan_months},'pending',NOW(),NOW(),{promo_sql},{promo_disc_v},'{living_address}','{work_address}') RETURNING id"
         )
         new_id = cur.fetchone()[0]
 
@@ -192,7 +194,8 @@ def handler(event: dict, context) -> dict:
             f"SELECT id, full_name, phone, email, birth_date, address, passport_serial, passport_num, "
             f"passport_issued, car_brand, car_model, car_year, car_mileage, contact_person, card_number, "
             f"loan_amount, loan_months, status, reject_reason, approved_amount, approved_months, "
-            f"approved_rate, notes, created_at, updated_at, disbursed_at, contract_signed, contract_signed_at, promo_code, promo_discount "
+            f"approved_rate, notes, created_at, updated_at, disbursed_at, contract_signed, contract_signed_at, promo_code, promo_discount, "
+            f"living_address, work_address "
             f"FROM {SCHEMA}.car_loan_applications WHERE {where} ORDER BY created_at DESC"
         )
         cols = [d[0] for d in cur.description]

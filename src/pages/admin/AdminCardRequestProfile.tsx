@@ -10,6 +10,8 @@ const SECTIONS: { title: string; fields: Field[] }[] = [
     { key: "birthDate", label: "Дата рождения" },
     { key: "birthPlace", label: "Место рождения" },
     { key: "snils", label: "СНИЛС" },
+    { key: "regAddress", label: "Адрес регистрации", wide: true },
+    { key: "livingAddress", label: "Адрес проживания", wide: true },
   ] },
   { title: "Контакты", fields: [
     { key: "phone", label: "Телефон" },
@@ -27,6 +29,7 @@ const SECTIONS: { title: string; fields: Field[] }[] = [
     { key: "workplace", label: "Место работы" },
     { key: "position", label: "Должность" },
     { key: "workPhone", label: "Рабочий телефон" },
+    { key: "workAddress", label: "Адрес организации", wide: true },
     { key: "salary", label: "Зарплата, ₽" },
     { key: "contactPerson", label: "Контактное лицо", wide: true },
   ] },

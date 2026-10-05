@@ -31,7 +31,7 @@ export default function CarLoanApplyPage() {
     fullName: "", phone: "", email: "", birthDate: "",
     carBrand: "", carModel: "", carYear: "", carMileage: "",
     passportSerial: "", passportNum: "", passportIssued: "",
-    address: "", contactPerson: "", cardNumber: "",
+    address: "", livingAddress: "", workAddress: "", contactPerson: "", cardNumber: "",
   });
   const [submitted, setSubmitted] = useState(false);
   const [promoCode, setPromoCode] = useState("");
@@ -66,6 +66,8 @@ export default function CarLoanApplyPage() {
           email: form.email,
           birthDate: form.birthDate,
           address: form.address,
+          livingAddress: form.livingAddress,
+          workAddress: form.workAddress,
           passportSerial: form.passportSerial,
           passportNum: form.passportNum,
           passportIssued: form.passportIssued,
@@ -255,6 +257,16 @@ export default function CarLoanApplyPage() {
                 <label className={labelCls}>Адрес регистрации <span className="text-red-400">*</span></label>
                 <input type="text" placeholder="г. Москва, ул. Примерная, д. 1" value={form.address}
                   onChange={e => setF("address", e.target.value)} required className={inputCls} style={inputStyle} />
+              </div>
+              <div>
+                <label className={labelCls}>Адрес проживания <span className="text-red-400">*</span></label>
+                <input type="text" placeholder="г. Москва, ул. Примерная, д. 1" value={form.livingAddress}
+                  onChange={e => setF("livingAddress", e.target.value)} required className={inputCls} style={inputStyle} />
+              </div>
+              <div>
+                <label className={labelCls}>Адрес организации</label>
+                <input type="text" placeholder="г. Москва, ул. Тверская, д. 5, офис 12" value={form.workAddress}
+                  onChange={e => setF("workAddress", e.target.value)} className={inputCls} style={inputStyle} />
               </div>
             </div>
           </div>

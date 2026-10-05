@@ -37,7 +37,7 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
   const [form, setForm] = useState({
     fullName: "", phone: "", email: "", birthDate: "", birthPlace: "", telegramId: "",
     passportSeries: "", passportNumber: "", passportDate: "", passportCode: "", passportBy: "",
-    snils: "",
+    snils: "", regAddress: "", livingAddress: "", workAddress: "",
     workplace: "", position: "", workPhone: "", salary: "",
     contactPerson: "", cardNumber: "",
     amount: "10000", days: "30",
@@ -53,6 +53,7 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
   const [consents, setConsents] = useState<ConsentState>(DEFAULT_CONSENTS);
   const [submitted, setSubmitted] = useState(false);
   const [promoCode, setPromoCode] = useState("");
+  const [sameAddress, setSameAddress] = useState(false);
   const [timerSec, setTimerSec] = useState(15 * 60);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -331,6 +332,18 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
                   <input type="text" placeholder="000-000-000 00" value={form.snils} onChange={e => setF("snils", e.target.value)} required className={inputCls} style={inputStyle} />
                   <p className="text-emerald-950/30 text-xs mt-1">Страховой номер индивидуального лицевого счёта</p>
                 </div>
+                <div>
+                  <label className={labelCls}>Адрес регистрации <span className="text-red-400">*</span></label>
+                  <input type="text" placeholder="г. Москва, ул. Ленина, д. 1, кв. 10" value={form.regAddress} onChange={e => { setF("regAddress", e.target.value); if (sameAddress) setF("livingAddress", e.target.value); }} required className={inputCls} style={inputStyle} />
+                </div>
+                <div>
+                  <label className={labelCls}>Адрес проживания <span className="text-red-400">*</span></label>
+                  <label className="flex items-center gap-2 mb-2 cursor-pointer text-emerald-950/60 text-sm">
+                    <input type="checkbox" checked={sameAddress} onChange={e => { setSameAddress(e.target.checked); if (e.target.checked) setF("livingAddress", form.regAddress); }} className="w-4 h-4 accent-emerald-500" />
+                    Совпадает с адресом регистрации
+                  </label>
+                  <input type="text" placeholder="г. Москва, ул. Ленина, д. 1, кв. 10" value={form.livingAddress} onChange={e => setF("livingAddress", e.target.value)} required disabled={sameAddress} className={inputCls} style={inputStyle} />
+                </div>
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setActiveSection("personal")}
                     className="glass text-emerald-950/60 font-semibold px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
@@ -356,6 +369,10 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
                 <div>
                   <label className={labelCls}>Место работы</label>
                   <input type="text" placeholder="ООО Компания" value={form.workplace} onChange={e => setF("workplace", e.target.value)} className={inputCls} style={inputStyle} />
+                </div>
+                <div>
+                  <label className={labelCls}>Адрес организации</label>
+                  <input type="text" placeholder="г. Москва, ул. Тверская, д. 5, офис 12" value={form.workAddress} onChange={e => setF("workAddress", e.target.value)} className={inputCls} style={inputStyle} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>

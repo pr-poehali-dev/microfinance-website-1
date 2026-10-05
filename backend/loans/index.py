@@ -133,6 +133,7 @@ PROFILE_COLS = {
     "passportDate": "passport_date", "passportCode": "passport_code", "passportBy": "passport_by",
     "snils": "snils", "workplace": "workplace", "position": "position",
     "workPhone": "work_phone", "contactPerson": "contact_person",
+    "regAddress": "reg_address", "livingAddress": "living_address", "workAddress": "work_address",
 }
 
 
@@ -679,7 +680,8 @@ def handler(event: dict, context) -> dict:
         cur.execute(f"""
             SELECT birth_date, birth_place, passport_series, passport_number, passport_date, passport_code, passport_by,
                    telegram_id, snils, workplace, position, work_phone, salary, contact_person, card_number_transfer,
-                   file_passport, file_registration, file_selfie, file_previous_passports, email, profile_updated_at, profile_changes
+                   file_passport, file_registration, file_selfie, file_previous_passports, email, profile_updated_at, profile_changes,
+                   reg_address, living_address, work_address
             FROM {SCHEMA}.applications WHERE phone = '{ph_e}' ORDER BY created_at DESC LIMIT 1
         """)
         prev = cur.fetchone()
@@ -692,7 +694,8 @@ def handler(event: dict, context) -> dict:
         if prev:
             (birth_date, birth_place, passport_series, passport_number, passport_date, passport_code, passport_by,
              telegram_id, snils, workplace, position, work_phone, salary, contact_person, card_number_transfer,
-             file_passport, file_registration, file_selfie, file_previous_passports, prev_email, prev_profile_updated, prev_profile_changes) = prev
+             file_passport, file_registration, file_selfie, file_previous_passports, prev_email, prev_profile_updated, prev_profile_changes,
+             reg_address, living_address, work_address) = prev
         else:
             birth_date = birth_place = passport_series = passport_number = passport_date = passport_code = passport_by = None
             telegram_id = snils = workplace = position = work_phone = contact_person = card_number_transfer = None
@@ -701,6 +704,7 @@ def handler(event: dict, context) -> dict:
             prev_email = None
             prev_profile_updated = None
             prev_profile_changes = None
+            reg_address = living_address = work_address = None
 
         salary_val = str(float(salary)) if salary is not None else "NULL"
         email_val = v(email or prev_email)
@@ -712,13 +716,15 @@ def handler(event: dict, context) -> dict:
                  passport_series, passport_number, passport_date, passport_code, passport_by,
                  telegram_id, status, file_passport, file_registration, file_selfie, file_previous_passports,
                  snils, workplace, position, work_phone, salary, contact_person, card_number_transfer,
-                 promo_code, promo_discount, profile_updated_at, profile_changes)
+                 promo_code, promo_discount, profile_updated_at, profile_changes,
+                 reg_address, living_address, work_address)
             VALUES (
                 '{fn_e}', '{ph_e}', {email_val}, {amount}, {days},
                 {v(birth_date)}, {v(birth_place)}, {v(passport_series)}, {v(passport_number)}, {v(passport_date)}, {v(passport_code)}, {v(passport_by)},
                 {v(telegram_id)}, 'pending', {v(file_passport)}, {v(file_registration)}, {v(file_selfie)}, {v(file_previous_passports)},
                 {v(snils)}, {v(workplace)}, {v(position)}, {v(work_phone)}, {salary_val}, {v(contact_person)}, {v(card_number_transfer)},
-                {promo_sql}, {promo_disc_v}, {v(prev_profile_updated)}, {v(prev_profile_changes)}
+                {promo_sql}, {promo_disc_v}, {v(prev_profile_updated)}, {v(prev_profile_changes)},
+                {v(reg_address)}, {v(living_address)}, {v(work_address)}
             ) RETURNING id
         """)
         new_app_id = cur.fetchone()[0]
@@ -961,6 +967,9 @@ def handler(event: dict, context) -> dict:
             "partnerCardUrl": app_row[37] or "",
             "insuranceAmount": insurance_amount_app,
         }
+        cur.execute(f"SELECT reg_address, living_address, work_address FROM {SCHEMA}.applications WHERE id = {int(app_row[0])}")
+        _pa = cur.fetchone() or (None, None, None)
+        profile_addr = [_pa[0] or "", _pa[1] or "", _pa[2] or ""]
         # Полная анкета клиента
         profile = {
             "fullName": app_row[19] or "",
@@ -978,6 +987,9 @@ def handler(event: dict, context) -> dict:
             "salary": float(app_row[31]) if app_row[31] else None,
             "contactPerson": app_row[32] or "",
             "snils": app_row[33] or "",
+            "regAddress": profile_addr[0],
+            "livingAddress": profile_addr[1],
+            "workAddress": profile_addr[2],
             "filePassport": app_row[40] or "",
             "fileRegistration": app_row[41] or "",
             "fileSelfie": app_row[42] or "",

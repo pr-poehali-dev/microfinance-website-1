@@ -43,6 +43,8 @@ const PROFILE_SECTIONS: { title: string; fields: ProfileField[] }[] = [
     { key: "birthDate", label: "Дата рождения", placeholder: "01.01.1990" },
     { key: "birthPlace", label: "Место рождения" },
     { key: "snils", label: "СНИЛС" },
+    { key: "regAddress", label: "Адрес регистрации", wide: true },
+    { key: "livingAddress", label: "Адрес проживания", wide: true },
   ] },
   { title: "Контакты и вход", fields: [
     { key: "phone", label: "Телефон", placeholder: "+7 (999) 000-00-00" },
@@ -61,6 +63,7 @@ const PROFILE_SECTIONS: { title: string; fields: ProfileField[] }[] = [
     { key: "workplace", label: "Место работы" },
     { key: "position", label: "Должность" },
     { key: "workPhone", label: "Рабочий телефон" },
+    { key: "workAddress", label: "Адрес организации", wide: true },
     { key: "salary", label: "Зарплата, ₽" },
     { key: "contactPerson", label: "Контактное лицо", wide: true },
   ] },

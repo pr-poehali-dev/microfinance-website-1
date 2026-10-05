@@ -131,6 +131,9 @@ def handler(event: dict, context) -> dict:
     birth_place = (body.get("birthPlace") or "").strip()
     telegram_username = (body.get("telegramId") or "").strip().lstrip("@")
     snils = (body.get("snils") or "").strip()
+    reg_address = (body.get("regAddress") or "").strip()
+    living_address = (body.get("livingAddress") or "").strip()
+    work_address = (body.get("workAddress") or "").strip()
     workplace = (body.get("workplace") or "").strip()
     position = (body.get("position") or "").strip()
     work_phone = (body.get("workPhone") or "").strip()
@@ -235,6 +238,9 @@ def handler(event: dict, context) -> dict:
         sal_val = str(salary) if salary is not None else "NULL"
         cp_val = f"'{esc(contact_person)}'" if contact_person else "NULL"
         cn_val = f"'{esc(card_number_transfer)}'" if card_number_transfer else "NULL"
+        ra_val = f"'{esc(reg_address)}'" if reg_address else "NULL"
+        la_val = f"'{esc(living_address)}'" if living_address else "NULL"
+        wa_val = f"'{esc(work_address)}'" if work_address else "NULL"
 
         cur.execute(f"""
             INSERT INTO {SCHEMA}.applications
@@ -243,7 +249,8 @@ def handler(event: dict, context) -> dict:
                  telegram_id, status, client_password,
                  file_passport, file_registration, file_selfie, file_previous_passports,
                  snils, workplace, position, work_phone, salary, contact_person, card_number_transfer,
-                 is_credit_doctor, is_card_request, promo_code, promo_discount)
+                 is_credit_doctor, is_card_request, promo_code, promo_discount,
+                 reg_address, living_address, work_address)
             VALUES (
                 '{esc(full_name)}', '{esc(phone)}', {em_val}, {amount}, {days},
                 {bd_val}, {bp_val}, {ps_val}, {pn_val}, {pd_val}, {pc_val}, {pb_val},
@@ -251,7 +258,8 @@ def handler(event: dict, context) -> dict:
                 {fp_val}, {fr_val}, {fs_val}, {fpp_val},
                 {snils_val}, {wp_val}, {pos_val}, {wph_val}, {sal_val}, {cp_val}, {cn_val},
                 {str(is_credit_doctor).upper()}, {str(is_card_request).upper()},
-                {("'" + esc(promo_code_val) + "'") if promo_code_val else 'NULL'}, {promo_discount_val}
+                {("'" + esc(promo_code_val) + "'") if promo_code_val else 'NULL'}, {promo_discount_val},
+                {ra_val}, {la_val}, {wa_val}
             ) RETURNING id
         """)
         app_id = cur.fetchone()[0]
@@ -329,10 +337,14 @@ def handler(event: dict, context) -> dict:
             f"  Дата выдачи: {passport_date or '—'}\n"
             f"  Код: {passport_code or '—'}\n"
             f"  Кем выдан: {passport_by or '—'}\n\n"
+            f"🏠 <b>Адреса:</b>\n"
+            f"  Регистрация: {reg_address or '—'}\n"
+            f"  Проживание: {living_address or '—'}\n\n"
             f"📎 <b>Документы загружены:</b> {docs_count} из {len(FILE_KEYS)}\n"
             f"💬 <b>Telegram:</b> {'@' + telegram_username if telegram_username else '—'}\n\n"
             f"💼 <b>Работа:</b>\n"
             f"  Место: {workplace or '—'}\n"
+            f"  Адрес организации: {work_address or '—'}\n"
             f"  Должность: {position or '—'}\n"
             f"  Раб. телефон: {work_phone or '—'}\n"
             f"  Зарплата: {salary_raw or '—'} ₽\n\n"

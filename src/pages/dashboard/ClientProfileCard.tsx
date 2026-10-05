@@ -18,6 +18,9 @@ export interface ClientProfile {
   salary: number | null;
   contactPerson: string;
   snils: string;
+  regAddress?: string;
+  livingAddress?: string;
+  workAddress?: string;
   filePassport?: string;
   fileRegistration?: string;
   fileSelfie?: string;
@@ -46,9 +49,12 @@ export default function ClientProfileCard({ profile, phone, editable = false, on
     { label: "Код подразделения", value: profile.passportCode },
     { label: "Кем выдан", value: profile.passportBy },
     { label: "СНИЛС", value: profile.snils },
+    { label: "Адрес регистрации", value: profile.regAddress || "" },
+    { label: "Адрес проживания", value: profile.livingAddress || "" },
     { label: "Место работы", value: profile.workplace },
     { label: "Должность", value: profile.position },
     { label: "Рабочий телефон", value: profile.workPhone },
+    { label: "Адрес организации", value: profile.workAddress || "" },
     { label: "Зарплата", value: profile.salary ? `${profile.salary.toLocaleString("ru-RU")} ₽` : "" },
     { label: "Контактное лицо", value: profile.contactPerson },
   ].filter(r => r.value);

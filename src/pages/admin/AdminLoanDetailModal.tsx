@@ -8,7 +8,7 @@ interface ScheduleItem { dueDate: string | null; amount: number; label?: string;
 interface PaymentItem { amount: number; paidAt: string; note?: string; }
 
 interface Profile {
-  birthDate?: string; birthPlace?: string; address?: string;
+  birthDate?: string; birthPlace?: string; address?: string; regAddress?: string; livingAddress?: string; workAddress?: string;
   passportSeries?: string; passportNumber?: string; passportDate?: string; passportCode?: string; passportBy?: string;
   workplace?: string; position?: string; workPhone?: string; salary?: number | null; contactPerson?: string; snils?: string;
   cardNumber?: string; telegramId?: string;
@@ -288,6 +288,9 @@ export default function AdminLoanDetailModal({ token, type, id, onClose }: Props
                   ["Дата рождения", data.profile.birthDate],
                   ["Место рождения", data.profile.birthPlace],
                   ["Адрес", data.profile.address],
+                  ["Адрес регистрации", data.profile.regAddress],
+                  ["Адрес проживания", data.profile.livingAddress],
+                  ["Адрес организации", data.profile.workAddress],
                   ["Паспорт", (data.profile.passportSeries || data.profile.passportNumber) ? `${data.profile.passportSeries || ""} ${data.profile.passportNumber || ""}`.trim() : ""],
                   ["Дата выдачи", data.profile.passportDate],
                   ["Код подразделения", data.profile.passportCode],

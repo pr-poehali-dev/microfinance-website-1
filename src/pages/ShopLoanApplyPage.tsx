@@ -33,7 +33,7 @@ export default function ShopLoanApplyPage() {
   const [months, setMonths] = useState(6);
   const [form, setForm] = useState({
     fullName: "", phone: "", email: "", birthDate: "",
-    address: "", passportSeries: "", passportNumber: "",
+    address: "", livingAddress: "", workAddress: "", passportSeries: "", passportNumber: "",
     passportDate: "", passportBy: "", snils: "",
     shopName: "", itemName: "", itemPrice: "",
     contactPerson: "", cardNumber: "",
@@ -318,6 +318,16 @@ export default function ShopLoanApplyPage() {
                 <label className={lbl}>Адрес регистрации <span className="text-red-400">*</span></label>
                 <input type="text" placeholder="г. Москва, ул. Примерная, д. 1" value={form.address}
                   onChange={e => setF("address", e.target.value)} required className={inp} style={iSt} />
+              </div>
+              <div>
+                <label className={lbl}>Адрес проживания <span className="text-red-400">*</span></label>
+                <input type="text" placeholder="г. Москва, ул. Примерная, д. 1" value={form.livingAddress}
+                  onChange={e => setF("livingAddress", e.target.value)} required className={inp} style={iSt} />
+              </div>
+              <div>
+                <label className={lbl}>Адрес организации</label>
+                <input type="text" placeholder="г. Москва, ул. Тверская, д. 5, офис 12" value={form.workAddress}
+                  onChange={e => setF("workAddress", e.target.value)} className={inp} style={iSt} />
               </div>
             </div>
           </div>

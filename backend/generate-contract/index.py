@@ -157,6 +157,7 @@ def generate_contract_html(app_data: dict, loan_num: int) -> str:
     birth_date = app_data.get("birth_date", "")
     birth_place = app_data.get("birth_place", "")
     address = app_data.get("address", "")
+    living_address = app_data.get("living_address", "")
     email = app_data.get("email", "")
 
     amount = float(app_data.get("amount", 0))
@@ -301,6 +302,7 @@ def generate_contract_html(app_data: dict, loan_num: int) -> str:
       <p>Дата рождения: {birth_date or "—"}</p>
       <p>Паспорт: {passport_str}</p>
       <p>Адрес регистрации: {address or "—"}</p>
+      <p>Адрес проживания: {living_address or "—"}</p>
       <p>Тел.: {phone}</p>
       {f'<p>Email: {email}</p>' if email else ''}
       <br>
@@ -351,11 +353,11 @@ def build_and_store(cur, app_id: str, loan_id: int) -> str:
     cur.execute(f"""
         SELECT full_name, phone, email, birth_date, birth_place,
                passport_series, passport_number, passport_date, passport_code, passport_by,
-               approved_amount, approved_rate, approved_days, amount, days
+               approved_amount, approved_rate, approved_days, amount, days, reg_address, living_address
         FROM {SCHEMA}.applications WHERE id = '{app_id_e}'
     """)
     (full_name, phone, email, birth_date, birth_place, ps, pn, pd, pc, pb,
-     approved_amount, approved_rate, approved_days, amount, days) = cur.fetchone()
+     approved_amount, approved_rate, approved_days, amount, days, reg_address, living_address) = cur.fetchone()
     app_data = {
         "full_name": full_name or "", "phone": phone or "", "email": email or "",
         "birth_date": str(birth_date) if birth_date else "", "birth_place": birth_place or "",
@@ -364,6 +366,8 @@ def build_and_store(cur, app_id: str, loan_id: int) -> str:
         "amount": float(approved_amount) if approved_amount else float(amount),
         "rate": float(approved_rate) if approved_rate else 0.008,
         "days": int(approved_days) if approved_days else int(days),
+        "address": reg_address or "",
+        "living_address": living_address or "",
     }
     html = generate_contract_html(app_data, loan_id or int(app_id_e))
     now_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -523,6 +527,8 @@ def generate_card_contract_html(d: dict, num: int) -> str:
       <p>{full_name}</p>
       <p>Дата рождения: {birth_date or "—"}</p>
       <p>Паспорт: {passport_str}</p>
+      <p>Адрес регистрации: {d.get("address") or "—"}</p>
+      <p>Адрес проживания: {d.get("living_address") or "—"}</p>
       <p>Тел.: {phone}</p>
       {f'<p>Email: {email}</p>' if email else ''}
       <br>
@@ -544,7 +550,8 @@ def build_card_contract(cur, app_id: str) -> str:
     cur.execute(f"""
         SELECT full_name, phone, email, birth_date, birth_place,
                passport_series, passport_number, passport_date, passport_code, passport_by,
-               virtual_card_limit, virtual_card_rate, virtual_card_days, virtual_card_number, virtual_card_issued_at, id
+               virtual_card_limit, virtual_card_rate, virtual_card_days, virtual_card_number, virtual_card_issued_at, id,
+               reg_address, living_address
         FROM {SCHEMA}.applications WHERE id = '{app_id_e}'
     """)
     r = cur.fetchone()
@@ -555,6 +562,7 @@ def build_card_contract(cur, app_id: str) -> str:
         "passport_date": str(r[7]) if r[7] else "", "passport_code": r[8] or "", "passport_by": r[9] or "",
         "limit": float(r[10] or 0), "rate": float(r[11] or 24), "days": r[12] or 0,
         "card_number": r[13] or "", "issued_at": r[14],
+        "address": r[16] or "", "living_address": r[17] or "",
     }
     html = generate_card_contract_html(d, int(r[15]))
     now_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -640,7 +648,7 @@ def handler(event: dict, context) -> dict:
     cur.execute(f"""
         SELECT full_name, phone, email, birth_date, birth_place,
                passport_series, passport_number, passport_date, passport_code, passport_by,
-               approved_amount, approved_rate, approved_days, amount, days
+               approved_amount, approved_rate, approved_days, amount, days, reg_address, living_address
         FROM {SCHEMA}.applications WHERE id = '{app_id_e}'
     """)
     row = cur.fetchone()
@@ -650,7 +658,7 @@ def handler(event: dict, context) -> dict:
 
     (full_name, phone, email, birth_date, birth_place,
      ps, pn, pd, pc, pb,
-     approved_amount, approved_rate, approved_days, amount, days) = row
+     approved_amount, approved_rate, approved_days, amount, days, reg_address, living_address) = row
 
     eff_amount = float(approved_amount) if approved_amount else float(amount)
     eff_rate = float(approved_rate) if approved_rate else 0.008
@@ -671,6 +679,8 @@ def handler(event: dict, context) -> dict:
         "amount": eff_amount,
         "rate": eff_rate,
         "days": eff_days,
+        "address": reg_address or "",
+        "living_address": living_address or "",
     }
 
     # Генерируем HTML и конвертируем в PDF
