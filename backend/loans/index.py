@@ -810,21 +810,31 @@ def handler(event: dict, context) -> dict:
     application = None
     app_promo_discount = 0
     app_promo_code = ""
+    app_promo_savings = 0
+    app_created_dt = None
     if app_row:
         cur.execute(f"SELECT promo_code, promo_discount FROM {SCHEMA}.applications WHERE id = {int(app_row[0])}")
         _ap = cur.fetchone()
         app_promo_discount = int(_ap[1]) if _ap and _ap[1] else 0
         app_promo_code = _ap[0] if _ap and _ap[0] else ""
+        app_created_dt = app_row[4]
         app_amount = float(app_row[1]) if app_row[1] else 0
         app_days = app_row[2] or 0
         approved_amount = float(app_row[5]) if app_row[5] else None
+        rate_is_final = bool(app_row[6])
         approved_rate = float(app_row[6]) if app_row[6] else 0.008
+        if not rate_is_final and app_promo_discount:
+            approved_rate = round(0.008 * (100 - app_promo_discount) / 100, 5)
         approved_days = int(app_row[7]) if app_row[7] else app_days
         insurance_amount_app = float(app_row[38]) if app_row[38] else 0
         eff_amount = approved_amount if approved_amount else app_amount
         eff_debt = eff_amount + insurance_amount_app
         approved_interest = round(eff_debt * approved_rate * approved_days)
         approved_total = eff_debt + approved_interest
+        app_promo_savings = 0
+        if app_promo_discount and app_promo_discount < 100:
+            base_rate_ = approved_rate / (100 - app_promo_discount) * 100
+            app_promo_savings = max(0, round(eff_debt * base_rate_ * approved_days) - approved_interest)
         reviewed_at = app_row[34]
         reapply_days_left = None
         if app_row[3] == "rejected" and reviewed_at:
@@ -912,6 +922,7 @@ def handler(event: dict, context) -> dict:
             "approvedRatePercent": round(approved_rate * 100, 1),
             "promoCode": app_promo_code,
             "promoDiscount": app_promo_discount,
+            "promoSavings": app_promo_savings,
             "approvedDays": approved_days,
             "approvedTotal": approved_total,
             "rejectReason": app_row[8] or "",
@@ -1072,6 +1083,13 @@ def handler(event: dict, context) -> dict:
             "remaining": max(0, total - paid_total),
             "schedule": schedule,
         }
+        if app_promo_discount and app_promo_discount < 100 and app_created_dt and created_at >= app_created_dt - timedelta(minutes=1):
+            base_rate_l = float(rate) / (100 - app_promo_discount) * 100
+            full_interest = round(float(amount) * base_rate_l * days)
+            if not is_monthly_cd and full_interest > interest:
+                loan_data["promoCode"] = app_promo_code
+                loan_data["promoDiscount"] = app_promo_discount
+                loan_data["promoSavings"] = full_interest - interest
         if status == "review" and not signed and offer_amount:
             oa = float(offer_amount)
             od = offer_days or days

@@ -31,6 +31,9 @@ interface Loan {
   payments?: PaymentItem[];
   paidTotal?: number;
   remaining?: number;
+  promoCode?: string;
+  promoDiscount?: number;
+  promoSavings?: number;
 }
 
 interface Application {
@@ -243,6 +246,11 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                         включая {loan.interest.toLocaleString("ru-RU")} ₽ процентов
                         {!!loan.penaltyAmount && ` и ${loan.penaltyAmount.toLocaleString("ru-RU")} ₽ пени за просрочку`}
                       </div>
+                      {!!loan.promoSavings && (
+                        <div className="text-emerald-700 text-xs font-semibold mt-1">
+                          Промокод {loan.promoCode} применён: скидка {loan.promoDiscount}% на проценты, вы экономите {loan.promoSavings.toLocaleString("ru-RU")} ₽
+                        </div>
+                      )}
                     </div>
                     {loan.status === "active" && (
                       <button

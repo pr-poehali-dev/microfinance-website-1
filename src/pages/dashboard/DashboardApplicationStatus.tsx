@@ -72,6 +72,9 @@ interface Application {
   approvedRatePercent: number;
   approvedDays: number;
   approvedTotal: number;
+  promoCode?: string;
+  promoDiscount?: number;
+  promoSavings?: number;
   insuranceAmount?: number;
   rejectReason: string;
   cardNumber: string;
@@ -310,6 +313,11 @@ export default function DashboardApplicationStatus({
                     <div className="text-emerald-700 font-bold">{application.approvedTotal.toLocaleString("ru-RU")} ₽</div>
                   </div>
                 </div>
+                {!!application.promoSavings && (
+                  <div className="mt-3 rounded-lg p-3 text-sm text-emerald-800 font-semibold" style={{ background: "rgba(16,185,129,0.1)" }}>
+                    Промокод {application.promoCode} применён: скидка {application.promoDiscount}% на проценты, вы экономите {application.promoSavings.toLocaleString("ru-RU")} ₽
+                  </div>
+                )}
               </div>
             )}
             <div className="rounded-xl p-5 space-y-4"
@@ -500,6 +508,12 @@ export default function DashboardApplicationStatus({
                 </div>
               ))}
             </div>
+
+            {!!application.promoSavings && (
+              <div className="rounded-xl p-3 text-sm text-emerald-800 font-semibold" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)" }}>
+                Промокод {application.promoCode} применён: скидка {application.promoDiscount}% на проценты, вы экономите {application.promoSavings.toLocaleString("ru-RU")} ₽
+              </div>
+            )}
 
             {/* Пояснение про страхование жизни и здоровья */}
             {!!application.insuranceAmount && (
