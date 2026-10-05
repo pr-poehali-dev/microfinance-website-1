@@ -390,7 +390,7 @@ def handler(event: dict, context) -> dict:
     if sub == "applications" and method == "GET":
         status_filter = qs.get("status", "all")
         print(f"[applications] status_filter={status_filter!r}")
-        where_clause = "" if status_filter == "all" else f"WHERE a.status = '{status_filter.replace(chr(39), chr(39)*2)}'"
+        where_clause = "WHERE COALESCE(a.is_card_request, FALSE) = FALSE" if status_filter == "all" else f"WHERE COALESCE(a.is_card_request, FALSE) = FALSE AND a.status = '{status_filter.replace(chr(39), chr(39)*2)}'"
         cur.execute(f"""
             SELECT a.id, a.full_name, a.phone, a.email, a.amount, a.days, a.birth_date,
                    a.passport_series, a.passport_number, a.status, a.created_at, a.reject_reason,
@@ -1555,7 +1555,7 @@ def handler(event: dict, context) -> dict:
             cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Клиент не найден"})}
         profile = {"fullName": u[0] or "", "phone": u[1] or "", "email": u[2] or "", "hasApplication": False}
-        cols = ", ".join(PROFILE_FIELDS.values()) + ", salary, full_name"
+        cols = ", ".join(PROFILE_FIELDS.values()) + ", salary, full_name, file_passport, file_registration, file_selfie, file_previous_passports"
         cur.execute(f"SELECT {cols} FROM {SCHEMA}.applications WHERE phone = '{(u[1] or '').replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1")
         a = cur.fetchone()
         cur.close(); conn.close()
@@ -1568,6 +1568,10 @@ def handler(event: dict, context) -> dict:
             profile["salary"] = str(int(a[n])) if a[n] is not None and float(a[n]) == int(a[n]) else (str(a[n]) if a[n] is not None else "")
             if not profile["fullName"]:
                 profile["fullName"] = a[n + 1] or ""
+            profile["filePassport"] = a[n + 2] or ""
+            profile["fileRegistration"] = a[n + 3] or ""
+            profile["fileSelfie"] = a[n + 4] or ""
+            profile["filePreviousPassports"] = a[n + 5] or ""
         return {"statusCode": 200, "headers": CORS, "body": json.dumps(profile, ensure_ascii=False)}
 
     # --- СОХРАНИТЬ ПОЛНУЮ АНКЕТУ КЛИЕНТА (POST, sub='client_profile_update', userId=...) ---
@@ -1916,10 +1920,11 @@ def handler(event: dict, context) -> dict:
         where_r = "" if status_f == "all" else f"WHERE cr.status = '{status_e}'"
         cur.execute(f"""
             SELECT cr.id, cr.phone, cr.full_name, cr.status, cr.reject_reason, cr.created_at, cr.reviewed_at,
-                   a.id AS app_id, a.virtual_card_status, a.virtual_card_limit
+                   a.id AS app_id, a.virtual_card_status, a.virtual_card_limit,
+                   (SELECT u.id FROM {SCHEMA}.users u WHERE u.phone = cr.phone LIMIT 1) AS user_id, a.amount
             FROM {SCHEMA}.card_requests cr
             LEFT JOIN LATERAL (
-                SELECT id, virtual_card_status, virtual_card_limit FROM {SCHEMA}.applications
+                SELECT id, virtual_card_status, virtual_card_limit, amount FROM {SCHEMA}.applications
                 WHERE phone = cr.phone ORDER BY created_at DESC LIMIT 1
             ) a ON true
             {where_r} ORDER BY cr.created_at DESC
@@ -1931,6 +1936,8 @@ def handler(event: dict, context) -> dict:
             "reviewedAt": msk(r[6]).strftime("%d.%m.%Y в %H:%M") if r[6] else None,
             "appId": r[7], "cardStatus": r[8] or "none",
             "cardLimit": float(r[9]) if r[9] else None,
+            "userId": r[10],
+            "requestedLimit": float(r[11]) if r[11] else None,
         } for r in cur.fetchall()]
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"requests": items}, ensure_ascii=False)}
@@ -2153,7 +2160,7 @@ def handler(event: dict, context) -> dict:
         cnt = cur.fetchone()[0]
         cur.execute(f"SELECT COUNT(DISTINCT (loan_type, loan_id)) FROM {SCHEMA}.loan_payment_notices WHERE status = 'new'")
         loan_cnt = cur.fetchone()[0]
-        cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.applications WHERE status = 'pending'")
+        cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.applications WHERE status = 'pending' AND COALESCE(is_card_request, FALSE) = FALSE")
         apps_wait = cur.fetchone()[0]
         cur.execute(f"""
             SELECT COUNT(*) FROM {SCHEMA}.applications a

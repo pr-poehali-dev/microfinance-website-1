@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 import { waitingStyle, WAITING_BADGE_STYLE } from "./waiting";
 import { CardRequestItem, GLASS } from "./adminTypes";
+import AdminCardRequestProfile from "./AdminCardRequestProfile";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
 
@@ -17,6 +18,7 @@ export default function AdminCardRequests({ token }: Props) {
   const [form, setForm] = useState<Record<number, { limit: string; rate: string; days: string }>>({});
   const [rejectOpen, setRejectOpen] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [profileOpen, setProfileOpen] = useState<number | null>(null);
   const [processing, setProcessing] = useState<Record<number, boolean>>({});
 
   const hdrs = useCallback(() => ({ "Content-Type": "application/json", "Authorization": `Bearer ${token}` }), [token]);
@@ -89,6 +91,17 @@ export default function AdminCardRequests({ token }: Props) {
               <div>
                 <div style={{ color: "#022c22", fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{req.fullName || req.phone}{req.status === "pending" && <span style={{ ...WAITING_BADGE_STYLE, marginLeft: 10 }}>🔴 Клиент ждёт решения</span>}</div>
                 <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 13 }}>{req.phone} · подана {req.createdAt}</div>
+                {!!req.requestedLimit && (
+                  <div style={{ marginTop: 4, fontSize: 13, color: "#047857", fontWeight: 600 }}>
+                    Желаемый лимит: {req.requestedLimit.toLocaleString("ru-RU")} ₽
+                  </div>
+                )}
+                {!!req.userId && (
+                  <button onClick={() => setProfileOpen(profileOpen === req.id ? null : req.id)}
+                    style={{ marginTop: 8, background: "rgba(16,185,129,0.1)", color: "#047857", border: "none", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontWeight: 600, fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    <Icon name="UserCircle" size={14} />{profileOpen === req.id ? "Скрыть анкету" : "Анкета клиента"}
+                  </button>
+                )}
                 {req.cardStatus !== "none" && (
                   <div style={{ marginTop: 6, fontSize: 12, color: "#14b8a6" }}>
                     Уже есть карта: {req.cardStatus}{req.cardLimit ? ` · лимит ${req.cardLimit.toLocaleString("ru-RU")} ₽` : ""}
@@ -163,6 +176,9 @@ export default function AdminCardRequests({ token }: Props) {
                 </span>
               )}
             </div>
+            {profileOpen === req.id && !!req.userId && (
+              <AdminCardRequestProfile token={token} userId={req.userId} onClose={() => setProfileOpen(null)} />
+            )}
           </div>
         ))}
       </div>

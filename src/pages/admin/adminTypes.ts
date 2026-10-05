@@ -49,6 +49,8 @@ export interface CardRequestItem {
   appId: number | null;
   cardStatus: string;
   cardLimit: number | null;
+  userId?: number | null;
+  requestedLimit?: number | null;
 }
 export interface User { id: number; phone: string; fullName: string; email: string; createdAt: string; loanCount: number; debt: number; }
 export interface Loan { id: number; amount: number; days: number; ratePercent: number; status: string; createdAt: string; totalDue?: number; isOverdue?: boolean; overdueDays?: number; penaltyAmount?: number; penaltyWaived?: number; }
