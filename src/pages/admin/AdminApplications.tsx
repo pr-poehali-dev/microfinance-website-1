@@ -407,6 +407,19 @@ export default function AdminApplications({
                   {app.snils && <div><div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>СНИЛС</div><div style={{ color: "#fbbf24", fontSize: 13, fontWeight: 600, letterSpacing: 1 }}>{app.snils}</div></div>}
                 </div>
 
+                {(app.status === "approved" || app.status === "partner_card") && (
+                  app.contractUrl ? (
+                    <a href={app.contractUrl} target="_blank" rel="noopener noreferrer"
+                      style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 12, background: "rgba(16,185,129,0.1)", color: "#047857", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 8, padding: "6px 12px", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
+                      <Icon name="FileCheck" size={14} />Договор создан и виден клиенту
+                    </a>
+                  ) : (
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 12, background: "rgba(245,158,11,0.1)", color: "#b45309", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 8, padding: "6px 12px", fontSize: 13, fontWeight: 600 }}>
+                      <Icon name="Clock" size={14} />Договор формируется
+                    </div>
+                  )
+                )}
+
                 {/* Документы */}
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
                   {[["filePassport","Паспорт"],["fileRegistration","Прописка"],["fileSelfie","Селфи"],["filePreviousPassports","Доп.паспорт"]].map(([key, label]) => {
