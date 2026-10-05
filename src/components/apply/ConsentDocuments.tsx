@@ -36,6 +36,18 @@ export const DEFAULT_CONSENTS: ConsentState = {
   advertising: false,
 };
 
+const LENDER_LINES = [
+  "Русфинанс 24",
+  "Адрес: г. Москва, Проспект Мира д.112",
+  "Банк: АО \"Газпромбанк\"",
+  "р/с: 40817810165377982899",
+  "к/с: 30101810200000000823",
+  "БИК: 044525823",
+  "Тел.: +7-996-201-95-00",
+  "Директор: Ребров Александр Сергеевич",
+];
+const LENDER_NOTE = "Если у вас оплата по реквизитам, обязательно указывайте в комментарии свой номер договора";
+
 const DOCS: { key: keyof ConsentState; title: string; required: boolean; text: string }[] = [
   {
     key: "personalData",
@@ -160,6 +172,14 @@ export default function ConsentDocuments({ consents, onChange }: Props) {
         </label>
       ))}
 
+      <div className="rounded-xl px-4 py-3 mt-3" style={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.15)" }}>
+        <div className="text-emerald-950 font-bold text-sm mb-1">ЗАЙМОДАВЕЦ</div>
+        {LENDER_LINES.map((l) => (
+          <div key={l} className="text-emerald-950/70 text-sm leading-snug">{l}</div>
+        ))}
+        <div className="text-emerald-950/50 text-xs mt-2">({LENDER_NOTE})</div>
+      </div>
+
       {openDoc && (
         <div
           style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
@@ -176,6 +196,13 @@ export default function ConsentDocuments({ consents, onChange }: Props) {
               </button>
             </div>
             <div className="text-emerald-950/60 text-sm leading-relaxed whitespace-pre-line">{openDoc.text}</div>
+            {(openDoc.key === "loanAgreement" || openDoc.key === "loanApplication") && (
+              <div className="text-emerald-950/70 text-sm leading-snug mt-4 pt-4" style={{ borderTop: "1px solid rgba(16,185,129,0.2)" }}>
+                <div className="font-bold mb-1">ЗАЙМОДАВЕЦ:</div>
+                {LENDER_LINES.map((l) => <div key={l}>{l}</div>)}
+                <div className="text-emerald-950/50 text-xs mt-2">({LENDER_NOTE})</div>
+              </div>
+            )}
             <button
               onClick={() => { onChange(openDoc.key, true); setOpenDoc(null); }}
               className="btn-neon text-white font-semibold w-full py-3 rounded-xl mt-6 flex items-center justify-center gap-2"

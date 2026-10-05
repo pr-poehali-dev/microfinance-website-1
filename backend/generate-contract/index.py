@@ -23,21 +23,17 @@ CORS = {
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Authorization",
 }
 
-# Реквизиты компании — замените на реальные
 MKK = {
     "name": "Русфинанс 24",
-    "ogrn": "1234567890123",
-    "inn": "1234567890",
-    "kpp": "123456789",
-    "address": "г. Москва, ул. Примерная, д. 1, офис 100",
-    "bank": "ПАО СБЕРБАНК",
-    "rs": "40702810000000000000",
-    "ks": "30101810400000000225",
-    "bik": "044525225",
+    "address": "г. Москва, Проспект Мира д.112",
+    "bank": 'АО "Газпромбанк"',
+    "rs": "40817810165377982899",
+    "ks": "30101810200000000823",
+    "bik": "044525823",
     "phone": "+7-996-201-95-00",
     "email": "support@rusfinans24.ru",
     "site": "rusfinans24.ru",
-    "director": "Иванов Иван Иванович",
+    "director": "Ребров Александр Сергеевич",
 }
 
 
@@ -181,7 +177,7 @@ def generate_contract_html(app_data: dict, loan_num: int) -> str:
 <h2>№ {contract_num}</h2>
 <p class="center num">г. Москва &nbsp;&nbsp;&nbsp; {date_str}</p>
 
-<p><span class="bold">{MKK["name"]}</span>, ОГРН {MKK["ogrn"]}, ИНН {MKK["inn"]}, именуемое в дальнейшем <span class="bold">«Займодавец»</span>, в лице директора {MKK["director"]}, действующего на основании Устава, с одной стороны, и</p>
+<p><span class="bold">{MKK["name"]}</span>, именуемое в дальнейшем <span class="bold">«Займодавец»</span>, в лице директора {MKK["director"]}, действующего на основании Устава, с одной стороны, и</p>
 
 <p><span class="bold">{full_name}</span>, дата рождения: {birth_date or "—"}, место рождения: {birth_place or "—"}, паспорт: {passport_str}, именуемый(-ая) в дальнейшем <span class="bold">«Заёмщик»</span>, с другой стороны,</p>
 
@@ -266,17 +262,17 @@ def generate_contract_html(app_data: dict, loan_num: int) -> str:
     <td>
       <p class="bold">ЗАЙМОДАВЕЦ:</p>
       <p>{MKK["name"]}</p>
-      <p>ОГРН: {MKK["ogrn"]}</p>
-      <p>ИНН/КПП: {MKK["inn"]} / {MKK["kpp"]}</p>
       <p>Адрес: {MKK["address"]}</p>
       <p>Банк: {MKK["bank"]}</p>
       <p>р/с: {MKK["rs"]}</p>
       <p>к/с: {MKK["ks"]}</p>
       <p>БИК: {MKK["bik"]}</p>
+      <p style="font-size:10pt;">(Если у вас оплата по реквизитам, обязательно указывайте в комментарии свой номер договора)</p>
       <p>Тел.: {MKK["phone"]}</p>
       <br>
-      <p>Директор: <span class="sign-line"></span></p>
-      <p style="margin-top:4pt;font-size:10pt;">({MKK["director"]})</p>
+      <p>Директор:</p>
+      <p>{MKK["director"]}</p>
+      <p><span class="sign-line"></span></p>
       <p style="margin-top:8pt;">М.П.</p>
     </td>
     <td>
