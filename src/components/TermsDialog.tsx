@@ -1,4 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { TERMS_SECTIONS } from "@/data/termsText";
 
 interface Props {
@@ -24,21 +25,27 @@ export default function TermsDialog({ open, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle className="text-emerald-950 text-xl">Условия</DialogTitle>
         </DialogHeader>
-        <div className="overflow-y-auto pr-2 space-y-6 text-sm leading-relaxed text-emerald-950/80">
-          {TERMS_SECTIONS.map((sec) => (
-            <section key={sec.title} className="space-y-2">
-              <h3 className="text-emerald-950 font-bold text-base">{sec.title}</h3>
-              {sec.paragraphs?.map((p, i) => <p key={i}>{p}</p>)}
-              {sec.list && <Bullets items={sec.list} />}
-              {sec.subs?.map((s) => (
-                <div key={s.title} className="space-y-1 pt-1">
-                  <h4 className="text-emerald-950 font-semibold">{s.title}</h4>
-                  <Bullets items={s.list} />
-                </div>
-              ))}
-              {sec.afterList?.map((p, i) => <p key={i}>{p}</p>)}
-            </section>
-          ))}
+        <div className="overflow-y-auto pr-2 text-sm leading-relaxed text-emerald-950/80">
+          <Accordion type="single" collapsible className="w-full">
+            {TERMS_SECTIONS.map((sec, idx) => (
+              <AccordionItem key={sec.title} value={`item-${idx}`}>
+                <AccordionTrigger className="text-left text-emerald-950 font-bold text-base hover:no-underline">
+                  {sec.title}
+                </AccordionTrigger>
+                <AccordionContent className="space-y-2 text-sm">
+                  {sec.paragraphs?.map((p, i) => <p key={i}>{p}</p>)}
+                  {sec.list && <Bullets items={sec.list} />}
+                  {sec.subs?.map((sub) => (
+                    <div key={sub.title} className="space-y-1 pt-1">
+                      <h4 className="text-emerald-950 font-semibold">{sub.title}</h4>
+                      <Bullets items={sub.list} />
+                    </div>
+                  ))}
+                  {sec.afterList?.map((p, i) => <p key={i}>{p}</p>)}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
       </DialogContent>
     </Dialog>
