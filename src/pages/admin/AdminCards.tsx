@@ -12,7 +12,7 @@ interface Tx {
 }
 interface Card {
   appId: number; fullName: string; phone: string; clientCard: string; cardNumber: string; status: string;
-  limit: number; rate: number; days: number | null; issuedAt: string | null; signedAt: string | null;
+  limit: number; contractUrl?: string; rate: number; days: number | null; issuedAt: string | null; signedAt: string | null;
   used: number; available: number; debt: number; repaid: number;
   minPaymentPercent: number; minPayment: number;
   paymentSchedule: { week: number; dueDate: string; amount: number; isNext: boolean }[];
@@ -112,6 +112,17 @@ export default function AdminCards({ token, onChanged }: Props) {
                   <span style={{ background: `${st.color}20`, color: st.color, padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>{st.label}</span>
                   <Icon name={open ? "ChevronUp" : "ChevronDown"} size={18} className="text-emerald-600" />
                 </div>
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                {c.contractUrl ? (
+                  <a href={c.contractUrl} target="_blank" rel="noopener noreferrer"
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(16,185,129,0.1)", color: "#047857", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 8, padding: "6px 12px", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
+                    <Icon name="FileDown" size={14} />Договор займа по карте
+                  </a>
+                ) : (
+                  <span style={{ fontSize: 12, color: "#b45309" }}>Договор по карте ещё не создан</span>
+                )}
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 10, marginTop: 14 }}>

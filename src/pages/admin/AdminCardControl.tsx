@@ -144,6 +144,18 @@ export default function AdminCardControl({ app, token, onDone }: Props) {
           {app.virtualCardLimit ? ` · ${app.virtualCardLimit.toLocaleString("ru-RU")} ₽` : ""}
         </div>
       )}
+      {hasCard && (
+        app.cardContractUrl ? (
+          <a href={app.cardContractUrl} target="_blank" rel="noopener noreferrer"
+            style={{ borderRadius: 10, padding: "8px 12px", fontSize: 12, fontWeight: 600, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", color: "#047857", display: "flex", alignItems: "center", gap: 6, textDecoration: "none" }}>
+            <Icon name="FileDown" size={13} />Договор займа по карте
+          </a>
+        ) : (
+          <div style={{ borderRadius: 10, padding: "8px 12px", fontSize: 12, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", color: "#b45309", display: "flex", alignItems: "center", gap: 6 }}>
+            <Icon name="FileX" size={13} />Договор по карте ещё не создан
+          </div>
+        )
+      )}
       {hasCard && app.virtualCardStatus !== "pending" && (
         <div style={{ borderRadius: 10, padding: "8px 12px", fontSize: 12, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", color: "#047857", display: "flex", alignItems: "flex-start", gap: 6 }}>
           <Icon name="FileCheck" size={13} />

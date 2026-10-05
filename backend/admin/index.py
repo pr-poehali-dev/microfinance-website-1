@@ -406,7 +406,7 @@ def handler(event: dict, context) -> dict:
                    COALESCE(hist.loans_count, 0), COALESCE(hist.paid_count, 0), COALESCE(hist.overdue_count, 0),
                    COALESCE(hist.total_borrowed, 0), COALESCE(hist.apps_count, 0), a.partner_card_url,
                    a.virtual_card_status, a.virtual_card_limit, a.virtual_card_signed_at, a.is_card_request,
-                   a.promo_code, a.promo_discount, a.profile_updated_at, a.profile_changes
+                   a.promo_code, a.promo_discount, a.profile_updated_at, a.profile_changes, a.card_contract_url
             FROM {SCHEMA}.applications a
             LEFT JOIN LATERAL (
                 SELECT lo.id, lo.signed, lo.signed_at, lo.status, lo.disbursed_at, lo.created_at
@@ -468,6 +468,7 @@ def handler(event: dict, context) -> dict:
             "promoDiscount": int(r[57]) if len(r) > 57 and r[57] else 0,
             "profileUpdatedAt": msk(r[58]).strftime("%d.%m.%Y в %H:%M") if len(r) > 58 and r[58] else None,
             "profileChanges": r[59] if len(r) > 59 and r[59] else "",
+            "cardContractUrl": r[60] if len(r) > 60 and r[60] else "",
             "videoCallRequested": bool(r[41]) if r[41] is not None else False,
             "virtualCardDays": int(r[42]) if r[42] else None,
             "blockedUntil": msk(r[43]).strftime("%d.%m.%Y %H:%M") if r[43] else None,
@@ -2011,7 +2012,7 @@ def handler(event: dict, context) -> dict:
     if sub == "cards" and method == "GET":
         cur.execute(f"""
             SELECT id, full_name, phone, card_number, virtual_card_number, virtual_card_status, virtual_card_limit,
-                   virtual_card_rate, virtual_card_days, virtual_card_issued_at, virtual_card_signed_at
+                   virtual_card_rate, virtual_card_days, virtual_card_issued_at, virtual_card_signed_at, card_contract_url
             FROM {SCHEMA}.applications
             WHERE virtual_card_number IS NOT NULL AND virtual_card_number <> ''
             ORDER BY virtual_card_issued_at DESC NULLS LAST
@@ -2043,7 +2044,7 @@ def handler(event: dict, context) -> dict:
         cur.close(); conn.close()
 
         cards = []
-        for (app_id, full_name, phone, client_card, vc_number, vc_status, vc_limit, vc_rate, vc_days, issued_at, signed_at) in card_rows:
+        for (app_id, full_name, phone, client_card, vc_number, vc_status, vc_limit, vc_rate, vc_days, issued_at, signed_at, card_contract) in card_rows:
             limit_v = float(vc_limit or 0)
             tx_list = []
             principal = 0.0
@@ -2071,6 +2072,7 @@ def handler(event: dict, context) -> dict:
                 "appId": app_id, "fullName": full_name or "", "phone": phone or "", "clientCard": client_card or "",
                 "cardNumber": vc_number or "", "status": vc_status or "none",
                 "limit": limit_v, "rate": float(vc_rate or 0), "days": vc_days,
+                "contractUrl": card_contract or "",
                 "issuedAt": msk(issued_at).strftime("%d.%m.%Y в %H:%M") if issued_at else None,
                 "signedAt": msk(signed_at).strftime("%d.%m.%Y в %H:%M") if signed_at else None,
                 "used": used, "available": max(0.0, limit_v - used),
