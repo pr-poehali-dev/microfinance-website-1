@@ -846,6 +846,7 @@ export default function DashboardApplicationStatus({
                   fullName={application.virtualCard.holder}
                   pendingNotices={application.virtualCard.pendingNotices ?? []}
                   paidNotices={application.virtualCard.paidNotices ?? []}
+                  closed={(application.virtualCard.debt ?? 0) <= 0 && (application.virtualCard.repaid ?? 0) > 0 && application.virtualCard.transactions.some((t) => t.status !== "cancelled")}
                   onReported={onRefresh}
                 />
 
@@ -862,6 +863,7 @@ export default function DashboardApplicationStatus({
                   fullName={application.virtualCard.holder}
                   pendingNotices={application.virtualCard.pendingNotices ?? []}
                   paidNotices={application.virtualCard.paidNotices ?? []}
+                  closed={(application.virtualCard.debt ?? 0) <= 0 && (application.virtualCard.repaid ?? 0) > 0 && application.virtualCard.transactions.some((t) => t.status !== "cancelled")}
                   onReported={onRefresh}
                 />
               </div>

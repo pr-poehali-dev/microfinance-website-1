@@ -28,10 +28,11 @@ interface Props {
   fullName?: string;
   pendingNotices?: string[];
   paidNotices?: string[];
+  closed?: boolean;
   onReported?: () => void;
 }
 
-export default function CardTransactionsList({ transactions, cardLast4, fullName, pendingNotices = [], paidNotices = [], onReported }: Props) {
+export default function CardTransactionsList({ transactions, cardLast4, fullName, pendingNotices = [], paidNotices = [], closed = false, onReported }: Props) {
   const [openId, setOpenId] = useState<number | null>(null);
   const [pay, setPay] = useState<{ txId: number; amount: number; dueDate: string } | null>(null);
 
@@ -53,6 +54,11 @@ export default function CardTransactionsList({ transactions, cardLast4, fullName
               <div className="text-left">
                 <div className="text-emerald-950 font-semibold text-sm">{tx.amount.toLocaleString("ru-RU")} ₽ · {tx.weeks} нед.</div>
                 <div className="text-emerald-950/40 text-xs">{tx.createdAt} · к возврату {tx.total.toLocaleString("ru-RU")} ₽</div>
+                {closed && tx.status !== "cancelled" && (
+                  <div className="text-xs font-semibold flex items-center gap-1" style={{ color: "#047857" }}>
+                    <Icon name="CheckCircle" size={12} />Оплачено · закрыт
+                  </div>
+                )}
                 <div className="text-xs font-medium" style={{ color: (tx.disbursedAmount ?? 0) >= tx.amount ? "#15803d" : "#b91c1c" }}>
                   {(tx.disbursedAmount ?? 0) >= tx.amount
                     ? `Перечислено на карту: ${(tx.disbursedAmount ?? 0).toLocaleString("ru-RU")} ₽`
@@ -72,7 +78,7 @@ export default function CardTransactionsList({ transactions, cardLast4, fullName
                   <span className="flex items-center gap-2">
                     <span className="text-emerald-950 font-semibold text-sm">{s.amount.toLocaleString("ru-RU")} ₽</span>
                     {cardLast4 && tx.status !== "cancelled" && (
-                      paidNotices.includes(`${tx.id}|${s.dueDate}`) ? (
+                      closed || paidNotices.includes(`${tx.id}|${s.dueDate}`) ? (
                         <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg" style={{ background: "rgba(16,185,129,0.15)", color: "#047857" }}>
                           <Icon name="CheckCircle" size={12} />Оплачено
                         </span>

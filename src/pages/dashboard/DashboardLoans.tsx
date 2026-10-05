@@ -231,6 +231,7 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                     payments={loan.payments || []}
                     paidTotal={loan.paidTotal || 0}
                     totalDue={loan.total}
+                    closed={loan.status === "paid"}
                   />
 
                   <div className="flex items-center justify-between rounded-xl px-5 py-4"
@@ -265,7 +266,7 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                     {loan.status === "paid" && (
                       <div className="flex items-center gap-2 text-green-400 font-semibold">
                         <Icon name="CheckCircle" size={20} />
-                        Погашен
+                        Оплачено · займ закрыт
                       </div>
                     )}
                   </div>

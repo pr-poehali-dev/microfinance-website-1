@@ -21,9 +21,10 @@ interface Props {
   payments: PaymentItem[];
   paidTotal: number;
   totalDue: number;
+  closed?: boolean;
 }
 
-export default function PaymentHistory({ schedule, payments, paidTotal, totalDue }: Props) {
+export default function PaymentHistory({ schedule, payments, paidTotal, totalDue, closed = false }: Props) {
   const [open, setOpen] = useState(false);
 
   if (schedule.length === 0 && payments.length === 0) return null;
@@ -42,8 +43,10 @@ export default function PaymentHistory({ schedule, payments, paidTotal, totalDue
           </div>
           <div className="text-left">
             <div className="text-emerald-950 font-semibold text-sm">График погашения и платежи</div>
-            <div className="text-emerald-950/40 text-xs">
-              Оплачено {paidTotal.toLocaleString("ru-RU")} ₽ из {totalDue.toLocaleString("ru-RU")} ₽
+            <div className="text-xs" style={{ color: closed ? "#047857" : "rgba(2,44,34,0.4)", fontWeight: closed ? 600 : 400 }}>
+              {closed
+                ? "Все платежи оплачены · займ закрыт"
+                : `Оплачено ${paidTotal.toLocaleString("ru-RU")} ₽ из ${totalDue.toLocaleString("ru-RU")} ₽`}
             </div>
           </div>
         </div>
@@ -52,8 +55,14 @@ export default function PaymentHistory({ schedule, payments, paidTotal, totalDue
 
       {open && (
         <div className="px-5 pb-5 space-y-5">
+          {closed && (
+            <div className="rounded-lg px-4 py-3 flex items-center gap-2 font-semibold text-sm" style={{ background: "rgba(16,185,129,0.15)", color: "#047857" }}>
+              <Icon name="CheckCircle" size={16} />Займ закрыт — все платежи оплачены
+            </div>
+          )}
+
           {/* Остаток */}
-          {paidTotal > 0 && (
+          {paidTotal > 0 && !closed && (
             <div className="rounded-lg px-4 py-3 flex items-center justify-between" style={{ background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.2)" }}>
               <span className="text-emerald-950/50 text-xs">Остаток к погашению</span>
               <span className="text-green-400 font-bold text-sm">{remaining.toLocaleString("ru-RU")} ₽</span>
@@ -74,7 +83,14 @@ export default function PaymentHistory({ schedule, payments, paidTotal, totalDue
                         {s.dueDate ? ` · ${s.dueDate}` : ""}
                       </span>
                     </div>
-                    <span className="text-emerald-950 font-semibold text-sm">{s.amount.toLocaleString("ru-RU")} ₽</span>
+                    <span className="flex items-center gap-2">
+                      <span className="text-emerald-950 font-semibold text-sm">{s.amount.toLocaleString("ru-RU")} ₽</span>
+                      {closed && (
+                        <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg" style={{ background: "rgba(16,185,129,0.15)", color: "#047857" }}>
+                          <Icon name="CheckCircle" size={12} />Оплачено
+                        </span>
+                      )}
+                    </span>
                   </div>
                 ))}
               </div>

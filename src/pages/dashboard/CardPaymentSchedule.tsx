@@ -19,13 +19,14 @@ interface Props {
   pendingNotices?: string[];
   paidNotices?: string[];
   highlightPaid?: boolean;
+  closed?: boolean;
   onReported?: () => void;
 }
 
 const FULL_KEY = "Полное погашение";
 const fmt = (n: number) => `${n.toLocaleString("ru-RU")} ₽`;
 
-export default function CardPaymentSchedule({ debt, minPaymentPercent, minPayment, schedule, cardLast4, fullName, pendingNotices = [], paidNotices = [], highlightPaid = false, onReported }: Props) {
+export default function CardPaymentSchedule({ debt, minPaymentPercent, minPayment, schedule, cardLast4, fullName, pendingNotices = [], paidNotices = [], highlightPaid = false, closed = false, onReported }: Props) {
   const [payRow, setPayRow] = useState<CardPaymentRow | null>(null);
   const [payFull, setPayFull] = useState(false);
   return (
@@ -36,7 +37,13 @@ export default function CardPaymentSchedule({ debt, minPaymentPercent, minPaymen
       </div>
 
       {debt <= 0 ? (
-        <div className="text-emerald-950/50 text-xs">Задолженности по карте нет — платежей нет.</div>
+        closed ? (
+          <div className="flex items-center justify-center gap-2 text-sm font-semibold py-3 rounded-xl" style={{ background: "rgba(16,185,129,0.15)", color: "#047857" }}>
+            <Icon name="CheckCircle" size={16} />Оплачено · лимит закрыт
+          </div>
+        ) : (
+          <div className="text-emerald-950/50 text-xs">Задолженности по карте нет — платежей нет.</div>
+        )
       ) : (
         <>
           <div className="grid grid-cols-2 gap-2">
