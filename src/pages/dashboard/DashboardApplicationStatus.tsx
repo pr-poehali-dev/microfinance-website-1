@@ -217,7 +217,7 @@ export default function DashboardApplicationStatus({
       )}
 
       {/* БЛОК СТАТУСА ЗАЯВКИ: PENDING — таймер */}
-      {application && application.status === "pending" && (
+      {application && application.status === "pending" && !(application.virtualCard && application.virtualCard.status !== "none") && (
         <div className="glass rounded-2xl overflow-hidden mb-6"
           style={{ border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.04)" }}>
           <div className="px-6 py-4 flex items-center gap-3"

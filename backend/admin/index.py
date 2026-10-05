@@ -1753,6 +1753,10 @@ def handler(event: dict, context) -> dict:
                 virtual_card_issued_at = NOW()
             WHERE id = '{app_id_e}'
         """)
+        cur.execute(
+            f"UPDATE {SCHEMA}.card_requests SET status='approved', reviewed_at=NOW() "
+            f"WHERE phone='{str(phone).replace(chr(39), chr(39)*2)}' AND status='pending'"
+        )
         conn.commit()
 
         tg(
