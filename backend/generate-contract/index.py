@@ -313,6 +313,71 @@ def html_to_pdf_bytes(html: str) -> bytes:
     return buf.getvalue()
 
 
+BACKFILL_WHERE = f"""
+    a.status IN ('approved','partner_card')
+    AND (a.contract_url IS NULL OR a.contract_url = '')
+    AND COALESCE(a.approved_amount, a.amount) >= 1000
+    AND a.id = (SELECT x.id FROM {SCHEMA}.applications x WHERE x.phone = a.phone ORDER BY x.created_at DESC LIMIT 1)
+"""
+
+
+def build_and_store(cur, app_id: str, loan_id: int) -> str:
+    app_id_e = str(app_id).replace("'", "''")
+    cur.execute(f"""
+        SELECT full_name, phone, email, birth_date, birth_place,
+               passport_series, passport_number, passport_date, passport_code, passport_by,
+               approved_amount, approved_rate, approved_days, amount, days
+        FROM {SCHEMA}.applications WHERE id = '{app_id_e}'
+    """)
+    (full_name, phone, email, birth_date, birth_place, ps, pn, pd, pc, pb,
+     approved_amount, approved_rate, approved_days, amount, days) = cur.fetchone()
+    app_data = {
+        "full_name": full_name or "", "phone": phone or "", "email": email or "",
+        "birth_date": str(birth_date) if birth_date else "", "birth_place": birth_place or "",
+        "passport_series": ps or "", "passport_number": pn or "",
+        "passport_date": str(pd) if pd else "", "passport_code": pc or "", "passport_by": pb or "",
+        "amount": float(approved_amount) if approved_amount else float(amount),
+        "rate": float(approved_rate) if approved_rate else 0.008,
+        "days": int(approved_days) if approved_days else int(days),
+    }
+    html = generate_contract_html(app_data, loan_id or int(app_id_e))
+    pdf_bytes = html_to_pdf_bytes(html)
+    now_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    s3_key = f"contracts/contract_{app_id}_{now_ts}.pdf"
+    s3_client().put_object(Bucket="files", Key=s3_key, Body=pdf_bytes, ContentType="application/pdf")
+    contract_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{s3_key}"
+    cur.execute(f"UPDATE {SCHEMA}.applications SET contract_url='{contract_url.replace(chr(39), chr(39)*2)}' WHERE id='{app_id_e}'")
+    return contract_url
+
+
+def backfill_contracts(cur, conn) -> dict:
+    """Создаёт недостающие договоры пачкой по 3 штуки, возвращает сколько осталось."""
+    cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.applications a WHERE {BACKFILL_WHERE}")
+    total_before = cur.fetchone()[0]
+    cur.execute(f"""
+        SELECT a.id, (SELECT lo.id FROM {SCHEMA}.loans lo JOIN {SCHEMA}.users u ON u.id = lo.user_id
+                      WHERE u.phone = a.phone ORDER BY lo.created_at DESC LIMIT 1)
+        FROM {SCHEMA}.applications a WHERE {BACKFILL_WHERE} ORDER BY a.id DESC LIMIT 3
+    """)
+    batch = cur.fetchall()
+    done, failed = 0, 0
+    for app_id, loan_id in batch:
+        try:
+            build_and_store(cur, str(app_id), int(loan_id) if loan_id else 0)
+            conn.commit()
+            done += 1
+        except Exception as ex:
+            conn.rollback()
+            failed += 1
+            print(f"[backfill] app_id={app_id} error: {ex}")
+    cur.close(); conn.close()
+    return {
+        "statusCode": 200, "headers": CORS,
+        "body": json.dumps({"ok": True, "created": done, "failed": failed,
+                            "remaining": max(0, total_before - done)}, ensure_ascii=False),
+    }
+
+
 def handler(event: dict, context) -> dict:
     """Генерация PDF договора займа и сохранение в S3. Вызывается из admin при одобрении заявки."""
     if event.get("httpMethod") == "OPTIONS":
@@ -335,6 +400,10 @@ def handler(event: dict, context) -> dict:
 
     raw = event.get("body") or "{}"
     body = json.loads(raw) if isinstance(raw, str) else raw
+
+    if body.get("backfill"):
+        return backfill_contracts(cur, conn)
+
     app_id = body.get("appId")
     loan_id = body.get("loanId")
 

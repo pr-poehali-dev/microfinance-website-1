@@ -11,6 +11,7 @@ import AdminDisbursed from "./admin/AdminDisbursed";
 import AdminCardRequests from "./admin/AdminCardRequests";
 import AdminCards from "./admin/AdminCards";
 import AdminPromoCodes from "./admin/AdminPromoCodes";
+import AdminContractsRepair from "./admin/AdminContractsRepair";
 import { App, User, Loan, PURPLE } from "./admin/adminTypes";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
@@ -380,6 +381,7 @@ export default function AdminPage() {
       </div>
 
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 16px" }}>
+        {tab === "apps" && <AdminContractsRepair token={token} />}
         {tab === "apps" && (
           <AdminApplications
             apps={apps} appsLoading={appsLoading}
