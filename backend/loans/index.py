@@ -117,6 +117,16 @@ PROFILE_FILE_COLS = {
     "fileSelfie": "file_selfie", "filePreviousPassports": "file_previous_passports",
 }
 
+PROFILE_LABELS = {
+    "fullName": "ФИО", "email": "Email", "birthDate": "дата рождения", "birthPlace": "место рождения",
+    "passportSeries": "серия паспорта", "passportNumber": "номер паспорта", "passportDate": "дата выдачи паспорта",
+    "passportCode": "код подразделения", "passportBy": "кем выдан паспорт", "snils": "СНИЛС",
+    "workplace": "место работы", "position": "должность", "workPhone": "рабочий телефон",
+    "salary": "зарплата", "contactPerson": "контактное лицо",
+    "filePassport": "фото паспорта", "fileRegistration": "фото прописки",
+    "fileSelfie": "селфи с паспортом", "filePreviousPassports": "фото ранее выданных паспортов",
+}
+
 PROFILE_COLS = {
     "birthDate": "birth_date", "birthPlace": "birth_place",
     "passportSeries": "passport_series", "passportNumber": "passport_number",
@@ -305,7 +315,36 @@ def handler(event: dict, context) -> dict:
         if not latest:
             conn.rollback(); cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Анкета не найдена"}, ensure_ascii=False)}
-        sets.append("profile_updated_at = NOW()")
+        old_keys = ["fullName", "email"] + list(PROFILE_COLS.keys()) + ["salary"] + list(PROFILE_FILE_COLS.keys())
+        old_cols = ["full_name", "email"] + list(PROFILE_COLS.values()) + ["salary"] + list(PROFILE_FILE_COLS.values())
+        cur.execute(f"SELECT {', '.join(old_cols)}, profile_changes FROM {SCHEMA}.applications WHERE id = {int(latest[0])}")
+        old_row = cur.fetchone()
+        changed = []
+        for idx, key in enumerate(old_keys):
+            if key not in b:
+                continue
+            old_v = old_row[idx]
+            new_v = b.get(key)
+            if key == "salary":
+                try:
+                    o_n = float(old_v) if old_v not in (None, "") else None
+                    n_n = float(str(new_v or "").replace(" ", "").replace(",", ".")) if str(new_v or "").strip() else None
+                except ValueError:
+                    continue
+                if o_n != n_n:
+                    changed.append(PROFILE_LABELS[key])
+            elif key in PROFILE_FILE_COLS:
+                nv = str(new_v or "").strip()
+                if nv.startswith("https://") and nv != str(old_v or "").strip():
+                    changed.append(PROFILE_LABELS[key])
+            else:
+                if str(old_v or "").strip() != str(new_v or "").strip():
+                    changed.append(PROFILE_LABELS[key])
+        if changed:
+            prev_list = [x for x in (old_row[-1] or "").split(", ") if x]
+            merged_list = prev_list + [x for x in changed if x not in prev_list]
+            sets.append("profile_updated_at = NOW()")
+            sets.append(f"profile_changes = '{e(', '.join(merged_list))}'")
         cur.execute(f"UPDATE {SCHEMA}.applications SET {', '.join(sets)} WHERE id = {int(latest[0])}")
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
@@ -640,7 +679,7 @@ def handler(event: dict, context) -> dict:
         cur.execute(f"""
             SELECT birth_date, birth_place, passport_series, passport_number, passport_date, passport_code, passport_by,
                    telegram_id, snils, workplace, position, work_phone, salary, contact_person, card_number_transfer,
-                   file_passport, file_registration, file_selfie, file_previous_passports, email, profile_updated_at
+                   file_passport, file_registration, file_selfie, file_previous_passports, email, profile_updated_at, profile_changes
             FROM {SCHEMA}.applications WHERE phone = '{ph_e}' ORDER BY created_at DESC LIMIT 1
         """)
         prev = cur.fetchone()
@@ -653,7 +692,7 @@ def handler(event: dict, context) -> dict:
         if prev:
             (birth_date, birth_place, passport_series, passport_number, passport_date, passport_code, passport_by,
              telegram_id, snils, workplace, position, work_phone, salary, contact_person, card_number_transfer,
-             file_passport, file_registration, file_selfie, file_previous_passports, prev_email, prev_profile_updated) = prev
+             file_passport, file_registration, file_selfie, file_previous_passports, prev_email, prev_profile_updated, prev_profile_changes) = prev
         else:
             birth_date = birth_place = passport_series = passport_number = passport_date = passport_code = passport_by = None
             telegram_id = snils = workplace = position = work_phone = contact_person = card_number_transfer = None
@@ -661,6 +700,7 @@ def handler(event: dict, context) -> dict:
             salary = None
             prev_email = None
             prev_profile_updated = None
+            prev_profile_changes = None
 
         salary_val = str(float(salary)) if salary is not None else "NULL"
         email_val = v(email or prev_email)
@@ -672,13 +712,13 @@ def handler(event: dict, context) -> dict:
                  passport_series, passport_number, passport_date, passport_code, passport_by,
                  telegram_id, status, file_passport, file_registration, file_selfie, file_previous_passports,
                  snils, workplace, position, work_phone, salary, contact_person, card_number_transfer,
-                 promo_code, promo_discount, profile_updated_at)
+                 promo_code, promo_discount, profile_updated_at, profile_changes)
             VALUES (
                 '{fn_e}', '{ph_e}', {email_val}, {amount}, {days},
                 {v(birth_date)}, {v(birth_place)}, {v(passport_series)}, {v(passport_number)}, {v(passport_date)}, {v(passport_code)}, {v(passport_by)},
                 {v(telegram_id)}, 'pending', {v(file_passport)}, {v(file_registration)}, {v(file_selfie)}, {v(file_previous_passports)},
                 {v(snils)}, {v(workplace)}, {v(position)}, {v(work_phone)}, {salary_val}, {v(contact_person)}, {v(card_number_transfer)},
-                {promo_sql}, {promo_disc_v}, {v(prev_profile_updated)}
+                {promo_sql}, {promo_disc_v}, {v(prev_profile_updated)}, {v(prev_profile_changes)}
             ) RETURNING id
         """)
         new_app_id = cur.fetchone()[0]
@@ -695,7 +735,7 @@ def handler(event: dict, context) -> dict:
                 f"📞 <b>Телефон:</b> {phone}\n"
                 f"💰 <b>Сумма:</b> {int(amount):,} ₽\n".replace(",", " ") +
                 f"📅 <b>Срок:</b> {days} дн.\n" +
-                ("✏️ <b>Клиент обновил анкету</b>\n" if prev_profile_updated else "") +
+                (f"✏️ <b>Клиент обновил анкету:</b> {prev_profile_changes}\n" if prev_profile_updated and prev_profile_changes else "✏️ <b>Клиент обновил анкету</b>\n" if prev_profile_updated else "") +
                 (f"🎟 <b>Промокод:</b> {promo_code_v} (−{promo_disc_v}% на проценты)\n" if promo_code_v else "") +
                 f"\nКлиент уже брал займ ранее — заявка подана через личный кабинет."
             )

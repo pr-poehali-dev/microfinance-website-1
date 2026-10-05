@@ -226,7 +226,7 @@ export default function AdminApplications({
                   {waitSigned && <span style={WAITING_BADGE_STYLE}>🔴 Договор подписан — клиент ждёт деньги</span>}
                   {!!app.profileUpdatedAt && (
                     <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(245,158,11,0.15)", color: "#b45309", border: "1px solid rgba(245,158,11,0.4)" }}>
-                      ✏️ Анкета обновлена клиентом · {app.profileUpdatedAt}
+                      ✏️ Анкета обновлена клиентом · {app.profileUpdatedAt}{app.profileChanges ? ` · изменено: ${app.profileChanges}` : ""}
                     </span>
                   )}
                   {!!app.promoCode && (

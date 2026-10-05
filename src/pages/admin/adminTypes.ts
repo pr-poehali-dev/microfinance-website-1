@@ -22,6 +22,7 @@ export interface App {
   promoCode?: string;
   promoDiscount?: number;
   profileUpdatedAt?: string | null;
+  profileChanges?: string;
   videoCallRequested: boolean;
   virtualCardDays: number | null;
   blockedUntil: string | null;
