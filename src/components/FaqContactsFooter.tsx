@@ -2,6 +2,7 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import OfferDialog from "@/components/OfferDialog";
 import RequisitesDialog from "@/components/RequisitesDialog";
+import TermsDialog from "@/components/TermsDialog";
 
 const FAQ_ITEMS = [
   {
@@ -30,6 +31,7 @@ export default function FaqContactsFooter() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [offerOpen, setOfferOpen] = useState(false);
   const [reqOpen, setReqOpen] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
 
   return (
     <>
@@ -156,7 +158,7 @@ export default function FaqContactsFooter() {
           </div>
           <div className="flex gap-4">
             {["Политика", "Условия", "Реквизиты"].map((l) => (
-              <button key={l} onClick={l === "Реквизиты" ? () => setReqOpen(true) : undefined} className="text-emerald-950/40 hover:text-emerald-600 text-sm transition-colors">
+              <button key={l} onClick={l === "Реквизиты" ? () => setReqOpen(true) : l === "Условия" ? () => setTermsOpen(true) : undefined} className="text-emerald-950/40 hover:text-emerald-600 text-sm transition-colors">
                 {l}
               </button>
             ))}
@@ -168,6 +170,7 @@ export default function FaqContactsFooter() {
       </footer>
       <OfferDialog open={offerOpen} onOpenChange={setOfferOpen} />
       <RequisitesDialog open={reqOpen} onOpenChange={setReqOpen} />
+      <TermsDialog open={termsOpen} onOpenChange={setTermsOpen} />
     </>
   );
 }
