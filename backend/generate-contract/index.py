@@ -321,6 +321,15 @@ BACKFILL_WHERE = f"""
 """
 
 
+def store_contract_file(html: str, app_id: str, now_ts: str):
+    """PDF, а если конвертер недоступен — готовая HTML-страница договора."""
+    try:
+        return f"contracts/contract_{app_id}_{now_ts}.pdf", html_to_pdf_bytes(html), "application/pdf"
+    except Exception as ex:
+        print(f"[contract] pdf unavailable, saving html: {ex}")
+        return f"contracts/contract_{app_id}_{now_ts}.html", html.encode("utf-8"), "text/html; charset=utf-8"
+
+
 def build_and_store(cur, app_id: str, loan_id: int) -> str:
     app_id_e = str(app_id).replace("'", "''")
     cur.execute(f"""
@@ -341,10 +350,9 @@ def build_and_store(cur, app_id: str, loan_id: int) -> str:
         "days": int(approved_days) if approved_days else int(days),
     }
     html = generate_contract_html(app_data, loan_id or int(app_id_e))
-    pdf_bytes = html_to_pdf_bytes(html)
     now_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    s3_key = f"contracts/contract_{app_id}_{now_ts}.pdf"
-    s3_client().put_object(Bucket="files", Key=s3_key, Body=pdf_bytes, ContentType="application/pdf")
+    s3_key, body_bytes, ctype = store_contract_file(html, str(app_id), now_ts)
+    s3_client().put_object(Bucket="files", Key=s3_key, Body=body_bytes, ContentType=ctype)
     contract_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{s3_key}"
     cur.execute(f"UPDATE {SCHEMA}.applications SET contract_url='{contract_url.replace(chr(39), chr(39)*2)}' WHERE id='{app_id_e}'")
     return contract_url
@@ -451,13 +459,11 @@ def handler(event: dict, context) -> dict:
 
     # Генерируем HTML и конвертируем в PDF
     html = generate_contract_html(app_data, eff_loan_id or int(app_id_e))
-    pdf_bytes = html_to_pdf_bytes(html)
 
-    # Загружаем в S3
     s3 = s3_client()
     now_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    s3_key = f"contracts/contract_{app_id}_{now_ts}.pdf"
-    s3.put_object(Bucket="files", Key=s3_key, Body=pdf_bytes, ContentType="application/pdf")
+    s3_key, body_bytes, ctype = store_contract_file(html, str(app_id), now_ts)
+    s3.put_object(Bucket="files", Key=s3_key, Body=body_bytes, ContentType=ctype)
     access_key = os.environ["AWS_ACCESS_KEY_ID"]
     contract_url = f"https://cdn.poehali.dev/projects/{access_key}/bucket/{s3_key}"
     print(f"[generate-contract] saved {s3_key} -> {contract_url}")
