@@ -112,6 +112,11 @@ def profile_locked(cur, user_id, phone):
     return False
 
 
+PROFILE_FILE_COLS = {
+    "filePassport": "file_passport", "fileRegistration": "file_registration",
+    "fileSelfie": "file_selfie", "filePreviousPassports": "file_previous_passports",
+}
+
 PROFILE_COLS = {
     "birthDate": "birth_date", "birthPlace": "birth_place",
     "passportSeries": "passport_series", "passportNumber": "passport_number",
@@ -288,6 +293,11 @@ def handler(event: dict, context) -> dict:
             except ValueError:
                 conn.rollback(); cur.close(); conn.close()
                 return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Зарплата должна быть числом"}, ensure_ascii=False)}
+
+        for key, col in PROFILE_FILE_COLS.items():
+            url_v = str(b.get(key) or "").strip()
+            if url_v.startswith("https://"):
+                sets.append(f"{col} = '{e(url_v)}'")
 
         ph_e = phone.replace("'", "''")
         cur.execute(f"SELECT id FROM {SCHEMA}.applications WHERE phone = '{ph_e}' ORDER BY created_at DESC LIMIT 1")
@@ -730,7 +740,8 @@ def handler(event: dict, context) -> dict:
         f"SELECT id, amount, days, status, created_at, approved_amount, approved_rate, approved_days, reject_reason, card_number, contract_url, "
         f"virtual_card_number, virtual_card_expiry, virtual_card_cvv, virtual_card_holder, virtual_card_limit, virtual_card_rate, virtual_card_status, "
         f"is_credit_doctor, full_name, email, birth_date, birth_place, passport_series, passport_number, passport_date, passport_code, passport_by, "
-        f"workplace, position, work_phone, salary, contact_person, snils, reviewed_at, video_call_requested, virtual_card_days, partner_card_url, insurance_amount, virtual_card_issued_at "
+        f"workplace, position, work_phone, salary, contact_person, snils, reviewed_at, video_call_requested, virtual_card_days, partner_card_url, insurance_amount, virtual_card_issued_at, "
+        f"file_passport, file_registration, file_selfie, file_previous_passports "
         f"FROM {SCHEMA}.applications "
         f"WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1"
     )
@@ -907,6 +918,10 @@ def handler(event: dict, context) -> dict:
             "salary": float(app_row[31]) if app_row[31] else None,
             "contactPerson": app_row[32] or "",
             "snils": app_row[33] or "",
+            "filePassport": app_row[40] or "",
+            "fileRegistration": app_row[41] or "",
+            "fileSelfie": app_row[42] or "",
+            "filePreviousPassports": app_row[43] or "",
         }
         application["profile"] = profile
 

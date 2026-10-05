@@ -18,6 +18,10 @@ export interface ClientProfile {
   salary: number | null;
   contactPerson: string;
   snils: string;
+  filePassport?: string;
+  fileRegistration?: string;
+  fileSelfie?: string;
+  filePreviousPassports?: string;
 }
 
 interface Props {
