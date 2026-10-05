@@ -1,22 +1,28 @@
 import { useMemo, useState } from "react";
 import Icon from "@/components/ui/icon";
+import ProfileEditForm from "./ProfileEditForm";
+import type { ClientProfile } from "./ClientProfileCard";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 
 interface Props {
   promo?: { code: string; discount: number } | null;
+  profile?: ClientProfile | null;
+  profileEditable?: boolean;
+  onProfileSaved?: () => void;
   fullName: string;
   phone: string;
   onSuccess: () => void;
 }
 
-export default function RepeatLoanForm({ promo, fullName, phone, onSuccess }: Props) {
+export default function RepeatLoanForm({ promo, profile, profileEditable = false, onProfileSaved, fullName, phone, onSuccess }: Props) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState(20000);
   const [days, setDays] = useState(30);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
 
   const calc = useMemo(() => {
     const interest = Math.round(amount * 0.008 * days * (100 - (promo?.discount || 0)) / 100);
@@ -100,6 +106,16 @@ export default function RepeatLoanForm({ promo, fullName, phone, onSuccess }: Pr
         </button>
       </div>
 
+      {editingProfile && profile ? (
+        <div className="px-6 py-5">
+          <ProfileEditForm
+            profile={profile}
+            phone={phone}
+            onCancel={() => setEditingProfile(false)}
+            onSaved={() => { setEditingProfile(false); onProfileSaved?.(); }}
+          />
+        </div>
+      ) : (
       <div className="px-6 py-5 space-y-5">
         {/* Проверка данных */}
         <div className="rounded-xl px-4 py-3 space-y-2" style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.08)" }}>
@@ -112,6 +128,11 @@ export default function RepeatLoanForm({ promo, fullName, phone, onSuccess }: Pr
             <span className="text-emerald-950/50">Телефон</span>
             <span className="text-emerald-950 font-medium">{phone}</span>
           </div>
+          {profile && profileEditable && (
+            <button onClick={() => setEditingProfile(true)} className="text-emerald-600 hover:text-emerald-700 text-sm font-semibold flex items-center gap-2 pt-1">
+              <Icon name="Pencil" size={14} />Проверить и изменить анкету
+            </button>
+          )}
           <div className="text-emerald-950/30 text-xs pt-1">Паспортные и рабочие данные возьмём из вашей предыдущей заявки</div>
         </div>
 
@@ -180,6 +201,7 @@ export default function RepeatLoanForm({ promo, fullName, phone, onSuccess }: Pr
           {sending ? "Отправляем..." : "Отправить заявку"}
         </button>
       </div>
+      )}
     </div>
   );
 }

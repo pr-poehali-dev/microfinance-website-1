@@ -78,6 +78,49 @@ def get_user_by_token(cur, token: str):
     return cur.fetchone()
 
 
+def profile_locked(cur, user_id, phone):
+    """True, если у клиента есть действующий займ/заявка/долг по карте и анкету менять нельзя."""
+    ph = phone.replace("'", "''")
+    cur.execute(f"SELECT 1 FROM {SCHEMA}.loans WHERE user_id = {int(user_id)} AND status IN ('active','overdue') LIMIT 1")
+    if cur.fetchone():
+        return True
+    cur.execute(f"SELECT status FROM {SCHEMA}.applications WHERE phone = '{ph}' ORDER BY created_at DESC LIMIT 1")
+    r = cur.fetchone()
+    st = r[0] if r else None
+    if st == "pending":
+        return True
+    if st in ("approved", "partner_card"):
+        cur.execute(f"SELECT 1 FROM {SCHEMA}.loans WHERE user_id = {int(user_id)} AND status = 'review' LIMIT 1")
+        if cur.fetchone():
+            return True
+    cur.execute(
+        f"SELECT COALESCE(SUM(amount + ROUND(amount * rate / 100 * weeks)), 0) FROM {SCHEMA}.card_transactions "
+        f"WHERE phone = '{ph}' AND status != 'cancelled'"
+    )
+    tx_total = float(cur.fetchone()[0] or 0)
+    if tx_total > 0:
+        cur.execute(
+            f"SELECT COALESCE(SUM(amount), 0) FROM {SCHEMA}.card_repayments "
+            f"WHERE application_id IN (SELECT id FROM {SCHEMA}.applications WHERE phone = '{ph}')"
+        )
+        if tx_total - float(cur.fetchone()[0] or 0) > 0:
+            return True
+    for tbl in ("car_loan_applications", "shopping_loan_applications"):
+        cur.execute(f"SELECT 1 FROM {SCHEMA}.{tbl} WHERE phone = '{ph}' AND status IN ('pending','signing','approved') LIMIT 1")
+        if cur.fetchone():
+            return True
+    return False
+
+
+PROFILE_COLS = {
+    "birthDate": "birth_date", "birthPlace": "birth_place",
+    "passportSeries": "passport_series", "passportNumber": "passport_number",
+    "passportDate": "passport_date", "passportCode": "passport_code", "passportBy": "passport_by",
+    "snils": "snils", "workplace": "workplace", "position": "position",
+    "workPhone": "work_phone", "contactPerson": "contact_person",
+}
+
+
 def handler(event: dict, context) -> dict:
     """Получение займов пользователя и подписание оффера."""
     if event.get("httpMethod") == "OPTIONS":
@@ -213,6 +256,47 @@ def handler(event: dict, context) -> dict:
                 except Exception:
                     pass
         cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    # --- КЛИЕНТ РЕДАКТИРУЕТ СВОЮ АНКЕТУ (POST, ?sub=profile_update) ---
+    if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "profile_update":
+        raw_b = event.get("body") or "{}"
+        b = json.loads(raw_b) if isinstance(raw_b, str) else raw_b
+        if profile_locked(cur, user_id, phone):
+            cur.close(); conn.close()
+            return {"statusCode": 403, "headers": CORS, "body": json.dumps({"error": "Анкету можно изменить только когда нет действующего займа"}, ensure_ascii=False)}
+
+        def e(v):
+            return str(v if v is not None else "").strip().replace("'", "''")
+
+        full_name_n = e(b.get("fullName"))
+        email_n = e(b.get("email"))
+        if not full_name_n:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите ФИО"}, ensure_ascii=False)}
+
+        cur.execute(f"UPDATE {SCHEMA}.users SET full_name = '{full_name_n}', email = '{email_n}' WHERE id = {user_id}")
+
+        sets = [f"full_name = '{full_name_n}'", f"email = '{email_n}'"]
+        for key, col in PROFILE_COLS.items():
+            if key in b:
+                sets.append(f"{col} = '{e(b.get(key))}'")
+        if "salary" in b:
+            sal = str(b.get("salary") or "").replace(" ", "").replace(",", ".")
+            try:
+                sets.append(f"salary = {float(sal)}" if sal else "salary = NULL")
+            except ValueError:
+                conn.rollback(); cur.close(); conn.close()
+                return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Зарплата должна быть числом"}, ensure_ascii=False)}
+
+        ph_e = phone.replace("'", "''")
+        cur.execute(f"SELECT id FROM {SCHEMA}.applications WHERE phone = '{ph_e}' ORDER BY created_at DESC LIMIT 1")
+        latest = cur.fetchone()
+        if not latest:
+            conn.rollback(); cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Анкета не найдена"}, ensure_ascii=False)}
+        cur.execute(f"UPDATE {SCHEMA}.applications SET {', '.join(sets)} WHERE id = {int(latest[0])}")
+        conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     # --- КЛИЕНТ АКТИВИРУЕТ ПРОМОКОД НА СЛЕДУЮЩИЙ ЗАЙМ (POST, ?sub=promo_apply, body: {code}) ---
@@ -850,6 +934,7 @@ def handler(event: dict, context) -> dict:
                 "note": p_note or "",
             })
 
+    profile_editable = not profile_locked(cur, user_id, phone)
     cur.execute(f"SELECT promo_code, promo_discount FROM {SCHEMA}.users WHERE id = {user_id}")
     _pr = cur.fetchone()
     user_promo = {"code": _pr[0], "discount": int(_pr[1])} if _pr and _pr[0] else None
@@ -954,5 +1039,6 @@ def handler(event: dict, context) -> dict:
             "cardRequest": card_request,
             "loanNotices": loan_notices,
             "promo": user_promo,
+            "profileEditable": profile_editable,
         }, ensure_ascii=False)
     }

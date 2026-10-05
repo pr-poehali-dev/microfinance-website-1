@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
+import ProfileEditForm from "./ProfileEditForm";
 
 export interface ClientProfile {
   fullName: string;
@@ -22,10 +23,13 @@ export interface ClientProfile {
 interface Props {
   profile: ClientProfile;
   phone: string;
+  editable?: boolean;
+  onSaved?: () => void;
 }
 
-export default function ClientProfileCard({ profile, phone }: Props) {
+export default function ClientProfileCard({ profile, phone, editable = false, onSaved }: Props) {
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   const rows: { label: string; value: string }[] = [
     { label: "ФИО", value: profile.fullName },
@@ -64,14 +68,36 @@ export default function ClientProfileCard({ profile, phone }: Props) {
         <Icon name={open ? "ChevronUp" : "ChevronDown"} size={18} className="text-emerald-950/40 shrink-0" />
       </button>
 
-      {open && (
-        <div className="p-5 grid sm:grid-cols-2 gap-3">
-          {rows.map(({ label, value }) => (
-            <div key={label} className="rounded-xl p-3" style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.07)" }}>
-              <div className="text-emerald-950/40 text-xs mb-1">{label}</div>
-              <div className="text-emerald-950 text-sm font-medium break-words">{value}</div>
+      {open && editing && (
+        <div className="p-5">
+          <ProfileEditForm
+            profile={profile}
+            phone={phone}
+            onCancel={() => setEditing(false)}
+            onSaved={() => { setEditing(false); onSaved?.(); }}
+          />
+        </div>
+      )}
+
+      {open && !editing && (
+        <div className="p-5 space-y-4">
+          <div className="grid sm:grid-cols-2 gap-3">
+            {rows.map(({ label, value }) => (
+              <div key={label} className="rounded-xl p-3" style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.07)" }}>
+                <div className="text-emerald-950/40 text-xs mb-1">{label}</div>
+                <div className="text-emerald-950 text-sm font-medium break-words">{value}</div>
+              </div>
+            ))}
+          </div>
+          {editable ? (
+            <button onClick={() => setEditing(true)} className="btn-neon text-white font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2">
+              <Icon name="Pencil" size={15} />Изменить анкету
+            </button>
+          ) : (
+            <div className="text-emerald-950/40 text-xs flex items-center gap-2">
+              <Icon name="Lock" size={14} />Анкету можно изменить только когда нет действующего займа
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>

@@ -157,6 +157,7 @@ export default function DashboardPage() {
   const [payLoan, setPayLoan] = useState<Loan | null>(null);
   const [payOther, setPayOther] = useState<{ contractNumber: string; amount: number; loanType: "carloan" | "shoploan"; loanId: number } | null>(null);
   const [loanNotices, setLoanNotices] = useState<string[]>([]);
+  const [profileEditable, setProfileEditable] = useState(false);
   const [promo, setPromo] = useState<{ code: string; discount: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -233,6 +234,7 @@ export default function DashboardPage() {
         setLoans(data.loans || []);
         setLoanNotices(data.loanNotices || []);
         setPromo(data.promo || null);
+        setProfileEditable(!!data.profileEditable);
         setIsRepeatClient(!!data.isRepeatClient);
         const app = data.application || null;
         setApplication(app);
@@ -484,7 +486,7 @@ export default function DashboardPage() {
 
         {/* АНКЕТА КЛИЕНТА */}
         {!loading && !error && user && application?.profile && (
-          <ClientProfileCard profile={application.profile} phone={user.phone} />
+          <ClientProfileCard profile={application.profile} phone={user.phone} editable={profileEditable} onSaved={() => { const t = localStorage.getItem("token"); if (t) loadData(t, false); }} />
         )}
         {!loading && !error && user && !application?.profile && carLoan?.full_name && (
           <ClientProfileCard
@@ -522,6 +524,9 @@ export default function DashboardPage() {
         ) && (
           <RepeatLoanForm
             promo={promo}
+            profile={application?.profile ?? null}
+            profileEditable={profileEditable}
+            onProfileSaved={() => { const t = localStorage.getItem("token"); if (t) loadData(t, false); }}
             fullName={user.fullName}
             phone={user.phone}
             onSuccess={() => { const t = localStorage.getItem("token"); if (t) loadData(t, false); }}
