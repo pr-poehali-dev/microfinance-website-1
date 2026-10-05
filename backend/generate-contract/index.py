@@ -54,34 +54,58 @@ def s3_client():
     )
 
 
-def num_to_words(n: int) -> str:
-    """Число прописью (упрощённо для рублей)."""
-    units = ["", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять",
-             "десять", "одиннадцать", "двенадцать", "тринадцать", "четырнадцать", "пятнадцать",
+def _plural(n: int, one: str, few: str, many: str) -> str:
+    n = abs(n) % 100
+    if 11 <= n <= 19:
+        return many
+    n %= 10
+    if n == 1:
+        return one
+    if 2 <= n <= 4:
+        return few
+    return many
+
+
+def _triplet(n: int, female: bool) -> list:
+    units_m = ["", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"]
+    units_f = ["", "одна", "две", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"]
+    teens = ["десять", "одиннадцать", "двенадцать", "тринадцать", "четырнадцать", "пятнадцать",
              "шестнадцать", "семнадцать", "восемнадцать", "девятнадцать"]
     tens = ["", "", "двадцать", "тридцать", "сорок", "пятьдесят",
             "шестьдесят", "семьдесят", "восемьдесят", "девяносто"]
     hundreds = ["", "сто", "двести", "триста", "четыреста", "пятьсот",
                 "шестьсот", "семьсот", "восемьсот", "девятьсот"]
-    if n == 0:
-        return "ноль"
-    if n >= 1000000:
-        return f"{n:,}".replace(",", " ")
     parts = []
-    h = n // 100
-    r = n % 100
-    t = r // 10
-    u = r % 10
+    h, r = n // 100, n % 100
     if h:
         parts.append(hundreds[h])
-    if r < 20:
-        if r:
-            parts.append(units[r])
+    if 10 <= r < 20:
+        parts.append(teens[r - 10])
     else:
-        if t:
-            parts.append(tens[t])
-        if u:
-            parts.append(units[u])
+        if r // 10:
+            parts.append(tens[r // 10])
+        if r % 10:
+            parts.append((units_f if female else units_m)[r % 10])
+    return parts
+
+
+def num_to_words(n: int) -> str:
+    """Число прописью (рубли, до миллиардов)."""
+    n = int(n)
+    if n == 0:
+        return "ноль"
+    if n < 0:
+        return "минус " + num_to_words(-n)
+    parts = []
+    billions, millions, thousands, rest = n // 10**9, (n // 10**6) % 1000, (n // 1000) % 1000, n % 1000
+    if billions:
+        parts += _triplet(billions, False) + [_plural(billions, "миллиард", "миллиарда", "миллиардов")]
+    if millions:
+        parts += _triplet(millions, False) + [_plural(millions, "миллион", "миллиона", "миллионов")]
+    if thousands:
+        parts += _triplet(thousands, True) + [_plural(thousands, "тысяча", "тысячи", "тысяч")]
+    if rest:
+        parts += _triplet(rest, False)
     return " ".join(parts)
 
 
