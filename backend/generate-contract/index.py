@@ -320,10 +320,10 @@ BACKFILL_WHERE = f"""
 def store_contract_file(html: str, app_id: str, now_ts: str):
     """PDF, а если конвертер недоступен — готовая HTML-страница договора."""
     try:
-        return f"contracts/contract_{app_id}_{now_ts}.pdf", html_to_pdf_bytes(html), "application/pdf"
+        return f"contracts/contract_{app_id}_{now_ts}_v2.pdf", html_to_pdf_bytes(html), "application/pdf"
     except Exception as ex:
         print(f"[contract] pdf unavailable, saving html: {ex}")
-        return f"contracts/contract_{app_id}_{now_ts}.html", html.encode("utf-8"), "text/html; charset=utf-8"
+        return f"contracts/contract_{app_id}_{now_ts}_v2.html", html.encode("utf-8"), "text/html; charset=utf-8"
 
 
 def build_and_store(cur, app_id: str, loan_id: int) -> str:
@@ -354,14 +354,25 @@ def build_and_store(cur, app_id: str, loan_id: int) -> str:
     return contract_url
 
 
-def backfill_contracts(cur, conn) -> dict:
-    """Создаёт недостающие договоры пачкой по 3 штуки, возвращает сколько осталось."""
-    cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.applications a WHERE {BACKFILL_WHERE}")
+REFRESH_WHERE = f"""
+    a.status IN ('approved','partner_card')
+    AND a.contract_url IS NOT NULL AND a.contract_url <> ''
+    AND a.contract_url NOT LIKE '%v2.pdf' AND a.contract_url NOT LIKE '%v2.html'
+    AND a.id = (SELECT x.id FROM {SCHEMA}.applications x WHERE x.phone = a.phone ORDER BY x.created_at DESC LIMIT 1)
+    AND COALESCE((SELECT lo.signed FROM {SCHEMA}.loans lo JOIN {SCHEMA}.users u ON u.id = lo.user_id
+                  WHERE u.phone = a.phone ORDER BY lo.created_at DESC LIMIT 1), FALSE) = FALSE
+"""
+
+
+def backfill_contracts(cur, conn, refresh: bool = False) -> dict:
+    """Создаёт недостающие (или обновляет неподписанные) договоры пачкой по 3 штуки."""
+    where = REFRESH_WHERE if refresh else BACKFILL_WHERE
+    cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.applications a WHERE {where}")
     total_before = cur.fetchone()[0]
     cur.execute(f"""
         SELECT a.id, (SELECT lo.id FROM {SCHEMA}.loans lo JOIN {SCHEMA}.users u ON u.id = lo.user_id
                       WHERE u.phone = a.phone ORDER BY lo.created_at DESC LIMIT 1)
-        FROM {SCHEMA}.applications a WHERE {BACKFILL_WHERE} ORDER BY a.id DESC LIMIT 3
+        FROM {SCHEMA}.applications a WHERE {where} ORDER BY a.id DESC LIMIT 3
     """)
     batch = cur.fetchall()
     done, failed = 0, 0
@@ -406,7 +417,7 @@ def handler(event: dict, context) -> dict:
     body = json.loads(raw) if isinstance(raw, str) else raw
 
     if body.get("backfill"):
-        return backfill_contracts(cur, conn)
+        return backfill_contracts(cur, conn, bool(body.get("refresh")))
 
     app_id = body.get("appId")
     loan_id = body.get("loanId")

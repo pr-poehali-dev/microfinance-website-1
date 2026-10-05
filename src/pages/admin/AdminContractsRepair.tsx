@@ -12,7 +12,7 @@ export default function AdminContractsRepair({ token }: Props) {
   const [failed, setFailed] = useState(0);
   const [done, setDone] = useState(false);
 
-  async function run() {
+  async function run(refresh: boolean) {
     setRunning(true); setDone(false); setCreated(0); setFailed(0);
     let guard = 0;
     let totalCreated = 0;
@@ -21,7 +21,7 @@ export default function AdminContractsRepair({ token }: Props) {
       const r = await fetch(CONTRACT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ backfill: true }),
+        body: JSON.stringify({ backfill: true, refresh }),
       }).catch(() => null);
       if (!r || !r.ok) break;
       const d = await r.json();
@@ -43,7 +43,11 @@ export default function AdminContractsRepair({ token }: Props) {
           {!running && !done && "Нажмите, чтобы пересоздать договоры у клиентов, которые ждут подписания."}
         </div>
       </div>
-      <button onClick={run} disabled={running}
+      <button onClick={() => run(true)} disabled={running}
+        style={{ background: "rgba(245,158,11,0.15)", color: "#92400e", border: "1px solid rgba(245,158,11,0.5)", borderRadius: 10, padding: "10px 18px", cursor: running ? "default" : "pointer", fontWeight: 700, fontSize: 14, opacity: running ? 0.7 : 1 }}>
+        Обновить реквизиты
+      </button>
+      <button onClick={() => run(false)} disabled={running}
         style={{ background: "linear-gradient(135deg,#d97706,#f59e0b)", color: "white", border: "none", borderRadius: 10, padding: "10px 18px", cursor: running ? "default" : "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 8, opacity: running ? 0.7 : 1 }}>
         <Icon name={running ? "Loader2" : "FileText"} size={16} className={running ? "animate-spin" : ""} />
         {running ? "Создаём..." : "Пересоздать договоры"}
