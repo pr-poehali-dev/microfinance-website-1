@@ -23,12 +23,13 @@ CORS = {
 OVERDUE_DAILY_PENALTY_RATE = 0.07  # 7% от суммы основного долга за каждый день просрочки
 
 
-def calc_penalty(amount, days, rate, disbursed_at, created_at, paid_total, db_status):
+def calc_penalty(amount, days, rate, disbursed_at, created_at, paid_total, db_status, wheel_rub=0):
     """Считает пеню за просрочку. Возвращает (effective_status, base_total, total_due, is_overdue, overdue_days, penalty_amount).
     amount — тело долга (сумма + страховка). Пеня 7%/день от amount начисляется за каждый
     полный календарный день с даты истечения срока, если долг не погашен полностью.
     Применяется только к уже выданным займам (active/overdue) — не трогает review/paid/rejected."""
     base_interest = round(float(amount) * float(rate) * int(days))
+    base_interest -= min(int(wheel_rub or 0), base_interest)
     base_total = float(amount) + base_interest
     if db_status not in ("active", "overdue") or not disbursed_at:
         return db_status, base_total, base_total, False, 0, 0.0
@@ -819,7 +820,7 @@ def handler(event: dict, context) -> dict:
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     cur.execute(
-        f"SELECT id, amount, days, rate, status, created_at, signed, offer_amount, offer_days, offer_rate, disbursed_at, insurance_amount FROM {SCHEMA}.loans WHERE user_id = {user_id} ORDER BY created_at DESC"
+        f"SELECT id, amount, days, rate, status, created_at, signed, offer_amount, offer_days, offer_rate, disbursed_at, insurance_amount, wheel_discount_rub FROM {SCHEMA}.loans WHERE user_id = {user_id} ORDER BY created_at DESC"
     )
     rows = cur.fetchall()
 
@@ -1079,7 +1080,7 @@ def handler(event: dict, context) -> dict:
 
     loans = []
     for row in rows:
-        loan_id, amount, days, rate, db_status, created_at, signed, offer_amount, offer_days, offer_rate, disbursed_at, loan_insurance = row
+        loan_id, amount, days, rate, db_status, created_at, signed, offer_amount, offer_days, offer_rate, disbursed_at, loan_insurance, loan_wheel_db = row
         loan_insurance = float(loan_insurance) if loan_insurance else 0
         loan_payments = payments_by_loan.get(loan_id, [])
         paid_total = sum(p["amount"] for p in loan_payments)
@@ -1095,15 +1096,11 @@ def handler(event: dict, context) -> dict:
             penalty = 0.0
         else:
             status, base_total, total, is_overdue, overdue_days, penalty = calc_penalty(
-                amount, days, rate, disbursed_at, created_at, paid_total, db_status
+                amount, days, rate, disbursed_at, created_at, paid_total, db_status, loan_wheel_db
             )
             interest = round(base_total - float(amount))
-            if app_wheel_rub and app_created_dt and created_at >= app_created_dt - timedelta(minutes=1) and status != "paid":
-                w_disc = min(app_wheel_rub, interest)
-                if w_disc > 0:
-                    interest -= w_disc
-                    total -= w_disc
-                    loan_wheel_rub = w_disc
+            if loan_wheel_db:
+                loan_wheel_rub = min(int(loan_wheel_db), round(float(amount) * float(rate) * int(days)))
 
         schedule = []
         if status in ("active", "overdue", "paid"):

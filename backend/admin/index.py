@@ -43,11 +43,12 @@ TELEGRAM_CHAT_ID = "8540431915"
 OVERDUE_DAILY_PENALTY_RATE = 0.07  # 7% от суммы основного долга (loans.amount, с учётом страховки) за каждый день просрочки
 
 
-def calc_loan_penalty(amount, days, rate, disbursed_at, created_at, paid_total, db_status, penalty_waived=0):
+def calc_loan_penalty(amount, days, rate, disbursed_at, created_at, paid_total, db_status, penalty_waived=0, wheel_rub=0):
     """Пеня за просрочку обычного займа (loans): 7%/день от amount за каждый день сверх срока.
     penalty_waived — сумма пени, прощённая администратором (уменьшает начисленную пеню, не ниже нуля).
     Возвращает (effective_status, total_due, is_overdue, overdue_days, penalty_amount)."""
     base_interest = round(float(amount) * float(rate) * int(days))
+    base_interest -= min(int(wheel_rub or 0), base_interest)
     base_total = float(amount) + base_interest
     if db_status not in ("active", "overdue") or not disbursed_at:
         return db_status, base_total, False, 0, 0.0
@@ -204,7 +205,7 @@ def handler(event: dict, context) -> dict:
     # --- ЗАЙМЫ КЛИЕНТА (GET, sub='loans', userId=...) ---
     if sub == "loans" and method == "GET":
         user_id = int(qs.get("userId", 0))
-        cur.execute(f"SELECT id, amount, days, rate, status, created_at, disbursed_at, penalty_waived FROM {SCHEMA}.loans WHERE user_id = {user_id} ORDER BY created_at DESC")
+        cur.execute(f"SELECT id, amount, days, rate, status, created_at, disbursed_at, penalty_waived, wheel_discount_rub FROM {SCHEMA}.loans WHERE user_id = {user_id} ORDER BY created_at DESC")
         rows = cur.fetchall()
         cur.execute(f"SELECT phone, full_name FROM {SCHEMA}.users WHERE id = {user_id}")
         u = cur.fetchone()
@@ -217,10 +218,10 @@ def handler(event: dict, context) -> dict:
         cur.close(); conn.close()
         loans = []
         for r in rows:
-            lid, amount, days, rate, status, created_at, disbursed_at, penalty_waived = r
+            lid, amount, days, rate, status, created_at, disbursed_at, penalty_waived, wheel_rub = r
             paid_total = paid_map.get(lid, 0.0)
             eff_status, total_due, is_overdue, overdue_days, penalty = calc_loan_penalty(
-                amount, days, rate, disbursed_at, created_at, paid_total, status, penalty_waived
+                amount, days, rate, disbursed_at, created_at, paid_total, status, penalty_waived, wheel_rub
             )
             loans.append({
                 "id": lid, "amount": float(amount), "days": days, "rate": float(rate),
@@ -304,21 +305,21 @@ def handler(event: dict, context) -> dict:
         custom_amount = body.get("amount")
 
         cur.execute(
-            f"SELECT l.amount, l.days, l.rate, l.disbursed_at, l.created_at, l.status, l.penalty_waived, u.phone "
+            f"SELECT l.amount, l.days, l.rate, l.disbursed_at, l.created_at, l.status, l.penalty_waived, u.phone, l.wheel_discount_rub "
             f"FROM {SCHEMA}.loans l JOIN {SCHEMA}.users u ON u.id = l.user_id WHERE l.id = {loan_id}"
         )
         row = cur.fetchone()
         if not row:
             cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Займ не найден"})}
-        amount, days, rate, disbursed_at, created_at, status, penalty_waived, phone = row
+        amount, days, rate, disbursed_at, created_at, status, penalty_waived, phone, wheel_rub = row
 
         cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.payments WHERE loan_type='loan' AND loan_id={loan_id}")
         paid_total = float(cur.fetchone()[0])
 
         # Текущая пеня без учёта уже списанного — чтобы понять, сколько ещё можно списать
         _, _, is_overdue, overdue_days, current_penalty = calc_loan_penalty(
-            amount, days, rate, disbursed_at, created_at, paid_total, status, penalty_waived
+            amount, days, rate, disbursed_at, created_at, paid_total, status, penalty_waived, wheel_rub
         )
         if not is_overdue or current_penalty <= 0:
             cur.close(); conn.close()
@@ -339,7 +340,7 @@ def handler(event: dict, context) -> dict:
 
         # Пересчитываем итоговые цифры после списания
         eff_status, total_due, is_overdue2, overdue_days2, penalty_after = calc_loan_penalty(
-            amount, days, rate, disbursed_at, created_at, paid_total, status, new_waived
+            amount, days, rate, disbursed_at, created_at, paid_total, status, new_waived, wheel_rub
         )
         cur.close(); conn.close()
 
@@ -558,6 +559,10 @@ def handler(event: dict, context) -> dict:
             f"VALUES ({user_id},{debt_amount},{days},{rate},'review',{debt_amount},{days},{rate},{insurance_amount}) RETURNING id"
         )
         loan_id = cur.fetchone()[0]
+        cur.execute(
+            f"UPDATE {SCHEMA}.loans SET wheel_discount_rub = COALESCE((SELECT wheel_discount_rub FROM {SCHEMA}.applications WHERE id='{app_id_esc}'), 0) "
+            f"WHERE id = {loan_id}"
+        )
 
         # Обновляем статус заявки, сохраняем сумму, ставку, срок, страховку и пароль клиента
         pw_esc = plain_password.replace("'", "''")
@@ -884,6 +889,10 @@ def handler(event: dict, context) -> dict:
                     f"INSERT INTO {SCHEMA}.loans (user_id, amount, days, rate, status, insurance_amount) "
                     f"VALUES ({user_id}, {p_debt}, {p_days}, {p_rate}, 'review', {p_insurance})"
                 )
+                cur.execute(
+                    f"UPDATE {SCHEMA}.loans SET wheel_discount_rub = COALESCE((SELECT wheel_discount_rub FROM {SCHEMA}.applications WHERE id='{app_id_e}'), 0) "
+                    f"WHERE id = (SELECT MAX(id) FROM {SCHEMA}.loans WHERE user_id = {user_id})"
+                )
         conn.commit(); cur.close(); conn.close()
         loan_info = ""
         if p_amount and p_days and p_rate:
@@ -959,6 +968,10 @@ def handler(event: dict, context) -> dict:
                 cur.execute(
                     f"INSERT INTO {SCHEMA}.loans (user_id, amount, days, rate, status, insurance_amount) "
                     f"VALUES ({user_id}, {p_debt}, {p_days}, {p_rate}, 'review', {p_insurance})"
+                )
+                cur.execute(
+                    f"UPDATE {SCHEMA}.loans SET wheel_discount_rub = COALESCE((SELECT wheel_discount_rub FROM {SCHEMA}.applications WHERE id='{app_id_e}'), 0) "
+                    f"WHERE id = (SELECT MAX(id) FROM {SCHEMA}.loans WHERE user_id = {user_id})"
                 )
         conn.commit(); cur.close(); conn.close()
         loan_info = ""
@@ -1174,7 +1187,7 @@ def handler(event: dict, context) -> dict:
             SELECT l.id, u.full_name, u.phone, u.email,
                    l.amount, l.days, l.rate,
                    l.disbursed_at, l.created_at, l.status,
-                   a.telegram_id, l.penalty_waived
+                   a.telegram_id, l.penalty_waived, l.wheel_discount_rub
             FROM {SCHEMA}.loans l
             JOIN {SCHEMA}.users u ON u.id = l.user_id
             LEFT JOIN LATERAL (
@@ -1216,10 +1229,10 @@ def handler(event: dict, context) -> dict:
 
         all_items = []
         for r in loan_rows:
-            loan_id, full_name, phone, email, amount, days, rate, disbursed_at, created_at, status, tg_id, penalty_waived = r
+            loan_id, full_name, phone, email, amount, days, rate, disbursed_at, created_at, status, tg_id, penalty_waived, wheel_rub = r
             paid_total = paid_map.get(("loan", loan_id), 0.0)
             eff_status, total_due, is_overdue, overdue_days, penalty = calc_loan_penalty(
-                amount, days, rate, disbursed_at, created_at, paid_total, status, penalty_waived
+                amount, days, rate, disbursed_at, created_at, paid_total, status, penalty_waived, wheel_rub
             )
             next_due = (disbursed_at + timedelta(days=int(days))) if disbursed_at and paid_total < total_due and status != "paid" else None
             all_items.append({
@@ -1478,7 +1491,7 @@ def handler(event: dict, context) -> dict:
         # Проверяем существование займа и получаем контакты клиента
         if loan_type == "loan":
             cur.execute(f"""
-                SELECT u.phone, u.full_name, l.amount, l.days, l.rate
+                SELECT u.phone, u.full_name, l.amount, l.days, l.rate, l.wheel_discount_rub
                 FROM {SCHEMA}.loans l JOIN {SCHEMA}.users u ON u.id = l.user_id
                 WHERE l.id = {loan_id}
             """)
@@ -1511,7 +1524,9 @@ def handler(event: dict, context) -> dict:
         became_paid = False
         if loan_type == "loan":
             loan_amount, loan_days, loan_rate = row[2], row[3], row[4]
-            total_due = float(loan_amount) + round(float(loan_amount) * float(loan_rate) * loan_days)
+            loan_interest = round(float(loan_amount) * float(loan_rate) * loan_days)
+            loan_interest -= min(int(row[5] or 0), loan_interest)
+            total_due = float(loan_amount) + loan_interest
             cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.payments WHERE loan_type='loan' AND loan_id={loan_id}")
             paid_total = float(cur.fetchone()[0])
             if paid_total >= total_due:
