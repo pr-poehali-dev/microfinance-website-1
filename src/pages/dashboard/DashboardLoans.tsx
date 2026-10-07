@@ -34,6 +34,7 @@ interface Loan {
   promoCode?: string;
   promoDiscount?: number;
   promoSavings?: number;
+  wheelDiscountRub?: number;
 }
 
 interface Application {
@@ -246,6 +247,11 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                         включая {loan.interest.toLocaleString("ru-RU")} ₽ процентов
                         {!!loan.penaltyAmount && ` и ${loan.penaltyAmount.toLocaleString("ru-RU")} ₽ пени за просрочку`}
                       </div>
+                      {!!loan.wheelDiscountRub && (
+                        <div className="text-emerald-700 text-xs font-semibold mt-1">
+                          Приз с колеса фортуны: скидка {loan.wheelDiscountRub.toLocaleString("ru-RU")} ₽ уже учтена
+                        </div>
+                      )}
                       {!!loan.promoSavings && (
                         <div className="text-emerald-700 text-xs font-semibold mt-1">
                           Промокод {loan.promoCode} применён: скидка {loan.promoDiscount}% на проценты, вы экономите {loan.promoSavings.toLocaleString("ru-RU")} ₽

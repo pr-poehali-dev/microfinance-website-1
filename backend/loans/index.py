@@ -83,6 +83,8 @@ def apply_wheel_prize(cur, schema, visitor_id, app_id):
         return
     key, label = row
     cur.execute(f"UPDATE {schema}.applications SET wheel_prize = '{label}' WHERE id = {int(app_id)}")
+    if key.startswith("rub"):
+        cur.execute(f"UPDATE {schema}.applications SET wheel_discount_rub = {int(key[3:])} WHERE id = {int(app_id)}")
     if key.startswith("pct"):
         pct = int(key[3:])
         cur.execute(
@@ -847,9 +849,11 @@ def handler(event: dict, context) -> dict:
     app_promo_code = ""
     app_promo_savings = 0
     app_created_dt = None
+    app_wheel_rub = 0
     if app_row:
-        cur.execute(f"SELECT promo_code, promo_discount FROM {SCHEMA}.applications WHERE id = {int(app_row[0])}")
+        cur.execute(f"SELECT promo_code, promo_discount, wheel_discount_rub FROM {SCHEMA}.applications WHERE id = {int(app_row[0])}")
         _ap = cur.fetchone()
+        app_wheel_rub = int(_ap[2]) if _ap and _ap[2] else 0
         app_promo_discount = int(_ap[1]) if _ap and _ap[1] else 0
         app_promo_code = _ap[0] if _ap and _ap[0] else ""
         app_created_dt = app_row[4]
@@ -865,6 +869,8 @@ def handler(event: dict, context) -> dict:
         eff_amount = approved_amount if approved_amount else app_amount
         eff_debt = eff_amount + insurance_amount_app
         approved_interest = round(eff_debt * approved_rate * approved_days)
+        wheel_rub_applied = min(app_wheel_rub, approved_interest)
+        approved_interest -= wheel_rub_applied
         approved_total = eff_debt + approved_interest
         app_promo_savings = 0
         if app_promo_discount and app_promo_discount < 100:
@@ -957,6 +963,7 @@ def handler(event: dict, context) -> dict:
             "approvedRatePercent": round(approved_rate * 100, 1),
             "promoCode": app_promo_code,
             "promoDiscount": app_promo_discount,
+            "wheelDiscountRub": wheel_rub_applied if app_row else 0,
             "virtualCardOwn": bool(card_app_id == app_row[0]),
             "promoSavings": app_promo_savings,
             "approvedDays": approved_days,
@@ -1064,6 +1071,7 @@ def handler(event: dict, context) -> dict:
         loan_payments = payments_by_loan.get(loan_id, [])
         paid_total = sum(p["amount"] for p in loan_payments)
 
+        loan_wheel_rub = 0
         is_monthly_cd = is_cd and days > 30
         if is_monthly_cd:
             # Помесячная схема Кредитного Доктора — пеня за просрочку сюда не применяется
@@ -1077,6 +1085,12 @@ def handler(event: dict, context) -> dict:
                 amount, days, rate, disbursed_at, created_at, paid_total, db_status
             )
             interest = round(base_total - float(amount))
+            if app_wheel_rub and app_created_dt and created_at >= app_created_dt - timedelta(minutes=1) and status != "paid":
+                w_disc = min(app_wheel_rub, interest)
+                if w_disc > 0:
+                    interest -= w_disc
+                    total -= w_disc
+                    loan_wheel_rub = w_disc
 
         schedule = []
         if status in ("active", "overdue", "paid"):
@@ -1126,6 +1140,8 @@ def handler(event: dict, context) -> dict:
             "remaining": max(0, total - paid_total),
             "schedule": schedule,
         }
+        if loan_wheel_rub:
+            loan_data["wheelDiscountRub"] = loan_wheel_rub
         if app_promo_discount and app_promo_discount < 100 and app_created_dt and created_at >= app_created_dt - timedelta(minutes=1):
             base_rate_l = float(rate) / (100 - app_promo_discount) * 100
             full_interest = round(float(amount) * base_rate_l * days)

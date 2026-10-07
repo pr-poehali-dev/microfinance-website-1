@@ -65,6 +65,8 @@ def apply_wheel_prize(cur, schema, visitor_id, app_id):
         return
     key, label = row
     cur.execute(f"UPDATE {schema}.applications SET wheel_prize = '{label}' WHERE id = {int(app_id)}")
+    if key.startswith("rub"):
+        cur.execute(f"UPDATE {schema}.applications SET wheel_discount_rub = {int(key[3:])} WHERE id = {int(app_id)}")
     if key.startswith("pct"):
         pct = int(key[3:])
         cur.execute(

@@ -1,0 +1,1 @@
+ALTER TABLE t_p30184577_microfinance_website.applications ADD COLUMN IF NOT EXISTS wheel_discount_rub INTEGER NOT NULL DEFAULT 0;
