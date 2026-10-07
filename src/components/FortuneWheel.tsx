@@ -190,9 +190,10 @@ export default function FortuneWheel() {
 
         {prize ? (
           <div className="mt-4 text-center rounded-2xl p-4" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>
-            <div className="text-emerald-950/60 text-sm">Ваш приз</div>
+            <div className="font-oswald text-2xl font-bold" style={{ color: "#ea580c" }}>Поздравляем! 🎉</div>
+            <div className="text-emerald-950/70 text-sm mt-1">Ваш приз:</div>
             <div className="font-oswald text-2xl font-bold text-emerald-700 my-1">{prize}</div>
-            <div className="text-emerald-950/50 text-xs">Назовите приз специалисту при оформлении займа</div>
+            <div className="text-emerald-950/70 text-sm font-semibold">Приз будет учтён при одобрении заявки!</div>
           </div>
         ) : (
           <>
