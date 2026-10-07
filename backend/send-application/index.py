@@ -52,23 +52,36 @@ def send_telegram_message(token: str, chat_id: str, text: str):
 
 
 def apply_wheel_prize(cur, schema, visitor_id, app_id):
-    """Привязывает неиспользованный приз колеса к заявке; процентная скидка идёт в скидку на проценты."""
+    """Привязывает приз колеса к заявке: проценты и 0%-займы — в скидку на проценты, рубли — в wheel_discount_rub."""
     vid = "".join(ch for ch in str(visitor_id or "") if ch.isalnum() or ch in "-_")[:64]
     if len(vid) < 8:
         return
-    cur.execute(
-        f"UPDATE {schema}.wheel_spins SET used_at = NOW(), used_app_id = {int(app_id)} "
-        f"WHERE visitor_id = '{vid}' AND used_at IS NULL RETURNING prize_key, prize_label"
-    )
+    cur.execute(f"SELECT prize_key, prize_label, used_at, uses_left FROM {schema}.wheel_spins WHERE visitor_id = '{vid}'")
     row = cur.fetchone()
     if not row:
         return
-    key, label = row
+    key, label, used_at, uses_left = row
+    is_zero = key in ("zero1", "zero2")
+    if is_zero:
+        total = 1 if key == "zero1" else 2
+        left = total if uses_left is None else int(uses_left)
+        if left <= 0:
+            return
+        cur.execute(
+            f"UPDATE {schema}.wheel_spins SET used_at = NOW(), used_app_id = {int(app_id)}, uses_left = {left - 1} "
+            f"WHERE visitor_id = '{vid}'"
+        )
+    else:
+        if used_at is not None:
+            return
+        cur.execute(
+            f"UPDATE {schema}.wheel_spins SET used_at = NOW(), used_app_id = {int(app_id)} WHERE visitor_id = '{vid}'"
+        )
     cur.execute(f"UPDATE {schema}.applications SET wheel_prize = '{label}' WHERE id = {int(app_id)}")
     if key.startswith("rub"):
         cur.execute(f"UPDATE {schema}.applications SET wheel_discount_rub = {int(key[3:])} WHERE id = {int(app_id)}")
-    if key.startswith("pct"):
-        pct = int(key[3:])
+    pct = 100 if is_zero else (int(key[3:]) if key.startswith("pct") else 0)
+    if pct:
         cur.execute(
             f"UPDATE {schema}.applications SET promo_discount = GREATEST(COALESCE(promo_discount, 0), {pct}) "
             f"WHERE id = {int(app_id)}"

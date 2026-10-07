@@ -1,0 +1,1 @@
+ALTER TABLE t_p30184577_microfinance_website.wheel_spins ADD COLUMN IF NOT EXISTS uses_left INTEGER NULL;
