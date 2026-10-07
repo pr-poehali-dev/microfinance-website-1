@@ -737,6 +737,37 @@ def handler(event: dict, context) -> dict:
             )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
+    # --- КОЛЕСО ФОРТУНЫ: список призов (GET, sub='wheel_prizes') ---
+    if sub == "wheel_prizes" and method == "GET":
+        cur.execute(
+            f"SELECT w.id, w.prize_key, w.prize_label, w.created_at, w.used_at, w.uses_left, "
+            f"a.id, a.full_name, a.phone "
+            f"FROM {SCHEMA}.wheel_spins w LEFT JOIN {SCHEMA}.applications a ON a.id = w.used_app_id "
+            f"ORDER BY w.created_at DESC LIMIT 500"
+        )
+        rows = cur.fetchall()
+        cur.close(); conn.close()
+        items = []
+        for r in rows:
+            key = r[1]
+            if key in ("zero1", "zero2"):
+                total = 1 if key == "zero1" else 2
+                left = total if r[5] is None else int(r[5])
+                used_up = left <= 0
+                note = f"Осталось займов под 0%: {max(0, left)} из {total}"
+            else:
+                left = None
+                used_up = r[4] is not None
+                note = ""
+            items.append({
+                "id": r[0], "key": key, "label": r[2],
+                "spunAt": msk(r[3]).strftime("%d.%m.%Y %H:%M"),
+                "usedAt": msk(r[4]).strftime("%d.%m.%Y %H:%M") if r[4] else None,
+                "usedUp": used_up, "note": note,
+                "appId": r[6], "fullName": r[7] or "", "phone": r[8] or "",
+            })
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"items": items}, ensure_ascii=False)}
+
     # --- ПРОМОКОДЫ: список (GET, sub='promo_codes') ---
     if sub == "promo_codes" and method == "GET":
         cur.execute(
