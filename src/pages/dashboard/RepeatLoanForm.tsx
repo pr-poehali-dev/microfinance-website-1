@@ -45,7 +45,7 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
     const res = await fetch(LOANS_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}` },
-      body: JSON.stringify({ amount, days }),
+      body: JSON.stringify({ amount, days, wheelVisitorId: localStorage.getItem("wheel_visitor_id") || "" }),
     });
     const data = await res.json();
     setSending(false);

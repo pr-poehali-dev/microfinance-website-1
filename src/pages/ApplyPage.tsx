@@ -143,6 +143,7 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
           isCreditDoctor,
           isCardRequest: cardMode,
           promoCode: promoCode.trim(),
+          wheelVisitorId: localStorage.getItem("wheel_visitor_id") || "",
           ...(cardMode ? { days: "0" } : {}),
         }),
       });

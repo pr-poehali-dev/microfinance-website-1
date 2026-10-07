@@ -407,6 +407,11 @@ export default function AdminApplications({
                   {app.snils && <div><div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>СНИЛС</div><div style={{ color: "#fbbf24", fontSize: 13, fontWeight: 600, letterSpacing: 1 }}>{app.snils}</div></div>}
                 </div>
 
+                {app.wheelPrize && (
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 12, marginRight: 8, background: "rgba(245,158,11,0.12)", color: "#b45309", border: "1px solid rgba(245,158,11,0.35)", borderRadius: 8, padding: "6px 12px", fontSize: 13, fontWeight: 600 }}>
+                    🎁 Приз с колеса фортуны: {app.wheelPrize}
+                  </div>
+                )}
                 {(app.status === "approved" || app.status === "partner_card") && (
                   app.contractUrl ? (
                     <a href={app.contractUrl} target="_blank" rel="noopener noreferrer"

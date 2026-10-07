@@ -68,6 +68,29 @@ def get_conn():
     return psycopg2.connect(os.environ["DATABASE_URL"])
 
 
+
+def apply_wheel_prize(cur, schema, visitor_id, app_id):
+    """Привязывает неиспользованный приз колеса к заявке; процентная скидка идёт в скидку на проценты."""
+    vid = "".join(ch for ch in str(visitor_id or "") if ch.isalnum() or ch in "-_")[:64]
+    if len(vid) < 8:
+        return
+    cur.execute(
+        f"UPDATE {schema}.wheel_spins SET used_at = NOW(), used_app_id = {int(app_id)} "
+        f"WHERE visitor_id = '{vid}' AND used_at IS NULL RETURNING prize_key, prize_label"
+    )
+    row = cur.fetchone()
+    if not row:
+        return
+    key, label = row
+    cur.execute(f"UPDATE {schema}.applications SET wheel_prize = '{label}' WHERE id = {int(app_id)}")
+    if key.startswith("pct"):
+        pct = int(key[3:])
+        cur.execute(
+            f"UPDATE {schema}.applications SET promo_discount = GREATEST(COALESCE(promo_discount, 0), {pct}) "
+            f"WHERE id = {int(app_id)}"
+        )
+
+
 def get_user_by_token(cur, token: str):
     t = token.replace("'", "''")
     cur.execute(
@@ -728,6 +751,7 @@ def handler(event: dict, context) -> dict:
             ) RETURNING id
         """)
         new_app_id = cur.fetchone()[0]
+        apply_wheel_prize(cur, SCHEMA, b.get("wheelVisitorId"), new_app_id)
         conn.commit()
         cur.close(); conn.close()
 

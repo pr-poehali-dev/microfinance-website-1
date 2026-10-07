@@ -407,7 +407,7 @@ def handler(event: dict, context) -> dict:
                    COALESCE(hist.total_borrowed, 0), COALESCE(hist.apps_count, 0), a.partner_card_url,
                    a.virtual_card_status, a.virtual_card_limit, a.virtual_card_signed_at, a.is_card_request,
                    a.promo_code, a.promo_discount, a.profile_updated_at, a.profile_changes, a.card_contract_url,
-                   a.reg_address, a.living_address, a.work_address, a.contract_url
+                   a.reg_address, a.living_address, a.work_address, a.contract_url, a.wheel_prize
             FROM {SCHEMA}.applications a
             LEFT JOIN LATERAL (
                 SELECT lo.id, lo.signed, lo.signed_at, lo.status, lo.disbursed_at, lo.created_at
@@ -474,6 +474,7 @@ def handler(event: dict, context) -> dict:
             "livingAddress": r[62] if len(r) > 62 and r[62] else "",
             "workAddress": r[63] if len(r) > 63 and r[63] else "",
             "contractUrl": r[64] if len(r) > 64 and r[64] else "",
+            "wheelPrize": r[65] if len(r) > 65 and r[65] else "",
             "videoCallRequested": bool(r[41]) if r[41] is not None else False,
             "virtualCardDays": int(r[42]) if r[42] else None,
             "blockedUntil": msk(r[43]).strftime("%d.%m.%Y %H:%M") if r[43] else None,

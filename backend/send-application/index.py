@@ -50,6 +50,29 @@ def send_telegram_message(token: str, chat_id: str, text: str):
         pass
 
 
+
+def apply_wheel_prize(cur, schema, visitor_id, app_id):
+    """Привязывает неиспользованный приз колеса к заявке; процентная скидка идёт в скидку на проценты."""
+    vid = "".join(ch for ch in str(visitor_id or "") if ch.isalnum() or ch in "-_")[:64]
+    if len(vid) < 8:
+        return
+    cur.execute(
+        f"UPDATE {schema}.wheel_spins SET used_at = NOW(), used_app_id = {int(app_id)} "
+        f"WHERE visitor_id = '{vid}' AND used_at IS NULL RETURNING prize_key, prize_label"
+    )
+    row = cur.fetchone()
+    if not row:
+        return
+    key, label = row
+    cur.execute(f"UPDATE {schema}.applications SET wheel_prize = '{label}' WHERE id = {int(app_id)}")
+    if key.startswith("pct"):
+        pct = int(key[3:])
+        cur.execute(
+            f"UPDATE {schema}.applications SET promo_discount = GREATEST(COALESCE(promo_discount, 0), {pct}) "
+            f"WHERE id = {int(app_id)}"
+        )
+
+
 def esc(val: str) -> str:
     return val.replace("'", "''")
 
@@ -263,6 +286,8 @@ def handler(event: dict, context) -> dict:
             ) RETURNING id
         """)
         app_id = cur.fetchone()[0]
+        if not is_card_request:
+            apply_wheel_prize(cur, SCHEMA, body.get("wheelVisitorId"), app_id)
         if is_card_request:
             cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = '{esc(phone)}'")
             u_row = cur.fetchone()
