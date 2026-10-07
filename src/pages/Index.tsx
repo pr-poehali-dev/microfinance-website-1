@@ -2,6 +2,7 @@ import { useState, lazy, Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import HeroAboutServices from "@/components/HeroAboutServices";
 import Testimonials from "@/components/Testimonials";
+import FortuneWheel from "@/components/FortuneWheel";
 
 const FaqContactsFooter = lazy(() => import("@/components/FaqContactsFooter"));
 
@@ -19,6 +20,7 @@ export default function Index() {
       <Navbar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} scrollTo={scrollTo} />
       <HeroAboutServices scrollTo={scrollTo} />
       <Testimonials />
+      <FortuneWheel />
       <Suspense fallback={null}>
         <FaqContactsFooter />
       </Suspense>
