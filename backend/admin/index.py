@@ -43,6 +43,13 @@ TELEGRAM_CHAT_ID = "8540431915"
 OVERDUE_DAILY_PENALTY_RATE = 0.07  # 7% от суммы основного долга (loans.amount, с учётом страховки) за каждый день просрочки
 
 
+def principal_part(principal, gross, repaid):
+    """Часть платежей по карте, ушедшая на основной долг (проценты в лимит не возвращаются)."""
+    if gross <= 0 or principal <= 0:
+        return 0.0
+    return min(principal, float(repaid) * principal / gross)
+
+
 def calc_loan_penalty(amount, days, rate, disbursed_at, created_at, paid_total, db_status, penalty_waived=0, wheel_rub=0):
     """Пеня за просрочку обычного займа (loans): 7%/день от amount за каждый день сверх срока.
     penalty_waived — сумма пени, прощённая администратором (уменьшает начисленную пеню, не ниже нуля).
@@ -1939,11 +1946,12 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Карта не найдена"})}
         dec_app_id, full_name, phone, old_limit = app
         old_limit = float(old_limit or 0)
-        cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_transactions WHERE application_id = {dec_app_id} AND status <> 'cancelled'")
-        principal_sum = float(cur.fetchone()[0])
+        cur.execute(f"SELECT COALESCE(SUM(amount),0), COALESCE(SUM(amount + ROUND(amount * rate / 100 * weeks)),0) FROM {SCHEMA}.card_transactions WHERE application_id = {dec_app_id} AND status <> 'cancelled'")
+        _pr, _gr = cur.fetchone()
+        principal_sum = float(_pr)
         cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_repayments WHERE application_id = {dec_app_id}")
         repaid_sum = float(cur.fetchone()[0])
-        used_sum = max(0.0, principal_sum - repaid_sum)
+        used_sum = max(0.0, principal_sum - principal_part(principal_sum, float(_gr), repaid_sum))
         new_limit = old_limit - sub_amount
         if new_limit <= 0:
             cur.close(); conn.close()
@@ -2122,7 +2130,7 @@ def handler(event: dict, context) -> dict:
                 })
             repaid = sum(float(x[2]) for x in reps.get(app_id, []))
             debt = max(0.0, gross - repaid)
-            used = max(0.0, principal - repaid)
+            used = max(0.0, principal - principal_part(principal, gross, repaid))
             cards.append({
                 "appId": app_id, "fullName": full_name or "", "phone": phone or "", "clientCard": client_card or "",
                 "cardNumber": vc_number or "", "status": vc_status or "none",

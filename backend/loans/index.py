@@ -23,6 +23,13 @@ CORS = {
 OVERDUE_DAILY_PENALTY_RATE = 0.07  # 7% от суммы основного долга за каждый день просрочки
 
 
+def principal_part(principal, gross, repaid):
+    """Часть платежей по карте, ушедшая на основной долг (проценты в лимит не возвращаются)."""
+    if gross <= 0 or principal <= 0:
+        return 0.0
+    return min(principal, float(repaid) * principal / gross)
+
+
 def calc_penalty(amount, days, rate, disbursed_at, created_at, paid_total, db_status, wheel_rub=0):
     """Считает пеню за просрочку. Возвращает (effective_status, base_total, total_due, is_overdue, overdue_days, penalty_amount).
     amount — тело долга (сумма + страховка). Пеня 7%/день от amount начисляется за каждый
@@ -626,12 +633,13 @@ def handler(event: dict, context) -> dict:
         card_limit = float(card_limit or 0)
 
         cur.execute(
-            f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_transactions "
-            f"WHERE application_id = {card_app_id} AND status != 'cancelled'"
+            f"SELECT COALESCE(SUM(amount),0), COALESCE(SUM(amount + ROUND(amount * rate / 100 * weeks)),0) "
+            f"FROM {SCHEMA}.card_transactions WHERE application_id = {card_app_id} AND status != 'cancelled'"
         )
-        used = float(cur.fetchone()[0])
+        _pr, _gr = cur.fetchone()
+        used = float(_pr)
         cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_repayments WHERE application_id = {card_app_id}")
-        used = max(0.0, used - float(cur.fetchone()[0]))
+        used = max(0.0, used - principal_part(float(_pr), float(_gr), float(cur.fetchone()[0])))
         available = card_limit - used
         if wd_amount > available:
             cur.close(); conn.close()
@@ -955,8 +963,9 @@ def handler(event: dict, context) -> dict:
             for n_tx, n_due, n_status in cur.fetchall():
                 key_ = f"{n_tx or 0}|{n_due}"
                 (vc_notices if n_status == "new" else vc_paid).append(key_)
+            vc_gross = vc_debt
             vc_debt = max(0.0, vc_debt - vc_repaid)
-            vc_used = max(0.0, vc_used - vc_repaid)
+            vc_used = max(0.0, vc_used - principal_part(vc_used, vc_gross, vc_repaid))
             cur.execute(
                 f"SELECT added_amount, new_limit FROM {SCHEMA}.card_limit_increases "
                 f"WHERE application_id = {card_app_id} AND seen = FALSE ORDER BY created_at ASC"
