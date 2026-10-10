@@ -1,0 +1,1 @@
+ALTER TABLE t_p30184577_microfinance_website.yookassa_payments ADD COLUMN IF NOT EXISTS meta TEXT NOT NULL DEFAULT '{}';

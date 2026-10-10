@@ -1,0 +1,1 @@
+{"tests":[{"name":"OPTIONS preflight","method":"OPTIONS","path":"/","expectedStatus":200},{"name":"No token returns 401","method":"POST","path":"/?sub=create","body":{},"expectedStatus":401}]}

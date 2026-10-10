@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
+import YooKassaPayButton from "./YooKassaPayButton";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 const CARD_NUMBER = "2204 3901 1553 9020";
@@ -72,6 +73,10 @@ export default function PayLoanModal({ amount, contractNumber, loanType, loanId,
             <span className="text-emerald-950/50 text-sm">Сумма к оплате</span>
             <span className="font-bold text-2xl gradient-text">{amount.toLocaleString("ru-RU")} ₽</span>
           </div>
+
+          {loanType && loanId ? <YooKassaPayButton loanType={loanType} loanId={loanId} amount={amount} /> : null}
+
+          <div className="text-emerald-950/40 text-xs uppercase tracking-wider text-center pt-1">или переводом на карту</div>
 
           <div>
             <div className="text-emerald-950/40 text-xs uppercase tracking-wider mb-2">Номер карты для оплаты</div>

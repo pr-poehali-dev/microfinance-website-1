@@ -223,6 +223,7 @@ export default function DashboardPage() {
   const [shopTimerDone, setShopTimerDone] = useState(false);
   const carTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const shopTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [paidToast, setPaidToast] = useState(false);
 
   const loadData = (token: string, isInitial = false) => {
     if (isInitial) setLoading(true);
@@ -285,6 +286,22 @@ export default function DashboardPage() {
     const token = localStorage.getItem("token");
     if (!token) { navigate("/login"); return; }
     loadData(token, true);
+
+    const ykId = localStorage.getItem("yk_payment_id");
+    if (ykId) {
+      localStorage.removeItem("yk_payment_id");
+      fetch("https://functions.poehali.dev/64ba6f22-6243-4b3f-ab24-f5bb294d5bfe?sub=check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ paymentId: ykId }),
+      })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.status === "succeeded") { setPaidToast(true); setTimeout(() => setPaidToast(false), 6000); }
+          loadData(token, false);
+        })
+        .catch(() => {});
+    }
 
     // Автообновление каждые 60 секунд — чтобы статус одобрения появлялся без перезагрузки
     const interval = setInterval(() => {
@@ -995,6 +1012,12 @@ export default function DashboardPage() {
 
         <DashboardSupport />
       </div>
+
+      {paidToast && (
+        <div style={{ position: "fixed", top: 16, left: "50%", transform: "translateX(-50%)", zIndex: 400, background: "#047857", color: "#fff", padding: "12px 20px", borderRadius: 12, fontWeight: 600, boxShadow: "0 8px 24px rgba(0,0,0,0.2)" }}>
+          Оплата прошла, платёж засчитан
+        </div>
+      )}
 
       {payLoan && (
         <PayLoanModal
