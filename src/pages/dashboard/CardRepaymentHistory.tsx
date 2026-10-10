@@ -4,6 +4,8 @@ export interface CardRepayment {
   amount: number;
   note: string;
   createdAt: string;
+  principal?: number;
+  interest?: number;
 }
 
 interface Props {
@@ -41,6 +43,9 @@ export default function CardRepaymentHistory({ repaid, debt, repayments }: Props
             <div>
               <div className="text-emerald-950/70 text-xs">{r.createdAt}</div>
               {r.note && <div className="text-emerald-950/40 text-xs">{r.note}</div>}
+              {r.principal !== undefined && r.interest !== undefined && (
+                <div className="text-emerald-950/50 text-xs">Основной долг {fmt(r.principal)} · проценты {fmt(r.interest)}</div>
+              )}
             </div>
             <span className="text-emerald-600 font-semibold text-sm">+{fmt(r.amount)}</span>
           </div>

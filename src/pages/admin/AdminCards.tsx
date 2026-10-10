@@ -20,7 +20,7 @@ interface Card {
   notices: { id: number; amount: number; dueDate: string; createdAt: string; txId: number | null }[];
   limitHistory: { id: number; oldLimit: number; newLimit: number; added: number; createdAt: string; seen: boolean }[];
   paidRows: { key: string; amount: number; paidAt: string | null }[];
-  repayments: { id: number; amount: number; note: string; createdAt: string }[];
+  repayments: { id: number; amount: number; note: string; createdAt: string; principal: number; interest: number }[];
 }
 
 const fmt = (n: number) => `${Math.round(n).toLocaleString("ru-RU")} ₽`;
@@ -360,7 +360,7 @@ export default function AdminCards({ token, onChanged }: Props) {
                       <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 4 }}>
                         {c.repayments.map(rp => (
                           <div key={rp.id} style={{ fontSize: 12, color: "rgba(2,44,34,0.6)" }}>
-                            {rp.createdAt} — погашено <b style={{ color: "#047857" }}>{fmt(rp.amount)}</b>{rp.note ? ` · ${rp.note}` : ""}
+                            {rp.createdAt} — погашено <b style={{ color: "#047857" }}>{fmt(rp.amount)}</b> (долг {fmt(rp.principal)} · проценты {fmt(rp.interest)}){rp.note ? ` · ${rp.note}` : ""}
                           </div>
                         ))}
                       </div>

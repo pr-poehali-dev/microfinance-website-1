@@ -953,9 +953,12 @@ def handler(event: dict, context) -> dict:
                 f"SELECT amount, note, created_at FROM {SCHEMA}.card_repayments "
                 f"WHERE application_id = {card_app_id} AND amount > 0 ORDER BY created_at DESC"
             )
+            _share = (vc_used / vc_debt) if vc_debt > 0 else 0.0
             vc_repayments = [{
                 "amount": float(r_amt), "note": r_note or "",
                 "createdAt": msk(r_at).strftime("%d.%m.%Y в %H:%M"),
+                "principal": round(float(r_amt) * _share),
+                "interest": float(r_amt) - round(float(r_amt) * _share),
             } for r_amt, r_note, r_at in cur.fetchall()]
             cur.execute(
                 f"SELECT tx_id, due_date, status FROM {SCHEMA}.card_payment_notices WHERE application_id = {card_app_id}"

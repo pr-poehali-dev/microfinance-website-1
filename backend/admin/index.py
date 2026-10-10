@@ -2146,7 +2146,9 @@ def handler(event: dict, context) -> dict:
                 "notices": [{"id": n[0], "amount": float(n[2]), "dueDate": n[3], "createdAt": msk(n[4]).strftime("%d.%m.%Y в %H:%M"), "txId": n[5]} for n in notices.get(app_id, []) if n[6] == "new"],
                 "limitHistory": [{"id": h[0], "oldLimit": float(h[2]), "newLimit": float(h[3]), "added": float(h[4]), "createdAt": msk(h[5]).strftime("%d.%m.%Y в %H:%M"), "seen": bool(h[6])} for h in limit_hist.get(app_id, [])],
                 "paidRows": [{"key": f"{n[5] or 0}|{n[3]}", "amount": float(n[2]), "paidAt": msk(n[7]).strftime("%d.%m.%Y в %H:%M") if n[7] else None} for n in notices.get(app_id, []) if n[6] == "done"],
-                "repayments": [{"id": x[0], "amount": float(x[2]), "note": x[3] or "", "createdAt": msk(x[4]).strftime("%d.%m.%Y в %H:%M")} for x in reps.get(app_id, [])],
+                "repayments": [{"id": x[0], "amount": float(x[2]), "note": x[3] or "", "createdAt": msk(x[4]).strftime("%d.%m.%Y в %H:%M"),
+                               "principal": round(float(x[2]) * (principal / gross if gross > 0 else 0)),
+                               "interest": float(x[2]) - round(float(x[2]) * (principal / gross if gross > 0 else 0))} for x in reps.get(app_id, [])],
             })
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"cards": cards}, ensure_ascii=False)}
 
