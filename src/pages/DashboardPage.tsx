@@ -6,6 +6,7 @@ import DashboardNavbar from "./dashboard/DashboardNavbar";
 import DashboardApplicationStatus from "./dashboard/DashboardApplicationStatus";
 import DashboardLoans from "./dashboard/DashboardLoans";
 import DashboardSupport from "./dashboard/DashboardSupport";
+import YooKassaHistory from "./dashboard/YooKassaHistory";
 import PaymentHistory from "./dashboard/PaymentHistory";
 import ClientProfileCard from "./dashboard/ClientProfileCard";
 import PartnerCardLinks from "./dashboard/PartnerCardLinks";
@@ -1009,6 +1010,8 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+
+        <YooKassaHistory />
 
         <DashboardSupport />
       </div>

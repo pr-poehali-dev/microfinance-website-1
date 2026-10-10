@@ -5,6 +5,7 @@ import os
 import urllib.request
 import urllib.error
 import uuid
+from datetime import timedelta
 
 import psycopg2
 
@@ -189,6 +190,20 @@ def handler(event: dict, context) -> dict:
         cur.close(); conn.close()
         return resp(401, {"error": "Требуется авторизация"})
     user_id, phone, full_name = user
+
+    if sub == "history":
+        ph_e = phone.replace("'", "''")
+        cur.execute(
+            f"SELECT yk_payment_id, loan_type, loan_id, amount, status, credited, created_at, credited_at "
+            f"FROM {SCHEMA}.yookassa_payments WHERE phone = '{ph_e}' ORDER BY created_at DESC LIMIT 50"
+        )
+        items = [{
+            "id": r[0], "loanType": r[1], "loanId": r[2], "amount": float(r[3]),
+            "status": "succeeded" if r[5] else r[4],
+            "date": (((r[7] or r[6]) + timedelta(hours=3)).strftime("%d.%m.%Y в %H:%M")) if (r[7] or r[6]) else "",
+        } for r in cur.fetchall()]
+        cur.close(); conn.close()
+        return resp(200, {"payments": items})
 
     if sub == "check":
         yk_id = str(body.get("paymentId") or "").replace("'", "")
