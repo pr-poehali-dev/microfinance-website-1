@@ -10,6 +10,7 @@ import AdminShopLoans from "./admin/AdminShopLoans";
 import AdminDisbursed from "./admin/AdminDisbursed";
 import AdminCardRequests from "./admin/AdminCardRequests";
 import AdminCards from "./admin/AdminCards";
+import AdminYooKassa from "./admin/AdminYooKassa";
 import AdminPromoCodes from "./admin/AdminPromoCodes";
 import AdminWheelPrizes from "./admin/AdminWheelPrizes";
 import AdminContractsRepair from "./admin/AdminContractsRepair";
@@ -24,7 +25,7 @@ export default function AdminPage() {
   const [err, setErr]     = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [tab, setTab]   = useState<"apps" | "clients" | "carloan" | "shoploan" | "disbursed" | "cardrequests" | "cards" | "promo" | "wheel">("apps");
+  const [tab, setTab]   = useState<"apps" | "clients" | "carloan" | "shoploan" | "disbursed" | "cardrequests" | "cards" | "promo" | "wheel" | "yookassa">("apps");
   const [apps, setApps] = useState<App[]>([]);
   const [appFilter, setAppFilter] = useState<"pending"|"approved"|"rejected"|"postponed"|"partner_card"|"creditdoctor"|"paid_loans">("pending");
   const [appsLoading, setAppsLoading] = useState(false);
@@ -364,6 +365,11 @@ export default function AdminPage() {
             <span style={{ background: "#ef4444", color: "white", borderRadius: 20, padding: "1px 8px", fontSize: 12, fontWeight: 700 }}>{cardNotices}</span>
           )}
         </button>
+        <button onClick={() => setTab("yookassa")}
+          style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
+            background: tab === "yookassa" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "yookassa" ? "white" : "rgba(2,44,34,0.5)" }}>
+          💰 Платежи ЮKassa
+        </button>
         <button onClick={() => setTab("promo")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
             background: tab === "promo" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "promo" ? "white" : "rgba(2,44,34,0.5)" }}>
@@ -423,6 +429,7 @@ export default function AdminPage() {
         {tab === "cards" && (
           <AdminCards token={token} onChanged={loadCardNotices} />
         )}
+        {tab === "yookassa" && <AdminYooKassa token={token} />}
         {tab === "wheel" && (
           <AdminWheelPrizes token={token} />
         )}

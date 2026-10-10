@@ -2232,6 +2232,23 @@ def handler(event: dict, context) -> dict:
         )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "debt": debt - amt})}
 
+    # --- ПЛАТЕЖИ ЧЕРЕЗ ЮKASSA (GET, sub='yookassa_payments') ---
+    if sub == "yookassa_payments" and method == "GET":
+        cur.execute(
+            f"SELECT y.yk_payment_id, y.loan_type, y.loan_id, y.phone, y.amount, y.status, y.credited, y.created_at, y.credited_at, "
+            f"(SELECT u.full_name FROM {SCHEMA}.users u WHERE u.phone = y.phone LIMIT 1) "
+            f"FROM {SCHEMA}.yookassa_payments y ORDER BY y.created_at DESC LIMIT 500"
+        )
+        items = [{
+            "id": r[0], "loanType": r[1], "loanId": r[2], "phone": r[3] or "", "amount": float(r[4]),
+            "status": r[5], "credited": bool(r[6]),
+            "createdAt": msk(r[7]).strftime("%d.%m.%Y в %H:%M"),
+            "creditedAt": msk(r[8]).strftime("%d.%m.%Y в %H:%M") if r[8] else None,
+            "fullName": r[9] or "",
+        } for r in cur.fetchall()]
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"payments": items}, ensure_ascii=False)}
+
     # --- ЧИСЛО НОВЫХ СООБЩЕНИЙ ОБ ОПЛАТЕ ПО КАРТАМ (GET, sub='card_notices_count') ---
     if sub == "card_notices_count" and method == "GET":
         cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.card_payment_notices WHERE status = 'new'")
