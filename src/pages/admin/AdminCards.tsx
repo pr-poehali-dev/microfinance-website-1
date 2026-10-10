@@ -360,7 +360,8 @@ export default function AdminCards({ token, onChanged }: Props) {
                       <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 4 }}>
                         {c.repayments.map(rp => (
                           <div key={rp.id} style={{ fontSize: 12, color: "rgba(2,44,34,0.6)" }}>
-                            {rp.createdAt} — погашено <b style={{ color: "#047857" }}>{fmt(rp.amount)}</b> (долг {fmt(rp.principal)} · проценты {fmt(rp.interest)}){rp.note ? ` · ${rp.note}` : ""}
+                            {rp.createdAt} — погашено <b style={{ color: "#047857" }}>{fmt(rp.amount)}</b> (долг {fmt(rp.principal)} · проценты {fmt(rp.interest)}){rp.note && !rp.note.includes("ЮKassa") ? ` · ${rp.note}` : ""}
+                            {rp.note?.includes("ЮKassa") && <span style={{ marginLeft: 6, padding: "1px 8px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#047857", fontSize: 11, fontWeight: 600 }}>Оплачено через ЮKassa</span>}
                           </div>
                         ))}
                       </div>

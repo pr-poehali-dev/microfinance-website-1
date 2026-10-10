@@ -350,7 +350,9 @@ export default function AdminLoanDetailModal({ token, type, id, onClose }: Props
                     <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", borderRadius: 8, background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.15)" }}>
                       <div>
                         <div style={{ color: "rgba(2,44,34,0.7)", fontSize: 12 }}>{p.paidAt}</div>
-                        {p.note && <div style={{ color: "rgba(2,44,34,0.3)", fontSize: 11 }}>{p.note}</div>}
+                        {p.note && (p.note.includes("ЮKassa")
+                          ? <span style={{ display: "inline-block", marginTop: 2, padding: "1px 8px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#047857", fontSize: 11, fontWeight: 600 }}>Оплачено через ЮKassa</span>
+                          : <div style={{ color: "rgba(2,44,34,0.3)", fontSize: 11 }}>{p.note}</div>)}
                       </div>
                       <span style={{ color: "#4ade80", fontWeight: 700, fontSize: 13 }}>+{fmt(p.amount)}</span>
                     </div>
