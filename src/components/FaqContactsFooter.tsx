@@ -144,25 +144,27 @@ export default function FaqContactsFooter() {
 
       {/* FOOTER */}
       <footer className="py-10 border-t border-emerald-900/10">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-6">
           <div className="flex items-center gap-2">
             <img src="/logo-icon.png" alt="Русфинанс 24" className="w-8 h-8 rounded-lg" />
             <span className="font-oswald text-lg font-bold text-emerald-950">
               <span className="gradient-text">РУСФИНАНС24</span>
             </span>
           </div>
-          <div className="text-emerald-950/30 text-sm text-center">
-            © 2026 РУСФИНАНС 24. Все права защищены.
-          </div>
-          <div className="flex gap-4">
-            {["Политика", "Условия"].map((l) => (
-              <button key={l} onClick={l === "Условия" ? () => setTermsOpen(true) : undefined} className="text-emerald-950/40 hover:text-emerald-600 text-sm transition-colors">
-                {l}
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex gap-6">
+              {["Политика", "Условия"].map((l) => (
+                <button key={l} onClick={l === "Условия" ? () => setTermsOpen(true) : undefined} className="text-emerald-950/50 hover:text-emerald-600 text-sm transition-colors">
+                  {l}
+                </button>
+              ))}
+              <button onClick={() => setOfferOpen(true)} className="text-emerald-950/50 hover:text-emerald-600 text-sm transition-colors">
+                Оферта
               </button>
-            ))}
-            <button onClick={() => setOfferOpen(true)} className="text-emerald-950/40 hover:text-emerald-600 text-sm transition-colors">
-              Оферта
-            </button>
+            </div>
+            <div className="text-emerald-950/30 text-sm text-center">
+              © 2026 РУСФИНАНС 24. Все права защищены.
+            </div>
           </div>
         </div>
       </footer>
