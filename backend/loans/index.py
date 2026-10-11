@@ -831,6 +831,12 @@ def handler(event: dict, context) -> dict:
 
         ph_e = phone.replace("'", "''")
 
+        chosen_card = (b.get("cardNumber") or "").strip()
+        chosen_digits = "".join(ch for ch in chosen_card if ch.isdigit())
+        if not (len(chosen_digits) in (10, 11) or 16 <= len(chosen_digits) <= 19):
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите номер карты (16–19 цифр) или телефон СБП, куда перевести деньги"}, ensure_ascii=False)}
+
         cur.execute(f"SELECT id FROM {SCHEMA}.applications WHERE phone = '{ph_e}' AND status = 'pending' LIMIT 1")
         if cur.fetchone():
             cur.close(); conn.close()
@@ -887,9 +893,7 @@ def handler(event: dict, context) -> dict:
             prev_profile_changes = None
             reg_address = living_address = work_address = None
 
-        chosen_card = (b.get("cardNumber") or "").strip()
-        chosen_digits = "".join(ch for ch in chosen_card if ch.isdigit())
-        if chosen_card and (len(chosen_digits) in (10, 11) or 16 <= len(chosen_digits) <= 19):
+        if True:
             card_number_transfer = chosen_card
             cur.execute(
                 f"INSERT INTO {SCHEMA}.saved_cards (phone, card_value, card_key, source) "

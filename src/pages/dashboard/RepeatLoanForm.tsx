@@ -39,7 +39,13 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
     return { interest, total, amountBg, daysBg, insurancePct, insurance };
   }, [amount, days, promo]);
 
-  function submit() { setCodeOpen(true); }
+  function submit() {
+    const digits = cardNumber.replace(/\D/g, "");
+    const valid = digits.length === 10 || digits.length === 11 || (digits.length >= 16 && digits.length <= 19);
+    if (!valid) { setError("Укажите номер карты (16–19 цифр) или телефон СБП, куда перевести деньги"); return; }
+    setError("");
+    setCodeOpen(true);
+  }
 
   async function doSubmit() {
     setCodeOpen(false);
@@ -186,7 +192,7 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
 
         {/* Карта для получения денег */}
         <div>
-          <div className="text-emerald-950/60 text-sm mb-2">Карта или телефон СБП для получения денег</div>
+          <div className="text-emerald-950/60 text-sm mb-2">Карта или телефон СБП для получения денег <span className="text-red-500">*</span></div>
           <SavedCardPicker autoFill value={cardNumber} onPick={setCardNumber} />
           <input
             type="text" inputMode="numeric" value={cardNumber}
