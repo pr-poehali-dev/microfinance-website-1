@@ -14,6 +14,9 @@ interface ShopApp {
   address: string;
   living_address?: string;
   work_address?: string;
+  birth_place?: string | null; workplace?: string | null; position?: string | null;
+  work_phone?: string | null; salary?: number | string | null; telegram_id?: string | null;
+  file_previous_passports?: string | null;
   passport_series: string;
   passport_number: string;
   passport_date: string;
@@ -242,6 +245,11 @@ export default function AdminShopLoans({ token }: Props) {
                         { l: "Адрес проживания", v: app.living_address || "—" },
                         { l: "Адрес организации", v: app.work_address || "—" },
                         { l: "Карта/СБП",  v: app.card_number || "—" },
+                        { l: "Дата рождения / место", v: [app.birth_date, app.birth_place].filter(Boolean).join(", ") || "—" },
+                        { l: "Работа", v: [app.workplace, app.position].filter(Boolean).join(", ") || "—" },
+                        { l: "Рабочий телефон", v: app.work_phone || "—" },
+                        { l: "Зарплата", v: app.salary ? `${Number(app.salary).toLocaleString("ru-RU")} ₽` : "—" },
+                        { l: "Telegram", v: app.telegram_id ? `@${app.telegram_id}` : "—" },
                       ].map(({ l, v }) => (
                         <div key={l}><div style={LBL}>{l}</div><div style={{ color: "rgba(2,44,34,0.85)", fontSize: 13 }}>{v}</div></div>
                       ))}
@@ -263,15 +271,16 @@ export default function AdminShopLoans({ token }: Props) {
                     {app.notes && <div style={{ marginTop: 6, color: "rgba(2,44,34,0.4)", fontSize: 13 }}>📝 {app.notes}</div>}
 
                     {/* Документы */}
-                    {(app.file_passport || app.file_registration || app.file_selfie || app.file_snils) && (
+                    {(app.file_passport || app.file_registration || app.file_selfie || app.file_snils || app.file_previous_passports) && (
                       <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
                         {[
                           { url: app.file_passport,     label: "Паспорт" },
                           { url: app.file_registration, label: "Прописка" },
                           { url: app.file_selfie,       label: "Селфи" },
                           { url: app.file_snils,        label: "СНИЛС" },
+                          { url: app.file_previous_passports, label: "Прежние паспорта" },
                         ].filter(d => d.url).map(d => (
-                          <button key={d.label} onClick={() => setLightbox(d.url)}
+                          <button key={d.label} onClick={() => setLightbox(d.url!)}
                             style={{ padding: "5px 12px", borderRadius: 8, border: "1px solid rgba(16,185,129,0.3)", background: "rgba(16,185,129,0.1)", color: "#0f766e", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
                             <Icon name="Image" size={12} /> {d.label}
                           </button>

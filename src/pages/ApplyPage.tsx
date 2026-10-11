@@ -8,6 +8,10 @@ import RateDisclaimer from "@/components/RateDisclaimer";
 
 const API_URL = "https://functions.poehali.dev/29f70c88-f1f7-4926-9c65-c642fd11fdfb";
 const UPLOAD_URL = "https://functions.poehali.dev/45733e38-49ca-4566-9ae3-b5323aec9a63";
+const CAR_API_URL = "https://functions.poehali.dev/651adde1-4432-4e5a-8086-3cda9898b7ac";
+const SHOP_API_URL = "https://functions.poehali.dev/f0312370-20d7-488e-b072-dc4c0b2af2aa";
+
+type Product = "loan" | "card" | "car" | "shop";
 
 const inputCls = "w-full rounded-xl px-4 py-3.5 text-emerald-950 placeholder-emerald-900/30 outline-none border border-emerald-900/15 focus:border-emerald-500 transition-colors text-sm";
 const inputStyle = { background: "rgba(16,185,129,0.05)" };
@@ -20,18 +24,25 @@ const FILE_FIELDS = [
   { key: "previousPassports", label: "О ранее выданных паспортах" },
 ] as const;
 
+const CAR_FILE_FIELD = { key: "vehicleDoc", label: "СТС или ПТС автомобиля" } as const;
+
 const SECTIONS = [
   { id: "personal", label: "Личные данные", icon: "User" },
   { id: "passport", label: "Паспорт", icon: "BookOpen" },
   { id: "work", label: "Работа и доходы", icon: "Briefcase" },
   { id: "contacts", label: "Контакты", icon: "Phone" },
+  { id: "item", label: "Данные", icon: "Package" },
   { id: "loan", label: "Параметры займа", icon: "Calculator" },
   { id: "docs", label: "Документы", icon: "FileImage" },
 ] as const;
 
 type SectionId = typeof SECTIONS[number]["id"];
 
-export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) {
+export default function ApplyPage({ cardMode = false, product: productProp }: { cardMode?: boolean; product?: Product }) {
+  const product: Product = productProp ?? (cardMode ? "card" : "loan");
+  const isCar = product === "car";
+  const isShop = product === "shop";
+  const isTerm = isCar || isShop;
   const navigate = useNavigate();
   const location = useLocation();
   const isCreditDoctor = !!(location.state as { isCreditDoctor?: boolean } | null)?.isCreditDoctor;
@@ -43,11 +54,14 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
     workplace: "", position: "", workPhone: "", salary: "",
     contactPerson: "", cardNumber: "",
     amount: "10000", days: "30",
+    carBrand: "", carModel: "", carYear: "", carMileage: "",
+    shopName: "", itemName: "", itemPrice: "",
   });
-  const [formAmount, setFormAmount] = useState(cardMode ? 50000 : 5000);
+  const [formAmount, setFormAmount] = useState(cardMode ? 50000 : isCar ? 300000 : isShop ? 30000 : 5000);
   const [formDays, setFormDays] = useState(15);
+  const [formMonths, setFormMonths] = useState(isCar ? 12 : 6);
   const [files, setFiles] = useState<{ [key: string]: File | null }>({
-    passportMain: null, registration: null, selfie: null, previousPassports: null,
+    passportMain: null, registration: null, selfie: null, previousPassports: null, vehicleDoc: null,
   });
   const [sending, setSending] = useState(false);
   const [sendStep, setSendStep] = useState("");
@@ -110,6 +124,8 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const allRequiredChecked = (cardMode ? CARD_REQUIRED_CONSENT_KEYS : REQUIRED_CONSENT_KEYS).every((k) => consents[k]);
+    if (allRequiredChecked && isShop && !form.itemName.trim()) { setSendError("Укажите название товара в разделе «Данные»"); setActiveSection("item"); return; }
+    if (allRequiredChecked && isCar && (!form.carBrand.trim() || !form.carModel.trim() || !form.carYear)) { setSendError("Заполните данные об автомобиле в разделе «Данные»"); setActiveSection("item"); return; }
     if (!allRequiredChecked) {
       setSendError("Отметьте все обязательные согласия перед отправкой заявки");
       return;
@@ -135,19 +151,56 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
       );
       const fileUrls = Object.fromEntries(uploadResults);
       setSendStep("Отправляем заявку...");
-      const res = await fetch(API_URL, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form, name: form.fullName,
-          amount: String(formAmount), days: String(formDays),
-          ...fileUrls,
-          isCreditDoctor,
-          isCardRequest: cardMode,
+      let res: Response;
+      if (isTerm) {
+        const common = {
+          fullName: form.fullName, phone: form.phone, email: form.email, birthDate: form.birthDate,
+          birthPlace: form.birthPlace, telegramId: form.telegramId, snils: form.snils,
+          address: form.regAddress, livingAddress: form.livingAddress, workAddress: form.workAddress,
+          workplace: form.workplace, position: form.position, workPhone: form.workPhone, salary: form.salary,
+          contactPerson: form.contactPerson, cardNumber: form.cardNumber,
+          loanAmount: formAmount, loanMonths: formMonths,
           promoCode: promoCode.trim(),
-          wheelVisitorId: localStorage.getItem("wheel_visitor_id") || "",
-          ...(cardMode ? { days: "0" } : {}),
-        }),
-      });
+          filePassport: fileUrls.passportMain || "", fileRegistration: fileUrls.registration || "",
+          fileSelfie: fileUrls.selfie || "", filePreviousPassports: fileUrls.previousPassports || "",
+        };
+        const body = isCar
+          ? {
+              ...common,
+              passportSerial: form.passportSeries, passportNum: form.passportNumber,
+              passportIssued: [form.passportDate, form.passportBy, form.passportCode ? `код ${form.passportCode}` : ""].filter(Boolean).join(", "),
+              passportCode: form.passportCode,
+              carBrand: form.carBrand, carModel: form.carModel,
+              carYear: form.carYear ? parseInt(form.carYear) : null,
+              carMileage: form.carMileage ? parseInt(form.carMileage) : null,
+              fileVehicleDoc: fileUrls.vehicleDoc || "",
+            }
+          : {
+              ...common,
+              passportSeries: form.passportSeries, passportNumber: form.passportNumber,
+              passportDate: form.passportDate, passportBy: form.passportBy, passportCode: form.passportCode,
+              shopName: form.shopName, itemName: form.itemName,
+              itemPrice: form.itemPrice ? parseInt(form.itemPrice) : 0,
+              fileSnils: "",
+            };
+        res = await fetch(isCar ? CAR_API_URL : SHOP_API_URL, {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+        });
+      } else {
+        res = await fetch(API_URL, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...form, name: form.fullName,
+            amount: String(formAmount), days: String(formDays),
+            ...fileUrls,
+            isCreditDoctor,
+            isCardRequest: cardMode,
+            promoCode: promoCode.trim(),
+            wheelVisitorId: localStorage.getItem("wheel_visitor_id") || "",
+            ...(cardMode ? { days: "0" } : {}),
+          }),
+        });
+      }
       if (res.ok) {
         const data = await res.json();
         if (data.token) localStorage.setItem("token", data.token);
@@ -164,13 +217,23 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
   };
 
   const RATE = 0.005;
-  const AMT_MIN = cardMode ? 5000 : 500;
-  const AMT_MAX = cardMode ? 200000 : 200000;
+  const TERM_RATE = isCar ? 0.12 : 0.09;
+  const AMT_MIN = cardMode ? 5000 : isCar ? 100000 : isShop ? 3000 : 500;
+  const AMT_MAX = cardMode ? 200000 : isCar ? 1000000 : isShop ? 150000 : 200000;
+  const MONTHS_MAX = isCar ? 36 : 24;
+  const termTotal = Math.round(formAmount * (1 + TERM_RATE * formMonths));
+  const termMonthly = Math.round(termTotal / formMonths);
   const insurancePct = formAmount <= 20000 ? 50 : formAmount <= 49900 ? 35 : formAmount <= 99999 ? 25 : 15;
   const amountBg = `linear-gradient(to right, #10b981 ${((formAmount - AMT_MIN) / (AMT_MAX - AMT_MIN)) * 100}%, rgba(16,185,129,0.2) ${((formAmount - AMT_MIN) / (AMT_MAX - AMT_MIN)) * 100}%)`;
+  const monthsBg = `linear-gradient(to right, #10b981 ${((formMonths - 1) / (MONTHS_MAX - 1)) * 100}%, rgba(16,185,129,0.2) ${((formMonths - 1) / (MONTHS_MAX - 1)) * 100}%)`;
   const daysBg = `linear-gradient(to right, #10b981 ${((formDays - 15) / (365 - 15)) * 100}%, rgba(16,185,129,0.2) ${((formDays - 15) / (365 - 15)) * 100}%)`;
 
-  const sections = SECTIONS.map(sec => sec.id === "loan" && cardMode ? { ...sec, label: "Лимит карты", icon: "CreditCard" } : sec);
+  const sections = SECTIONS
+    .filter(sec => sec.id !== "item" || isTerm)
+    .map(sec => sec.id === "loan" && cardMode ? { ...sec, label: "Лимит карты", icon: "CreditCard" }
+      : sec.id === "item" ? { ...sec, label: isCar ? "Данные об авто" : "Данные о товаре", icon: isCar ? "Car" : "ShoppingCart" }
+      : sec);
+  const afterContacts: SectionId = isTerm ? "item" : "loan";
   const setF = (key: string, val: string) => setForm(p => ({ ...p, [key]: val }));
 
   if (submitted) {
@@ -227,7 +290,7 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-4"
               style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.35)", color: "#6ee7b7" }}>
               <Icon name="FileText" size={14} />
-              {cardMode ? "Анкета на карту" : "Анкета заёмщика"}
+              {cardMode ? "Анкета на карту" : isCar ? "Анкета: займ под залог авто" : isShop ? "Анкета: займ на покупки" : "Анкета заёмщика"}
             </div>
           )}
           <h1 className="font-oswald text-4xl md:text-5xl font-bold text-emerald-950 mb-3">
@@ -436,7 +499,7 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
                     className="glass text-emerald-950/60 font-semibold px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
                     <Icon name="ArrowLeft" size={16} /> Назад
                   </button>
-                  <button type="button" onClick={() => setActiveSection("loan")}
+                  <button type="button" onClick={() => setActiveSection(afterContacts)}
                     className="btn-neon text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2">
                     Далее <Icon name="ArrowRight" size={16} />
                   </button>
@@ -445,6 +508,75 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
             )}
 
             {/* ПАРАМЕТРЫ ЗАЙМА */}
+            {/* ДАННЫЕ ОБ АВТО / ТОВАРЕ */}
+            {activeSection === "item" && isTerm && (
+              <div className="glass rounded-2xl p-6 space-y-5">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center shrink-0">
+                    <Icon name={isCar ? "Car" : "ShoppingCart"} size={16} className="text-white" />
+                  </div>
+                  <h3 className="text-emerald-950 font-bold text-lg">{isCar ? "Данные об автомобиле" : "Информация о товаре"}</h3>
+                </div>
+                {isCar ? (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="rounded-xl p-3 text-xs text-emerald-950/60" style={{ background: "rgba(6,182,212,0.08)", border: "1px solid rgba(6,182,212,0.2)" }}>
+                        Иностранное: <span className="font-semibold text-cyan-600">не старше 10 лет</span>
+                      </div>
+                      <div className="rounded-xl p-3 text-xs text-emerald-950/60" style={{ background: "rgba(20,184,166,0.08)", border: "1px solid rgba(20,184,166,0.2)" }}>
+                        Отечественное: <span className="font-semibold text-emerald-600">не старше 5 лет</span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className={labelCls}>Марка авто <span className="text-red-400">*</span></label>
+                        <input type="text" placeholder="Toyota" value={form.carBrand} onChange={e => setF("carBrand", e.target.value)} className={inputCls} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Модель <span className="text-red-400">*</span></label>
+                        <input type="text" placeholder="Camry" value={form.carModel} onChange={e => setF("carModel", e.target.value)} className={inputCls} style={inputStyle} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className={labelCls}>Год выпуска <span className="text-red-400">*</span></label>
+                        <input type="number" placeholder="2020" min="1990" max="2026" value={form.carYear} onChange={e => setF("carYear", e.target.value)} className={inputCls} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Пробег (км)</label>
+                        <input type="number" placeholder="50000" value={form.carMileage} onChange={e => setF("carMileage", e.target.value)} className={inputCls} style={inputStyle} />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className={labelCls}>Название магазина / площадки</label>
+                      <input type="text" placeholder="Wildberries, Ozon, М.Видео..." value={form.shopName} onChange={e => setF("shopName", e.target.value)} className={inputCls} style={inputStyle} />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Название товара <span className="text-red-400">*</span></label>
+                      <input type="text" placeholder="iPhone 15 Pro, диван угловой..." value={form.itemName} onChange={e => setF("itemName", e.target.value)} className={inputCls} style={inputStyle} />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Цена товара (₽)</label>
+                      <input type="number" placeholder="50000" value={form.itemPrice} onChange={e => setF("itemPrice", e.target.value)} className={inputCls} style={inputStyle} />
+                    </div>
+                  </>
+                )}
+                <div className="flex justify-between">
+                  <button type="button" onClick={() => setActiveSection("contacts")}
+                    className="glass text-emerald-950/60 font-semibold px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
+                    <Icon name="ArrowLeft" size={16} /> Назад
+                  </button>
+                  <button type="button" onClick={() => setActiveSection("loan")}
+                    className="btn-neon text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                    Далее <Icon name="ArrowRight" size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+
             {activeSection === "loan" && cardMode && (
               <div className="glass rounded-2xl p-6 space-y-5">
                 <div className="flex items-center gap-3 mb-2">
@@ -488,7 +620,75 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
               </div>
             )}
 
-            {activeSection === "loan" && !cardMode && (
+            {activeSection === "loan" && isTerm && (
+              <div className="glass rounded-2xl p-6 space-y-5">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center shrink-0">
+                    <Icon name="Calculator" size={16} className="text-white" />
+                  </div>
+                  <h3 className="text-emerald-950 font-bold text-lg">Параметры займа</h3>
+                </div>
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-emerald-950/60 text-sm">Сумма займа</span>
+                    <span className="font-bold gradient-text text-base">{formAmount.toLocaleString("ru-RU")} ₽</span>
+                  </div>
+                  <input type="range" min={AMT_MIN} max={AMT_MAX} step={isCar ? 10000 : 1000} value={formAmount}
+                    onChange={e => setFormAmount(Number(e.target.value))}
+                    className="slider-custom w-full" style={{ background: amountBg }} />
+                  <div className="flex justify-between text-emerald-950/30 text-xs mt-1">
+                    <span>{AMT_MIN.toLocaleString("ru-RU")} ₽</span><span>{AMT_MAX.toLocaleString("ru-RU")} ₽</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-emerald-950/60 text-sm">Срок займа</span>
+                    <span className="font-bold gradient-text text-base">{formMonths} мес.</span>
+                  </div>
+                  <input type="range" min={1} max={MONTHS_MAX} step={1} value={formMonths}
+                    onChange={e => setFormMonths(Number(e.target.value))}
+                    className="slider-custom w-full" style={{ background: monthsBg }} />
+                  <div className="flex justify-between text-emerald-950/30 text-xs mt-1">
+                    <span>1 мес.</span><span>{MONTHS_MAX} мес.</span>
+                  </div>
+                </div>
+                <div className="rounded-xl p-4" style={{ background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.3)" }}>
+                  <div className="grid grid-cols-2 gap-3 text-center mb-3">
+                    <div>
+                      <div className="text-emerald-950/40 text-xs mb-1">Ставка</div>
+                      <div className="text-yellow-600 font-bold">{isCar ? 12 : 9}% / мес.</div>
+                    </div>
+                    <div>
+                      <div className="text-emerald-950/40 text-xs mb-1">Платёж / мес.</div>
+                      <div className="text-emerald-950 font-bold">{termMonthly.toLocaleString("ru-RU")} ₽</div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-center pt-3" style={{ borderTop: "1px solid rgba(16,185,129,0.15)" }}>
+                    <div>
+                      <div className="text-emerald-950/40 text-xs mb-1">Переплата</div>
+                      <div className="text-red-500 font-bold">{(termTotal - formAmount).toLocaleString("ru-RU")} ₽</div>
+                    </div>
+                    <div>
+                      <div className="text-emerald-950/40 text-xs mb-1">К возврату</div>
+                      <div className="text-emerald-600 font-bold">{termTotal.toLocaleString("ru-RU")} ₽</div>
+                    </div>
+                  </div>
+                </div>
+                <RateDisclaimer />
+                <div className="flex justify-between">
+                  <button type="button" onClick={() => setActiveSection("item")}
+                    className="glass text-emerald-950/60 font-semibold px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
+                    <Icon name="ArrowLeft" size={16} /> Назад
+                  </button>
+                  <button type="button" onClick={() => setActiveSection("docs")}
+                    className="btn-neon text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                    Далее <Icon name="ArrowRight" size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {activeSection === "loan" && !cardMode && !isTerm && (
               <div className="glass rounded-2xl p-6 space-y-5">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center shrink-0">
@@ -571,7 +771,7 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
                   <span className="text-emerald-950/30 text-sm font-normal">(необязательно)</span>
                 </div>
                 <div className="space-y-3">
-                  {FILE_FIELDS.map(({ key, label }) => (
+                  {[...FILE_FIELDS, ...(isCar ? [CAR_FILE_FIELD] : [])].map(({ key, label }) => (
                     <div key={key}>
                       <label className={labelCls}>{label}</label>
                       <div className="relative">

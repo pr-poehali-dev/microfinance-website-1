@@ -112,6 +112,18 @@ def handler(event: dict, context) -> dict:
         file_selfie    = s(b.get("fileSelfie"))
         file_snils     = s(b.get("fileSnils"))
 
+        birth_place    = s(b.get("birthPlace"))
+        passport_code  = s(b.get("passportCode"))
+        workplace      = s(b.get("workplace"))
+        position       = s(b.get("position"))
+        work_phone     = s(b.get("workPhone"))
+        telegram_id    = s(b.get("telegramId"))
+        file_prev      = s(b.get("filePreviousPassports"))
+        try:
+            salary_sql = str(float(b["salary"])) if b.get("salary") else "NULL"
+        except (TypeError, ValueError):
+            salary_sql = "NULL"
+
         item_price_raw  = b.get("itemPrice")
         loan_amount_raw = b.get("loanAmount")
         loan_months_raw = b.get("loanMonths")
@@ -142,13 +154,15 @@ def handler(event: dict, context) -> dict:
             f" passport_date, passport_by, snils, shop_name, item_name, item_price, "
             f" loan_amount, loan_months, contact_person, card_number, "
             f" file_passport, file_registration, file_selfie, file_snils, "
-            f" status, created_at, updated_at, promo_code, promo_discount, living_address, work_address) "
+            f" status, created_at, updated_at, promo_code, promo_discount, living_address, work_address, "
+            f" birth_place, passport_code, workplace, position, work_phone, salary, telegram_id, file_previous_passports) "
             f"VALUES ('{full_name}','{phone}','{email}',{bd_val},'{address}',"
             f"'{passport_series}','{passport_number}','{passport_date}','{passport_by}',"
             f"'{snils}','{shop_name}','{item_name}',{item_price},"
             f"{loan_amount},{loan_months},'{contact_person}','{card_number}',"
             f"'{file_passport}','{file_registration}','{file_selfie}','{file_snils}',"
-            f"'pending',NOW(),NOW(),{promo_sql},{promo_disc_v},'{living_address}','{work_address}') RETURNING id"
+            f"'pending',NOW(),NOW(),{promo_sql},{promo_disc_v},'{living_address}','{work_address}',"
+            f"'{birth_place}','{passport_code}','{workplace}','{position}','{work_phone}',{salary_sql},'{telegram_id}','{file_prev}') RETURNING id"
         )
         new_id = cur.fetchone()[0]
 
@@ -212,7 +226,7 @@ def handler(event: dict, context) -> dict:
             f"file_passport, file_registration, file_selfie, file_snils, "
             f"status, reject_reason, approved_amount, approved_months, approved_rate, "
             f"notes, contract_signed, contract_signed_at, created_at, updated_at, disbursed_at, promo_code, promo_discount, "
-            f"living_address, work_address "
+            f"living_address, work_address, birth_place, passport_code, workplace, position, work_phone, salary, telegram_id, file_previous_passports "
             f"FROM {SCHEMA}.shopping_loan_applications WHERE {where} ORDER BY created_at DESC"
         )
         cols = [d[0] for d in cur.description]

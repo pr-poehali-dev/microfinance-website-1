@@ -14,6 +14,10 @@ interface CarApp {
   address: string;
   living_address?: string;
   work_address?: string;
+  birth_place?: string | null; snils?: string | null; workplace?: string | null; position?: string | null;
+  work_phone?: string | null; salary?: number | string | null; telegram_id?: string | null;
+  file_passport?: string | null; file_registration?: string | null; file_selfie?: string | null;
+  file_previous_passports?: string | null; file_vehicle_doc?: string | null;
   passport_serial: string;
   passport_num: string;
   passport_issued: string;
@@ -237,6 +241,12 @@ export default function AdminCarLoans({ token }: Props) {
                         { l: "Адрес организации", v: app.work_address || "—" },
                         { l: "Карта/СБП", v: app.card_number || "—" },
                         { l: "Контакт", v: app.contact_person || "—" },
+                        { l: "Дата рождения / место", v: [app.birth_date, app.birth_place].filter(Boolean).join(", ") || "—" },
+                        { l: "СНИЛС", v: app.snils || "—" },
+                        { l: "Работа", v: [app.workplace, app.position].filter(Boolean).join(", ") || "—" },
+                        { l: "Рабочий телефон", v: app.work_phone || "—" },
+                        { l: "Зарплата", v: app.salary ? `${Number(app.salary).toLocaleString("ru-RU")} ₽` : "—" },
+                        { l: "Telegram", v: app.telegram_id ? `@${app.telegram_id}` : "—" },
                       ].map(({ l, v }) => (
                         <div key={l}>
                           <div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>{l}</div>
@@ -244,6 +254,23 @@ export default function AdminCarLoans({ token }: Props) {
                         </div>
                       ))}
                     </div>
+
+                    {(app.file_passport || app.file_registration || app.file_selfie || app.file_previous_passports || app.file_vehicle_doc) && (
+                      <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+                        {[
+                          { url: app.file_passport, label: "Паспорт" },
+                          { url: app.file_registration, label: "Прописка" },
+                          { url: app.file_selfie, label: "Селфи" },
+                          { url: app.file_previous_passports, label: "Прежние паспорта" },
+                          { url: app.file_vehicle_doc, label: "СТС/ПТС" },
+                        ].filter(d => d.url).map(d => (
+                          <a key={d.label} href={d.url!} target="_blank" rel="noreferrer"
+                            style={{ padding: "5px 12px", borderRadius: 8, border: "1px solid rgba(16,185,129,0.3)", background: "rgba(16,185,129,0.1)", color: "#0f766e", fontSize: 12, textDecoration: "none" }}>
+                            {d.label}
+                          </a>
+                        ))}
+                      </div>
+                    )}
 
                     {(app.status === "approved" || app.status === "signing") && (app.approved_amount || app.approved_months || app.approved_rate) && (
                       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", padding: "10px 14px", borderRadius: 10, background: app.status === "approved" ? "rgba(34,197,94,0.08)" : "rgba(96,165,250,0.08)", border: `1px solid ${app.status === "approved" ? "rgba(34,197,94,0.2)" : "rgba(96,165,250,0.2)"}`, marginBottom: 8 }}>

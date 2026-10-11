@@ -104,6 +104,23 @@ def handler(event: dict, context) -> dict:
         contact_person  = s("contactPerson")
         card_number     = s("cardNumber")
 
+        birth_place     = s("birthPlace")
+        passport_code   = s("passportCode")
+        snils           = s("snils")
+        workplace       = s("workplace")
+        position        = s("position")
+        work_phone      = s("workPhone")
+        telegram_id     = s("telegramId")
+        file_passport   = s("filePassport")
+        file_registration = s("fileRegistration")
+        file_selfie     = s("fileSelfie")
+        file_prev       = s("filePreviousPassports")
+        file_vehicle    = s("fileVehicleDoc")
+        try:
+            salary_sql = str(float(b["salary"])) if b.get("salary") else "NULL"
+        except (TypeError, ValueError):
+            salary_sql = "NULL"
+
         car_year    = int(b["carYear"])    if b.get("carYear")    else 0
         car_mileage = int(b["carMileage"]) if b.get("carMileage") else 0
         loan_amount = float(b["loanAmount"]) if b.get("loanAmount") else 0
@@ -130,10 +147,14 @@ def handler(event: dict, context) -> dict:
             f"INSERT INTO {SCHEMA}.car_loan_applications "
             f"(full_name, phone, email, birth_date, address, passport_serial, passport_num, passport_issued, "
             f" car_brand, car_model, car_year, car_mileage, contact_person, card_number, loan_amount, loan_months, "
-            f" status, created_at, updated_at, promo_code, promo_discount, living_address, work_address) "
+            f" status, created_at, updated_at, promo_code, promo_discount, living_address, work_address, "
+            f" birth_place, passport_code, snils, workplace, position, work_phone, salary, telegram_id, "
+            f" file_passport, file_registration, file_selfie, file_previous_passports, file_vehicle_doc) "
             f"VALUES ('{full_name}','{phone}','{email}',{bd_val},'{address}','{passport_serial}','{passport_num}',"
             f"'{passport_issued}','{car_brand}','{car_model}',{car_year},{car_mileage},'{contact_person}',"
-            f"'{card_number}',{loan_amount},{loan_months},'pending',NOW(),NOW(),{promo_sql},{promo_disc_v},'{living_address}','{work_address}') RETURNING id"
+            f"'{card_number}',{loan_amount},{loan_months},'pending',NOW(),NOW(),{promo_sql},{promo_disc_v},'{living_address}','{work_address}',"
+            f"'{birth_place}','{passport_code}','{snils}','{workplace}','{position}','{work_phone}',{salary_sql},'{telegram_id}',"
+            f"'{file_passport}','{file_registration}','{file_selfie}','{file_prev}','{file_vehicle}') RETURNING id"
         )
         new_id = cur.fetchone()[0]
 
@@ -195,7 +216,8 @@ def handler(event: dict, context) -> dict:
             f"passport_issued, car_brand, car_model, car_year, car_mileage, contact_person, card_number, "
             f"loan_amount, loan_months, status, reject_reason, approved_amount, approved_months, "
             f"approved_rate, notes, created_at, updated_at, disbursed_at, contract_signed, contract_signed_at, promo_code, promo_discount, "
-            f"living_address, work_address "
+            f"living_address, work_address, birth_place, passport_code, snils, workplace, position, work_phone, salary, telegram_id, "
+            f"file_passport, file_registration, file_selfie, file_previous_passports, file_vehicle_doc "
             f"FROM {SCHEMA}.car_loan_applications WHERE {where} ORDER BY created_at DESC"
         )
         cols = [d[0] for d in cur.description]
