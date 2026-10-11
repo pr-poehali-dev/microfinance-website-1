@@ -5,7 +5,7 @@ export type DashboardSection = "apps" | "history" | "repay" | "new" | "cards" | 
 const ITEMS: { key: DashboardSection; label: string; icon: string }[] = [
   { key: "apps", label: "Мои заявки", icon: "ClipboardList" },
   { key: "history", label: "История займов", icon: "History" },
-  { key: "repay", label: "Погашение", icon: "Wallet" },
+  { key: "repay", label: "История выплат", icon: "Wallet" },
   { key: "new", label: "Новая заявка", icon: "FilePlus" },
   { key: "cards", label: "Мои карты", icon: "CreditCard" },
   { key: "docs", label: "Документы", icon: "FileText" },

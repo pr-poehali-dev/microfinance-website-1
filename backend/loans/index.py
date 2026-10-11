@@ -232,6 +232,30 @@ PROFILE_COLS = {
 }
 
 
+def sync_saved_cards(cur, phone: str):
+    """Подтягивает карты/СБП из всех заявок клиента в список сохранённых карт."""
+    ph = phone.replace("'", "''")
+    parts = [
+        f"SELECT card_number AS v FROM {SCHEMA}.applications WHERE phone = '{ph}'",
+        f"SELECT card_number_transfer AS v FROM {SCHEMA}.applications WHERE phone = '{ph}'",
+        f"SELECT card_number AS v FROM {SCHEMA}.car_loan_applications WHERE phone = '{ph}'",
+        f"SELECT card_number AS v FROM {SCHEMA}.shopping_loan_applications WHERE phone = '{ph}'",
+    ]
+    cur.execute(
+        f"INSERT INTO {SCHEMA}.saved_cards (phone, card_value, card_key, source) "
+        f"SELECT DISTINCT ON (k) '{ph}', trim(v), k, 'loan' FROM ("
+        f"SELECT v, regexp_replace(v, '[^0-9]', '', 'g') AS k FROM (" + " UNION ALL ".join(parts) + ") a WHERE v IS NOT NULL"
+        f") t WHERE (length(k) IN (10, 11) OR length(k) BETWEEN 16 AND 19) AND k !~ '^0+$' ORDER BY k ON CONFLICT (phone, card_key) DO NOTHING"
+    )
+
+
+def mask_card(value: str) -> str:
+    digits = "".join(ch for ch in value if ch.isdigit())
+    if len(digits) >= 16:
+        return "•••• •••• •••• " + digits[-4:]
+    return value
+
+
 def handler(event: dict, context) -> dict:
     """Получение займов пользователя и подписание оффера."""
     if event.get("httpMethod") == "OPTIONS":
@@ -252,6 +276,33 @@ def handler(event: dict, context) -> dict:
         return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Сессия истекла, войдите снова"})}
 
     user_id, phone, full_name, email = user
+
+    # --- МОИ КАРТЫ: список (GET sub=saved_cards) ---
+    if event.get("httpMethod") == "GET" and (event.get("queryStringParameters") or {}).get("sub") == "saved_cards":
+        sync_saved_cards(cur, phone)
+        conn.commit()
+        cur.execute(f"SELECT id, card_value, source FROM {SCHEMA}.saved_cards WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC, id DESC")
+        items = [{"id": r_[0], "label": mask_card(r_[1]), "isCard": len("".join(c for c in r_[1] if c.isdigit())) >= 16, "source": r_[2]} for r_ in cur.fetchall()]
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"cards": items}, ensure_ascii=False)}
+
+    # --- МОИ КАРТЫ: добавить (POST sub=card_add) ---
+    if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "card_add":
+        raw_c = event.get("body") or "{}"
+        bc = json.loads(raw_c) if isinstance(raw_c, str) else raw_c
+        value = (bc.get("cardNumber") or "").strip()
+        digits = "".join(ch for ch in value if ch.isdigit())
+        if len(digits) not in (10, 11) and not (16 <= len(digits) <= 19):
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Введите номер карты (16–19 цифр) или телефон СБП"}, ensure_ascii=False)}
+        ph_c = phone.replace("'", "''")
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.saved_cards (phone, card_value, card_key, source) "
+            f"VALUES ('{ph_c}', '{value.replace(chr(39), chr(39)*2)}', '{digits}', 'manual') ON CONFLICT (phone, card_key) DO NOTHING"
+        )
+        conn.commit()
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     # --- СОХРАНИТЬ НОМЕР КАРТЫ/СБП (PATCH) ---
     if event.get("httpMethod") == "PATCH":

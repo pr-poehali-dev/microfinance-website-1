@@ -7,6 +7,7 @@ import CardTransactionsList, { CardTransaction } from "./CardTransactionsList";
 import CardPaymentSchedule, { CardPaymentRow } from "./CardPaymentSchedule";
 import CardRepaymentHistory, { CardRepayment } from "./CardRepaymentHistory";
 import CardRequestBlock from "./CardRequestBlock";
+import SavedCards from "./SavedCards";
 import LimitIncreasedModal, { LimitIncrease } from "./LimitIncreasedModal";
 
 interface LoanOffer {
@@ -723,6 +724,7 @@ export default function DashboardApplicationStatus({
 
       </>)}
       {part === "cards" && (<>
+      <SavedCards />
       {/* ВИРТУАЛЬНАЯ КАРТА РУСФИНАНС 24 */}
       {application?.virtualCard && application.virtualCard.status !== "none" && (
         <div className="mb-6">

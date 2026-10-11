@@ -658,6 +658,7 @@ export default function DashboardPage() {
               signMsg={signMsg}
               onSign={handleSign}
               onPay={handlePay}
+              hideNewLoan={section === "repay"}
             />
           </>
         )}
