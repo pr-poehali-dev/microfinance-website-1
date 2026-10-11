@@ -8,13 +8,13 @@ import DashboardNavbar from "./dashboard/DashboardNavbar";
 import DashboardApplicationStatus from "./dashboard/DashboardApplicationStatus";
 import DashboardLoans from "./dashboard/DashboardLoans";
 import DashboardSupport from "./dashboard/DashboardSupport";
-import YooKassaHistory from "./dashboard/YooKassaHistory";
 import PaymentHistory from "./dashboard/PaymentHistory";
 import ClientProfileCard from "./dashboard/ClientProfileCard";
 import PartnerCardLinks from "./dashboard/PartnerCardLinks";
 import RepeatLoanForm from "./dashboard/RepeatLoanForm";
 import PromoCodeCard from "./dashboard/PromoCodeCard";
 import PayLoanModal from "./dashboard/PayLoanModal";
+import PaymentsList from "./dashboard/PaymentsList";
 import CardActivatedModal from "./dashboard/CardActivatedModal";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
@@ -648,7 +648,9 @@ export default function DashboardPage() {
             </>
         )}
 
-        {!loading && !error && (section === "history" || section === "repay") && (
+        {!loading && !error && section === "repay" && <PaymentsList loans={loans} />}
+
+        {!loading && !error && (section === "history" || (section === "apps" && loans.some((l) => l.status !== "paid"))) && (
           <>
             <DashboardLoans
               loans={section === "history" ? loans.filter((l) => l.status === "paid") : loans.filter((l) => l.status !== "paid")}
@@ -658,7 +660,7 @@ export default function DashboardPage() {
               signMsg={signMsg}
               onSign={handleSign}
               onPay={handlePay}
-              hideNewLoan={section === "repay"}
+              hideNewLoan={section === "apps"}
             />
           </>
         )}
@@ -1043,8 +1045,6 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
-
-        {section === "repay" && <YooKassaHistory />}
 
         {section === "new" && !loading && !error && (
           <div className="glass rounded-2xl p-6 mb-6">

@@ -14,7 +14,7 @@ const STATUS: Record<string, { label: string; bg: string; color: string }> = {
   pending: { label: "Не завершён", bg: "rgba(245,158,11,0.15)", color: "#b45309" },
 };
 
-export default function YooKassaHistory() {
+export default function YooKassaHistory({ showEmpty = false }: { showEmpty?: boolean }) {
   const [items, setItems] = useState<Item[]>([]);
 
   useEffect(() => {
@@ -30,7 +30,18 @@ export default function YooKassaHistory() {
       .catch(() => {});
   }, []);
 
-  if (items.length === 0) return null;
+  if (items.length === 0) {
+    if (!showEmpty) return null;
+    return (
+      <div className="glass rounded-2xl p-10 text-center">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(16,185,129,0.2)" }}>
+          <Icon name="Wallet" size={28} className="text-emerald-600" />
+        </div>
+        <h3 className="text-emerald-950 font-semibold text-lg mb-2">Выплат пока нет</h3>
+        <p className="text-emerald-950/50 text-sm">Здесь появятся платежи, которые вы внесёте по займам</p>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-2xl p-5 space-y-3" style={{ background: "#ffffff", border: "1px solid rgba(16,185,129,0.25)" }}>

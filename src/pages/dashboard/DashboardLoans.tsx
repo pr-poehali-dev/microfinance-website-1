@@ -91,7 +91,7 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
             </>
           ) : (
             <>
-              <h3 className="text-emerald-950 font-semibold text-lg mb-2">{hideNewLoan ? "Выплат пока нет" : "Займов пока нет"}</h3>
+              <h3 className="text-emerald-950 font-semibold text-lg mb-2">Займов пока нет</h3>
               {!hideNewLoan && (
                 <>
                   <p className="text-emerald-950/50 text-sm mb-6">Оформите первый займ прямо сейчас</p>
