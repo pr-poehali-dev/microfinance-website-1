@@ -3,7 +3,7 @@ import Icon from "@/components/ui/icon";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 
-interface SavedCard { id: number; label: string; isCard: boolean; source: string }
+interface SavedCard { id: number; label: string; value: string; isCard: boolean; source: string }
 
 const headers = (token: string) => ({
   "Content-Type": "application/json",

@@ -282,7 +282,7 @@ def handler(event: dict, context) -> dict:
         sync_saved_cards(cur, phone)
         conn.commit()
         cur.execute(f"SELECT id, card_value, source FROM {SCHEMA}.saved_cards WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC, id DESC")
-        items = [{"id": r_[0], "label": mask_card(r_[1]), "isCard": len("".join(c for c in r_[1] if c.isdigit())) >= 16, "source": r_[2]} for r_ in cur.fetchall()]
+        items = [{"id": r_[0], "label": mask_card(r_[1]), "value": r_[1], "isCard": len("".join(c for c in r_[1] if c.isdigit())) >= 16, "source": r_[2]} for r_ in cur.fetchall()]
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"cards": items}, ensure_ascii=False)}
 

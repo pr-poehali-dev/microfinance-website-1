@@ -1,4 +1,5 @@
 import SignCodeDialog from "@/components/SignCodeDialog";
+import SavedCardPicker from "@/components/SavedCardPicker";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import PromoCodeField from "@/components/PromoCodeField";
@@ -491,6 +492,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
                 </div>
                 <div>
                   <label className={labelCls}>Номер карты или телефон СБП для перевода <span className="text-red-400">*</span></label>
+                  <SavedCardPicker value={form.cardNumber} onPick={(v) => setF("cardNumber", v)} />
                   <input type="text" placeholder="2200 1234 5678 9012 или +7 (900) 000-00-00" value={form.cardNumber} onChange={e => setF("cardNumber", e.target.value)} required className={inputCls} style={inputStyle} />
                   <p className="text-emerald-950/30 text-xs mt-1">На этот реквизит поступят деньги после одобрения</p>
                 </div>

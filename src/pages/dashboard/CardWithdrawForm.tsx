@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import SavedCardPicker from "@/components/SavedCardPicker";
 import Icon from "@/components/ui/icon";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
@@ -127,6 +128,7 @@ export default function CardWithdrawForm({ available, defaultCard, onSuccess }: 
 
       <div>
         <div className="text-emerald-950/60 text-sm mb-2">Номер вашей карты, куда перевести деньги</div>
+        <SavedCardPicker value={cardNumber} onPick={setCardNumber} />
         <input
           type="text" inputMode="numeric" value={cardNumber}
           onChange={(e) => setCardNumber(e.target.value)}
