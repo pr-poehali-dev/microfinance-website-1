@@ -40,7 +40,7 @@ export default function AdminContractsRepair({ token }: Props) {
         <div style={{ fontSize: 13, marginTop: 2 }}>
           {running && `Создаём договоры... готово ${created}${remaining !== null ? `, осталось ${Math.max(0, remaining)}` : ""}`}
           {!running && done && `Создано договоров: ${created}${failed ? `, с ошибкой: ${failed}` : ""}${remaining ? `, осталось: ${Math.max(0, remaining)}` : ""}`}
-          {!running && !done && "Нажмите, чтобы пересоздать договоры у клиентов, которые ждут подписания."}
+          {!running && !done && "Нажмите, чтобы обновить условия в договорах у клиентов, которые ещё не подписали договор. Подписанные договоры не меняются."}
         </div>
       </div>
       <button onClick={() => run(false, true)} disabled={running}
@@ -49,7 +49,7 @@ export default function AdminContractsRepair({ token }: Props) {
       </button>
       <button onClick={() => run(true)} disabled={running}
         style={{ background: "rgba(245,158,11,0.15)", color: "#92400e", border: "1px solid rgba(245,158,11,0.5)", borderRadius: 10, padding: "10px 18px", cursor: running ? "default" : "pointer", fontWeight: 700, fontSize: 14, opacity: running ? 0.7 : 1 }}>
-        Обновить реквизиты
+        Обновить условия займов
       </button>
       <button onClick={() => run(false)} disabled={running}
         style={{ background: "linear-gradient(135deg,#d97706,#f59e0b)", color: "white", border: "none", borderRadius: 10, padding: "10px 18px", cursor: running ? "default" : "pointer", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 8, opacity: running ? 0.7 : 1 }}>
