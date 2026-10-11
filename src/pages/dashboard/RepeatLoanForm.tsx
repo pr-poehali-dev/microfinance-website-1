@@ -31,7 +31,9 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
     const total = amount + interest;
     const amountBg = `linear-gradient(to right, #10b981 ${((amount - 5000) / (200000 - 5000)) * 100}%, rgba(16,185,129,0.2) ${((amount - 5000) / (200000 - 5000)) * 100}%)`;
     const daysBg = `linear-gradient(to right, #10b981 ${((days - 5) / (365 - 5)) * 100}%, rgba(16,185,129,0.2) ${((days - 5) / (365 - 5)) * 100}%)`;
-    return { interest, total, amountBg, daysBg };
+    const insurancePct = amount <= 20000 ? 50 : amount <= 49900 ? 35 : amount <= 99999 ? 25 : 15;
+    const insurance = Math.round(amount * insurancePct / 100);
+    return { interest, total, amountBg, daysBg, insurancePct, insurance };
   }, [amount, days, promo]);
 
   function submit() { setCodeOpen(true); }
@@ -189,6 +191,11 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
         <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>
           <span className="text-emerald-950/50 text-sm">К возврату</span>
           <span className="font-bold text-xl gradient-text">{calc.total.toLocaleString("ru-RU")} ₽</span>
+        </div>
+
+        <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.2)" }}>
+          <span className="text-emerald-950/50 text-sm">Страховая премия ({calc.insurancePct}%)</span>
+          <span className="font-bold text-emerald-950">{calc.insurance.toLocaleString("ru-RU")} ₽</span>
         </div>
 
         {error && (
