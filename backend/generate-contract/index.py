@@ -960,60 +960,14 @@ def handler(event: dict, context) -> dict:
         cur.close(); conn.close()
         return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Не указан appId"})}
 
-    # Получаем данные заявки
     app_id_e = str(app_id).replace("'", "''")
-    cur.execute(f"""
-        SELECT full_name, phone, email, birth_date, birth_place,
-               passport_series, passport_number, passport_date, passport_code, passport_by,
-               approved_amount, approved_rate, approved_days, amount, days, reg_address, living_address
-        FROM {SCHEMA}.applications WHERE id = '{app_id_e}'
-    """)
-    row = cur.fetchone()
-    if not row:
+    cur.execute(f"SELECT id FROM {SCHEMA}.applications WHERE id = '{app_id_e}'")
+    if not cur.fetchone():
         cur.close(); conn.close()
         return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
 
-    (full_name, phone, email, birth_date, birth_place,
-     ps, pn, pd, pc, pb,
-     approved_amount, approved_rate, approved_days, amount, days, reg_address, living_address) = row
-
-    eff_amount = float(approved_amount) if approved_amount else float(amount)
-    eff_rate = float(approved_rate) if approved_rate else 0.008
-    eff_days = int(approved_days) if approved_days else int(days)
-    eff_loan_id = int(loan_id) if loan_id else 0
-
-    app_data = {
-        "full_name": full_name or "",
-        "phone": phone or "",
-        "email": email or "",
-        "birth_date": str(birth_date) if birth_date else "",
-        "birth_place": birth_place or "",
-        "passport_series": ps or "",
-        "passport_number": pn or "",
-        "passport_date": str(pd) if pd else "",
-        "passport_code": pc or "",
-        "passport_by": pb or "",
-        "amount": eff_amount,
-        "rate": eff_rate,
-        "days": eff_days,
-        "address": reg_address or "",
-        "living_address": living_address or "",
-    }
-
-    # Генерируем HTML и конвертируем в PDF
-    html = generate_contract_html(app_data, eff_loan_id or int(app_id_e))
-
-    s3 = s3_client()
-    now_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    s3_key, body_bytes, ctype = store_contract_file(html, str(app_id), now_ts)
-    s3.put_object(Bucket="files", Key=s3_key, Body=body_bytes, ContentType=ctype)
-    access_key = os.environ["AWS_ACCESS_KEY_ID"]
-    contract_url = f"https://cdn.poehali.dev/projects/{access_key}/bucket/{s3_key}"
-    print(f"[generate-contract] saved {s3_key} -> {contract_url}")
-
-    # Сохраняем ссылку в БД
-    cu = contract_url.replace("'", "''")
-    cur.execute(f"UPDATE {SCHEMA}.applications SET contract_url='{cu}' WHERE id='{app_id_e}'")
+    contract_url = build_and_store(cur, str(app_id), int(loan_id) if loan_id else 0)
+    print(f"[generate-contract] saved -> {contract_url}")
     conn.commit()
     cur.close()
     conn.close()
