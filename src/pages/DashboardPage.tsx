@@ -106,6 +106,7 @@ interface VirtualCard {
   status: string;
   days?: number | null;
   transactions: CardTransaction[];
+  repayments?: { amount: number; note: string; createdAt: string; principal?: number; interest?: number }[];
 }
 
 interface CardRequest {
@@ -648,7 +649,7 @@ export default function DashboardPage() {
             </>
         )}
 
-        {!loading && !error && section === "repay" && <PaymentsList loans={loans} />}
+        {!loading && !error && section === "repay" && <PaymentsList loans={loans} cardRepayments={application?.virtualCard?.repayments ?? []} />}
 
         {!loading && !error && (section === "history" || (section === "apps" && loans.some((l) => l.status !== "paid"))) && (
           <>
