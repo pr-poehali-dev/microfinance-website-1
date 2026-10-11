@@ -281,7 +281,7 @@ def handler(event: dict, context) -> dict:
     if event.get("httpMethod") == "GET" and (event.get("queryStringParameters") or {}).get("sub") == "saved_cards":
         sync_saved_cards(cur, phone)
         conn.commit()
-        cur.execute(f"SELECT id, card_value, source FROM {SCHEMA}.saved_cards WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC, id DESC")
+        cur.execute(f"SELECT id, card_value, source FROM {SCHEMA}.saved_cards WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' AND hidden = FALSE ORDER BY created_at DESC, id DESC")
         items = [{"id": r_[0], "label": mask_card(r_[1]), "value": r_[1], "isCard": len("".join(c for c in r_[1] if c.isdigit())) >= 16, "source": r_[2]} for r_ in cur.fetchall()]
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"cards": items}, ensure_ascii=False)}
@@ -298,8 +298,22 @@ def handler(event: dict, context) -> dict:
         ph_c = phone.replace("'", "''")
         cur.execute(
             f"INSERT INTO {SCHEMA}.saved_cards (phone, card_value, card_key, source) "
-            f"VALUES ('{ph_c}', '{value.replace(chr(39), chr(39)*2)}', '{digits}', 'manual') ON CONFLICT (phone, card_key) DO NOTHING"
+            f"VALUES ('{ph_c}', '{value.replace(chr(39), chr(39)*2)}', '{digits}', 'manual') ON CONFLICT (phone, card_key) DO UPDATE SET hidden = FALSE, card_value = EXCLUDED.card_value"
         )
+        conn.commit()
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    # --- МОИ КАРТЫ: удалить (POST sub=card_delete) ---
+    if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "card_delete":
+        raw_d = event.get("body") or "{}"
+        bd = json.loads(raw_d) if isinstance(raw_d, str) else raw_d
+        try:
+            card_id = int(bd.get("id"))
+        except (TypeError, ValueError):
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Не указана карта"}, ensure_ascii=False)}
+        cur.execute(f"UPDATE {SCHEMA}.saved_cards SET hidden = TRUE WHERE id = {card_id} AND phone = '{phone.replace(chr(39), chr(39)*2)}'")
         conn.commit()
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}

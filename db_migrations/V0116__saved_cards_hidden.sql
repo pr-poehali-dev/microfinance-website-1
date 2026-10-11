@@ -1,0 +1,1 @@
+ALTER TABLE t_p30184577_microfinance_website.saved_cards ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT FALSE;

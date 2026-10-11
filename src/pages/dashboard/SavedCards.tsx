@@ -36,6 +36,17 @@ export default function SavedCards() {
 
   useEffect(load, [load]);
 
+  const remove = async (id: number) => {
+    if (!window.confirm("Удалить эту карту из списка?")) return;
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setCards((prev) => prev.filter((c) => c.id !== id));
+    await fetch(`${LOANS_URL}?sub=card_delete`, {
+      method: "POST", headers: headers(token), body: JSON.stringify({ id }),
+    }).catch(() => null);
+    load();
+  };
+
   const save = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -104,6 +115,10 @@ export default function SavedCards() {
                   {c.isCard ? "Банковская карта" : "СБП"}{c.source === "loan" ? " · указана при оформлении займа" : " · добавлена вами"}
                 </div>
               </div>
+              <button onClick={() => remove(c.id)} aria-label="Удалить карту"
+                className="shrink-0 p-2 rounded-lg text-red-500/70 hover:text-red-600 hover:bg-red-500/10 transition-colors">
+                <Icon name="Trash2" size={18} />
+              </button>
             </div>
           ))}
         </div>
