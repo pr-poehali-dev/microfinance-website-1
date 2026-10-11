@@ -44,6 +44,7 @@ interface VirtualCard {
   available: number;
   monthlyFee?: number;
   feesTotal?: number;
+  feeList?: { amount: number; kind: string; title: string; createdAt: string }[];
   rate: number;
   status: string;
   days?: number | null;
@@ -888,6 +889,16 @@ export default function DashboardApplicationStatus({
                   <div>Перевод на другую карту — комиссия 199 ₽ + 3,9% от суммы.</div>
                   {(application.virtualCard.feesTotal ?? 0) > 0 && (
                     <div className="font-semibold text-emerald-950">Списано за обслуживание и переводы: {(application.virtualCard.feesTotal ?? 0).toLocaleString("ru-RU")} ₽</div>
+                  )}
+                  {(application.virtualCard.feeList ?? []).length > 0 && (
+                    <div className="pt-2 mt-1 space-y-1" style={{ borderTop: "1px solid rgba(16,185,129,0.2)" }}>
+                      {(application.virtualCard.feeList ?? []).map((f, i) => (
+                        <div key={i} className="flex justify-between gap-3 text-xs">
+                          <span>{f.title} <span className="text-emerald-950/40">· {f.createdAt}</span></span>
+                          <span className="font-semibold text-emerald-950 shrink-0">−{f.amount.toLocaleString("ru-RU")} ₽</span>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
                 <CardWithdrawForm available={application.virtualCard.available} defaultCard={application.cardNumber} onSuccess={onRefresh} />

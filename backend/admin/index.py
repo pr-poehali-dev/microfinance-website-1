@@ -2109,6 +2109,7 @@ def handler(event: dict, context) -> dict:
             for n in cur.fetchall():
                 notices.setdefault(n[1], []).append(n)
         fees: dict = {}
+        fee_list: dict = {}
         for (_aid, _n, _st, _sg) in [(r[0], r[4], r[5], r[10]) for r in card_rows]:
             if _st == "active" and _sg:
                 _now = datetime.utcnow()
@@ -2125,6 +2126,13 @@ def handler(event: dict, context) -> dict:
             cur.execute(f"SELECT application_id, COALESCE(SUM(amount),0) FROM {SCHEMA}.card_fees WHERE application_id IN ({','.join(ids)}) GROUP BY application_id")
             for _a, _sum in cur.fetchall():
                 fees[_a] = float(_sum)
+            cur.execute(f"SELECT application_id, amount, kind, period_no, created_at FROM {SCHEMA}.card_fees WHERE application_id IN ({','.join(ids)}) ORDER BY created_at DESC, id DESC")
+            for _a, _am, _kd, _pn, _ca in cur.fetchall():
+                fee_list.setdefault(_a, []).append({
+                    "amount": float(_am), "kind": _kd,
+                    "title": "Ежемесячное обслуживание" if _kd == "monthly" else f"Комиссия за перевод №{_pn}",
+                    "createdAt": msk(_ca).strftime("%d.%m.%Y в %H:%M"),
+                })
         cur.close(); conn.close()
 
         cards = []
@@ -2159,7 +2167,7 @@ def handler(event: dict, context) -> dict:
                 "contractUrl": card_contract or "",
                 "issuedAt": msk(issued_at).strftime("%d.%m.%Y в %H:%M") if issued_at else None,
                 "signedAt": msk(signed_at).strftime("%d.%m.%Y в %H:%M") if signed_at else None,
-                "used": used, "fees": fees.get(app_id, 0.0), "available": max(0.0, limit_v - used - fees.get(app_id, 0.0)),
+                "used": used, "fees": fees.get(app_id, 0.0), "feeList": fee_list.get(app_id, []), "available": max(0.0, limit_v - used - fees.get(app_id, 0.0)),
                 "debt": debt, "repaid": repaid,
                 "minPaymentPercent": CARD_MIN_PAYMENT_PERCENT, "minPayment": round(debt * CARD_MIN_PAYMENT_PERCENT / 100),
                 "paymentSchedule": card_payment_schedule(issued_at, debt) if debt > 0 else [],

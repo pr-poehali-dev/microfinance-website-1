@@ -1019,9 +1019,16 @@ def handler(event: dict, context) -> dict:
 
         vc_limit_val = float(app_row[15]) if app_row[15] else 0
         vc_fees_total = 0.0
+        vc_fee_list = []
         if app_row[11] and card_app_id:
             vc_fees_total = ensure_card_fees(cur, card_app_id)
             conn.commit()
+            cur.execute(f"SELECT amount, kind, period_no, created_at FROM {SCHEMA}.card_fees WHERE application_id = {int(card_app_id)} ORDER BY created_at DESC, id DESC")
+            vc_fee_list = [{
+                "amount": float(a_), "kind": k_,
+                "title": "Ежемесячное обслуживание" if k_ == "monthly" else f"Комиссия за перевод №{n_}",
+                "createdAt": msk(c_).strftime("%d.%m.%Y в %H:%M"),
+            } for a_, k_, n_, c_ in cur.fetchall()]
         vc_available = max(0, vc_limit_val - vc_used - vc_fees_total)
 
         application = {
@@ -1053,6 +1060,7 @@ def handler(event: dict, context) -> dict:
                 "available": vc_available,
                 "monthlyFee": CARD_MONTHLY_FEE,
                 "feesTotal": vc_fees_total,
+                "feeList": vc_fee_list,
                 "rate": float(app_row[16]) if app_row[16] else 0,
                 "status": app_row[17] or "none",
                 "days": vc_days,

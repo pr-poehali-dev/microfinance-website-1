@@ -13,7 +13,8 @@ interface Tx {
 interface Card {
   appId: number; fullName: string; phone: string; clientCard: string; cardNumber: string; status: string;
   limit: number; contractUrl?: string; rate: number; days: number | null; issuedAt: string | null; signedAt: string | null;
-  used: number; available: number; debt: number; repaid: number;
+  used: number; fees?: number; feeList?: { amount: number; kind: string; title: string; createdAt: string }[];
+  available: number; debt: number; repaid: number;
   minPaymentPercent: number; minPayment: number;
   paymentSchedule: { week: number; dueDate: string; amount: number; isNext: boolean }[];
   transactions: Tx[];
@@ -143,6 +144,20 @@ export default function AdminCards({ token, onChanged }: Props) {
                     Выдана: {c.issuedAt || "—"} · Договор: {c.signedAt ? `подписан ${c.signedAt} (МСК)` : "не подписан"}
                     {c.clientCard && <> · Карта клиента: {c.clientCard}</>}
                   </div>
+
+                  {(c.feeList ?? []).length > 0 && (
+                    <div style={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 12, padding: 12 }}>
+                      <div style={{ color: "rgba(2,44,34,0.55)", fontSize: 12, fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>
+                        Списания с лимита · всего {fmt(c.fees ?? 0)}
+                      </div>
+                      {(c.feeList ?? []).map((f, i) => (
+                        <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 13, padding: "3px 0", color: "#022c22" }}>
+                          <span>{f.title} <span style={{ color: "rgba(2,44,34,0.45)", fontSize: 12 }}>· {f.createdAt}</span></span>
+                          <b>−{fmt(f.amount)}</b>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {c.notices.length > 0 && (
                     <div style={{ border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.06)", borderRadius: 12, padding: 12 }}>
