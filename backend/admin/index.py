@@ -2330,6 +2330,24 @@ def handler(event: dict, context) -> dict:
             "shopWaiting": int(shop_wait), "cardRequestsWaiting": int(card_req_wait),
         })}
 
+    # --- ДОПСОГЛАШЕНИЕ: РАЗОСЛАТЬ (POST) / СТАТИСТИКА (GET), sub='addendum' ---
+    if sub == "addendum" and method in ("POST", "GET"):
+        if method == "POST":
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.agreement_addenda (phone, version) "
+                f"SELECT DISTINCT phone, 'v1' FROM ("
+                f"  SELECT u.phone AS phone FROM {SCHEMA}.loans l JOIN {SCHEMA}.users u ON u.id = l.user_id WHERE l.signed = TRUE AND l.status IN ('active','overdue')"
+                f"  UNION SELECT phone FROM {SCHEMA}.applications WHERE virtual_card_status = 'active'"
+                f"  UNION SELECT phone FROM {SCHEMA}.car_loan_applications WHERE contract_signed = TRUE AND disbursed_at IS NOT NULL"
+                f"  UNION SELECT phone FROM {SCHEMA}.shopping_loan_applications WHERE contract_signed = TRUE AND disbursed_at IS NOT NULL"
+                f") t WHERE phone IS NOT NULL AND phone <> '' ON CONFLICT (phone, version) DO NOTHING"
+            )
+            conn.commit()
+        cur.execute(f"SELECT COUNT(*), COUNT(signed_at) FROM {SCHEMA}.agreement_addenda WHERE version = 'v1'")
+        tot, sg = cur.fetchone()
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "total": tot, "signed": sg, "pending": tot - sg})}
+
     # --- РУЧНОЕ СПИСАНИЕ С ЛИМИТА КАРТЫ (POST, sub='card_fee_add', appId=..., body: {amount, note}) ---
     if sub == "card_fee_add" and method == "POST":
         fa_app = int(qs.get("appId", 0) or 0)

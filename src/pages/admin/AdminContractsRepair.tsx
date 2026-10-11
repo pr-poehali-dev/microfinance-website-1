@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 
 const CONTRACT_URL = "https://functions.poehali.dev/9cdc3bea-1348-49df-a7a3-4aeef6088ff3";
@@ -11,6 +11,23 @@ export default function AdminContractsRepair({ token }: Props) {
   const [remaining, setRemaining] = useState<number | null>(null);
   const [failed, setFailed] = useState(0);
   const [done, setDone] = useState(false);
+  const [addendum, setAddendum] = useState<{ total: number; signed: number; pending: number } | null>(null);
+  const [addBusy, setAddBusy] = useState(false);
+  const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
+
+  useEffect(() => { addendumAction(false); }, []);
+
+  async function addendumAction(send: boolean) {
+    if (send && !window.confirm("Отправить допсоглашение всем клиентам с действующими займами и картами? Они увидят его при входе в кабинет.")) return;
+    setAddBusy(true);
+    const r = await fetch(`${ADMIN_URL}?sub=addendum`, {
+      method: send ? "POST" : "GET",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: send ? "{}" : undefined,
+    }).catch(() => null);
+    if (r && r.ok) setAddendum(await r.json());
+    setAddBusy(false);
+  }
 
   async function run(refresh: boolean, card = false) {
     setRunning(true); setDone(false); setCreated(0); setFailed(0);
@@ -43,6 +60,15 @@ export default function AdminContractsRepair({ token }: Props) {
           {!running && !done && "Нажмите, чтобы обновить условия в договорах у клиентов, которые ещё не подписали договор. Подписанные договоры не меняются."}
         </div>
       </div>
+      <button onClick={() => addendumAction(true)} disabled={addBusy}
+        style={{ background: "rgba(59,130,246,0.12)", color: "#1d4ed8", border: "1px solid rgba(59,130,246,0.4)", borderRadius: 10, padding: "10px 18px", cursor: addBusy ? "default" : "pointer", fontWeight: 700, fontSize: 14 }}>
+        Разослать допсоглашение
+      </button>
+      {addendum && (
+        <div style={{ width: "100%", color: "#1e3a8a", fontSize: 13 }}>
+          Допсоглашение: всего клиентов {addendum.total}, подписали {addendum.signed}, ждут подписи {addendum.pending}
+        </div>
+      )}
       <button onClick={() => run(false, true)} disabled={running}
         style={{ background: "rgba(16,185,129,0.15)", color: "#047857", border: "1px solid rgba(16,185,129,0.5)", borderRadius: 10, padding: "10px 18px", cursor: running ? "default" : "pointer", fontWeight: 700, fontSize: 14, opacity: running ? 0.7 : 1 }}>
         Договоры по картам

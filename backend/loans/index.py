@@ -516,6 +516,14 @@ def handler(event: dict, context) -> dict:
                 pass
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "requestId": req_id})}
 
+    # --- КЛИЕНТ ПОДПИСАЛ ДОПСОГЛАШЕНИЕ (POST, ?sub=addendum_sign) ---
+    if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "addendum_sign":
+        ph_e = phone.replace("'", "''")
+        cur.execute(f"UPDATE {SCHEMA}.agreement_addenda SET signed_at = NOW() WHERE phone = '{ph_e}' AND version = 'v1' AND signed_at IS NULL")
+        conn.commit()
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     # --- КЛИЕНТ ЗАКРЫЛ ПЛАШКУ «ЛИМИТ УВЕЛИЧЕН» (POST, ?sub=limit_seen) ---
     if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "limit_seen":
         ph_e = phone.replace("'", "''")
@@ -1268,6 +1276,9 @@ def handler(event: dict, context) -> dict:
             }
         loans.append(loan_data)
 
+    cur.execute(f"SELECT 1 FROM {SCHEMA}.agreement_addenda WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' AND version = 'v1' AND signed_at IS NULL LIMIT 1")
+    addendum_pending = bool(cur.fetchone())
+
     return {
         "statusCode": 200,
         "headers": CORS,
@@ -1280,5 +1291,6 @@ def handler(event: dict, context) -> dict:
             "loanNotices": loan_notices,
             "promo": user_promo,
             "profileEditable": profile_editable,
+            "addendumPending": addendum_pending,
         }, ensure_ascii=False)
     }

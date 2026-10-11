@@ -1,4 +1,5 @@
 import SignCodeDialog from "@/components/SignCodeDialog";
+import AddendumDialog from "./dashboard/AddendumDialog";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
@@ -225,6 +226,7 @@ export default function DashboardPage() {
   const carTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const shopTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [paidToast, setPaidToast] = useState(false);
+  const [addendumPending, setAddendumPending] = useState(false);
 
   const loadData = (token: string, isInitial = false) => {
     if (isInitial) setLoading(true);
@@ -239,6 +241,7 @@ export default function DashboardPage() {
         }
         setUser(data.user);
         setLoans(data.loans || []);
+        setAddendumPending(!!data.addendumPending);
         setLoanNotices(data.loanNotices || []);
         setPromo(data.promo || null);
         setProfileEditable(!!data.profileEditable);
@@ -1045,6 +1048,7 @@ export default function DashboardPage() {
           onClose={() => setPayOther(null)}
         />
       )}
+      <AddendumDialog open={addendumPending} onSigned={() => setAddendumPending(false)} />
       <SignCodeDialog
         open={!!signAction}
         title="Подпись договора"
