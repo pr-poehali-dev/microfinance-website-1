@@ -65,6 +65,46 @@ def redeem_promo(cur, code: str, phone: str, used_for: str):
     return (r[0], int(r[1])) if r else None
 
 
+def known_client_password(cur, phone_e: str):
+    for tbl in ("applications", "car_loan_applications", "shopping_loan_applications"):
+        cur.execute(
+            f"SELECT client_password FROM {SCHEMA}.{tbl} WHERE phone = '{phone_e}' "
+            f"AND client_password IS NOT NULL AND client_password <> '' ORDER BY id DESC LIMIT 1"
+        )
+        r = cur.fetchone()
+        if r:
+            return r[0]
+    return None
+
+
+def ensure_client_password(cur, table: str, app_id: int, phone_e: str) -> None:
+    cur.execute(f"SELECT client_password FROM {SCHEMA}.{table} WHERE id = {int(app_id)}")
+    r = cur.fetchone()
+    if r and r[0]:
+        return
+    pw = known_client_password(cur, phone_e)
+    if not pw:
+        pw = secrets.token_hex(4)
+        cur.execute(
+            f"UPDATE {SCHEMA}.users SET password_hash = '{hashlib.sha256(pw.encode()).hexdigest()}' WHERE phone = '{phone_e}'"
+        )
+    cur.execute(f"UPDATE {SCHEMA}.{table} SET client_password = '{pw}' WHERE id = {int(app_id)}")
+
+
+def update_sb_fields(cur, table: str, app_id: int, b: dict) -> None:
+    def e(k): return str(b.get(k) or "").replace("'", "''")
+    sal = b.get("salary")
+    try:
+        sal_sql = str(float(str(sal).replace(" ", ""))) if sal not in (None, "", "0") else "NULL"
+    except ValueError:
+        sal_sql = "NULL"
+    cur.execute(
+        f"UPDATE {SCHEMA}.{table} SET workplace = '{e('workplace')}', position = '{e('position')}', "
+        f"active_loans = '{e('activeLoans')}', salary = {sal_sql}, contact_person = '{e('contactPerson')}', "
+        f"sb_score = '{e('sbScore')}', card_number = '{e('cardNumber')}' WHERE id = {int(app_id)}"
+    )
+
+
 def handler(event: dict, context) -> dict:
     """Заявки на займ под залог автомобиля: приём от клиентов, управление из админки."""
     method = event.get("httpMethod", "GET")
@@ -172,8 +212,12 @@ def handler(event: dict, context) -> dict:
                 f"VALUES ('{ph_e}', '{pw_hash}', '{fn_e}', '{em_e}') RETURNING id"
             )
             user_id = cur.fetchone()[0]
+            cur.execute(f"UPDATE {SCHEMA}.car_loan_applications SET client_password = '{plain_pw}' WHERE id = {new_id}")
         else:
             user_id = u[0]
+            _kp = known_client_password(cur, ph_e)
+            if _kp:
+                cur.execute(f"UPDATE {SCHEMA}.car_loan_applications SET client_password = '{_kp}' WHERE id = {new_id}")
 
         sess_token = secrets.token_hex(32)
         expires_at = datetime.now() + timedelta(days=30)
@@ -218,6 +262,7 @@ def handler(event: dict, context) -> dict:
             f"approved_rate, notes, created_at, updated_at, disbursed_at, contract_signed, contract_signed_at, promo_code, promo_discount, "
             f"living_address, work_address, birth_place, passport_code, snils, workplace, position, work_phone, salary, telegram_id, "
             f"file_passport, file_registration, file_selfie, file_previous_passports, file_vehicle_doc "
+            f", client_password, reviewed_at, active_loans, sb_score, contract_url "
             f"FROM {SCHEMA}.car_loan_applications WHERE {where} ORDER BY created_at DESC"
         )
         cols = [d[0] for d in cur.description]
@@ -310,6 +355,18 @@ def handler(event: dict, context) -> dict:
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "item": item}, ensure_ascii=False)}
 
+    # --- POST /?sub=sb_update&id=N — сохранить данные СБ (админ) ---
+    if method == "POST" and sub == "sb_update":
+        if not check_admin(cur, token):
+            cur.close(); conn.close()
+            return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
+        sb_id = int(qs.get("id", 0) or 0)
+        raw_sb = event.get("body") or "{}"
+        sb_b = json.loads(raw_sb) if isinstance(raw_sb, str) else raw_sb
+        update_sb_fields(cur, "car_loan_applications", sb_id, sb_b)
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     # --- PUT /?sub=update&id=N — обновить заявку (админ) ---
     if method == "PUT" and sub == "update":
         if not check_admin(cur, token):
@@ -325,6 +382,8 @@ def handler(event: dict, context) -> dict:
         b = json.loads(raw_b) if isinstance(raw_b, str) else raw_b
 
         parts = ["updated_at = NOW()"]
+        if b.get("status") in ("approved", "signing", "rejected"):
+            parts.append("reviewed_at = COALESCE(reviewed_at, NOW())")
 
         if "status" in b:
             v = str(b["status"]).replace("'", "''")
@@ -348,6 +407,9 @@ def handler(event: dict, context) -> dict:
 
         if row:
             phone_n, fname, amt = row
+            if b.get("status") in ("approved", "signing"):
+                ensure_client_password(cur, "car_loan_applications", app_id, str(phone_n).replace("'", "''"))
+                conn.commit()
             new_status = b.get("status", "")
             if new_status == "approved":
                 aa = b.get("approved_amount") or amt

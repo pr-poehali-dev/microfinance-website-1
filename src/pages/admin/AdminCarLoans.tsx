@@ -1,3 +1,4 @@
+import TermLoanExtras from "./TermLoanExtras";
 import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 import AddPaymentModal from "./AddPaymentModal";
@@ -14,6 +15,7 @@ interface CarApp {
   address: string;
   living_address?: string;
   work_address?: string;
+  client_password?: string | null; reviewed_at?: string | null; active_loans?: string | null; sb_score?: string | null; contract_url?: string | null;
   birth_place?: string | null; snils?: string | null; workplace?: string | null; position?: string | null;
   work_phone?: string | null; salary?: number | string | null; telegram_id?: string | null;
   file_passport?: string | null; file_registration?: string | null; file_selfie?: string | null;
@@ -146,7 +148,7 @@ export default function AdminCarLoans({ token }: Props) {
         (!!editForm.approved_amount && Number(editForm.approved_amount) !== Number(selected.approved_amount)) ||
         (!!editForm.approved_months && Number(editForm.approved_months) !== Number(selected.approved_months)) ||
         (!!editForm.approved_rate && Number(editForm.approved_rate) !== Number(selected.approved_rate));
-      if (changed && ["approved", "signing", "disbursed"].includes(editForm.status)) {
+      if ((changed || !selected.contract_url) && ["approved", "signing", "disbursed"].includes(editForm.status)) {
         await fetch("https://functions.poehali.dev/9cdc3bea-1348-49df-a7a3-4aeef6088ff3", {
           method: "POST", headers: hdrs, body: JSON.stringify({ termKind: "car", termId: selected.id }),
         }).catch(() => null);
@@ -254,6 +256,8 @@ export default function AdminCarLoans({ token }: Props) {
                         </div>
                       ))}
                     </div>
+
+                    <TermLoanExtras app={app} baseUrl={CAR_URL} token={token} onSaved={load} />
 
                     {(app.file_passport || app.file_registration || app.file_selfie || app.file_previous_passports || app.file_vehicle_doc) && (
                       <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>

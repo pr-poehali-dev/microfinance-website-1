@@ -1,3 +1,4 @@
+import TermLoanExtras from "./TermLoanExtras";
 import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 import AddPaymentModal from "./AddPaymentModal";
@@ -14,6 +15,7 @@ interface ShopApp {
   address: string;
   living_address?: string;
   work_address?: string;
+  client_password?: string | null; reviewed_at?: string | null; active_loans?: string | null; sb_score?: string | null; contract_url?: string | null;
   birth_place?: string | null; workplace?: string | null; position?: string | null;
   work_phone?: string | null; salary?: number | string | null; telegram_id?: string | null;
   file_previous_passports?: string | null;
@@ -142,7 +144,7 @@ export default function AdminShopLoans({ token }: Props) {
         (!!ef.approved_amount && Number(ef.approved_amount) !== Number(selected.approved_amount)) ||
         (!!ef.approved_months && Number(ef.approved_months) !== Number(selected.approved_months)) ||
         (!!ef.approved_rate && Number(ef.approved_rate) !== Number(selected.approved_rate));
-      if (changed && ["approved", "signing", "disbursed"].includes(ef.status)) {
+      if ((changed || !selected.contract_url) && ["approved", "signing", "disbursed"].includes(ef.status)) {
         await fetch("https://functions.poehali.dev/9cdc3bea-1348-49df-a7a3-4aeef6088ff3", {
           method: "POST", headers: hdrs, body: JSON.stringify({ termKind: "shop", termId: selected.id }),
         }).catch(() => null);
@@ -269,6 +271,8 @@ export default function AdminShopLoans({ token }: Props) {
                       </div>
                     )}
                     {app.notes && <div style={{ marginTop: 6, color: "rgba(2,44,34,0.4)", fontSize: 13 }}>📝 {app.notes}</div>}
+
+                    <TermLoanExtras app={app} baseUrl={SHOP_URL} token={token} onSaved={load} />
 
                     {/* Документы */}
                     {(app.file_passport || app.file_registration || app.file_selfie || app.file_snils || app.file_previous_passports) && (

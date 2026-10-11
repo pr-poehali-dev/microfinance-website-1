@@ -1,5 +1,5 @@
 import Icon from "@/components/ui/icon";
-import { App } from "./adminTypes";
+
 
 interface Step {
   label: string;
@@ -9,7 +9,15 @@ interface Step {
   done: boolean;
 }
 
-export default function AdminAppTimeline({ app }: { app: App }) {
+export interface TimelineApp {
+  status: string;
+  createdAt: string | null;
+  reviewedAt: string | null;
+  loanSignedAt: string | null;
+  loanDisbursedAt: string | null;
+}
+
+export default function AdminAppTimeline({ app }: { app: TimelineApp }) {
   const steps: Step[] = [
     { label: "Заявка подана", date: app.createdAt, icon: "FileText", color: "#94a3b8", done: !!app.createdAt },
     {
