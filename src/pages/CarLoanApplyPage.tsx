@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import PromoCodeField from "@/components/PromoCodeField";
 import Icon from "@/components/ui/icon";
 import Navbar from "@/components/Navbar";
+import RateDisclaimer from "@/components/RateDisclaimer";
 
 const inputCls = "w-full bg-transparent border rounded-xl px-4 py-3 text-emerald-950 placeholder-emerald-900/30 outline-none focus:ring-2 focus:ring-yellow-500/50 transition-all text-sm";
 const inputStyle = { borderColor: "rgba(16,185,129,0.12)" };
@@ -228,6 +229,7 @@ export default function CarLoanApplyPage() {
                 <div className="font-bold" style={{ color: "#f59e0b" }}>{totalReturn.toLocaleString("ru-RU")} ₽</div>
               </div>
             </div>
+            <RateDisclaimer className="mt-3" />
           </div>
 
           {/* ЛИЧНЫЕ ДАННЫЕ */}

@@ -1,4 +1,5 @@
 import { useMemo, memo } from "react";
+import RateDisclaimer from "@/components/RateDisclaimer";
 
 interface LoanCalculatorProps {
   amount: number;
@@ -110,9 +111,7 @@ function LoanCalculator({ amount, days, onAmountChange, onDaysChange }: LoanCalc
                   Оформить {amount.toLocaleString("ru-RU")} ₽
                 </button>
 
-                <p className="text-emerald-950/30 text-xs text-center mt-3">
-                  Расчёт является предварительным
-                </p>
+                <RateDisclaimer className="mt-4" />
               </div>
             </div>
           </div>

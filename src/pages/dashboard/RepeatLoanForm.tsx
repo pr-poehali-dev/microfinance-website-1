@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import Icon from "@/components/ui/icon";
 import ProfileEditForm from "./ProfileEditForm";
 import type { ClientProfile } from "./ClientProfileCard";
+import RateDisclaimer from "@/components/RateDisclaimer";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 
@@ -197,6 +198,8 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
           <span className="text-emerald-950/50 text-sm">Страховая премия ({calc.insurancePct}%)</span>
           <span className="font-bold text-emerald-950">{calc.insurance.toLocaleString("ru-RU")} ₽</span>
         </div>
+
+        <RateDisclaimer />
 
         {error && (
           <div className="rounded-xl px-4 py-3 text-sm font-medium" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#dc2626" }}>

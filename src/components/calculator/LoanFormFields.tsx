@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import Icon from "@/components/ui/icon";
+import RateDisclaimer from "@/components/RateDisclaimer";
 
 interface FormState {
   fullName: string;
@@ -272,6 +273,7 @@ export default function LoanFormFields({
               <span className="font-bold text-2xl gradient-text">{calc.total.toLocaleString("ru-RU")} ₽</span>
             </div>
           </div>
+          <RateDisclaimer className="mt-3" />
         </div>
       </div>
 

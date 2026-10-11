@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import PromoCodeField from "@/components/PromoCodeField";
 import Icon from "@/components/ui/icon";
 import ConsentDocuments, { ConsentState, DEFAULT_CONSENTS, REQUIRED_CONSENT_KEYS } from "@/components/apply/ConsentDocuments";
+import RateDisclaimer from "@/components/RateDisclaimer";
 
 const API_URL = "https://functions.poehali.dev/29f70c88-f1f7-4926-9c65-c642fd11fdfb";
 const UPLOAD_URL = "https://functions.poehali.dev/45733e38-49ca-4566-9ae3-b5323aec9a63";
@@ -467,6 +468,7 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
                 <div className="rounded-xl p-4 text-sm text-emerald-950/70" style={{ background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.3)" }}>
                   Итоговый лимит и условия определит специалист после проверки анкеты.
                 </div>
+                <RateDisclaimer />
                 <div className="rounded-xl p-4 text-sm text-emerald-950/70 space-y-1.5" style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.35)" }}>
                   <div className="font-semibold text-emerald-950">Стоимость обслуживания карты</div>
                   <div>При активации карты ежемесячное обслуживание стоит 399 ₽. Эта сумма автоматически списывается с лимита карты сразу после получения карты и далее каждый месяц.</div>
@@ -544,6 +546,7 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
                     <span className="text-emerald-950 font-bold">{Math.round(formAmount * insurancePct / 100).toLocaleString("ru-RU")} ₽</span>
                   </div>
                 </div>
+                <RateDisclaimer />
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setActiveSection("contacts")}
                     className="glass text-emerald-950/60 font-semibold px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">

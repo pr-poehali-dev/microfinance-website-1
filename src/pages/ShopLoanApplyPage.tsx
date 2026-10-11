@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import PromoCodeField from "@/components/PromoCodeField";
 import Icon from "@/components/ui/icon";
 import Navbar from "@/components/Navbar";
+import RateDisclaimer from "@/components/RateDisclaimer";
 
 const API_URL    = "https://functions.poehali.dev/f0312370-20d7-488e-b072-dc4c0b2af2aa";
 const UPLOAD_URL = "https://functions.poehali.dev/45733e38-49ca-4566-9ae3-b5323aec9a63";
@@ -273,6 +274,7 @@ export default function ShopLoanApplyPage() {
                 <div className="font-bold text-emerald-600">{totalReturn.toLocaleString("ru-RU")} ₽</div>
               </div>
             </div>
+            <RateDisclaimer className="mt-3" />
           </div>
 
           {/* ── ТОВАР ── */}
