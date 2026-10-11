@@ -41,7 +41,6 @@ const LENDER_LINES = [
   "Русфинанс 24",
   "Адрес: г. Москва, Проспект Мира д.112",
   "Тел.: +7-996-201-95-00",
-  "Директор: Ребров Александр Сергеевич",
 ];
 
 const DOCS: { key: keyof ConsentState; title: string; required: boolean; text: string }[] = [
