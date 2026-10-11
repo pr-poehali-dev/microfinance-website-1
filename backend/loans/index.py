@@ -887,6 +887,16 @@ def handler(event: dict, context) -> dict:
             prev_profile_changes = None
             reg_address = living_address = work_address = None
 
+        chosen_card = (b.get("cardNumber") or "").strip()
+        chosen_digits = "".join(ch for ch in chosen_card if ch.isdigit())
+        if chosen_card and (len(chosen_digits) in (10, 11) or 16 <= len(chosen_digits) <= 19):
+            card_number_transfer = chosen_card
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.saved_cards (phone, card_value, card_key, source) "
+                f"VALUES ('{ph_e}', '{chosen_card.replace(chr(39), chr(39)*2)}', '{chosen_digits}', 'manual') "
+                f"ON CONFLICT (phone, card_key) DO UPDATE SET hidden = FALSE"
+            )
+
         salary_val = str(float(salary)) if salary is not None else "NULL"
         email_val = v(email or prev_email)
         fn_e = (full_name or "").replace("'", "''")

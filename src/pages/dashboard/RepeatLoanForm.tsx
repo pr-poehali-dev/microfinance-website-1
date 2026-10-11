@@ -4,6 +4,7 @@ import Icon from "@/components/ui/icon";
 import ProfileEditForm from "./ProfileEditForm";
 import type { ClientProfile } from "./ClientProfileCard";
 import RateDisclaimer from "@/components/RateDisclaimer";
+import SavedCardPicker from "@/components/SavedCardPicker";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 
@@ -22,6 +23,7 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState(20000);
   const [days, setDays] = useState(30);
+  const [cardNumber, setCardNumber] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
@@ -48,7 +50,7 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
     const res = await fetch(LOANS_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}` },
-      body: JSON.stringify({ amount, days, wheelVisitorId: localStorage.getItem("wheel_visitor_id") || "" }),
+      body: JSON.stringify({ amount, days, cardNumber: cardNumber.trim(), wheelVisitorId: localStorage.getItem("wheel_visitor_id") || "" }),
     });
     const data = await res.json();
     setSending(false);
@@ -180,6 +182,20 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
             <span>5 дней</span>
             <span>365 дней</span>
           </div>
+        </div>
+
+        {/* Карта для получения денег */}
+        <div>
+          <div className="text-emerald-950/60 text-sm mb-2">Карта или телефон СБП для получения денег</div>
+          <SavedCardPicker autoFill value={cardNumber} onPick={setCardNumber} />
+          <input
+            type="text" inputMode="numeric" value={cardNumber}
+            onChange={(e) => setCardNumber(e.target.value)}
+            placeholder="2200 1234 5678 9012 или +7 900 000-00-00"
+            className="w-full rounded-xl px-4 py-2.5 text-emerald-950 text-sm outline-none"
+            style={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.25)" }}
+          />
+          <div className="text-emerald-950/30 text-xs mt-1">Можно выбрать сохранённую карту или ввести новую</div>
         </div>
 
         {promo && (
