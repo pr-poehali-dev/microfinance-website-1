@@ -13,7 +13,7 @@ function LoanCalculator({ amount, days, onAmountChange, onDaysChange }: LoanCalc
   const { interest, total, amountPct, daysPct, amountBg, daysBg } = useMemo(() => {
     const interest = Math.round(amount * RATE * days);
     const total = amount + interest;
-    const amountPct = ((amount - 5000) / (100000 - 5000)) * 100;
+    const amountPct = ((amount - 5000) / (200000 - 5000)) * 100;
     const daysPct = ((days - 5) / (365 - 5)) * 100;
     const amountBg = `linear-gradient(to right, #10b981 ${amountPct}%, rgba(16,185,129,0.2) ${amountPct}%)`;
     const daysBg = `linear-gradient(to right, #10b981 ${daysPct}%, rgba(16,185,129,0.2) ${daysPct}%)`;
@@ -46,7 +46,7 @@ function LoanCalculator({ amount, days, onAmountChange, onDaysChange }: LoanCalc
                   <input
                     type="range"
                     min={5000}
-                    max={100000}
+                    max={200000}
                     step={1000}
                     value={amount}
                     onChange={(e) => onAmountChange(Number(e.target.value))}
@@ -55,7 +55,7 @@ function LoanCalculator({ amount, days, onAmountChange, onDaysChange }: LoanCalc
                   />
                   <div className="flex justify-between text-xs text-emerald-950/30 mt-1">
                     <span>5 000 ₽</span>
-                    <span>100 000 ₽</span>
+                    <span>200 000 ₽</span>
                   </div>
                 </div>
 

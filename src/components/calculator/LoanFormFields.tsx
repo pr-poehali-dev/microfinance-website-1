@@ -50,7 +50,7 @@ export default function LoanFormFields({
   const calc = useMemo(() => {
     const interest = Math.round(formAmount * 0.008 * formDays);
     const total = formAmount + interest;
-    const amountBg = `linear-gradient(to right, #10b981 ${((formAmount - 5000) / (100000 - 5000)) * 100}%, rgba(16,185,129,0.2) ${((formAmount - 5000) / (100000 - 5000)) * 100}%)`;
+    const amountBg = `linear-gradient(to right, #10b981 ${((formAmount - 5000) / (200000 - 5000)) * 100}%, rgba(16,185,129,0.2) ${((formAmount - 5000) / (200000 - 5000)) * 100}%)`;
     const daysBg = `linear-gradient(to right, #10b981 ${((formDays - 5) / (365 - 5)) * 100}%, rgba(16,185,129,0.2) ${((formDays - 5) / (365 - 5)) * 100}%)`;
     return { interest, total, amountBg, daysBg };
   }, [formAmount, formDays]);
@@ -216,7 +216,7 @@ export default function LoanFormFields({
             <input
               type="range"
               min={5000}
-              max={100000}
+              max={200000}
               step={5000}
               value={formAmount}
               onChange={(e) => {
@@ -229,7 +229,7 @@ export default function LoanFormFields({
             />
             <div className="flex justify-between text-xs text-emerald-950/30 mt-1">
               <span>5 000 ₽</span>
-              <span>100 000 ₽</span>
+              <span>200 000 ₽</span>
             </div>
           </div>
           <div>
