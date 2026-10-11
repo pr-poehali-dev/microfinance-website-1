@@ -37,6 +37,7 @@ interface ShopApp {
   approved_rate: number | null;
   notes: string | null;
   contract_signed: boolean;
+  contract_signed_at?: string | null;
   created_at: string;
   disbursed_at: string | null;
 }
@@ -206,8 +207,13 @@ export default function AdminShopLoans({ token }: Props) {
                       {waitNew && <span style={WAITING_BADGE_STYLE}>🔴 Новая заявка — клиент ждёт решения</span>}
                       {waitSigned && <span style={WAITING_BADGE_STYLE}>🔴 Договор подписан — клиент ждёт деньги</span>}
                       {app.contract_signed && (
-                        <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "rgba(34,197,94,0.15)", color: "#4ade80" }}>
-                          ✍️ Подписан
+                        <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "rgba(34,197,94,0.15)", color: "#15803d" }}>
+                          ✍️ Подписан{app.contract_signed_at ? ` ${new Date(app.contract_signed_at).toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}` : ""}
+                        </span>
+                      )}
+                      {(app.status === "approved" && !app.contract_signed) && (
+                        <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "rgba(245,158,11,0.15)", color: "#b45309" }}>
+                          ⏳ Ждём подпись договора
                         </span>
                       )}
                       <span style={{ color: "rgba(2,44,34,0.3)", fontSize: 12 }}>#{app.id} · {new Date(app.created_at).toLocaleDateString("ru-RU")}</span>

@@ -34,6 +34,7 @@ interface CarApp {
   created_at: string;
   disbursed_at: string | null;
   contract_signed: boolean;
+  contract_signed_at?: string | null;
 }
 
 const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
@@ -202,8 +203,15 @@ export default function AdminCarLoans({ token }: Props) {
                       <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: st.bg, color: st.color }}>{st.label}</span>
                       {waitNew && <span style={WAITING_BADGE_STYLE}>🔴 Новая заявка — клиент ждёт решения</span>}
                       {waitSigned && <span style={WAITING_BADGE_STYLE}>🔴 Договор подписан — клиент ждёт деньги</span>}
-                      {app.status === "approved" && app.contract_signed && (
-                        <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "rgba(34,197,94,0.15)", color: "#4ade80" }}>✍️ Подписан</span>
+                      {app.contract_signed && (
+                        <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "rgba(34,197,94,0.15)", color: "#15803d" }}>
+                          ✍️ Подписан{app.contract_signed_at ? ` ${new Date(app.contract_signed_at).toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}` : ""}
+                        </span>
+                      )}
+                      {(app.status === "approved" && !app.contract_signed) && (
+                        <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "rgba(245,158,11,0.15)", color: "#b45309" }}>
+                          ⏳ Ждём подпись договора
+                        </span>
                       )}
                       <span style={{ color: "rgba(2,44,34,0.3)", fontSize: 12 }}>#{app.id} · {new Date(app.created_at).toLocaleDateString("ru-RU")}</span>
                     </div>
