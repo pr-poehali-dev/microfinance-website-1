@@ -29,7 +29,7 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
   const calc = useMemo(() => {
     const interest = Math.round(amount * 0.008 * days * (100 - (promo?.discount || 0)) / 100);
     const total = amount + interest;
-    const amountBg = `linear-gradient(to right, #10b981 ${((amount - 5000) / (100000 - 5000)) * 100}%, rgba(16,185,129,0.2) ${((amount - 5000) / (100000 - 5000)) * 100}%)`;
+    const amountBg = `linear-gradient(to right, #10b981 ${((amount - 5000) / (200000 - 5000)) * 100}%, rgba(16,185,129,0.2) ${((amount - 5000) / (200000 - 5000)) * 100}%)`;
     const daysBg = `linear-gradient(to right, #10b981 ${((days - 5) / (365 - 5)) * 100}%, rgba(16,185,129,0.2) ${((days - 5) / (365 - 5)) * 100}%)`;
     return { interest, total, amountBg, daysBg };
   }, [amount, days, promo]);
@@ -148,7 +148,7 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
             <span className="font-bold text-base gradient-text">{amount.toLocaleString("ru-RU")} ₽</span>
           </div>
           <input
-            type="range" min={5000} max={100000} step={5000}
+            type="range" min={5000} max={200000} step={5000}
             value={amount}
             onChange={(e) => setAmount(Number(e.target.value))}
             className="slider-custom w-full"
@@ -156,7 +156,7 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
           />
           <div className="flex justify-between text-emerald-950/30 text-xs mt-1">
             <span>5 000 ₽</span>
-            <span>100 000 ₽</span>
+            <span>200 000 ₽</span>
           </div>
         </div>
 
