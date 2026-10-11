@@ -39,14 +39,9 @@ export const DEFAULT_CONSENTS: ConsentState = {
 const LENDER_LINES = [
   "Русфинанс 24",
   "Адрес: г. Москва, Проспект Мира д.112",
-  "Банк: АО \"Газпромбанк\"",
-  "р/с: 40817810165377982899",
-  "к/с: 30101810200000000823",
-  "БИК: 044525823",
   "Тел.: +7-996-201-95-00",
   "Директор: Ребров Александр Сергеевич",
 ];
-const LENDER_NOTE = "Если у вас оплата по реквизитам, обязательно указывайте в комментарии свой номер договора";
 
 const DOCS: { key: keyof ConsentState; title: string; required: boolean; text: string }[] = [
   {
@@ -192,7 +187,6 @@ export default function ConsentDocuments({ consents, onChange }: Props) {
               <div className="text-emerald-950/70 text-sm leading-snug mt-4 pt-4" style={{ borderTop: "1px solid rgba(16,185,129,0.2)" }}>
                 <div className="font-bold mb-1">ЗАЙМОДАВЕЦ:</div>
                 {LENDER_LINES.map((l) => <div key={l}>{l}</div>)}
-                <div className="text-emerald-950/50 text-xs mt-2">({LENDER_NOTE})</div>
               </div>
             )}
             <button
