@@ -75,7 +75,7 @@ export default function FortuneWheel() {
       if (cancelled) return;
       setVisible(true);
       setOpen(true);
-    }, 10000);
+    }, 600);
     return () => { cancelled = true; clearTimeout(t); };
   }, [visitorId]);
 
@@ -117,9 +117,17 @@ export default function FortuneWheel() {
       )}
 
       <div
-        className="fixed top-1/2 right-0 z-50 w-[390px] max-w-[96vw] rounded-l-3xl p-5 transition-transform duration-500"
+        className="fixed inset-0 z-[49] transition-opacity duration-500"
+        style={{ background: "rgba(2,44,34,0.55)", opacity: open ? 1 : 0, pointerEvents: open ? "auto" : "none" }}
+        onClick={() => setOpen(false)}
+      />
+
+      <div
+        className="fixed top-1/2 left-1/2 z-50 w-[390px] max-w-[94vw] max-h-[96vh] overflow-y-auto rounded-3xl p-5 transition-all duration-500"
         style={{
-          transform: `translateY(-50%) translateX(${open ? "0" : "110%"})`,
+          transform: `translate(-50%,-50%) scale(${open ? 1 : 0.6})`,
+          opacity: open ? 1 : 0,
+          pointerEvents: open ? "auto" : "none",
           background: "linear-gradient(160deg,#fff7ed 0%,#ffffff 45%,#ecfdf5 100%)",
           border: "2px solid #fbbf24",
           boxShadow: "0 10px 60px rgba(245,158,11,0.45), 0 0 0 4px rgba(16,185,129,0.15)",
