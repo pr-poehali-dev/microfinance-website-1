@@ -128,7 +128,7 @@ export default function CardWithdrawForm({ available, defaultCard, onSuccess }: 
 
       <div>
         <div className="text-emerald-950/60 text-sm mb-2">Номер вашей карты, куда перевести деньги</div>
-        <SavedCardPicker value={cardNumber} onPick={setCardNumber} />
+        <SavedCardPicker autoFill value={cardNumber} onPick={setCardNumber} />
         <input
           type="text" inputMode="numeric" value={cardNumber}
           onChange={(e) => setCardNumber(e.target.value)}

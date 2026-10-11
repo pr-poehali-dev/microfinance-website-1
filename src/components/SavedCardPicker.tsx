@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
@@ -8,10 +8,14 @@ interface SavedCard { id: number; label: string; value: string; isCard: boolean 
 interface Props {
   value: string;
   onPick: (value: string) => void;
+  autoFill?: boolean;
 }
 
-export default function SavedCardPicker({ value, onPick }: Props) {
+export default function SavedCardPicker({ value, onPick, autoFill = false }: Props) {
   const [cards, setCards] = useState<SavedCard[]>([]);
+  const filled = useRef(false);
+  const valueRef = useRef(value);
+  valueRef.current = value;
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -20,8 +24,16 @@ export default function SavedCardPicker({ value, onPick }: Props) {
       headers: { Authorization: `Bearer ${token}`, "X-Authorization": `Bearer ${token}` },
     })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d?.cards) setCards(d.cards); })
+      .then((d) => {
+        if (!d?.cards) return;
+        setCards(d.cards);
+        if (autoFill && !filled.current && d.cards.length > 0 && !valueRef.current.trim()) {
+          filled.current = true;
+          onPick(d.cards[0].value);
+        }
+      })
       .catch(() => null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (cards.length === 0) return null;
