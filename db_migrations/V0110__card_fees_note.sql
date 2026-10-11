@@ -1,0 +1,1 @@
+ALTER TABLE t_p30184577_microfinance_website.card_fees ADD COLUMN IF NOT EXISTS note VARCHAR(200) NULL;

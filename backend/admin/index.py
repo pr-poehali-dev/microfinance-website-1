@@ -2126,11 +2126,11 @@ def handler(event: dict, context) -> dict:
             cur.execute(f"SELECT application_id, COALESCE(SUM(amount),0) FROM {SCHEMA}.card_fees WHERE cancelled_at IS NULL AND application_id IN ({','.join(ids)}) GROUP BY application_id")
             for _a, _sum in cur.fetchall():
                 fees[_a] = float(_sum)
-            cur.execute(f"SELECT application_id, amount, kind, period_no, created_at, id FROM {SCHEMA}.card_fees WHERE cancelled_at IS NULL AND application_id IN ({','.join(ids)}) ORDER BY created_at DESC, id DESC")
-            for _a, _am, _kd, _pn, _ca, _fid in cur.fetchall():
+            cur.execute(f"SELECT application_id, amount, kind, period_no, created_at, id, note FROM {SCHEMA}.card_fees WHERE cancelled_at IS NULL AND application_id IN ({','.join(ids)}) ORDER BY created_at DESC, id DESC")
+            for _a, _am, _kd, _pn, _ca, _fid, _nt in cur.fetchall():
                 fee_list.setdefault(_a, []).append({
                     "id": _fid, "amount": float(_am), "kind": _kd,
-                    "title": "Ежемесячное обслуживание" if _kd == "monthly" else f"Комиссия за перевод №{_pn}",
+                    "title": "Ежемесячное обслуживание" if _kd == "monthly" else (("Списание: " + _nt) if _nt else "Списание") if _kd == "manual" else f"Комиссия за перевод №{_pn}",
                     "createdAt": msk(_ca).strftime("%d.%m.%Y в %H:%M"),
                 })
         cur.close(); conn.close()
@@ -2308,6 +2308,30 @@ def handler(event: dict, context) -> dict:
             "appsWaiting": int(apps_wait), "carWaiting": int(car_wait),
             "shopWaiting": int(shop_wait), "cardRequestsWaiting": int(card_req_wait),
         })}
+
+    # --- РУЧНОЕ СПИСАНИЕ С ЛИМИТА КАРТЫ (POST, sub='card_fee_add', appId=..., body: {amount, note}) ---
+    if sub == "card_fee_add" and method == "POST":
+        fa_app = int(qs.get("appId", 0) or 0)
+        try:
+            fa_amt = round(float(body.get("amount", 0)))
+        except Exception:
+            fa_amt = 0
+        fa_note = str(body.get("note", "") or "").strip()[:200].replace("'", "''")
+        if not fa_app or fa_amt <= 0 or fa_amt > 1000000:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите сумму списания"})}
+        cur.execute(f"SELECT 1 FROM {SCHEMA}.applications WHERE id = {fa_app} AND virtual_card_number IS NOT NULL")
+        if not cur.fetchone():
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Карта не найдена"})}
+        cur.execute(f"SELECT COALESCE(MAX(period_no),0)+1 FROM {SCHEMA}.card_fees WHERE application_id = {fa_app} AND kind = 'manual'")
+        pno = cur.fetchone()[0]
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.card_fees (application_id, amount, kind, period_no, note) "
+            f"VALUES ({fa_app}, {fa_amt}, 'manual', {pno}, '{fa_note}')"
+        )
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     # --- ОТМЕНИТЬ СПИСАНИЕ С ЛИМИТА КАРТЫ (POST, sub='card_fee_cancel', feeId=...) ---
     if sub == "card_fee_cancel" and method == "POST":

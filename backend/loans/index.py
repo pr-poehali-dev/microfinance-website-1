@@ -1023,12 +1023,12 @@ def handler(event: dict, context) -> dict:
         if app_row[11] and card_app_id:
             vc_fees_total = ensure_card_fees(cur, card_app_id)
             conn.commit()
-            cur.execute(f"SELECT amount, kind, period_no, created_at FROM {SCHEMA}.card_fees WHERE application_id = {int(card_app_id)} AND cancelled_at IS NULL ORDER BY created_at DESC, id DESC")
+            cur.execute(f"SELECT amount, kind, period_no, created_at, note FROM {SCHEMA}.card_fees WHERE application_id = {int(card_app_id)} AND cancelled_at IS NULL ORDER BY created_at DESC, id DESC")
             vc_fee_list = [{
                 "amount": float(a_), "kind": k_,
-                "title": "Ежемесячное обслуживание" if k_ == "monthly" else f"Комиссия за перевод №{n_}",
+                "title": "Ежемесячное обслуживание" if k_ == "monthly" else (("Списание: " + nt_) if nt_ else "Списание") if k_ == "manual" else f"Комиссия за перевод №{n_}",
                 "createdAt": msk(c_).strftime("%d.%m.%Y в %H:%M"),
-            } for a_, k_, n_, c_ in cur.fetchall()]
+            } for a_, k_, n_, c_, nt_ in cur.fetchall()]
         vc_available = max(0, vc_limit_val - vc_used - vc_fees_total)
 
         application = {

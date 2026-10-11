@@ -44,6 +44,8 @@ export default function AdminCards({ token, onChanged }: Props) {
   const [limitOpen, setLimitOpen] = useState<number | null>(null);
   const [limitMode, setLimitMode] = useState<"inc" | "dec">("inc");
   const [limitAdd, setLimitAdd] = useState<Record<number, string>>({});
+  const [feeAmt, setFeeAmt] = useState<Record<number, string>>({});
+  const [feeNote, setFeeNote] = useState<Record<number, string>>({});
   const [busy, setBusy] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -143,6 +145,26 @@ export default function AdminCards({ token, onChanged }: Props) {
                   <div style={{ color: "rgba(2,44,34,0.55)", fontSize: 12 }}>
                     Выдана: {c.issuedAt || "—"} · Договор: {c.signedAt ? `подписан ${c.signedAt} (МСК)` : "не подписан"}
                     {c.clientCard && <> · Карта клиента: {c.clientCard}</>}
+                  </div>
+
+                  <div style={{ background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 12, padding: 12 }}>
+                    <div style={{ color: "#b45309", fontSize: 12, fontWeight: 700, textTransform: "uppercase", marginBottom: 8 }}>Списать с лимита вручную</div>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                      <input type="number" min={1} placeholder="Сумма, ₽" value={feeAmt[c.appId] ?? ""}
+                        onChange={e => setFeeAmt(p => ({ ...p, [c.appId]: e.target.value }))} style={INPUT} />
+                      <input type="text" placeholder="За что (необязательно)" value={feeNote[c.appId] ?? ""}
+                        onChange={e => setFeeNote(p => ({ ...p, [c.appId]: e.target.value }))} style={{ ...INPUT, width: 220 }} />
+                      <button disabled={busy === `fa${c.appId}` || !(Number(feeAmt[c.appId]) > 0)}
+                        onClick={async () => {
+                          const sum = Number(feeAmt[c.appId]);
+                          if (!window.confirm(`Списать ${fmt(sum)} с лимита карты клиента?`)) return;
+                          await post(`sub=card_fee_add&appId=${c.appId}`, { amount: sum, note: feeNote[c.appId] || "" }, `fa${c.appId}`, `С лимита списано ${fmt(sum)}`);
+                          setFeeAmt(p => ({ ...p, [c.appId]: "" })); setFeeNote(p => ({ ...p, [c.appId]: "" }));
+                        }}
+                        style={{ background: "linear-gradient(135deg,#f59e0b,#ef4444)", color: "white", border: "none", borderRadius: 8, padding: "8px 12px", fontWeight: 700, fontSize: 13, cursor: "pointer", opacity: Number(feeAmt[c.appId]) > 0 ? 1 : 0.5 }}>
+                        Списать
+                      </button>
+                    </div>
                   </div>
 
                   {(c.feeList ?? []).length > 0 && (
