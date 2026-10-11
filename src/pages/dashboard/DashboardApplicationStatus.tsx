@@ -99,6 +99,7 @@ interface Application {
 const mainLoan = (loans: Loan[]) => loans[0] || null;
 
 interface Props {
+  part: "apps" | "cards";
   application: Application | null;
   cardRequest?: CardRequest | null;
   loans: Loan[];
@@ -130,7 +131,7 @@ interface Props {
 }
 
 export default function DashboardApplicationStatus({
-  application, cardRequest, loans, isRepeatClient, timerSec, timerDone, fmtTimer, fmtAppId,
+  part, application, cardRequest, loans, isRepeatClient, timerSec, timerDone, fmtTimer, fmtAppId,
   signingId, signMsg, cardInput, cardSaving, cardSaved, cardError,
   confirming, confirmDone, cardActivating, cardActivated, cvvVisible, setCvvVisible,
   onSign, onSaveCard, onConfirm, onActivateCard, onRefresh, setCardInput, setCardSaved, setCardError,
@@ -147,6 +148,7 @@ export default function DashboardApplicationStatus({
           onClose={() => { setLimitModalClosed(true); onRefresh(); }}
         />
       )}
+      {part === "apps" && (<>
       {/* ОФФЕР ОТ МЕНЕДЖЕРА (займ в статусе review с offer) —
           показываем только если это НЕ связано с текущей одобренной заявкой,
           иначе кнопка "Подписать договор" дублируется с блоком APPROVED ниже */}
@@ -719,6 +721,8 @@ export default function DashboardApplicationStatus({
         </div>
       )}
 
+      </>)}
+      {part === "cards" && (<>
       {/* ВИРТУАЛЬНАЯ КАРТА РУСФИНАНС 24 */}
       {application?.virtualCard && application.virtualCard.status !== "none" && (
         <div className="mb-6">
@@ -954,6 +958,7 @@ export default function DashboardApplicationStatus({
           onSuccess={onRefresh}
         />
       )}
+      </>)}
     </>
   );
 }

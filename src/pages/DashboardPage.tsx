@@ -1,5 +1,6 @@
 import SignCodeDialog from "@/components/SignCodeDialog";
 import AddendumDialog from "./dashboard/AddendumDialog";
+import DashboardSidebar, { DashboardSection } from "./dashboard/DashboardSidebar";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
@@ -227,6 +228,7 @@ export default function DashboardPage() {
   const shopTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [paidToast, setPaidToast] = useState(false);
   const [addendumPending, setAddendumPending] = useState(false);
+  const [section, setSection] = useState<DashboardSection>("apps");
 
   const loadData = (token: string, isInitial = false) => {
     if (isInitial) setLoading(true);
@@ -507,7 +509,7 @@ export default function DashboardPage() {
         />
       )}
 
-      <div className="max-w-4xl mx-auto px-4 pt-28 pb-16">
+      <div className="max-w-6xl mx-auto px-4 pt-28 pb-16">
 
         {/* ПРИВЕТСТВИЕ */}
         {user && (
@@ -524,6 +526,10 @@ export default function DashboardPage() {
           </div>
         )}
 
+        <div className="flex flex-col md:flex-row gap-6 items-start">
+        <DashboardSidebar active={section} onChange={setSection} />
+        <div className="flex-1 min-w-0 w-full">
+
         {/* СОСТОЯНИЕ ЗАГРУЗКИ */}
         {loading && (
           <div className="text-center py-20">
@@ -539,6 +545,7 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {section === "profile" && (<>
         {/* АНКЕТА КЛИЕНТА */}
         {!loading && !error && user && application?.profile && (
           <ClientProfileCard profile={application.profile} phone={user.phone} editable={profileEditable} onSaved={() => { const t = localStorage.getItem("token"); if (t) loadData(t, false); }} />
@@ -566,6 +573,9 @@ export default function DashboardPage() {
           />
         )}
 
+        </>)}
+
+        {section === "new" && (<>
         {/* ПОВТОРНАЯ ЗАЯВКА: клиент уже брал займ раньше и сейчас свободен от активной заявки
             (нет заявки, отказ, либо предыдущий займ уже полностью погашен) */}
         {!loading && !error && user && (
@@ -588,9 +598,12 @@ export default function DashboardPage() {
           />
         )}
 
-        {!loading && !error && (
+        </>)}
+
+        {!loading && !error && (section === "apps" || section === "cards") && (
           <>
             <DashboardApplicationStatus
+              part={section}
               application={application}
               cardRequest={cardRequest}
               loans={loans}
@@ -621,8 +634,13 @@ export default function DashboardPage() {
               setCardError={setCardError}
             />
 
+            </>
+        )}
+
+        {!loading && !error && (section === "history" || section === "repay") && (
+          <>
             <DashboardLoans
-              loans={loans}
+              loans={section === "history" ? loans.filter((l) => l.status === "paid") : loans.filter((l) => l.status !== "paid")}
               application={application}
               isRepeatClient={isRepeatClient}
               signingId={signingId}
@@ -634,7 +652,7 @@ export default function DashboardPage() {
         )}
 
         {/* БЛОК ТОВАРНОГО ЗАЙМА */}
-        {shopLoan && (
+        {section === "apps" && shopLoan && (
           <div className="mb-6">
             <div className="glass rounded-2xl overflow-hidden">
               <div className="p-5 flex items-center gap-3"
@@ -825,7 +843,7 @@ export default function DashboardPage() {
         )}
 
         {/* БЛОК АВТО-ЗАЙМА */}
-        {carLoan && (
+        {section === "apps" && carLoan && (
           <div className="mb-6">
             <div className="glass rounded-2xl overflow-hidden">
               <div className="p-5 flex items-center gap-3"
@@ -1014,9 +1032,58 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <YooKassaHistory />
+        {section === "repay" && <YooKassaHistory />}
 
-        <DashboardSupport />
+        {section === "new" && !loading && !error && (
+          <div className="glass rounded-2xl p-6 mb-6">
+            <h2 className="font-oswald text-2xl font-bold text-emerald-950 mb-4">Новая заявка</h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { label: "Займ наличными", icon: "Banknote", to: "/apply" },
+                { label: "Карта РУСФИНАНС 24", icon: "CreditCard", to: "/card/apply" },
+                { label: "Займ под залог авто", icon: "Car", to: "/car-loan" },
+                { label: "Займ на покупки", icon: "ShoppingCart", to: "/shop-loan" },
+              ].map((o) => (
+                <button key={o.to} type="button" onClick={() => navigate(o.to)}
+                  className="flex items-center gap-3 rounded-xl px-4 py-4 text-left font-semibold text-emerald-950 hover:border-emerald-500 transition-colors"
+                  style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.25)" }}>
+                  <Icon name={o.icon} size={20} className="text-emerald-600" />
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {section === "docs" && !loading && !error && (
+          <div className="glass rounded-2xl p-6 mb-6">
+            <h2 className="font-oswald text-2xl font-bold text-emerald-950 mb-4">Документы</h2>
+            {(() => {
+              const docs = [
+                application?.contractUrl ? { title: "Договор займа", url: application.contractUrl } : null,
+                application?.virtualCard?.contractUrl ? { title: "Договор по карте РУСФИНАНС 24", url: application.virtualCard.contractUrl } : null,
+              ].filter(Boolean) as { title: string; url: string }[];
+              if (docs.length === 0) return <p className="text-emerald-950/50 text-sm">Документов пока нет. Они появятся после одобрения заявки.</p>;
+              return (
+                <div className="space-y-2">
+                  {docs.map((d) => (
+                    <a key={d.url} href={d.url} target="_blank" rel="noreferrer"
+                      className="flex items-center gap-3 rounded-xl px-4 py-3 text-emerald-950 font-medium hover:border-emerald-500 transition-colors"
+                      style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.25)" }}>
+                      <Icon name="FileText" size={18} className="text-emerald-600" />
+                      {d.title}
+                      <Icon name="Download" size={16} className="ml-auto text-emerald-600" />
+                    </a>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {section === "profile" && <DashboardSupport />}
+        </div>
+        </div>
       </div>
 
       {paidToast && (
