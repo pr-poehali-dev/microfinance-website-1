@@ -164,7 +164,7 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
 
   const RATE = 0.005;
   const AMT_MIN = cardMode ? 5000 : 500;
-  const AMT_MAX = cardMode ? 200000 : 50000;
+  const AMT_MAX = cardMode ? 200000 : 200000;
   const insurancePct = formAmount <= 20000 ? 50 : formAmount <= 49900 ? 35 : formAmount <= 99999 ? 25 : 15;
   const amountBg = `linear-gradient(to right, #10b981 ${((formAmount - AMT_MIN) / (AMT_MAX - AMT_MIN)) * 100}%, rgba(16,185,129,0.2) ${((formAmount - AMT_MIN) / (AMT_MAX - AMT_MIN)) * 100}%)`;
   const daysBg = `linear-gradient(to right, #10b981 ${((formDays - 15) / (365 - 15)) * 100}%, rgba(16,185,129,0.2) ${((formDays - 15) / (365 - 15)) * 100}%)`;
@@ -493,11 +493,11 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
                     <span className="text-emerald-950/60 text-sm">Сумма займа</span>
                     <span className="font-bold gradient-text text-base">{formAmount.toLocaleString("ru-RU")} ₽</span>
                   </div>
-                  <input type="range" min={500} max={50000} step={500} value={formAmount}
+                  <input type="range" min={500} max={200000} step={500} value={formAmount}
                     onChange={e => { const v = Number(e.target.value); setFormAmount(v); setF("amount", String(v)); }}
                     className="slider-custom w-full" style={{ background: amountBg }} />
                   <div className="flex justify-between text-emerald-950/30 text-xs mt-1">
-                    <span>500 ₽</span><span>50 000 ₽</span>
+                    <span>500 ₽</span><span>200 000 ₽</span>
                   </div>
                 </div>
                 <div>
