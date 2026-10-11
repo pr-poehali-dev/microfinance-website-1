@@ -25,6 +25,7 @@ export const CONSENT_KEYS = [
 ] as const;
 
 export const REQUIRED_CONSENT_KEYS = CONSENT_KEYS.filter((k) => k !== "advertising");
+export const CARD_REQUIRED_CONSENT_KEYS = REQUIRED_CONSENT_KEYS.filter((k) => k !== "lifeInsurance");
 
 export const DEFAULT_CONSENTS: ConsentState = {
   personalData: false,
@@ -139,16 +140,17 @@ const DOCS: { key: keyof ConsentState; title: string; required: boolean; text: s
 interface Props {
   consents: ConsentState;
   onChange: (key: keyof ConsentState, value: boolean) => void;
+  hideKeys?: (keyof ConsentState)[];
 }
 
-export default function ConsentDocuments({ consents, onChange }: Props) {
+export default function ConsentDocuments({ consents, onChange, hideKeys = [] }: Props) {
   const [openDoc, setOpenDoc] = useState<(typeof DOCS)[number] | null>(null);
   const [privacyOpen, setPrivacyOpen] = useState(false);
 
   return (
     <div className="space-y-2">
       <h3 className="text-emerald-950 font-bold text-base mb-1">Согласия и документы</h3>
-      {DOCS.map((doc) => (
+      {DOCS.filter((doc) => !hideKeys.includes(doc.key)).map((doc) => (
         <label
           key={doc.key}
           className="flex items-start gap-3 rounded-xl px-4 py-3 cursor-pointer transition-colors"

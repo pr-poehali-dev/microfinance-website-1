@@ -3,7 +3,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import PromoCodeField from "@/components/PromoCodeField";
 import Icon from "@/components/ui/icon";
-import ConsentDocuments, { ConsentState, DEFAULT_CONSENTS, REQUIRED_CONSENT_KEYS } from "@/components/apply/ConsentDocuments";
+import ConsentDocuments, { ConsentState, DEFAULT_CONSENTS, REQUIRED_CONSENT_KEYS, CARD_REQUIRED_CONSENT_KEYS } from "@/components/apply/ConsentDocuments";
 import RateDisclaimer from "@/components/RateDisclaimer";
 
 const API_URL = "https://functions.poehali.dev/29f70c88-f1f7-4926-9c65-c642fd11fdfb";
@@ -109,7 +109,7 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const allRequiredChecked = REQUIRED_CONSENT_KEYS.every((k) => consents[k]);
+    const allRequiredChecked = (cardMode ? CARD_REQUIRED_CONSENT_KEYS : REQUIRED_CONSENT_KEYS).every((k) => consents[k]);
     if (!allRequiredChecked) {
       setSendError("Отметьте все обязательные согласия перед отправкой заявки");
       return;
@@ -602,6 +602,7 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
 
                 <ConsentDocuments
                   consents={consents}
+                  hideKeys={cardMode ? ["lifeInsurance"] : []}
                   onChange={(key, value) => setConsents((p) => ({ ...p, [key]: value }))}
                 />
 
