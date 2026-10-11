@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
+import PrivacyDialog from "@/components/PrivacyDialog";
 
 export interface ConsentState {
   personalData: boolean;
@@ -137,6 +138,7 @@ interface Props {
 
 export default function ConsentDocuments({ consents, onChange }: Props) {
   const [openDoc, setOpenDoc] = useState<(typeof DOCS)[number] | null>(null);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
 
   return (
     <div className="space-y-2">
@@ -163,9 +165,23 @@ export default function ConsentDocuments({ consents, onChange }: Props) {
               {doc.title.charAt(0).toLowerCase() + doc.title.slice(1)}
             </button>
             {!doc.required && <span className="text-emerald-950/30"> (необязательно)</span>}
+            {doc.key === "personalData" && (
+              <span className="text-emerald-950/50">
+                {" "}в соответствии с{" "}
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); setPrivacyOpen(true); }}
+                  className="text-emerald-600 underline underline-offset-2 hover:text-emerald-700 transition-colors"
+                >
+                  политикой конфиденциальности
+                </button>
+              </span>
+            )}
           </span>
         </label>
       ))}
+
+      <PrivacyDialog open={privacyOpen} onOpenChange={setPrivacyOpen} />
 
       {openDoc && (
         <div
