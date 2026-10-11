@@ -72,6 +72,36 @@ def card_payment_schedule(issued_at, debt):
     } for i in range(CARD_SCHEDULE_WEEKS)]
 
 
+CARD_MONTHLY_FEE = 399
+
+
+def ensure_card_fees(cur, app_id):
+    """Списывает с лимита карты ежемесячное обслуживание: первое сразу при активации, далее каждый месяц. Возвращает сумму всех списаний."""
+    cur.execute(f"SELECT virtual_card_signed_at FROM {SCHEMA}.applications WHERE id = {int(app_id)} AND virtual_card_status = 'active'")
+    r = cur.fetchone()
+    if r and r[0]:
+        now = datetime.utcnow()
+        sd = r[0]
+        months = (now.year - sd.year) * 12 + (now.month - sd.month)
+        if now.day < sd.day:
+            months -= 1
+        for n in range(1, min(max(months, 0) + 1, 36) + 1):
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.card_fees (application_id, amount, kind, period_no) "
+                f"VALUES ({int(app_id)}, {CARD_MONTHLY_FEE}, 'monthly', {n}) ON CONFLICT (application_id, kind, period_no) DO NOTHING"
+            )
+    cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_fees WHERE application_id = {int(app_id)}")
+    return float(cur.fetchone()[0])
+
+
+CARD_TRANSFER_FEE_FIXED = 199
+CARD_TRANSFER_FEE_PERCENT = 3.9
+
+
+def card_transfer_fee(amount):
+    return round(CARD_TRANSFER_FEE_FIXED + float(amount) * CARD_TRANSFER_FEE_PERCENT / 100)
+
+
 def get_conn():
     return psycopg2.connect(os.environ["DATABASE_URL"])
 
@@ -232,6 +262,11 @@ def handler(event: dict, context) -> dict:
                 f"WHERE phone='{ph_e}' AND virtual_card_status='pending' AND virtual_card_number IS NOT NULL"
             )
             activated_now = cur.rowcount
+            if activated_now:
+                cur.execute(f"SELECT id FROM {SCHEMA}.applications WHERE phone='{ph_e}' AND virtual_card_status='active' AND virtual_card_number IS NOT NULL ORDER BY virtual_card_issued_at DESC LIMIT 1")
+                _ca = cur.fetchone()
+                if _ca:
+                    ensure_card_fees(cur, _ca[0])
             conn.commit()
             if not activated_now:
                 cur.execute(
@@ -640,10 +675,13 @@ def handler(event: dict, context) -> dict:
         used = float(_pr)
         cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_repayments WHERE application_id = {card_app_id}")
         used = max(0.0, used - principal_part(float(_pr), float(_gr), float(cur.fetchone()[0])))
-        available = card_limit - used
-        if wd_amount > available:
+        fees_total = ensure_card_fees(cur, card_app_id)
+        conn.commit()
+        available = card_limit - used - fees_total
+        transfer_fee = card_transfer_fee(wd_amount)
+        if wd_amount + transfer_fee > available:
             cur.close(); conn.close()
-            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": f"Сумма превышает доступный остаток лимита ({int(available):,} ₽)".replace(",", " ")})}
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": f"Сумма с комиссией {int(wd_amount + transfer_fee):,} ₽ превышает доступный остаток лимита ({int(available):,} ₽)".replace(",", " ")})}
 
         CARD_WEEKLY_RATE = 24.0  # 24% в неделю, фиксировано, без пересчёта
         cur.execute(
@@ -651,6 +689,10 @@ def handler(event: dict, context) -> dict:
             f"VALUES ({card_app_id}, '{ph_e}', {wd_amount}, {wd_weeks}, {CARD_WEEKLY_RATE}, 'active', '{wd_card_e}') RETURNING id"
         )
         tx_id = cur.fetchone()[0]
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.card_fees (application_id, amount, kind, period_no) "
+            f"VALUES ({card_app_id}, {transfer_fee}, 'transfer', {tx_id}) ON CONFLICT DO NOTHING"
+        )
         conn.commit()
         cur.close(); conn.close()
 
@@ -976,7 +1018,11 @@ def handler(event: dict, context) -> dict:
             vc_limit_news = [{"added": float(a_), "newLimit": float(n_)} for a_, n_ in cur.fetchall()]
 
         vc_limit_val = float(app_row[15]) if app_row[15] else 0
-        vc_available = max(0, vc_limit_val - vc_used)
+        vc_fees_total = 0.0
+        if app_row[11] and card_app_id:
+            vc_fees_total = ensure_card_fees(cur, card_app_id)
+            conn.commit()
+        vc_available = max(0, vc_limit_val - vc_used - vc_fees_total)
 
         application = {
             "id": app_row[0],
@@ -1005,6 +1051,8 @@ def handler(event: dict, context) -> dict:
                 "limit": vc_limit_val,
                 "contractUrl": card_contract_url,
                 "available": vc_available,
+                "monthlyFee": CARD_MONTHLY_FEE,
+                "feesTotal": vc_fees_total,
                 "rate": float(app_row[16]) if app_row[16] else 0,
                 "status": app_row[17] or "none",
                 "days": vc_days,

@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 const CARD_WEEKLY_RATE = 24;
+const transferFee = (a: number) => Math.round(199 + a * 3.9 / 100);
 
 interface Props {
   available: number;
@@ -19,17 +20,17 @@ export default function CardWithdrawForm({ available, defaultCard, onSuccess }: 
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
 
-  const maxAmount = Math.max(1000, Math.floor(available));
+  const maxAmount = Math.max(1000, Math.floor((available - 199) / 1.039));
 
   const calc = useMemo(() => {
     const interest = Math.round(amount * (CARD_WEEKLY_RATE / 100) * weeks);
     const total = amount + interest;
     const weeklyPayment = Math.round(total / weeks);
-    return { interest, total, weeklyPayment };
+    return { interest, total, weeklyPayment, fee: transferFee(amount) };
   }, [amount, weeks]);
 
   async function submit() {
-    if (amount <= 0 || amount > available) { setError("Проверьте сумму перевода"); return; }
+    if (amount <= 0 || amount + transferFee(amount) > available) { setError("Проверьте сумму перевода"); return; }
     if (cardNumber.replace(/\s/g, "").length < 10) { setError("Укажите номер вашей карты, куда перевести деньги"); return; }
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -46,7 +47,7 @@ export default function CardWithdrawForm({ available, defaultCard, onSuccess }: 
     onSuccess();
   }
 
-  if (available < 1000) return null;
+  if (available < 1000 + transferFee(1000)) return null;
 
   if (done) {
     return (
@@ -143,6 +144,10 @@ export default function CardWithdrawForm({ available, defaultCard, onSuccess }: 
         <div className="flex justify-between text-sm">
           <span className="text-emerald-950/50">Платёж в неделю</span>
           <span className="text-emerald-950 font-semibold">{calc.weeklyPayment.toLocaleString("ru-RU")} ₽</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-emerald-950/50">Комиссия за перевод (199 ₽ + 3,9%)</span>
+          <span className="text-emerald-950 font-semibold">{calc.fee.toLocaleString("ru-RU")} ₽</span>
         </div>
         <div className="flex justify-between text-sm pt-1.5 border-t border-emerald-900/15">
           <span className="text-emerald-950/50">К возврату</span>

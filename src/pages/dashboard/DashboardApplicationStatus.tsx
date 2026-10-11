@@ -42,6 +42,8 @@ interface VirtualCard {
   limit: number;
   contractUrl?: string;
   available: number;
+  monthlyFee?: number;
+  feesTotal?: number;
   rate: number;
   status: string;
   days?: number | null;
@@ -881,6 +883,13 @@ export default function DashboardApplicationStatus({
                   </div>
                 )}
                 {/* Форма перевода средств в рамках доступного лимита */}
+                <div className="rounded-xl px-4 py-3 text-sm text-emerald-950/70 space-y-1" style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)" }}>
+                  <div>Ежемесячное обслуживание карты — {application.virtualCard.monthlyFee ?? 399} ₽, списывается с лимита автоматически.</div>
+                  <div>Перевод на другую карту — комиссия 199 ₽ + 3,9% от суммы.</div>
+                  {(application.virtualCard.feesTotal ?? 0) > 0 && (
+                    <div className="font-semibold text-emerald-950">Списано за обслуживание и переводы: {(application.virtualCard.feesTotal ?? 0).toLocaleString("ru-RU")} ₽</div>
+                  )}
+                </div>
                 <CardWithdrawForm available={application.virtualCard.available} defaultCard={application.cardNumber} onSuccess={onRefresh} />
 
                 <CardPaymentSchedule

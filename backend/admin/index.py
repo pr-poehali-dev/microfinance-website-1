@@ -1865,6 +1865,10 @@ def handler(event: dict, context) -> dict:
             cur.close(); conn.close()
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Карта не выдана или уже активна"})}
         cur.execute(f"UPDATE {SCHEMA}.applications SET virtual_card_status='active', virtual_card_signed_at=COALESCE(virtual_card_signed_at, NOW()) WHERE id='{app_id_e}'")
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.card_fees (application_id, amount, kind, period_no) "
+            f"VALUES ({int(app_id_e)}, 399, 'monthly', 1) ON CONFLICT (application_id, kind, period_no) DO NOTHING"
+        )
         conn.commit()
         tg(f"✅ <b>Карта РУСФИНАНС 24 активирована</b>\n\n👤 {full_name or phone}\n📞 {phone}")
         cur.close(); conn.close()
@@ -2104,6 +2108,23 @@ def handler(event: dict, context) -> dict:
             cur.execute(f"SELECT id, application_id, amount, due_date, created_at, tx_id, status, resolved_at FROM {SCHEMA}.card_payment_notices WHERE application_id IN ({','.join(ids)}) ORDER BY created_at DESC")
             for n in cur.fetchall():
                 notices.setdefault(n[1], []).append(n)
+        fees: dict = {}
+        for (_aid, _n, _st, _sg) in [(r[0], r[4], r[5], r[10]) for r in card_rows]:
+            if _st == "active" and _sg:
+                _now = datetime.utcnow()
+                _m = (_now.year - _sg.year) * 12 + (_now.month - _sg.month)
+                if _now.day < _sg.day:
+                    _m -= 1
+                for _k in range(1, min(max(_m, 0) + 1, 36) + 1):
+                    cur.execute(
+                        f"INSERT INTO {SCHEMA}.card_fees (application_id, amount, kind, period_no) "
+                        f"VALUES ({int(_aid)}, 399, 'monthly', {_k}) ON CONFLICT (application_id, kind, period_no) DO NOTHING"
+                    )
+        conn.commit()
+        if ids:
+            cur.execute(f"SELECT application_id, COALESCE(SUM(amount),0) FROM {SCHEMA}.card_fees WHERE application_id IN ({','.join(ids)}) GROUP BY application_id")
+            for _a, _sum in cur.fetchall():
+                fees[_a] = float(_sum)
         cur.close(); conn.close()
 
         cards = []
@@ -2138,7 +2159,7 @@ def handler(event: dict, context) -> dict:
                 "contractUrl": card_contract or "",
                 "issuedAt": msk(issued_at).strftime("%d.%m.%Y в %H:%M") if issued_at else None,
                 "signedAt": msk(signed_at).strftime("%d.%m.%Y в %H:%M") if signed_at else None,
-                "used": used, "available": max(0.0, limit_v - used),
+                "used": used, "fees": fees.get(app_id, 0.0), "available": max(0.0, limit_v - used - fees.get(app_id, 0.0)),
                 "debt": debt, "repaid": repaid,
                 "minPaymentPercent": CARD_MIN_PAYMENT_PERCENT, "minPayment": round(debt * CARD_MIN_PAYMENT_PERCENT / 100),
                 "paymentSchedule": card_payment_schedule(issued_at, debt) if debt > 0 else [],

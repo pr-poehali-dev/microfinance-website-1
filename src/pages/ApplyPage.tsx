@@ -467,6 +467,11 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
                 <div className="rounded-xl p-4 text-sm text-emerald-950/70" style={{ background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.3)" }}>
                   Итоговый лимит и условия определит специалист после проверки анкеты.
                 </div>
+                <div className="rounded-xl p-4 text-sm text-emerald-950/70 space-y-1.5" style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.35)" }}>
+                  <div className="font-semibold text-emerald-950">Стоимость обслуживания карты</div>
+                  <div>При активации карты ежемесячное обслуживание стоит 399 ₽. Эта сумма автоматически списывается с лимита карты сразу после получения карты и далее каждый месяц.</div>
+                  <div>За перевод денежных средств с карты Русфинанс 24 на любую другую карту взимается комиссия 199 ₽ + 3,9% от суммы.</div>
+                </div>
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setActiveSection("contacts")}
                     className="glass text-emerald-950/60 font-semibold px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">

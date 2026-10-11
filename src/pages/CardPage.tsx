@@ -4,7 +4,7 @@ import Icon from "@/components/ui/icon";
 const BENEFITS = [
   { icon: "CreditCard", title: "Лимит до 200 000 ₽", desc: "Одобрение онлайн без посещения офиса" },
   { icon: "Percent", title: "Кэшбэк 1%", desc: "На все покупки по карте, без ограничений" },
-  { icon: "Wallet", title: "Бесплатное обслуживание", desc: "0 ₽ в год при любом остатке" },
+  { icon: "Wallet", title: "Обслуживание 399 ₽ в месяц", desc: "Списывается с лимита карты автоматически" },
   { icon: "Zap", title: "Оформление за 15 минут", desc: "Решение онлайн, карта на любой счёт" },
   { icon: "Shield", title: "Защита покупок", desc: "Страхование транзакций и антифрод" },
   { icon: "Smartphone", title: "Управление в приложении", desc: "Переводы, лимиты, выписки онлайн" },
@@ -14,7 +14,8 @@ const TARIFFS = [
   { label: "Ставка", value: "от 0.2% / день" },
   { label: "Лимит", value: "5 000 – 200 000 ₽" },
   { label: "Срок", value: "до 24 месяцев" },
-  { label: "Обслуживание", value: "Бесплатно" },
+  { label: "Обслуживание", value: "399 ₽ / месяц" },
+  { label: "Перевод на другую карту", value: "199 ₽ + 3,9%" },
   { label: "Кэшбэк", value: "1% на всё" },
   { label: "Одобрение", value: "за 15 минут" },
 ];
@@ -61,7 +62,7 @@ export default function CardPage() {
             КАРТА <span className="gradient-text">РУСФИНАНС 24</span>
           </h1>
           <p className="text-emerald-950/60 text-lg mb-10 max-w-xl mx-auto">
-            Кредитная карта с лимитом до 200 000 ₽, кэшбэком 1% и бесплатным обслуживанием. Оформление онлайн за 15 минут.
+            Кредитная карта с лимитом до 200 000 ₽, кэшбэком 1% и обслуживанием 399 ₽ в месяц. Оформление онлайн за 15 минут.
           </p>
           <a href="/card/apply" onClick={(e) => { e.preventDefault(); navigate("/card/apply"); }}
             className="btn-neon text-white font-semibold px-8 py-4 rounded-xl inline-flex items-center gap-2 text-base">
