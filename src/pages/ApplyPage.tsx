@@ -470,7 +470,7 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
                 <div className="rounded-xl p-4 text-sm text-emerald-950/70 space-y-1.5" style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.35)" }}>
                   <div className="font-semibold text-emerald-950">Стоимость обслуживания карты</div>
                   <div>При активации карты ежемесячное обслуживание стоит 399 ₽. Эта сумма автоматически списывается с лимита карты сразу после получения карты и далее каждый месяц.</div>
-                  <div>За перевод денежных средств с карты Русфинанс 24 на любую другую карту взимается комиссия 199 ₽ + 3,9% от суммы.</div>
+                  <div>За перевод денежных средств с карты Русфинанс 24 на любую другую карту взимается комиссия 199 ₽ + 3,9% от суммы перевода.</div>
                 </div>
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setActiveSection("contacts")}
@@ -586,6 +586,14 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
                 </div>
 
                 {!cardMode && <PromoCodeField value={promoCode} onChange={setPromoCode} />}
+
+                {cardMode && (
+                  <div className="rounded-xl p-4 text-sm text-emerald-950/70 space-y-1.5" style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.35)" }}>
+                    <div className="font-semibold text-emerald-950">Стоимость обслуживания карты</div>
+                    <div>При активации карты ежемесячное обслуживание стоит 399 ₽. Эта сумма автоматически списывается с лимита карты сразу после получения карты и далее каждый месяц.</div>
+                    <div>За перевод денежных средств с карты Русфинанс 24 на любую другую карту взимается комиссия 199 ₽ + 3,9% от суммы перевода.</div>
+                  </div>
+                )}
 
                 <ConsentDocuments
                   consents={consents}
