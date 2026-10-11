@@ -176,6 +176,7 @@ export default function DashboardPage() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const ensuringRef = useRef(false);
   const contractsPendingRef = useRef(false);
+  const termEnsuredRef = useRef(false);
 
   // Карта/СБП для approved и partner_card
   const [cardInput, setCardInput] = useState("");
@@ -195,6 +196,7 @@ export default function DashboardPage() {
     approved_months: number | null; approved_rate: number | null;
     car_brand: string; car_model: string; car_year: number; created_at: string;
     contract_signed: boolean;
+    contract_url?: string | null;
     disbursed_at?: string | null;
     full_name?: string; email?: string; birth_date?: string; address?: string;
     passport_serial?: string; passport_num?: string; passport_issued?: string;
@@ -210,6 +212,7 @@ export default function DashboardPage() {
     approved_months: number | null; approved_rate: number | null;
     notes: string | null; shop_name: string; item_name: string; item_price: number;
     contract_signed: boolean; created_at: string;
+    contract_url?: string | null;
     disbursed_at?: string | null;
     full_name?: string; email?: string; birth_date?: string; address?: string;
     passport_series?: string; passport_number?: string; passport_date?: string;
@@ -229,6 +232,13 @@ export default function DashboardPage() {
   const [paidToast, setPaidToast] = useState(false);
   const [addendumPending, setAddendumPending] = useState(false);
   const [section, setSection] = useState<DashboardSection>("apps");
+
+  const loadTermLoans = (phone?: string) => {
+    if (!phone) return;
+    const ph = encodeURIComponent(phone);
+    fetch(`${CAR_URL}?sub=get&phone=${ph}`).then(r => r.ok ? r.json() : null).then(d => { if (d?.item) setCarLoan(d.item); }).catch(() => {});
+    fetch(`${SHOP_URL}?sub=get&phone=${ph}`).then(r => r.ok ? r.json() : null).then(d => { if (d?.item) setShopLoan(d.item); }).catch(() => {});
+  };
 
   const loadData = (token: string, isInitial = false) => {
     if (isInitial) setLoading(true);
@@ -253,7 +263,8 @@ export default function DashboardPage() {
         contractsPendingRef.current = (!!app && (app.status === "approved" || app.status === "partner_card") && !app.contractUrl) || (!!app?.virtualCard && !app.virtualCard.contractUrl);
         const needLoanContract = !!app && (app.status === "approved" || app.status === "partner_card") && !app.contractUrl;
         const needCardContract = !!app?.virtualCard && !app.virtualCard.contractUrl;
-        if ((needLoanContract || needCardContract) && !ensuringRef.current) {
+        if ((needLoanContract || needCardContract || !termEnsuredRef.current) && !ensuringRef.current) {
+          termEnsuredRef.current = true;
           ensuringRef.current = true;
           fetch(CONTRACT_URL, {
             method: "POST",
@@ -261,7 +272,7 @@ export default function DashboardPage() {
             body: JSON.stringify({ ensure: true }),
           })
             .then(r => r.ok ? r.json() : null)
-            .then(d => { if (d?.created?.loan || d?.created?.card) loadData(token, false); })
+            .then(d => { if (d?.created?.loan || d?.created?.card) loadData(token, false); else if (d?.created?.car || d?.created?.shop) loadTermLoans(data.user?.phone); })
             .catch(() => {})
             .finally(() => { ensuringRef.current = false; });
         }
@@ -1062,6 +1073,8 @@ export default function DashboardPage() {
               const docs = [
                 application?.contractUrl ? { title: "Договор займа", url: application.contractUrl } : null,
                 application?.virtualCard?.contractUrl ? { title: "Договор по карте РУСФИНАНС 24", url: application.virtualCard.contractUrl } : null,
+                carLoan?.contract_url ? { title: "Договор займа под залог авто", url: carLoan.contract_url } : null,
+                shopLoan?.contract_url ? { title: "Договор займа на покупки", url: shopLoan.contract_url } : null,
               ].filter(Boolean) as { title: string; url: string }[];
               if (docs.length === 0) return <p className="text-emerald-950/50 text-sm">Документов пока нет. Они появятся после одобрения заявки.</p>;
               return (

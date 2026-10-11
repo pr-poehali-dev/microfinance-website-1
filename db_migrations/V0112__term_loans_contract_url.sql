@@ -1,0 +1,2 @@
+ALTER TABLE t_p30184577_microfinance_website.car_loan_applications ADD COLUMN IF NOT EXISTS contract_url TEXT NULL;
+ALTER TABLE t_p30184577_microfinance_website.shopping_loan_applications ADD COLUMN IF NOT EXISTS contract_url TEXT NULL;

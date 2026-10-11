@@ -609,6 +609,238 @@ def backfill_card_contracts(cur, conn) -> dict:
     }
 
 
+
+TERM_KINDS = {
+    "car": {
+        "table": "car_loan_applications", "prefix": "А", "title": "Договор потребительского займа",
+        "subtitle": "(займ под залог автомобиля)", "store": "car",
+    },
+    "shop": {
+        "table": "shopping_loan_applications", "prefix": "Т", "title": "Договор потребительского займа",
+        "subtitle": "(займ на покупки)", "store": "shop",
+    },
+}
+
+
+def term_schedule(amount: float, months: int, rate: float, start) -> list:
+    rows = []
+    principal = amount / months
+    remaining = amount
+    for m in range(1, months + 1):
+        interest = round(remaining * rate / 100)
+        rows.append({
+            "n": m, "due": (start + timedelta(days=30 * m)).strftime("%d.%m.%Y"),
+            "principal": round(principal), "interest": interest, "total": round(principal + interest),
+        })
+        remaining -= principal
+    return rows
+
+
+def generate_term_contract_html(kind: str, d: dict) -> str:
+    k = TERM_KINDS[kind]
+    full_name = d.get("full_name", "")
+    phone = d.get("phone", "")
+    email = d.get("email", "")
+    passport_str = d.get("passport", "")
+    amount = float(d.get("amount", 0))
+    months = int(d.get("months", 1) or 1)
+    rate = float(d.get("rate", 0))
+    start = d.get("start") or datetime.now()
+    date_str = msk(start).strftime("%d.%m.%Y")
+    contract_num = f"{k['prefix']}-{str(d['id']).zfill(12)}"
+    rows = term_schedule(amount, months, rate, msk(start))
+    total_pay = sum(r["total"] for r in rows)
+    amount_words = num_to_words(int(amount))
+    sched_rows = "".join(
+        f'<tr><td>{r["n"]}</td><td>{r["due"]}</td><td>{r["principal"]:,} ₽</td><td>{r["interest"]:,} ₽</td><td>{r["total"]:,} ₽</td></tr>'
+        for r in rows
+    )
+    if kind == "car":
+        subject = (f'<tr><td class="label">Залоговое имущество</td><td class="value">Автомобиль {d.get("car_brand") or ""} '
+                   f'{d.get("car_model") or ""}, {d.get("car_year") or "—"} г.в.</td></tr>')
+        subject_p = ("2.4. Исполнение обязательств Заёмщика по настоящему Договору обеспечивается залогом автомобиля, "
+                     "указанного в п. 1. Заёмщик подтверждает, что является собственником автомобиля, он не находится в залоге "
+                     "у третьих лиц и не обременён иными правами.")
+    else:
+        subject = (f'<tr><td class="label">Приобретаемый товар</td><td class="value">{d.get("item_name") or "—"}, '
+                   f'магазин: {d.get("shop_name") or "—"}</td></tr>')
+        subject_p = ("2.4. Заём предоставляется для оплаты товара, указанного в п. 1. Заёмщик подтверждает, "
+                     "что приобретает товар для личных нужд, не связанных с предпринимательской деятельностью.")
+    return f"""<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Договор займа №{contract_num}</title>
+<style>{CONTRACT_CSS} table.sched {{width:100%;border-collapse:collapse;font-size:10pt;}} table.sched td, table.sched th {{border:1px solid #444;padding:3pt 5pt;text-align:center;}}</style>
+</head>
+<body>
+
+<h1>{k["title"]}</h1>
+<h2>{k["subtitle"]} № {contract_num}</h2>
+<p class="center num">г. Москва &nbsp;&nbsp;&nbsp; {date_str}</p>
+
+<p><span class="bold">{MKK["name"]}</span>, именуемое в дальнейшем <span class="bold">«Займодавец»</span>, в лице директора {MKK["director"]}, действующего на основании Устава, с одной стороны, и</p>
+
+<p><span class="bold">{full_name}</span>, дата рождения: {d.get("birth_date") or "—"}, паспорт: {passport_str}, именуемый(-ая) в дальнейшем <span class="bold">«Заёмщик»</span>, с другой стороны, заключили настоящий Договор о нижеследующем:</p>
+
+<h3>1. Индивидуальные условия</h3>
+
+<table class="params">
+  <tr><td class="label">Сумма займа</td><td class="value"><span class="bold">{int(amount):,} ₽</span> ({amount_words} рублей 00 копеек)</td></tr>
+  <tr><td class="label">Срок займа</td><td class="value"><span class="bold">{months} мес.</span></td></tr>
+  <tr><td class="label">Процентная ставка</td><td class="value"><span class="bold">{rate:g}% в месяц</span> от остатка основного долга</td></tr>
+  <tr><td class="label">Порядок погашения</td><td class="value">Ежемесячные платежи по графику (основной долг равными частями + проценты на остаток)</td></tr>
+  <tr><td class="label">Общая сумма выплат</td><td class="value"><span class="bold">{total_pay:,} ₽</span></td></tr>
+  {subject}
+  <tr><td class="label">Способ получения средств</td><td class="value">Перевод на банковскую карту / СБП Заёмщика</td></tr>
+  <tr><td class="label">Контактный телефон Заёмщика</td><td class="value">{phone}</td></tr>
+  {f'<tr><td class="label">Email Заёмщика</td><td class="value">{email}</td></tr>' if email else ''}
+</table>
+
+<h3>2. Предмет договора</h3>
+
+<p>2.1. Займодавец передаёт Заёмщику денежные средства в сумме, указанной в п. 1, а Заёмщик обязуется возвратить сумму займа и уплатить проценты в сроки и на условиях настоящего Договора.</p>
+
+<p>2.2. Заём считается предоставленным в момент перечисления средств на банковскую карту или счёт Заёмщика, указанные им.</p>
+
+<p>2.3. Заём предоставляется на потребительские нужды, не связанные с предпринимательской деятельностью.</p>
+
+<p>{subject_p}</p>
+
+<h3>3. Проценты и погашение</h3>
+
+<p>3.1. За пользование займом Заёмщик уплачивает проценты по ставке <span class="bold">{rate:g}% в месяц</span> от остатка основного долга.</p>
+
+<p>3.2. Погашение производится ежемесячно по графику ниже. Платёж может быть внесён по реквизитам Займодавца, указанным в разделе 6, с указанием номера настоящего договора в комментарии.</p>
+
+<table class="sched">
+  <tr><th>№</th><th>Дата</th><th>Основной долг</th><th>Проценты</th><th>Платёж</th></tr>
+  {sched_rows}
+</table>
+
+<p>3.3. За просрочку платежа ежедневно автоматически начисляется штраф в размере 2,99% в день от суммы просроченного основного долга до полного погашения задолженности.</p>
+
+<h3>4. Права и обязанности сторон</h3>
+
+<p>4.1. Заёмщик обязуется своевременно вносить платежи и сообщать об изменении контактных данных.</p>
+
+<p>4.2. Займодавец вправе потребовать досрочного возврата задолженности при нарушении Заёмщиком условий настоящего Договора.</p>
+
+<p>4.3. Заёмщик несёт ответственность за достоверность предоставленных данных.</p>
+
+<h3>5. Заключительные положения</h3>
+
+<p>5.1. Подписывая настоящий Договор, Заёмщик даёт согласие на обработку персональных данных в целях его исполнения.</p>
+
+<p>5.2. Договор вступает в силу с момента его подписания Заёмщиком простой электронной подписью и действует до полного исполнения сторонами обязательств.</p>
+
+<p>5.3. Споры разрешаются путём переговоров, а при недостижении согласия — в судебном порядке по месту нахождения Займодавца.</p>
+
+<h3>6. Реквизиты и подписи сторон</h3>
+
+<table class="sign">
+  <tr>
+    <td>
+      <p class="bold">ЗАЙМОДАВЕЦ:</p>
+      <p>{MKK["name"]}</p>
+      <p>Адрес: {MKK["address"]}</p>
+      <p>Банк: {MKK["bank"]}</p>
+      <p>р/с: {MKK["rs"]}</p>
+      <p>к/с: {MKK["ks"]}</p>
+      <p>БИК: {MKK["bik"]}</p>
+      <p>Тел.: {MKK["phone"]}</p>
+      <br>
+      <p>Директор:</p>
+      <p>{MKK["director"]}</p>
+      <p style="position:relative;height:34pt;"><span class="sign-line"></span>{SIGN_IMG}</p>
+      <p style="margin-top:8pt;position:relative;height:90pt;">М.П.{SEAL_IMG}</p>
+    </td>
+    <td>
+      <p class="bold">ЗАЁМЩИК:</p>
+      <p>{full_name}</p>
+      <p>Дата рождения: {d.get("birth_date") or "—"}</p>
+      <p>Паспорт: {passport_str}</p>
+      <p>Адрес регистрации: {d.get("address") or "—"}</p>
+      <p>Тел.: {phone}</p>
+      {f'<p>Email: {email}</p>' if email else ''}
+      <br>
+      {digital_sign_block(contract_num)}
+      <p style="margin-top:4pt;font-size:10pt;">({full_name})</p>
+      <br>
+      <p>Дата: {date_str}</p>
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>"""
+
+
+def build_term_contract(cur, kind: str, app_id: int) -> str:
+    k = TERM_KINDS[kind]
+    if kind == "car":
+        cur.execute(
+            f"SELECT id, full_name, phone, email, birth_date, address, passport_serial, passport_num, passport_issued, "
+            f"approved_amount, loan_amount, approved_months, loan_months, approved_rate, promo_discount, created_at, car_brand, car_model, car_year "
+            f"FROM {SCHEMA}.{k['table']} WHERE id = {int(app_id)}"
+        )
+        r = cur.fetchone()
+        passport = f"{r[6] or ''} {r[7] or ''}".strip() + (f", выдан {r[8]}" if r[8] else "")
+        extra = {"car_brand": r[16], "car_model": r[17], "car_year": r[18]}
+    else:
+        cur.execute(
+            f"SELECT id, full_name, phone, email, birth_date, address, passport_series, passport_number, passport_by, "
+            f"approved_amount, loan_amount, approved_months, loan_months, approved_rate, promo_discount, created_at, shop_name, item_name, passport_date "
+            f"FROM {SCHEMA}.{k['table']} WHERE id = {int(app_id)}"
+        )
+        r = cur.fetchone()
+        passport = f"{r[6] or ''} {r[7] or ''}".strip()
+        if r[18]:
+            passport += f", выдан {r[18]}"
+        if r[8]:
+            passport += f" {r[8]}"
+        extra = {"shop_name": r[16], "item_name": r[17]}
+    rate = float(r[13] or 0)
+    disc = int(r[14] or 0)
+    if rate and disc:
+        rate = round(rate * (100 - disc) / 100, 4)
+    d = {
+        "id": r[0], "full_name": r[1] or "", "phone": r[2] or "", "email": r[3] or "",
+        "birth_date": r[4] or "", "address": r[5] or "", "passport": passport,
+        "amount": float(r[9] or r[10] or 0), "months": int(r[11] or r[12] or 1), "rate": rate,
+        "start": r[15], **extra,
+    }
+    html = generate_term_contract_html(kind, d)
+    now_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    ext_key, body_bytes, ctype = store_contract_file(html, f"{k['store']}_{app_id}", now_ts)
+    s3_client().put_object(Bucket="files", Key=ext_key, Body=body_bytes, ContentType=ctype)
+    url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{ext_key}"
+    cur.execute(f"UPDATE {SCHEMA}.{k['table']} SET contract_url = '{url}' WHERE id = {int(app_id)}")
+    return url
+
+
+def ensure_term_contracts(cur, conn, phone_e: str) -> dict:
+    out = {}
+    for kind, k in TERM_KINDS.items():
+        cur.execute(
+            f"SELECT id FROM {SCHEMA}.{k['table']} WHERE phone = '{phone_e}' "
+            f"AND status IN ('approved','signing','disbursed') AND (contract_url IS NULL OR contract_url = '') "
+            f"AND COALESCE(approved_amount, 0) > 0 AND approved_rate IS NOT NULL "
+            f"ORDER BY created_at DESC LIMIT 1"
+        )
+        row = cur.fetchone()
+        out[kind] = False
+        if row:
+            try:
+                build_term_contract(cur, kind, int(row[0]))
+                conn.commit()
+                out[kind] = True
+            except Exception as ex:
+                conn.rollback()
+                print(f"[ensure] {kind} contract error: {ex}")
+    return out
+
+
 def ensure_client_contracts(cur, conn, token_e: str) -> dict:
     """Клиент запрашивает свои недостающие договоры (займ и карта) — создаются сразу."""
     cur.execute(
@@ -622,6 +854,7 @@ def ensure_client_contracts(cur, conn, token_e: str) -> dict:
     user_id, phone = u
     ph = str(phone).replace("'", "''")
     created = {"loan": False, "card": False}
+    created.update(ensure_term_contracts(cur, conn, ph))
 
     cur.execute(
         f"SELECT id FROM {SCHEMA}.applications WHERE phone = '{ph}' "

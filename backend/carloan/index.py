@@ -226,7 +226,7 @@ def handler(event: dict, context) -> dict:
             f"SELECT id, loan_amount, loan_months, status, reject_reason, approved_amount, approved_months, "
             f"approved_rate, notes, car_brand, car_model, car_year, created_at, disbursed_at, "
             f"full_name, email, birth_date, address, passport_serial, passport_num, passport_issued, "
-            f"car_mileage, contact_person, card_number, contract_signed, contract_signed_at, promo_code, promo_discount "
+            f"car_mileage, contact_person, card_number, contract_signed, contract_signed_at, promo_code, promo_discount, contract_url "
             f"FROM {SCHEMA}.car_loan_applications WHERE phone = '{phone_q}' ORDER BY created_at DESC LIMIT 1"
         )
         row = cur.fetchone()
@@ -236,7 +236,7 @@ def handler(event: dict, context) -> dict:
         keys = ["id","loan_amount","loan_months","status","reject_reason","approved_amount","approved_months",
                 "approved_rate","notes","car_brand","car_model","car_year","created_at","disbursed_at",
                 "full_name","email","birth_date","address","passport_serial","passport_num","passport_issued",
-                "car_mileage","contact_person","card_number","contract_signed","contract_signed_at","promo_code","promo_discount"]
+                "car_mileage","contact_person","card_number","contract_signed","contract_signed_at","promo_code","promo_discount","contract_url"]
         item = {}
         for k, v in zip(keys, row):
             if hasattr(v, "isoformat"):
