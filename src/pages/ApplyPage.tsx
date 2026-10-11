@@ -165,6 +165,7 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
   const RATE = 0.005;
   const AMT_MIN = cardMode ? 5000 : 500;
   const AMT_MAX = cardMode ? 200000 : 50000;
+  const insurancePct = formAmount <= 20000 ? 50 : formAmount <= 49900 ? 35 : formAmount <= 99999 ? 25 : 15;
   const amountBg = `linear-gradient(to right, #10b981 ${((formAmount - AMT_MIN) / (AMT_MAX - AMT_MIN)) * 100}%, rgba(16,185,129,0.2) ${((formAmount - AMT_MIN) / (AMT_MAX - AMT_MIN)) * 100}%)`;
   const daysBg = `linear-gradient(to right, #10b981 ${((formDays - 15) / (365 - 15)) * 100}%, rgba(16,185,129,0.2) ${((formDays - 15) / (365 - 15)) * 100}%)`;
 
@@ -531,6 +532,10 @@ export default function ApplyPage({ cardMode = false }: { cardMode?: boolean }) 
                       <div className="text-emerald-950/40 text-xs mb-1">К возврату</div>
                       <div className="text-emerald-600 font-bold">{Math.round(formAmount * (1 + RATE * formDays)).toLocaleString("ru-RU")} ₽</div>
                     </div>
+                  </div>
+                  <div className="flex justify-between items-center pt-3 mt-3 text-sm" style={{ borderTop: "1px solid rgba(16,185,129,0.15)" }}>
+                    <span className="text-emerald-950/50">Страховая премия ({insurancePct}%)</span>
+                    <span className="text-emerald-950 font-bold">{Math.round(formAmount * insurancePct / 100).toLocaleString("ru-RU")} ₽</span>
                   </div>
                 </div>
                 <div className="flex justify-between">
