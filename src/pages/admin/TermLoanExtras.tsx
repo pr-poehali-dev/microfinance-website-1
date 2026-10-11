@@ -61,6 +61,8 @@ export default function TermLoanExtras({ app, baseUrl, token, onSaved }: Props) 
   const [sb, setSb] = useState(initial);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [newPw, setNewPw] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
 
   const keyMap: Record<string, keyof ReturnType<typeof initial>> = {
     workplace: "workplace", position: "position", active_loans: "activeLoans",
@@ -79,21 +81,38 @@ export default function TermLoanExtras({ app, baseUrl, token, onSaved }: Props) 
     onSaved();
   };
 
+  const resetPassword = async () => {
+    if (!window.confirm("Сбросить пароль клиента? Старый пароль перестанет работать.")) return;
+    setResetting(true);
+    const r = await fetch(`${baseUrl}?sub=reset_password&id=${app.id}`, {
+      method: "POST", headers: { Authorization: `Bearer ${token}` },
+    }).catch(() => null);
+    const d = r && r.ok ? await r.json().catch(() => null) : null;
+    setResetting(false);
+    if (d?.password) { setNewPw(d.password); onSaved(); }
+    else window.alert("Не удалось сбросить пароль");
+  };
+
+  const shownPw = newPw || app.client_password;
   const decided = ["approved", "signing", "rejected"].includes(app.status);
   const showContract = ["approved", "signing"].includes(app.status) || !!app.disbursed_at;
 
   return (
     <div style={{ marginTop: 12 }}>
-      {app.client_password && (
+      {shownPw && (
         <div style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.35)", borderRadius: 12, padding: "14px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 12 }}>
           <Icon name="KeyRound" size={18} style={{ color: "#14b8a6", flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
             <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 11, marginBottom: 4 }}>Данные для входа в личный кабинет</div>
             <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
               <span style={{ color: "#022c22", fontSize: 14 }}>📞 <b>{app.phone}</b></span>
-              <span style={{ color: "#022c22", fontSize: 14 }}>🔑 Пароль: <b style={{ color: "#14b8a6", letterSpacing: 1 }}>{app.client_password}</b></span>
+              <span style={{ color: "#022c22", fontSize: 14 }}>🔑 Пароль: <b style={{ color: "#14b8a6", letterSpacing: 1 }}>{shownPw}</b></span>
             </div>
           </div>
+          <button type="button" onClick={resetPassword} disabled={resetting}
+            style={{ background: "rgba(239,68,68,0.08)", color: "#b91c1c", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontWeight: 600, fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+            <Icon name="RotateCcw" size={13} />{resetting ? "Сбрасываем..." : "Сбросить пароль"}
+          </button>
         </div>
       )}
 

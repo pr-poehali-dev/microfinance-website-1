@@ -105,6 +105,15 @@ def update_sb_fields(cur, table: str, app_id: int, b: dict) -> None:
     )
 
 
+def reset_client_password(cur, phone_e: str) -> str:
+    pw = secrets.token_hex(4)
+    pw_hash = hashlib.sha256(pw.encode()).hexdigest()
+    cur.execute(f"UPDATE {SCHEMA}.users SET password_hash = '{pw_hash}' WHERE phone = '{phone_e}'")
+    for tbl in ("applications", "car_loan_applications", "shopping_loan_applications"):
+        cur.execute(f"UPDATE {SCHEMA}.{tbl} SET client_password = '{pw}' WHERE phone = '{phone_e}'")
+    return pw
+
+
 def handler(event: dict, context) -> dict:
     """Заявки на займ под залог автомобиля: приём от клиентов, управление из админки."""
     method = event.get("httpMethod", "GET")
@@ -354,6 +363,21 @@ def handler(event: dict, context) -> dict:
 
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "item": item}, ensure_ascii=False)}
+
+    # --- POST /?sub=reset_password&id=N — сбросить пароль клиента (админ) ---
+    if method == "POST" and sub == "reset_password":
+        if not check_admin(cur, token):
+            cur.close(); conn.close()
+            return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
+        rp_id = int(qs.get("id", 0) or 0)
+        cur.execute(f"SELECT phone FROM {SCHEMA}.car_loan_applications WHERE id = {rp_id}")
+        rp_row = cur.fetchone()
+        if not rp_row:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}
+        new_pw = reset_client_password(cur, str(rp_row[0]).replace("'", "''"))
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "password": new_pw})}
 
     # --- POST /?sub=sb_update&id=N — сохранить данные СБ (админ) ---
     if method == "POST" and sub == "sb_update":
