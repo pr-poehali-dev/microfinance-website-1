@@ -63,6 +63,7 @@ export default function AdminApplications({
   const [blockOpen, setBlockOpen] = useState<number | null>(null);
   const [blockDays, setBlockDays] = useState("30");
   const [search, setSearch] = useState("");
+  const [onlyUnsigned, setOnlyUnsigned] = useState(false);
   const [sbEdits, setSbEdits] = useState<Record<number, SbFields>>({});
   const [sbSaving, setSbSaving] = useState<Record<number, boolean>>({});
   const [sbSaved, setSbSaved] = useState<Record<number, boolean>>({});
@@ -110,6 +111,7 @@ export default function AdminApplications({
   }
 
   const filtered = apps.filter(a => {
+    if (onlyUnsigned && appFilter === "approved" && (a.loanSigned || !a.loanId || !!a.loanDisbursedAt)) return false;
     if (appFilter === "paid_loans") {
       if (a.loanStatus !== "paid") return false;
     } else if (appFilter === "creditdoctor") {
@@ -161,6 +163,13 @@ export default function AdminApplications({
             <Icon name={icon} size={14} />{label}
           </button>
         ))}
+        {appFilter === "approved" && (
+          <button onClick={() => setOnlyUnsigned(v => !v)}
+            style={{ padding: "8px 14px", borderRadius: 12, border: `1px solid ${onlyUnsigned ? "rgba(245,158,11,0.5)" : "transparent"}`, cursor: "pointer", fontWeight: 600, fontSize: 14,
+              background: onlyUnsigned ? "rgba(245,158,11,0.15)" : "rgba(2,44,34,0.07)", color: onlyUnsigned ? "#b45309" : "rgba(2,44,34,0.5)" }}>
+            ⏳ Только ждут подписи
+          </button>
+        )}
         <input
           placeholder="Поиск по имени, телефону, email..."
           value={search}
@@ -245,8 +254,13 @@ export default function AdminApplications({
                     </span>
                   )}
                   {(app.status === "approved" || app.status === "partner_card") && app.loanId && app.loanSigned && (
-                    <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "rgba(34,197,94,0.15)", color: "#4ade80" }}>
-                      ✍️ Подписан
+                    <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "rgba(34,197,94,0.15)", color: "#15803d" }}>
+                      ✍️ Подписан{app.loanSignedAt ? ` ${app.loanSignedAt}` : ""}
+                    </span>
+                  )}
+                  {(app.status === "approved" || app.status === "partner_card") && app.loanId && !app.loanSigned && !app.loanDisbursedAt && (
+                    <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "rgba(245,158,11,0.15)", color: "#b45309" }}>
+                      ⏳ Ждём подпись договора
                     </span>
                   )}
                   {app.loanStatus === "paid" && (
