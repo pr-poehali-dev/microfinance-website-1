@@ -1177,6 +1177,8 @@ def handler(event: dict, context) -> dict:
 
     cur.execute(f"SELECT loan_type, loan_id FROM {SCHEMA}.loan_payment_notices WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' AND status = 'new'")
     loan_notices = [f"{r_[0]}|{r_[1]}" for r_ in cur.fetchall()]
+    cur.execute(f"SELECT 1 FROM {SCHEMA}.agreement_addenda WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' AND version = 'v1' AND signed_at IS NULL LIMIT 1")
+    addendum_pending = bool(cur.fetchone())
     cur.close(); conn.close()
 
     is_cd = bool(application and application.get("isCreditDoctor"))
@@ -1275,9 +1277,6 @@ def handler(event: dict, context) -> dict:
                 "total": oa + oi,
             }
         loans.append(loan_data)
-
-    cur.execute(f"SELECT 1 FROM {SCHEMA}.agreement_addenda WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' AND version = 'v1' AND signed_at IS NULL LIMIT 1")
-    addendum_pending = bool(cur.fetchone())
 
     return {
         "statusCode": 200,
