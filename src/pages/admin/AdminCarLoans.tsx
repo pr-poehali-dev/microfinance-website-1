@@ -135,6 +135,17 @@ export default function AdminCarLoans({ token }: Props) {
     const r = await fetch(`${CAR_URL}?sub=update&id=${selected.id}`, {
       method: "PUT", headers: hdrs, body: JSON.stringify(body),
     });
+    if (r.ok) {
+      const changed =
+        (!!editForm.approved_amount && Number(editForm.approved_amount) !== Number(selected.approved_amount)) ||
+        (!!editForm.approved_months && Number(editForm.approved_months) !== Number(selected.approved_months)) ||
+        (!!editForm.approved_rate && Number(editForm.approved_rate) !== Number(selected.approved_rate));
+      if (changed && ["approved", "signing", "disbursed"].includes(editForm.status)) {
+        await fetch("https://functions.poehali.dev/9cdc3bea-1348-49df-a7a3-4aeef6088ff3", {
+          method: "POST", headers: hdrs, body: JSON.stringify({ termKind: "car", termId: selected.id }),
+        }).catch(() => null);
+      }
+    }
     setSaving(false);
     if (r.ok) {
       setMsg("Сохранено!");

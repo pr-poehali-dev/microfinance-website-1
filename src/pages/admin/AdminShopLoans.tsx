@@ -132,6 +132,17 @@ export default function AdminShopLoans({ token }: Props) {
     const r = await fetch(`${SHOP_URL}?sub=update&id=${selected.id}`, {
       method: "PUT", headers: hdrs, body: JSON.stringify(body),
     });
+    if (r.ok) {
+      const changed =
+        (!!ef.approved_amount && Number(ef.approved_amount) !== Number(selected.approved_amount)) ||
+        (!!ef.approved_months && Number(ef.approved_months) !== Number(selected.approved_months)) ||
+        (!!ef.approved_rate && Number(ef.approved_rate) !== Number(selected.approved_rate));
+      if (changed && ["approved", "signing", "disbursed"].includes(ef.status)) {
+        await fetch("https://functions.poehali.dev/9cdc3bea-1348-49df-a7a3-4aeef6088ff3", {
+          method: "POST", headers: hdrs, body: JSON.stringify({ termKind: "shop", termId: selected.id }),
+        }).catch(() => null);
+      }
+    }
     setSaving(false);
     if (r.ok) { setMsg("Сохранено!"); setSelected(null); load(); }
     else      { setMsg("Ошибка сохранения"); }
