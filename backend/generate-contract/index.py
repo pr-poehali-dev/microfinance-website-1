@@ -163,8 +163,12 @@ def generate_contract_html(app_data: dict, loan_num: int) -> str:
     amount = float(app_data.get("amount", 0))
     rate = float(app_data.get("rate", 0.008))
     days = int(app_data.get("days", 0))
-    interest = round(amount * rate * days)
-    total = amount + interest
+    insurance = float(app_data.get("insurance", 0) or 0)
+    wheel_rub = int(app_data.get("wheel_rub", 0) or 0)
+    debt = amount + insurance
+    interest = round(debt * rate * days)
+    interest -= min(wheel_rub, interest)
+    total = debt + interest
     rate_pct = round(rate * 100, 1)
 
     today = msk(datetime.now())
@@ -174,6 +178,8 @@ def generate_contract_html(app_data: dict, loan_num: int) -> str:
 
     amount_words = num_to_words(int(amount))
     total_words = num_to_words(int(total))
+    insurance_words = num_to_words(int(insurance))
+    debt_words = num_to_words(int(debt))
 
     passport_str = f"{passport_series} {passport_number}"
     if passport_date:
@@ -209,11 +215,12 @@ def generate_contract_html(app_data: dict, loan_num: int) -> str:
 <table class="params">
   <tr><td class="label">Сумма займа</td><td class="value"><span class="bold">{int(amount):,} ₽</span> ({amount_words} рублей 00 копеек)</td></tr>
   <tr><td class="label">Срок займа</td><td class="value"><span class="bold">{days} календарных дней</span></td></tr>
+  {f'<tr><td class="label">Страхование жизни и здоровья (50% от суммы займа)</td><td class="value"><span class="bold">{int(insurance):,} ₽</span> ({insurance_words} рублей 00 копеек)</td></tr><tr><td class="label">Сумма долга (заём + страхование)</td><td class="value"><span class="bold">{int(debt):,} ₽</span> ({debt_words} рублей 00 копеек)</td></tr>' if insurance else ''}
   <tr><td class="label">Дата выдачи</td><td class="value"><span class="bold">{date_str}</span></td></tr>
   <tr><td class="label">Дата возврата</td><td class="value"><span class="bold">{due_date}</span></td></tr>
   <tr><td class="label">Процентная ставка</td><td class="value"><span class="bold">{rate_pct}% в день</span> ({round(rate_pct * 365, 1)}% годовых)</td></tr>
-  <tr><td class="label">Начисленные проценты</td><td class="value"><span class="bold">{int(interest):,} ₽</span></td></tr>
-  <tr><td class="label">Полная сумма к возврату</td><td class="value"><span class="bold">{int(total):,} ₽</span> ({total_words} рублей 00 копеек)</td></tr>
+  <tr><td class="label">Начисленные проценты{' (на сумму долга)' if insurance else ''}</td><td class="value"><span class="bold">{int(interest):,} ₽</span></td></tr>
+  <tr><td class="label">Итоговая сумма к выплате</td><td class="value"><span class="bold">{int(total):,} ₽</span> ({total_words} рублей 00 копеек)</td></tr>
   <tr><td class="label">Способ получения</td><td class="value">Перевод на банковский счёт / СБП</td></tr>
   <tr><td class="label">Контактный телефон Заёмщика</td><td class="value">{phone}</td></tr>
   {f'<tr><td class="label">Email Заёмщика</td><td class="value">{email}</td></tr>' if email else ''}
@@ -225,7 +232,7 @@ def generate_contract_html(app_data: dict, loan_num: int) -> str:
 
 <h3>2. Предмет договора</h3>
 
-<p>2.1. Займодавец передаёт в собственность Заёмщику денежные средства в размере <span class="bold">{int(amount):,} ({"".join([amount_words, " рублей 00 копеек"])}</span>, а Заёмщик обязуется вернуть указанную сумму займа и уплатить проценты на неё в порядке и на условиях, предусмотренных настоящим Договором.</p>
+<p>2.1. Займодавец передаёт в собственность Заёмщику денежные средства в размере <span class="bold">{int(amount):,} ({"".join([amount_words, " рублей 00 копеек"])}</span>, а Заёмщик обязуется вернуть указанную сумму займа{" (с учётом страхования жизни и здоровья на сумму " + format(int(insurance), ",") + " ₽)" if insurance else ""} и уплатить проценты в порядке и на условиях, предусмотренных настоящим Договором. Итоговая сумма к выплате составляет <span class="bold">{int(total):,} ₽</span>.</p>
 
 <p>2.2. Заём предоставляется на потребительские нужды, не связанные с осуществлением предпринимательской деятельности.</p>
 
@@ -248,7 +255,7 @@ def generate_contract_html(app_data: dict, loan_num: int) -> str:
 
 <h3>4. Порядок начисления и уплаты процентов</h3>
 
-<p>4.1. За пользование суммой займа Заёмщик уплачивает Займодавцу проценты из расчёта <span class="bold">{rate_pct}% в день</span> от суммы займа.</p>
+<p>4.1. За пользование суммой займа Заёмщик уплачивает Займодавцу проценты из расчёта <span class="bold">{rate_pct}% в день</span> от {"суммы долга (сумма займа и страхование жизни и здоровья)" if insurance else "суммы займа"}.</p>
 
 <p>4.2. Проценты начисляются ежедневно, начиная со дня, следующего за днём предоставления займа, по день его фактического возврата включительно.</p>
 
@@ -342,10 +349,10 @@ BACKFILL_WHERE = f"""
 def store_contract_file(html: str, app_id: str, now_ts: str):
     """PDF, а если конвертер недоступен — готовая HTML-страница договора."""
     try:
-        return f"contracts/contract_{app_id}_{now_ts}_v5.pdf", html_to_pdf_bytes(html), "application/pdf"
+        return f"contracts/contract_{app_id}_{now_ts}_v6.pdf", html_to_pdf_bytes(html), "application/pdf"
     except Exception as ex:
         print(f"[contract] pdf unavailable, saving html: {ex}")
-        return f"contracts/contract_{app_id}_{now_ts}_v5.html", html.encode("utf-8"), "text/html; charset=utf-8"
+        return f"contracts/contract_{app_id}_{now_ts}_v6.html", html.encode("utf-8"), "text/html; charset=utf-8"
 
 
 def build_and_store(cur, app_id: str, loan_id: int) -> str:
@@ -353,11 +360,13 @@ def build_and_store(cur, app_id: str, loan_id: int) -> str:
     cur.execute(f"""
         SELECT full_name, phone, email, birth_date, birth_place,
                passport_series, passport_number, passport_date, passport_code, passport_by,
-               approved_amount, approved_rate, approved_days, amount, days, reg_address, living_address
+               approved_amount, approved_rate, approved_days, amount, days, reg_address, living_address,
+               insurance_amount, wheel_discount_rub
         FROM {SCHEMA}.applications WHERE id = '{app_id_e}'
     """)
     (full_name, phone, email, birth_date, birth_place, ps, pn, pd, pc, pb,
-     approved_amount, approved_rate, approved_days, amount, days, reg_address, living_address) = cur.fetchone()
+     approved_amount, approved_rate, approved_days, amount, days, reg_address, living_address,
+     insurance_amount, wheel_discount_rub) = cur.fetchone()
     app_data = {
         "full_name": full_name or "", "phone": phone or "", "email": email or "",
         "birth_date": str(birth_date) if birth_date else "", "birth_place": birth_place or "",
@@ -368,6 +377,8 @@ def build_and_store(cur, app_id: str, loan_id: int) -> str:
         "days": int(approved_days) if approved_days else int(days),
         "address": reg_address or "",
         "living_address": living_address or "",
+        "insurance": float(insurance_amount) if insurance_amount else 0,
+        "wheel_rub": int(wheel_discount_rub) if wheel_discount_rub else 0,
     }
     html = generate_contract_html(app_data, loan_id or int(app_id_e))
     now_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -381,7 +392,7 @@ def build_and_store(cur, app_id: str, loan_id: int) -> str:
 REFRESH_WHERE = f"""
     a.status IN ('approved','partner_card')
     AND a.contract_url IS NOT NULL AND a.contract_url <> ''
-    AND a.contract_url NOT LIKE '%v5.pdf' AND a.contract_url NOT LIKE '%v5.html'
+    AND a.contract_url NOT LIKE '%v6.pdf' AND a.contract_url NOT LIKE '%v6.html'
     AND a.id = (SELECT x.id FROM {SCHEMA}.applications x WHERE x.phone = a.phone ORDER BY x.created_at DESC LIMIT 1)
     AND COALESCE((SELECT lo.signed FROM {SCHEMA}.loans lo JOIN {SCHEMA}.users u ON u.id = lo.user_id
                   WHERE u.phone = a.phone ORDER BY lo.created_at DESC LIMIT 1), FALSE) = FALSE
@@ -583,7 +594,7 @@ CARD_BACKFILL_WHERE = """
     a.virtual_card_number IS NOT NULL AND a.virtual_card_status IN ('pending','active','blocked')
     AND (a.card_contract_url IS NULL OR a.card_contract_url = ''
          OR (a.virtual_card_status = 'pending'
-             AND a.card_contract_url NOT LIKE '%v5.pdf' AND a.card_contract_url NOT LIKE '%v5.html'))
+             AND a.card_contract_url NOT LIKE '%v6.pdf' AND a.card_contract_url NOT LIKE '%v6.html'))
 """
 
 
