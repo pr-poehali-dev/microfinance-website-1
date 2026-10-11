@@ -14,7 +14,7 @@ interface Card {
   appId: number; fullName: string; phone: string; clientCard: string; cardNumber: string; status: string;
   limit: number; contractUrl?: string; rate: number; days: number | null; issuedAt: string | null; signedAt: string | null;
   used: number; fees?: number; feeList?: { id: number; amount: number; kind: string; title: string; createdAt: string }[];
-  available: number; debt: number; repaid: number;
+  available: number; debt: number; repaid: number; penalty?: number; overdueDays?: number;
   minPaymentPercent: number; minPayment: number;
   paymentSchedule: { week: number; dueDate: string; amount: number; isNext: boolean }[];
   transactions: Tx[];
@@ -132,6 +132,7 @@ export default function AdminCards({ token, onChanged }: Props) {
                 {[
                   ["Лимит", fmt(c.limit)], ["Использовано", fmt(c.used)], ["Доступно", fmt(c.available)],
                   ["Ставка", `${c.rate}%/нед.`], ["Срок", c.days ? `${c.days} дн.` : "—"], ["Долг", fmt(c.debt)],
+                  ...((c.penalty ?? 0) > 0 ? [["Штраф 2,99%/день", `${fmt(c.penalty ?? 0)} · ${c.overdueDays} дн.`]] : []),
                 ].map(([l, v]) => (
                   <div key={l} style={{ background: "rgba(16,185,129,0.06)", borderRadius: 10, padding: "8px 12px" }}>
                     <div style={{ color: "rgba(2,44,34,0.45)", fontSize: 11 }}>{l}</div>

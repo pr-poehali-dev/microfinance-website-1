@@ -460,7 +460,7 @@ export default function AdminClients({
                           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                             <Icon name="AlertTriangle" size={14} style={{ color: "#f87171", flexShrink: 0 }} />
                             <span style={{ color: "#fca5a5", fontSize: 12 }}>
-                              Просрочка {loan.overdueDays} дн. · пеня 7%/день: <b>+{(loan.penaltyAmount ?? 0).toLocaleString("ru-RU")} ₽</b> · к возврату <b>{(loan.totalDue ?? loan.amount).toLocaleString("ru-RU")} ₽</b>
+                              Просрочка {loan.overdueDays} дн. · пеня 2,99%/день: <b>+{(loan.penaltyAmount ?? 0).toLocaleString("ru-RU")} ₽</b> · к возврату <b>{(loan.totalDue ?? loan.amount).toLocaleString("ru-RU")} ₽</b>
                             </span>
                           </div>
                           {!!loan.penaltyAmount && (

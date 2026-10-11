@@ -40,7 +40,26 @@ def card_payment_schedule(issued_at, debt):
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
 TELEGRAM_CHAT_ID = "8540431915"
 
-OVERDUE_DAILY_PENALTY_RATE = 0.07  # 7% от суммы основного долга (loans.amount, с учётом страховки) за каждый день просрочки
+OVERDUE_DAILY_PENALTY_RATE = 0.0299  # 2,99% от суммы основного долга (loans.amount, с учётом страховки) за каждый день просрочки
+
+
+def card_penalty(tx_rows, gross, repaid):
+    """Штраф по карте: 2,99% в день от непогашенного основного долга по каждому переводу после окончания его срока."""
+    if gross <= 0:
+        return 0.0, 0
+    ratio = max(0.0, 1.0 - float(repaid) / float(gross))
+    if ratio <= 0:
+        return 0.0, 0
+    today = (datetime.utcnow() + timedelta(hours=3)).date()
+    total = 0.0
+    max_days = 0
+    for amount, weeks, created in tx_rows:
+        due = (created + timedelta(hours=3, weeks=int(weeks))).date()
+        d = (today - due).days
+        if d > 0:
+            total += float(amount) * ratio * OVERDUE_DAILY_PENALTY_RATE * d
+            max_days = max(max_days, d)
+    return float(round(total)), max_days
 
 
 def principal_part(principal, gross, repaid):
@@ -51,7 +70,7 @@ def principal_part(principal, gross, repaid):
 
 
 def calc_loan_penalty(amount, days, rate, disbursed_at, created_at, paid_total, db_status, penalty_waived=0, wheel_rub=0):
-    """Пеня за просрочку обычного займа (loans): 7%/день от amount за каждый день сверх срока.
+    """Пеня за просрочку обычного займа (loans): 2,99%/день от amount за каждый день сверх срока.
     penalty_waived — сумма пени, прощённая администратором (уменьшает начисленную пеню, не ниже нуля).
     Возвращает (effective_status, total_due, is_overdue, overdue_days, penalty_amount)."""
     base_interest = round(float(amount) * float(rate) * int(days))
@@ -1384,7 +1403,7 @@ def handler(event: dict, context) -> dict:
                 "totalDue": total_due, "paidTotal": paid_total, "remaining": max(0, total_due - paid_total),
                 "isOverdue": is_overdue, "overdueDays": overdue_days, "penaltyAmount": penalty,
                 "penaltyWaived": float(penalty_waived or 0),
-                "penaltyRatePercent": round(OVERDUE_DAILY_PENALTY_RATE * 100, 1),
+                "penaltyRatePercent": round(OVERDUE_DAILY_PENALTY_RATE * 100, 2),
                 "schedule": schedule, "payments": payments, "profile": profile,
             }, ensure_ascii=False)}
 
@@ -2158,7 +2177,9 @@ def handler(event: dict, context) -> dict:
                                  for w in range(1, (tx_weeks or 0) + 1)],
                 })
             repaid = sum(float(x[2]) for x in reps.get(app_id, []))
-            debt = max(0.0, gross - repaid)
+            pen_rows = [(float(t[2]), t[3], t[6]) for t in txs.get(app_id, []) if t[5] != "cancelled"]
+            card_pen, card_over_days = card_penalty(pen_rows, gross, repaid)
+            debt = max(0.0, gross + card_pen - repaid)
             used = max(0.0, principal - principal_part(principal, gross, repaid))
             cards.append({
                 "appId": app_id, "fullName": full_name or "", "phone": phone or "", "clientCard": client_card or "",
@@ -2168,7 +2189,7 @@ def handler(event: dict, context) -> dict:
                 "issuedAt": msk(issued_at).strftime("%d.%m.%Y в %H:%M") if issued_at else None,
                 "signedAt": msk(signed_at).strftime("%d.%m.%Y в %H:%M") if signed_at else None,
                 "used": used, "fees": fees.get(app_id, 0.0), "feeList": fee_list.get(app_id, []), "available": max(0.0, limit_v - used - fees.get(app_id, 0.0)),
-                "debt": debt, "repaid": repaid,
+                "debt": debt, "repaid": repaid, "penalty": card_pen, "overdueDays": card_over_days,
                 "minPaymentPercent": CARD_MIN_PAYMENT_PERCENT, "minPayment": round(debt * CARD_MIN_PAYMENT_PERCENT / 100),
                 "paymentSchedule": card_payment_schedule(issued_at, debt) if debt > 0 else [],
                 "transactions": tx_list,

@@ -230,7 +230,7 @@ export default function AdminLoanDetailModal({ token, type, id, onClose }: Props
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                     <Icon name="AlertTriangle" size={14} style={{ color: "#f87171", flexShrink: 0 }} />
                     <span style={{ color: "#fca5a5", fontSize: 13 }}>
-                      Просрочка {data.overdueDays} дн. · пеня {data.penaltyRatePercent ?? 7}%/день от суммы долга: <b>+{(data.penaltyAmount ?? 0).toLocaleString("ru-RU")} ₽</b>
+                      Просрочка {data.overdueDays} дн. · пеня {data.penaltyRatePercent ?? 2.99}%/день от суммы долга: <b>+{(data.penaltyAmount ?? 0).toLocaleString("ru-RU")} ₽</b>
                     </span>
                   </div>
                   {data.type === "loan" && !!data.penaltyAmount && (

@@ -20,7 +20,7 @@ CORS = {
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Authorization",
 }
 
-OVERDUE_DAILY_PENALTY_RATE = 0.07  # 7% от суммы основного долга за каждый день просрочки
+OVERDUE_DAILY_PENALTY_RATE = 0.0299  # 2,99% от суммы основного долга за каждый день просрочки
 
 
 def principal_part(principal, gross, repaid):
@@ -30,9 +30,28 @@ def principal_part(principal, gross, repaid):
     return min(principal, float(repaid) * principal / gross)
 
 
+def card_penalty(tx_rows, gross, repaid):
+    """Штраф по карте: 2,99% в день от непогашенного основного долга по каждому переводу после окончания его срока."""
+    if gross <= 0:
+        return 0.0, 0
+    ratio = max(0.0, 1.0 - float(repaid) / float(gross))
+    if ratio <= 0:
+        return 0.0, 0
+    today = (datetime.utcnow() + timedelta(hours=3)).date()
+    total = 0.0
+    max_days = 0
+    for amount, weeks, created in tx_rows:
+        due = (created + timedelta(hours=3, weeks=int(weeks))).date()
+        d = (today - due).days
+        if d > 0:
+            total += float(amount) * ratio * OVERDUE_DAILY_PENALTY_RATE * d
+            max_days = max(max_days, d)
+    return float(round(total)), max_days
+
+
 def calc_penalty(amount, days, rate, disbursed_at, created_at, paid_total, db_status, wheel_rub=0):
     """Считает пеню за просрочку. Возвращает (effective_status, base_total, total_due, is_overdue, overdue_days, penalty_amount).
-    amount — тело долга (сумма + страховка). Пеня 7%/день от amount начисляется за каждый
+    amount — тело долга (сумма + страховка). Пеня 2,99%/день от amount начисляется за каждый
     полный календарный день с даты истечения срока, если долг не погашен полностью.
     Применяется только к уже выданным займам (active/overdue) — не трогает review/paid/rejected."""
     base_interest = round(float(amount) * float(rate) * int(days))
@@ -951,6 +970,9 @@ def handler(event: dict, context) -> dict:
         vc_transactions = []
         vc_used = 0.0
         vc_debt = 0.0
+        vc_pen_rows = []
+        vc_penalty = 0.0
+        vc_overdue_days = 0
         vc_repaid = 0.0
         vc_repayments = []
         vc_notices = []
@@ -969,6 +991,7 @@ def handler(event: dict, context) -> dict:
                 if tx_status != "cancelled":
                     vc_used += tx_amount
                     vc_debt += tx_total
+                    vc_pen_rows.append((tx_amount, tx_weeks, tx_created))
                 weekly_principal = tx_amount / tx_weeks
                 weekly_payment = round(tx_total / tx_weeks)
                 tx_schedule = [{
@@ -1009,7 +1032,8 @@ def handler(event: dict, context) -> dict:
                 key_ = f"{n_tx or 0}|{n_due}"
                 (vc_notices if n_status == "new" else vc_paid).append(key_)
             vc_gross = vc_debt
-            vc_debt = max(0.0, vc_debt - vc_repaid)
+            vc_penalty, vc_overdue_days = card_penalty(vc_pen_rows, vc_gross, vc_repaid)
+            vc_debt = max(0.0, vc_debt + vc_penalty - vc_repaid)
             vc_used = max(0.0, vc_used - principal_part(vc_used, vc_gross, vc_repaid))
             cur.execute(
                 f"SELECT added_amount, new_limit FROM {SCHEMA}.card_limit_increases "
@@ -1066,6 +1090,9 @@ def handler(event: dict, context) -> dict:
                 "days": vc_days,
                 "transactions": vc_transactions,
                 "debt": vc_debt,
+                "penalty": vc_penalty,
+                "overdueDays": vc_overdue_days,
+                "penaltyRatePercent": 2.99,
                 "repaid": vc_repaid,
                 "repayments": vc_repayments,
                 "pendingNotices": vc_notices,
@@ -1209,7 +1236,7 @@ def handler(event: dict, context) -> dict:
             "status": status,
             "overdueDays": overdue_days,
             "penaltyAmount": penalty,
-            "penaltyRatePercent": round(OVERDUE_DAILY_PENALTY_RATE * 100, 1),
+            "penaltyRatePercent": round(OVERDUE_DAILY_PENALTY_RATE * 100, 2),
             "createdAt": created_at.strftime("%d.%m.%Y"),
             "signed": signed,
             "disbursedAt": msk(disbursed_at).strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,

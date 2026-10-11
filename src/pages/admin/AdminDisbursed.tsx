@@ -263,7 +263,7 @@ export default function AdminDisbursed({ token }: Props) {
                       <div style={{ padding: "8px 12px", borderRadius: 8, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", display: "flex", alignItems: "center", gap: 6 }}>
                         <Icon name="TrendingUp" size={13} style={{ color: "#f87171", flexShrink: 0 }} />
                         <span style={{ color: "#fca5a5", fontSize: 12 }}>
-                          Просрочка {item.overdueDays} дн. · пеня 7%/день: <b>+{(item.penaltyAmount ?? 0).toLocaleString("ru-RU")} ₽</b>
+                          Просрочка {item.overdueDays} дн. · пеня 2,99%/день: <b>+{(item.penaltyAmount ?? 0).toLocaleString("ru-RU")} ₽</b>
                         </span>
                       </div>
                     )}

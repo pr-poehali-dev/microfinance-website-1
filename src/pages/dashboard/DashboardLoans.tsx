@@ -223,7 +223,7 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                       <div>
                         <div className="text-red-600 font-bold text-sm">Займ просрочен на {loan.overdueDays} {loan.overdueDays === 1 ? "день" : loan.overdueDays < 5 ? "дня" : "дней"}</div>
                         <div className="text-emerald-950/50 text-xs mt-0.5">
-                          Начисляется пеня {loan.penaltyRatePercent ?? 7}% в день от суммы основного долга — уже {(loan.penaltyAmount ?? 0).toLocaleString("ru-RU")} ₽. Сумма к возврату увеличивается каждый день.
+                          Начисляется пеня {loan.penaltyRatePercent ?? 2.99}% в день от суммы основного долга — уже {(loan.penaltyAmount ?? 0).toLocaleString("ru-RU")} ₽. Сумма к возврату увеличивается каждый день.
                         </div>
                       </div>
                     </div>
