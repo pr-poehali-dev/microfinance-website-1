@@ -2123,13 +2123,13 @@ def handler(event: dict, context) -> dict:
                     )
         conn.commit()
         if ids:
-            cur.execute(f"SELECT application_id, COALESCE(SUM(amount),0) FROM {SCHEMA}.card_fees WHERE application_id IN ({','.join(ids)}) GROUP BY application_id")
+            cur.execute(f"SELECT application_id, COALESCE(SUM(amount),0) FROM {SCHEMA}.card_fees WHERE cancelled_at IS NULL AND application_id IN ({','.join(ids)}) GROUP BY application_id")
             for _a, _sum in cur.fetchall():
                 fees[_a] = float(_sum)
-            cur.execute(f"SELECT application_id, amount, kind, period_no, created_at FROM {SCHEMA}.card_fees WHERE application_id IN ({','.join(ids)}) ORDER BY created_at DESC, id DESC")
-            for _a, _am, _kd, _pn, _ca in cur.fetchall():
+            cur.execute(f"SELECT application_id, amount, kind, period_no, created_at, id FROM {SCHEMA}.card_fees WHERE cancelled_at IS NULL AND application_id IN ({','.join(ids)}) ORDER BY created_at DESC, id DESC")
+            for _a, _am, _kd, _pn, _ca, _fid in cur.fetchall():
                 fee_list.setdefault(_a, []).append({
-                    "amount": float(_am), "kind": _kd,
+                    "id": _fid, "amount": float(_am), "kind": _kd,
                     "title": "Ежемесячное обслуживание" if _kd == "monthly" else f"Комиссия за перевод №{_pn}",
                     "createdAt": msk(_ca).strftime("%d.%m.%Y в %H:%M"),
                 })
@@ -2308,6 +2308,19 @@ def handler(event: dict, context) -> dict:
             "appsWaiting": int(apps_wait), "carWaiting": int(car_wait),
             "shopWaiting": int(shop_wait), "cardRequestsWaiting": int(card_req_wait),
         })}
+
+    # --- ОТМЕНИТЬ СПИСАНИЕ С ЛИМИТА КАРТЫ (POST, sub='card_fee_cancel', feeId=...) ---
+    if sub == "card_fee_cancel" and method == "POST":
+        fid = int(qs.get("feeId", 0) or 0)
+        if not fid:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Не указано списание"})}
+        cur.execute(f"UPDATE {SCHEMA}.card_fees SET cancelled_at = NOW() WHERE id = {fid} AND cancelled_at IS NULL RETURNING amount")
+        row = cur.fetchone()
+        conn.commit(); cur.close(); conn.close()
+        if not row:
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Списание не найдено или уже отменено"})}
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "returned": float(row[0])})}
 
     # --- ОТМЕТИТЬ СООБЩЕНИЕ ОБ ОПЛАТЕ ПРОВЕРЕННЫМ (POST, sub='card_notice_done', noticeId=...) ---
     if sub == "card_notice_done" and method == "POST":

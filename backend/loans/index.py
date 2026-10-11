@@ -90,7 +90,7 @@ def ensure_card_fees(cur, app_id):
                 f"INSERT INTO {SCHEMA}.card_fees (application_id, amount, kind, period_no) "
                 f"VALUES ({int(app_id)}, {CARD_MONTHLY_FEE}, 'monthly', {n}) ON CONFLICT (application_id, kind, period_no) DO NOTHING"
             )
-    cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_fees WHERE application_id = {int(app_id)}")
+    cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_fees WHERE application_id = {int(app_id)} AND cancelled_at IS NULL")
     return float(cur.fetchone()[0])
 
 
@@ -1023,7 +1023,7 @@ def handler(event: dict, context) -> dict:
         if app_row[11] and card_app_id:
             vc_fees_total = ensure_card_fees(cur, card_app_id)
             conn.commit()
-            cur.execute(f"SELECT amount, kind, period_no, created_at FROM {SCHEMA}.card_fees WHERE application_id = {int(card_app_id)} ORDER BY created_at DESC, id DESC")
+            cur.execute(f"SELECT amount, kind, period_no, created_at FROM {SCHEMA}.card_fees WHERE application_id = {int(card_app_id)} AND cancelled_at IS NULL ORDER BY created_at DESC, id DESC")
             vc_fee_list = [{
                 "amount": float(a_), "kind": k_,
                 "title": "Ежемесячное обслуживание" if k_ == "monthly" else f"Комиссия за перевод №{n_}",

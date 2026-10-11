@@ -13,7 +13,7 @@ interface Tx {
 interface Card {
   appId: number; fullName: string; phone: string; clientCard: string; cardNumber: string; status: string;
   limit: number; contractUrl?: string; rate: number; days: number | null; issuedAt: string | null; signedAt: string | null;
-  used: number; fees?: number; feeList?: { amount: number; kind: string; title: string; createdAt: string }[];
+  used: number; fees?: number; feeList?: { id: number; amount: number; kind: string; title: string; createdAt: string }[];
   available: number; debt: number; repaid: number;
   minPaymentPercent: number; minPayment: number;
   paymentSchedule: { week: number; dueDate: string; amount: number; isNext: boolean }[];
@@ -153,7 +153,17 @@ export default function AdminCards({ token, onChanged }: Props) {
                       {(c.feeList ?? []).map((f, i) => (
                         <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 13, padding: "3px 0", color: "#022c22" }}>
                           <span>{f.title} <span style={{ color: "rgba(2,44,34,0.45)", fontSize: 12 }}>· {f.createdAt}</span></span>
-                          <b>−{fmt(f.amount)}</b>
+                          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <b>−{fmt(f.amount)}</b>
+                            <button disabled={busy === `f${f.id}`}
+                              onClick={() => {
+                                if (!window.confirm(`Отменить списание «${f.title}» на ${fmt(f.amount)} и вернуть сумму на лимит клиента?`)) return;
+                                post(`sub=card_fee_cancel&feeId=${f.id}`, {}, `f${f.id}`, `Списание отменено, ${fmt(f.amount)} возвращено на лимит`);
+                              }}
+                              style={{ background: "rgba(239,68,68,0.1)", color: "#dc2626", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                              Отменить
+                            </button>
+                          </span>
                         </div>
                       ))}
                     </div>
