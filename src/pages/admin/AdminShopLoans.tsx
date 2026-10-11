@@ -57,6 +57,7 @@ interface Props { token: string; }
 
 export default function AdminShopLoans({ token }: Props) {
   const [items, setItems]         = useState<ShopApp[]>([]);
+  const [onlyUnsigned, setOnlyUnsigned] = useState(false);
   const [loading, setLoading]     = useState(false);
   const [filter, setFilter]       = useState<"pending"|"signing"|"approved"|"rejected">("pending");
   const [selected, setSelected]   = useState<ShopApp | null>(null);
@@ -172,6 +173,13 @@ export default function AdminShopLoans({ token }: Props) {
             {ST[s].label}
           </button>
         ))}
+        {filter === "approved" && (
+          <button onClick={() => setOnlyUnsigned(v => !v)}
+            style={{ padding: "8px 14px", borderRadius: 10, border: `1px solid ${onlyUnsigned ? "rgba(245,158,11,0.5)" : "transparent"}`, cursor: "pointer", fontWeight: 600, fontSize: 13,
+              background: onlyUnsigned ? "rgba(245,158,11,0.15)" : "rgba(16,185,129,0.07)", color: onlyUnsigned ? "#b45309" : "rgba(2,44,34,0.5)" }}>
+            ⏳ Только ждут подписи
+          </button>
+        )}
         <button onClick={load} style={{ marginLeft: "auto", background: "rgba(16,185,129,0.07)", border: "none", borderRadius: 10, padding: "8px 12px", cursor: "pointer", color: "rgba(2,44,34,0.5)" }}>
           <Icon name="RefreshCw" size={15} />
         </button>
@@ -190,7 +198,7 @@ export default function AdminShopLoans({ token }: Props) {
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {items.map(app => {
+          {items.filter(a => !(onlyUnsigned && filter === "approved") || (a.status === "approved" && !a.contract_signed)).map(app => {
             const st = ST[app.status] || ST.pending;
             const waitNew = app.status === "pending";
             const waitSigned = app.status === "approved" && app.contract_signed && !disbursed[app.id] && !app.disbursed_at;
