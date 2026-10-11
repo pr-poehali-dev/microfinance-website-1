@@ -2,6 +2,7 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import OfferDialog from "@/components/OfferDialog";
 import TermsDialog from "@/components/TermsDialog";
+import PrivacyDialog from "@/components/PrivacyDialog";
 
 const FAQ_ITEMS = [
   {
@@ -30,6 +31,7 @@ export default function FaqContactsFooter() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [offerOpen, setOfferOpen] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
 
   return (
     <>
@@ -154,7 +156,7 @@ export default function FaqContactsFooter() {
           <div className="flex flex-col items-center gap-3">
             <div className="flex gap-6">
               {["Политика", "Условия"].map((l) => (
-                <button key={l} onClick={l === "Условия" ? () => setTermsOpen(true) : undefined} className="text-emerald-950/50 hover:text-emerald-600 text-sm transition-colors">
+                <button key={l} onClick={l === "Условия" ? () => setTermsOpen(true) : () => setPrivacyOpen(true)} className="text-emerald-950/50 hover:text-emerald-600 text-sm transition-colors">
                   {l}
                 </button>
               ))}
@@ -170,6 +172,7 @@ export default function FaqContactsFooter() {
       </footer>
       <OfferDialog open={offerOpen} onOpenChange={setOfferOpen} />
       <TermsDialog open={termsOpen} onOpenChange={setTermsOpen} />
+      <PrivacyDialog open={privacyOpen} onOpenChange={setPrivacyOpen} />
     </>
   );
 }
