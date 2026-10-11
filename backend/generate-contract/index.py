@@ -926,6 +926,11 @@ def handler(event: dict, context) -> dict:
         cur.close(); conn.close()
         return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
 
+    if body.get("termKind") in TERM_KINDS and body.get("termId"):
+        url = build_term_contract(cur, body["termKind"], int(body["termId"]))
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "contractUrl": url}, ensure_ascii=False)}
+
     if body.get("cardBackfill"):
         return backfill_card_contracts(cur, conn)
 

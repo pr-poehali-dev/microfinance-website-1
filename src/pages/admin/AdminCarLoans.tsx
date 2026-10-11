@@ -108,6 +108,18 @@ export default function AdminCarLoans({ token }: Props) {
     });
   }
 
+  const [regenBusy, setRegenBusy] = useState(false);
+  async function regenContract() {
+    if (!selected) return;
+    if (!window.confirm("Пересоздать договор по текущим условиям заявки? Старая ссылка заменится новой.")) return;
+    setRegenBusy(true); setMsg("");
+    const r = await fetch("https://functions.poehali.dev/9cdc3bea-1348-49df-a7a3-4aeef6088ff3", {
+      method: "POST", headers: hdrs, body: JSON.stringify({ termKind: "car", termId: selected.id }),
+    }).catch(() => null);
+    setRegenBusy(false);
+    if (r && r.ok) { setMsg("Договор пересоздан"); load(); } else { setMsg("Не удалось пересоздать договор"); }
+  }
+
   async function save() {
     if (!selected) return;
     setSaving(true); setMsg("");
@@ -332,7 +344,14 @@ export default function AdminCarLoans({ token }: Props) {
                   value={editForm.notes} onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))} />
               </div>
 
-              {msg && <div style={{ padding: "8px 12px", borderRadius: 8, background: msg === "Сохранено!" ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)", color: msg === "Сохранено!" ? "#4ade80" : "#f87171", fontSize: 13 }}>{msg}</div>}
+              {msg && <div style={{ padding: "8px 12px", borderRadius: 8, background: (msg === "Сохранено!" || msg === "Договор пересоздан") ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)", color: msg === "Сохранено!" ? "#4ade80" : "#f87171", fontSize: 13 }}>{msg}</div>}
+
+              {(selected.status === "approved" || selected.status === "signing" || selected.status === "disbursed") && (
+                <button onClick={regenContract} disabled={regenBusy}
+                  style={{ padding: "10px", borderRadius: 10, border: "1px solid rgba(16,185,129,0.4)", cursor: "pointer", background: "rgba(16,185,129,0.08)", color: "#047857", fontWeight: 600, fontSize: 14 }}>
+                  {regenBusy ? "Пересоздаю договор..." : "Пересоздать договор"}
+                </button>
+              )}
 
               <div style={{ display: "flex", gap: 10 }}>
                 <button onClick={() => setEditing(false)}
