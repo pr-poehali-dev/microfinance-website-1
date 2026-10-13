@@ -762,6 +762,7 @@ export default function DashboardPage() {
                           const r = (shopLoan.approved_rate || 9) / 100;
                           return Math.round(a * (1 + r * m));
                         })()}
+                        onPay={shopLoan.disbursed_at && shopLoan.status === "approved" ? (amt) => setPayOther({ contractNumber: `Т-${String(shopLoan.id).padStart(12, "0")}`, amount: amt, loanType: "shoploan", loanId: shopLoan.id }) : undefined}
                       />
                     )}
 
@@ -964,6 +965,7 @@ export default function DashboardPage() {
                             const r = (carLoan.approved_rate || 12) / 100;
                             return Math.round(a * (1 + r * m));
                           })()}
+                        onPay={carLoan.disbursed_at && carLoan.status === "approved" ? (amt) => setPayOther({ contractNumber: `А-${String(carLoan.id).padStart(12, "0")}`, amount: amt, loanType: "carloan", loanId: carLoan.id }) : undefined}
                         />
                         {carLoan.status === "approved" && (
                           <button

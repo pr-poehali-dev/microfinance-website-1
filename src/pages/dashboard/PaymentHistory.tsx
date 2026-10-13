@@ -22,14 +22,24 @@ interface Props {
   paidTotal: number;
   totalDue: number;
   closed?: boolean;
+  onPay?: (amount: number) => void;
 }
 
-export default function PaymentHistory({ schedule, payments, paidTotal, totalDue, closed = false }: Props) {
+export default function PaymentHistory({ schedule, payments, paidTotal, totalDue, closed = false, onPay }: Props) {
   const [open, setOpen] = useState(false);
 
   if (schedule.length === 0 && payments.length === 0) return null;
 
   const remaining = Math.max(0, totalDue - paidTotal);
+
+  let acc = 0;
+  const targets = schedule.map((r, i) => {
+    acc += r.amount;
+    return i === schedule.length - 1 ? Math.max(acc, totalDue) : acc;
+  });
+  const nextIdx = closed || remaining <= 0 ? -1 : targets.findIndex((t) => paidTotal < t - 0.5);
+  const nextDue = nextIdx >= 0 ? Math.max(1, Math.round(Math.min(targets[nextIdx] - paidTotal, remaining))) : 0;
+  const nextRow = nextIdx >= 0 ? schedule[nextIdx] : null;
 
   return (
     <div className="mb-4 rounded-xl overflow-hidden" style={{ background: "rgba(16,185,129,0.03)", border: "1px solid rgba(16,185,129,0.08)" }}>
@@ -52,6 +62,19 @@ export default function PaymentHistory({ schedule, payments, paidTotal, totalDue
         </div>
         <Icon name={open ? "ChevronUp" : "ChevronDown"} size={18} className="text-emerald-950/40 shrink-0" />
       </button>
+
+      {onPay && nextRow && nextDue > 0 && (
+        <div className="px-5 pb-4">
+          <button
+            onClick={() => onPay(nextDue)}
+            className="w-full btn-neon text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2"
+          >
+            <Icon name="CreditCard" size={16} />
+            Оплатить {nextRow.month ? `${nextRow.month}-й платёж` : "платёж"} · {nextDue.toLocaleString("ru-RU")} ₽
+          </button>
+          {nextRow.dueDate && <div className="text-emerald-950/40 text-xs text-center mt-1.5">Срок оплаты: {nextRow.dueDate}</div>}
+        </div>
+      )}
 
       {open && (
         <div className="px-5 pb-5 space-y-5">
@@ -85,11 +108,15 @@ export default function PaymentHistory({ schedule, payments, paidTotal, totalDue
                     </div>
                     <span className="flex items-center gap-2">
                       <span className="text-emerald-950 font-semibold text-sm">{s.amount.toLocaleString("ru-RU")} ₽</span>
-                      {closed && (
+                      {(closed || paidTotal >= targets[i] - 0.5) ? (
                         <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg" style={{ background: "rgba(16,185,129,0.15)", color: "#047857" }}>
                           <Icon name="CheckCircle" size={12} />Оплачено
                         </span>
-                      )}
+                      ) : onPay && i === nextIdx ? (
+                        <button onClick={() => onPay(nextDue)} className="btn-neon text-white text-xs font-semibold px-3 py-1.5 rounded-lg">
+                          Оплатить {nextDue.toLocaleString("ru-RU")} ₽
+                        </button>
+                      ) : null}
                     </span>
                   </div>
                 ))}
