@@ -13,6 +13,7 @@ import ClientProfileCard from "./dashboard/ClientProfileCard";
 import RepeatLoanForm from "./dashboard/RepeatLoanForm";
 import PromoCodeCard from "./dashboard/PromoCodeCard";
 import PayLoanModal from "./dashboard/PayLoanModal";
+import CardPayModal from "./dashboard/CardPayModal";
 import PaymentsList, { DueItem } from "./dashboard/PaymentsList";
 import { nextPayment } from "./dashboard/nextPayment";
 import NewRequestHub from "./dashboard/NewRequestHub";
@@ -97,6 +98,9 @@ interface CardTransaction {
 }
 
 interface VirtualCard {
+  debt?: number;
+  minPayment?: number;
+  paymentSchedule?: { week: number; dueDate: string; amount: number; isNext?: boolean }[];
   contractUrl?: string;
   number: string;
   expiry: string;
@@ -165,6 +169,7 @@ export default function DashboardPage() {
   const [isRepeatClient, setIsRepeatClient] = useState(false);
   const [payLoan, setPayLoan] = useState<Loan | null>(null);
   const [payEarly, setPayEarly] = useState(false);
+  const [payCard, setPayCard] = useState<{ amount: number; dueDate: string } | null>(null);
   const [payOther, setPayOther] = useState<{ contractNumber: string; amount: number; loanType: "carloan" | "shoploan"; loanId: number; early?: boolean } | null>(null);
   const [loanNotices, setLoanNotices] = useState<string[]>([]);
   const [profileEditable, setProfileEditable] = useState(false);
@@ -659,6 +664,32 @@ export default function DashboardPage() {
               onPay: () => setPayOther({ contractNumber: `${pref}-${String(l.id).padStart(12, "0")}`, amount: np.amount, loanType: kind, loanId: l.id }),
             });
           };
+          loans.filter((l) => l.status === "active" || l.status === "overdue").forEach((l) => {
+            const left = Math.round(l.remaining ?? l.total);
+            if (left <= 0) return;
+            const due = l.schedule?.[0]?.dueDate;
+            dues.push({
+              key: `loan${l.id}`,
+              title: `Займ ${fmtAppId(l.id)}`,
+              subtitle: l.status === "overdue" ? `Просрочка ${l.overdueDays ?? 0} дн.` : due ? `Погашение до ${due}` : "Погашение займа",
+              amount: left,
+              onPay: () => handlePay(l),
+            });
+          });
+          const vc = application?.virtualCard;
+          if (vc && vc.status === "active" && (vc.debt ?? 0) > 0) {
+            const next = (vc.paymentSchedule ?? []).find((r) => r.isNext) ?? (vc.paymentSchedule ?? [])[0];
+            const amt = Math.min(Math.round(vc.minPayment ?? vc.debt ?? 0), Math.round(vc.debt ?? 0));
+            if (next && amt > 0) {
+              dues.push({
+                key: "card",
+                title: "Карта РУСФИНАНС 24",
+                subtitle: `Минимальный платёж · до ${next.dueDate}`,
+                amount: amt,
+                onPay: () => setPayCard({ amount: amt, dueDate: next.dueDate }),
+              });
+            }
+          }
           addTerm(carLoan, "carloan", "Займ под залог авто", "А", 12);
           addTerm(shopLoan, "shoploan", "Займ на покупки", "Т", 9);
           return <PaymentsList loans={loans} cardRepayments={application?.virtualCard?.repayments ?? []} dues={dues} />;
@@ -1147,6 +1178,15 @@ export default function DashboardPage() {
           alreadyReported={loanNotices.includes(`loan|${payLoan.id}`)}
           onReported={() => { const t = localStorage.getItem("token"); if (t) loadData(t); }}
           onClose={() => setPayLoan(null)}
+        />
+      )}
+
+      {payCard && application?.virtualCard && (
+        <CardPayModal
+          amount={payCard.amount}
+          dueDate={payCard.dueDate}
+          cardLast4={application.virtualCard.number.replace(/\D/g, "").slice(-4)}
+          onClose={() => setPayCard(null)}
         />
       )}
 
