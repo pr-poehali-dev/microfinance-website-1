@@ -151,6 +151,12 @@ def credit_payment(cur, row):
                 cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.payments WHERE loan_type='loan' AND loan_id={int(loan_id)}")
                 if float(cur.fetchone()[0]) >= total_due and l[4] != "paid":
                     cur.execute(f"UPDATE {SCHEMA}.loans SET status='paid' WHERE id={int(loan_id)}")
+        if loan_type in ("carloan", "shoploan") and meta.get("early") and int(meta.get("months") or 0) > 0:
+            tbl = "car_loan_applications" if loan_type == "carloan" else "shopping_loan_applications"
+            cur.execute(
+                f"UPDATE {SCHEMA}.{tbl} SET approved_months = {int(meta['months'])} "
+                f"WHERE id = {int(loan_id)} AND COALESCE(approved_months, loan_months) > {int(meta['months'])}"
+            )
         label = {"loan": "Займ", "carloan": "Автозайм", "shoploan": "Займ на покупки"}.get(loan_type, "Займ") + f" №{loan_id}"
     tg(
         f"✅ <b>Оплата через ЮKassa</b>\n\n📞 {phone}\n📄 {label}\n"
@@ -304,7 +310,26 @@ def handler(event: dict, context) -> dict:
                 cur.execute(f"SELECT id FROM {SCHEMA}.car_loan_applications WHERE id = {loan_id} AND phone = '{ph_e}'")
             else:
                 cur.execute(f"SELECT id FROM {SCHEMA}.shopping_loan_applications WHERE id = {loan_id} AND phone = '{ph_e}'")
-            if not cur.fetchone():
+            found = cur.fetchone()
+            if found and body.get("early") and loan_type in ("carloan", "shoploan"):
+                tbl = "car_loan_applications" if loan_type == "carloan" else "shopping_loan_applications"
+                cur.execute(
+                    f"SELECT COALESCE(approved_amount, loan_amount), COALESCE(approved_months, loan_months), approved_rate, disbursed_at, status "
+                    f"FROM {SCHEMA}.{tbl} WHERE id = {loan_id}"
+                )
+                a_, m_, r_, d_, st_ = cur.fetchone()
+                if st_ != "approved" or not d_:
+                    cur.close(); conn.close()
+                    return resp(400, {"error": "Досрочное погашение сейчас недоступно"})
+                r_ = float(r_ or (12 if loan_type == "carloan" else 9)) / 100
+                em = min(int(m_), started_units(d_, 30))
+                cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.payments WHERE loan_type='{loan_type}' AND loan_id={loan_id}")
+                amount = round(max(0.0, round(float(a_) * (1 + r_ * em)) - float(cur.fetchone()[0])), 2)
+                if amount <= 0:
+                    cur.close(); conn.close()
+                    return resp(400, {"error": "Долга нет"})
+                meta = {"early": True, "months": em}
+            if not found:
                 cur.close(); conn.close()
                 return resp(404, {"error": "Займ не найден"})
             desc = f"Погашение займа №{loan_id}"

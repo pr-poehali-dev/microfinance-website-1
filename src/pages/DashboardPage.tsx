@@ -164,7 +164,7 @@ export default function DashboardPage() {
   const [isRepeatClient, setIsRepeatClient] = useState(false);
   const [payLoan, setPayLoan] = useState<Loan | null>(null);
   const [payEarly, setPayEarly] = useState(false);
-  const [payOther, setPayOther] = useState<{ contractNumber: string; amount: number; loanType: "carloan" | "shoploan"; loanId: number } | null>(null);
+  const [payOther, setPayOther] = useState<{ contractNumber: string; amount: number; loanType: "carloan" | "shoploan"; loanId: number; early?: boolean } | null>(null);
   const [loanNotices, setLoanNotices] = useState<string[]>([]);
   const [profileEditable, setProfileEditable] = useState(false);
   const [promo, setPromo] = useState<{ code: string; discount: number } | null>(null);
@@ -204,7 +204,7 @@ export default function DashboardPage() {
     full_name?: string; email?: string; birth_date?: string; address?: string;
     passport_serial?: string; passport_num?: string; passport_issued?: string;
     car_mileage?: number; contact_person?: string; card_number?: string;
-    payments?: PaymentItem[]; paidTotal?: number; schedule?: ScheduleItem[];
+    payments?: PaymentItem[]; paidTotal?: number; earlyPayoff?: { months: number; remaining: number; saving: number } | null; schedule?: ScheduleItem[];
   } | null>(null);
   const [carSigning, setCarSigning] = useState(false);
   const [carSignMsg, setCarSignMsg] = useState("");
@@ -220,7 +220,7 @@ export default function DashboardPage() {
     full_name?: string; email?: string; birth_date?: string; address?: string;
     passport_series?: string; passport_number?: string; passport_date?: string;
     passport_by?: string; snils?: string; contact_person?: string; card_number?: string;
-    payments?: PaymentItem[]; paidTotal?: number; schedule?: ScheduleItem[];
+    payments?: PaymentItem[]; paidTotal?: number; earlyPayoff?: { months: number; remaining: number; saving: number } | null; schedule?: ScheduleItem[];
   } | null>(null);
   const [shopSigning, setShopSigning] = useState(false);
   const [shopSignMsg, setShopSignMsg] = useState("");
@@ -832,6 +832,16 @@ export default function DashboardPage() {
                             Погасить займ
                           </button>
                         )}
+                        {shopLoan.status === "approved" && shopLoan.earlyPayoff && (
+                          <button
+                            onClick={() => setPayOther({ contractNumber: `Т-${String(shopLoan.id).padStart(12, "0")}`, amount: shopLoan.earlyPayoff?.remaining ?? 0, loanType: "shoploan", loanId: shopLoan.id, early: true })}
+                            className="w-full font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2"
+                            style={{ background: "rgba(16,185,129,0.15)", color: "#047857", border: "1px solid rgba(16,185,129,0.4)" }}
+                          >
+                            <Icon name="Zap" size={16} />
+                            Досрочное погашение · {shopLoan.earlyPayoff.remaining.toLocaleString("ru-RU")} ₽
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)" }}>
@@ -998,6 +1008,16 @@ export default function DashboardPage() {
                             Погасить займ
                           </button>
                         )}
+                        {carLoan.status === "approved" && carLoan.earlyPayoff && (
+                          <button
+                            onClick={() => setPayOther({ contractNumber: `А-${String(carLoan.id).padStart(12, "0")}`, amount: carLoan.earlyPayoff?.remaining ?? 0, loanType: "carloan", loanId: carLoan.id, early: true })}
+                            className="w-full font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2"
+                            style={{ background: "rgba(16,185,129,0.15)", color: "#047857", border: "1px solid rgba(16,185,129,0.4)" }}
+                          >
+                            <Icon name="Zap" size={16} />
+                            Досрочное погашение · {carLoan.earlyPayoff.remaining.toLocaleString("ru-RU")} ₽
+                          </button>
+                        )}
                       </div>
                     ) : !carLoan.contract_signed ? (
                       <div>
@@ -1129,6 +1149,7 @@ export default function DashboardPage() {
           amount={payOther.amount}
           loanType={payOther.loanType}
           loanId={payOther.loanId}
+          early={payOther.early}
           alreadyReported={loanNotices.includes(`${payOther.loanType}|${payOther.loanId}`)}
           onReported={() => { const t = localStorage.getItem("token"); if (t) loadData(t); }}
           onClose={() => setPayOther(null)}

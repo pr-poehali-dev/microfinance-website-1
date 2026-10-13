@@ -345,6 +345,18 @@ def handler(event: dict, context) -> dict:
         item["payments"] = payments
         item["paidTotal"] = sum(p["amount"] for p in payments)
 
+        item["earlyPayoff"] = None
+        if item.get("status") == "approved" and item.get("disbursed_at"):
+            _a = float(item.get("approved_amount") or item.get("loan_amount") or 0)
+            _m = int(item.get("approved_months") or item.get("loan_months") or 0)
+            _r = float(item.get("approved_rate") or 9) / 100
+            _start = datetime.fromisoformat(item["disbursed_at"])
+            _em = min(_m, max(0, (datetime.utcnow() - _start).days) // 30 + 1)
+            _full = max(0.0, round(_a * (1 + _r * _m)) - item["paidTotal"])
+            _early = max(0.0, round(_a * (1 + _r * _em)) - item["paidTotal"])
+            if 0 < _early < _full:
+                item["earlyPayoff"] = {"months": _em, "remaining": _early, "saving": _full - _early}
+
         # Расчётный ежемесячный график погашения (если одобрен/выдан)
         item["schedule"] = []
         eff_amount = item.get("approved_amount") or item.get("loan_amount")
