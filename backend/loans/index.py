@@ -49,6 +49,14 @@ def card_penalty(tx_rows, gross, repaid):
     return float(round(total)), max_days
 
 
+def started_units(start_dt, unit_days):
+    """Сколько начатых периодов (дней/недель) прошло с start_dt по московскому времени."""
+    today = (datetime.utcnow() + timedelta(hours=3)).date()
+    begin = (start_dt + timedelta(hours=3)).date()
+    diff = max(0, (today - begin).days)
+    return diff // unit_days + 1
+
+
 def calc_penalty(amount, days, rate, disbursed_at, created_at, paid_total, db_status, wheel_rub=0):
     """Считает пеню за просрочку. Возвращает (effective_status, base_total, total_due, is_overdue, overdue_days, penalty_amount).
     amount — тело долга (сумма + страховка). Пеня 2,99%/день от amount начисляется за каждый
@@ -1057,6 +1065,8 @@ def handler(event: dict, context) -> dict:
         vc_transactions = []
         vc_used = 0.0
         vc_debt = 0.0
+        vc_early_debt = None
+        vc_early_gross = 0.0
         vc_pen_rows = []
         vc_penalty = 0.0
         vc_overdue_days = 0
@@ -1076,6 +1086,8 @@ def handler(event: dict, context) -> dict:
                 tx_interest_total = round(tx_amount * tx_rate / 100 * tx_weeks)
                 tx_total = tx_amount + tx_interest_total
                 if tx_status != "cancelled":
+                    _ew = min(int(tx_weeks), started_units(tx_created, 7))
+                    vc_early_gross += tx_amount + round(tx_amount * tx_rate / 100 * _ew)
                     vc_used += tx_amount
                     vc_debt += tx_total
                     vc_pen_rows.append((tx_amount, tx_weeks, tx_created))
@@ -1121,6 +1133,7 @@ def handler(event: dict, context) -> dict:
             vc_gross = vc_debt
             vc_penalty, vc_overdue_days = card_penalty(vc_pen_rows, vc_gross, vc_repaid)
             vc_debt = max(0.0, vc_debt + vc_penalty - vc_repaid)
+            vc_early_debt = max(0.0, vc_early_gross - vc_repaid) if vc_overdue_days == 0 else None
             vc_used = max(0.0, vc_used - principal_part(vc_used, vc_gross, vc_repaid))
             cur.execute(
                 f"SELECT added_amount, new_limit FROM {SCHEMA}.card_limit_increases "
@@ -1185,6 +1198,7 @@ def handler(event: dict, context) -> dict:
                 "pendingNotices": vc_notices,
                 "paidNotices": vc_paid,
                 "limitIncreases": vc_limit_news,
+                "earlyDebt": vc_early_debt if (vc_early_debt is not None and 0 < vc_early_debt < vc_debt) else None,
                 "minPaymentPercent": CARD_MIN_PAYMENT_PERCENT,
                 "minPayment": round(vc_debt * CARD_MIN_PAYMENT_PERCENT / 100),
                 "paymentSchedule": card_payment_schedule(app_row[39], vc_debt),
@@ -1334,6 +1348,18 @@ def handler(event: dict, context) -> dict:
             "remaining": max(0, total - paid_total),
             "schedule": schedule,
         }
+        if status == "active" and disbursed_at and not is_monthly_cd:
+            e_days = min(int(days), started_units(disbursed_at, 1))
+            e_interest = round(float(amount) * float(rate) * e_days)
+            e_interest -= min(int(loan_wheel_db or 0), e_interest)
+            e_remaining = max(0.0, float(amount) + e_interest - paid_total)
+            if 0 < e_remaining < loan_data["remaining"]:
+                loan_data["earlyPayoff"] = {
+                    "days": e_days,
+                    "interest": e_interest,
+                    "remaining": e_remaining,
+                    "saving": loan_data["remaining"] - e_remaining,
+                }
         if loan_wheel_rub:
             loan_data["wheelDiscountRub"] = loan_wheel_rub
         if app_promo_discount and app_promo_discount < 100 and app_created_dt and created_at >= app_created_dt - timedelta(minutes=1):

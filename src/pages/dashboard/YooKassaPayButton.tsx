@@ -10,9 +10,10 @@ interface Props {
   txId?: number;
   dueDate?: string;
   full?: boolean;
+  early?: boolean;
 }
 
-export default function YooKassaPayButton({ loanType, loanId, amount, txId, dueDate, full }: Props) {
+export default function YooKassaPayButton({ loanType, loanId, amount, txId, dueDate, full, early }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -24,7 +25,7 @@ export default function YooKassaPayButton({ loanType, loanId, amount, txId, dueD
       const res = await fetch(`${YK_URL}?sub=create`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ loanType, loanId, amount, txId, dueDate, full, returnUrl: `${window.location.origin}/dashboard` }),
+        body: JSON.stringify({ loanType, loanId, amount, txId, dueDate, full, early, returnUrl: `${window.location.origin}/dashboard` }),
       });
       const d = await res.json().catch(() => ({}));
       if (!res.ok || !d.confirmationUrl) { setError(d.error || "Не удалось открыть оплату. Попробуйте ещё раз."); return; }

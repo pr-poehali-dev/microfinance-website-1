@@ -9,11 +9,12 @@ interface Props {
   fullName?: string;
   alreadyReported?: boolean;
   full?: boolean;
+  early?: boolean;
   onClose: () => void;
   onReported?: () => void;
 }
 
-export default function CardPayModal({ amount, dueDate, txId, full, onClose }: Props) {
+export default function CardPayModal({ amount, dueDate, txId, full, early, onClose }: Props) {
   return (
     <div
       style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
@@ -30,8 +31,8 @@ export default function CardPayModal({ amount, dueDate, txId, full, onClose }: P
               <Icon name="CreditCard" size={20} className="text-emerald-700" />
             </div>
             <div>
-              <div className="text-emerald-950 font-bold text-lg leading-tight">{full ? "Полное погашение" : "Оплата по карте"}</div>
-              <div className="text-emerald-950/50 text-xs">{full ? "Закрытие всей задолженности по карте" : `Платёж до ${dueDate}`}</div>
+              <div className="text-emerald-950 font-bold text-lg leading-tight">{early ? "Досрочное погашение" : full ? "Полное погашение" : "Оплата по карте"}</div>
+              <div className="text-emerald-950/50 text-xs">{early ? "Закрытие долга с пересчётом процентов" : full ? "Закрытие всей задолженности по карте" : `Платёж до ${dueDate}`}</div>
             </div>
           </div>
           <button onClick={onClose} className="text-emerald-950/40 hover:text-emerald-950/70 transition-colors">
@@ -45,7 +46,7 @@ export default function CardPayModal({ amount, dueDate, txId, full, onClose }: P
             <span className="font-bold text-2xl gradient-text">{amount.toLocaleString("ru-RU")} ₽</span>
           </div>
 
-          <YooKassaPayButton loanType="card" amount={amount} txId={txId} dueDate={dueDate} full={full} />
+          <YooKassaPayButton loanType="card" amount={amount} txId={txId} dueDate={dueDate} full={full} early={early} />
 
           <div className="rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)" }}>
             <Icon name="Clock" size={18} className="text-emerald-600 shrink-0" />

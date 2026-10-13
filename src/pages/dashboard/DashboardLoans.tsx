@@ -35,6 +35,7 @@ interface Loan {
   promoDiscount?: number;
   promoSavings?: number;
   wheelDiscountRub?: number;
+  earlyPayoff?: { days: number; interest: number; remaining: number; saving: number };
 }
 
 interface Application {
@@ -68,7 +69,7 @@ interface Props {
   signingId: number | null;
   signMsg: string;
   onSign: (loan: Loan) => void;
-  onPay: (loan: Loan) => void;
+  onPay: (loan: Loan, early?: boolean) => void;
   hideNewLoan?: boolean;
 }
 
@@ -270,6 +271,16 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                       >
                         <Icon name="Banknote" size={16} />
                         Погасить займ
+                      </button>
+                    )}
+                    {loan.status === "active" && loan.earlyPayoff && (
+                      <button
+                        onClick={() => onPay(loan, true)}
+                        className="font-semibold px-6 py-3 rounded-xl flex items-center gap-2"
+                        style={{ background: "rgba(16,185,129,0.15)", color: "#047857", border: "1px solid rgba(16,185,129,0.4)" }}
+                      >
+                        <Icon name="Zap" size={16} />
+                        Досрочное погашение · {loan.earlyPayoff.remaining.toLocaleString("ru-RU")} ₽
                       </button>
                     )}
                     {loan.status === "overdue" && (

@@ -53,6 +53,7 @@ interface VirtualCard {
   days?: number | null;
   transactions: CardTransaction[];
   debt?: number;
+  earlyDebt?: number | null;
   minPaymentPercent?: number;
   minPayment?: number;
   paymentSchedule?: CardPaymentRow[];
@@ -919,6 +920,7 @@ export default function DashboardApplicationStatus({
 
                 <CardPaymentSchedule
                   debt={application.virtualCard.debt ?? 0}
+                  earlyDebt={application.virtualCard.earlyDebt}
                   minPaymentPercent={application.virtualCard.minPaymentPercent ?? 30}
                   minPayment={application.virtualCard.minPayment ?? 0}
                   schedule={application.virtualCard.paymentSchedule ?? []}

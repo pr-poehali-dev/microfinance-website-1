@@ -11,6 +11,7 @@ export interface CardPaymentRow {
 
 interface Props {
   debt: number;
+  earlyDebt?: number | null;
   minPaymentPercent: number;
   minPayment: number;
   schedule: CardPaymentRow[];
@@ -26,9 +27,10 @@ interface Props {
 const FULL_KEY = "Полное погашение";
 const fmt = (n: number) => `${n.toLocaleString("ru-RU")} ₽`;
 
-export default function CardPaymentSchedule({ debt, minPaymentPercent, minPayment, schedule, cardLast4, fullName, pendingNotices = [], paidNotices = [], highlightPaid = false, closed = false, onReported }: Props) {
+export default function CardPaymentSchedule({ debt, earlyDebt, minPaymentPercent, minPayment, schedule, cardLast4, fullName, pendingNotices = [], paidNotices = [], highlightPaid = false, closed = false, onReported }: Props) {
   const [payRow, setPayRow] = useState<CardPaymentRow | null>(null);
   const [payFull, setPayFull] = useState(false);
+  const [payEarly, setPayEarly] = useState(false);
   return (
     <div className="rounded-xl p-4 space-y-3" style={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.2)" }}>
       <div className="flex items-center gap-2">
@@ -71,6 +73,13 @@ export default function CardPaymentSchedule({ debt, minPaymentPercent, minPaymen
                 <Icon name="BadgeCheck" size={18} />Оплатить полностью · {fmt(debt)}
               </button>
             )
+          )}
+
+          {cardLast4 && !!earlyDebt && earlyDebt > 0 && !pendingNotices.includes(`0|${FULL_KEY}`) && !paidNotices.includes(`0|${FULL_KEY}`) && (
+            <button onClick={() => setPayEarly(true)} className="w-full text-sm font-semibold py-3 rounded-xl flex items-center justify-center gap-2" style={{ background: "rgba(16,185,129,0.15)", color: "#047857", border: "1px solid rgba(16,185,129,0.4)" }}>
+              <Icon name="Zap" size={16} />Досрочное погашение · {fmt(earlyDebt)}
+              <span className="text-xs font-normal">(экономия {fmt(Math.max(0, debt - earlyDebt))})</span>
+            </button>
           )}
 
           <div className="space-y-1.5">
@@ -123,6 +132,15 @@ export default function CardPaymentSchedule({ debt, minPaymentPercent, minPaymen
             Платёж вносится раз в неделю, не меньше {minPaymentPercent}% от общего долга по карте.
           </div>
         </>
+      )}
+      {payEarly && cardLast4 && !!earlyDebt && (
+        <CardPayModal
+          early
+          amount={earlyDebt}
+          dueDate="Досрочное погашение"
+          cardLast4={cardLast4}
+          onClose={() => setPayEarly(false)}
+        />
       )}
       {payFull && cardLast4 && (
         <CardPayModal

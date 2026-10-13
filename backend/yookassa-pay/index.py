@@ -5,7 +5,7 @@ import os
 import urllib.request
 import urllib.error
 import uuid
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import psycopg2
 
@@ -72,6 +72,29 @@ def card_app_id(cur, phone):
     return r[0] if r else None
 
 
+def started_units(start_dt, unit_days):
+    today = (datetime.utcnow() + timedelta(hours=3)).date()
+    begin = (start_dt + timedelta(hours=3)).date()
+    return max(0, (today - begin).days) // unit_days + 1
+
+
+def card_early_plan(cur, app_id):
+    """Досрочное погашение карты: возвращает (сумма к оплате, {tx_id: недель}) или (None, None), если есть просрочка."""
+    cur.execute(f"SELECT id, amount, weeks, rate, created_at FROM {SCHEMA}.card_transactions WHERE application_id = {app_id} AND status != 'cancelled'")
+    today = (datetime.utcnow() + timedelta(hours=3)).date()
+    gross = 0.0
+    weeks_map = {}
+    for tx_id, a, w, r, created in cur.fetchall():
+        w = int(w)
+        if today > (created + timedelta(hours=3, weeks=w)).date():
+            return None, None
+        ew = min(w, started_units(created, 7))
+        weeks_map[int(tx_id)] = ew
+        gross += float(a) + round(float(a) * float(r) / 100 * ew)
+    cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.card_repayments WHERE application_id = {app_id}")
+    return max(0.0, gross - float(cur.fetchone()[0])), weeks_map
+
+
 def card_debt(cur, app_id):
     cur.execute(f"SELECT amount, weeks, rate FROM {SCHEMA}.card_transactions WHERE application_id = {app_id} AND status != 'cancelled'")
     gross = sum(round(float(a) * (1 + float(r) / 100 * w)) for a, w, r in cur.fetchall())
@@ -91,6 +114,12 @@ def credit_payment(cur, row):
         return False
     note = "Оплата через ЮKassa"
     if loan_type == "card":
+        if meta.get("early"):
+            for k, w in (meta.get("weeks") or {}).items():
+                cur.execute(
+                    f"UPDATE {SCHEMA}.card_transactions SET weeks = {int(w)} "
+                    f"WHERE id = {int(k)} AND application_id = {int(loan_id)} AND weeks > {int(w)}"
+                )
         cur.execute(f"INSERT INTO {SCHEMA}.card_repayments (application_id, amount, note) VALUES ({int(loan_id)}, {amount}, '{note}')")
         tx_id = int(meta.get("txId") or 0)
         due = str(meta.get("dueDate") or "").replace("'", "''")
@@ -111,6 +140,8 @@ def credit_payment(cur, row):
             f"WHERE loan_type='{loan_type}' AND loan_id={int(loan_id)} AND status='new'"
         )
         if loan_type == "loan":
+            if meta.get("early") and int(meta.get("days") or 0) > 0:
+                cur.execute(f"UPDATE {SCHEMA}.loans SET days = {int(meta['days'])} WHERE id = {int(loan_id)} AND days > {int(meta['days'])}")
             cur.execute(f"SELECT amount, days, rate, wheel_discount_rub, status FROM {SCHEMA}.loans WHERE id = {int(loan_id)}")
             l = cur.fetchone()
             if l:
@@ -235,15 +266,39 @@ def handler(event: dict, context) -> dict:
                 cur.close(); conn.close()
                 return resp(404, {"error": "Карта не найдена"})
             debt = card_debt(cur, app_id)
+            early_meta = {}
+            if body.get("early"):
+                e_debt, weeks_map = card_early_plan(cur, app_id)
+                if e_debt is None or e_debt <= 0:
+                    cur.close(); conn.close()
+                    return resp(400, {"error": "Досрочное погашение сейчас недоступно"})
+                debt = e_debt
+                amount = e_debt
+                early_meta = {"early": True, "weeks": weeks_map}
             if debt <= 0:
                 cur.close(); conn.close()
                 return resp(400, {"error": "Долга по карте нет"})
             amount = min(amount, debt)
             loan_id = app_id
-            meta = {"txId": int(body.get("txId") or 0), "dueDate": str(body.get("dueDate") or ""), "full": bool(body.get("full"))}
+            meta = {"txId": int(body.get("txId") or 0), "dueDate": str(body.get("dueDate") or ""), "full": bool(body.get("full")), **early_meta}
             desc = f"Погашение по карте РУСФИНАНС 24"
         else:
             if loan_type == "loan":
+                cur.execute(f"SELECT id, amount, days, rate, wheel_discount_rub, disbursed_at, status FROM {SCHEMA}.loans WHERE id = {loan_id} AND user_id = {user_id}")
+                lrow = cur.fetchone()
+                if lrow and body.get("early"):
+                    if lrow[6] != "active" or not lrow[5]:
+                        cur.close(); conn.close()
+                        return resp(400, {"error": "Досрочное погашение сейчас недоступно"})
+                    e_days = min(int(lrow[2]), started_units(lrow[5], 1))
+                    e_interest = round(float(lrow[1]) * float(lrow[3]) * e_days)
+                    e_interest -= min(int(lrow[4] or 0), e_interest)
+                    cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.payments WHERE loan_type='loan' AND loan_id={loan_id}")
+                    amount = round(max(0.0, float(lrow[1]) + e_interest - float(cur.fetchone()[0])), 2)
+                    if amount <= 0:
+                        cur.close(); conn.close()
+                        return resp(400, {"error": "Долга нет"})
+                    meta = {"early": True, "days": e_days}
                 cur.execute(f"SELECT id FROM {SCHEMA}.loans WHERE id = {loan_id} AND user_id = {user_id}")
             elif loan_type == "carloan":
                 cur.execute(f"SELECT id FROM {SCHEMA}.car_loan_applications WHERE id = {loan_id} AND phone = '{ph_e}'")

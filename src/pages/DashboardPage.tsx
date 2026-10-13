@@ -68,6 +68,7 @@ interface Loan {
   payments?: PaymentItem[];
   paidTotal?: number;
   remaining?: number;
+  earlyPayoff?: { days: number; interest: number; remaining: number; saving: number };
 }
 
 interface User {
@@ -162,6 +163,7 @@ export default function DashboardPage() {
   const [cardRequest, setCardRequest] = useState<CardRequest | null>(null);
   const [isRepeatClient, setIsRepeatClient] = useState(false);
   const [payLoan, setPayLoan] = useState<Loan | null>(null);
+  const [payEarly, setPayEarly] = useState(false);
   const [payOther, setPayOther] = useState<{ contractNumber: string; amount: number; loanType: "carloan" | "shoploan"; loanId: number } | null>(null);
   const [loanNotices, setLoanNotices] = useState<string[]>([]);
   const [profileEditable, setProfileEditable] = useState(false);
@@ -400,7 +402,8 @@ export default function DashboardPage() {
     askCode(() => doConfirm());
   };
 
-  const handlePay = (loan: Loan) => {
+  const handlePay = (loan: Loan, early = false) => {
+    setPayEarly(early);
     setPayLoan(loan);
   };
 
@@ -1110,7 +1113,8 @@ export default function DashboardPage() {
       {payLoan && (
         <PayLoanModal
           contractNumber={fmtAppId(payLoan.id)}
-          amount={payLoan.remaining ?? payLoan.total}
+          amount={payEarly && payLoan.earlyPayoff ? payLoan.earlyPayoff.remaining : (payLoan.remaining ?? payLoan.total)}
+          early={payEarly}
           loanType="loan"
           loanId={payLoan.id}
           alreadyReported={loanNotices.includes(`loan|${payLoan.id}`)}

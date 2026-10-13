@@ -7,12 +7,13 @@ interface Props {
   fullName?: string;
   loanType?: "loan" | "carloan" | "shoploan";
   loanId?: number;
+  early?: boolean;
   alreadyReported?: boolean;
   onReported?: () => void;
   onClose: () => void;
 }
 
-export default function PayLoanModal({ amount, contractNumber, loanType, loanId, onClose }: Props) {
+export default function PayLoanModal({ amount, contractNumber, loanType, loanId, early, onClose }: Props) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
       onClick={onClose}>
@@ -25,7 +26,7 @@ export default function PayLoanModal({ amount, contractNumber, loanType, loanId,
               <Icon name="Banknote" size={20} className="text-white" />
             </div>
             <div>
-              <div className="text-emerald-950 font-bold text-lg leading-tight">Погашение займа</div>
+              <div className="text-emerald-950 font-bold text-lg leading-tight">{early ? "Досрочное погашение" : "Погашение займа"}</div>
               <div className="text-emerald-950/50 text-xs">Договор № {contractNumber}</div>
             </div>
           </div>
@@ -40,7 +41,7 @@ export default function PayLoanModal({ amount, contractNumber, loanType, loanId,
             <span className="font-bold text-2xl gradient-text">{amount.toLocaleString("ru-RU")} ₽</span>
           </div>
 
-          {loanType && loanId ? <YooKassaPayButton loanType={loanType} loanId={loanId} amount={amount} /> : null}
+          {loanType && loanId ? <YooKassaPayButton loanType={loanType} loanId={loanId} amount={amount} early={early} /> : null}
 
           <div className="rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)" }}>
             <Icon name="Clock" size={18} className="text-emerald-600 shrink-0" />
