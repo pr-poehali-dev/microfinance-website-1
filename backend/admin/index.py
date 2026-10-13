@@ -2019,7 +2019,12 @@ def handler(event: dict, context) -> dict:
         cur.execute(f"""
             SELECT cr.id, cr.phone, cr.full_name, cr.status, cr.reject_reason, cr.created_at, cr.reviewed_at,
                    a.id AS app_id, a.virtual_card_status, a.virtual_card_limit,
-                   (SELECT u.id FROM {SCHEMA}.users u WHERE u.phone = cr.phone LIMIT 1) AS user_id, a.amount
+                   (SELECT u.id FROM {SCHEMA}.users u WHERE u.phone = cr.phone LIMIT 1) AS user_id, a.amount,
+                   GREATEST(0,
+                     COALESCE((SELECT SUM(ROUND(t.amount * (1 + t.rate / 100 * t.weeks))) FROM {SCHEMA}.card_transactions t
+                               WHERE t.application_id = a.id AND t.status != 'cancelled'), 0)
+                     - COALESCE((SELECT SUM(rp.amount) FROM {SCHEMA}.card_repayments rp WHERE rp.application_id = a.id), 0)
+                   ) AS debt
             FROM {SCHEMA}.card_requests cr
             LEFT JOIN LATERAL (
                 SELECT id, virtual_card_status, virtual_card_limit, amount FROM {SCHEMA}.applications
@@ -2036,6 +2041,7 @@ def handler(event: dict, context) -> dict:
             "cardLimit": float(r[9]) if r[9] else None,
             "userId": r[10],
             "requestedLimit": float(r[11]) if r[11] else None,
+            "debt": float(r[12] or 0),
         } for r in cur.fetchall()]
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"requests": items}, ensure_ascii=False)}

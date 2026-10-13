@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import { waitingStyle, WAITING_BADGE_STYLE } from "./waiting";
 import { CardRequestItem, GLASS } from "./adminTypes";
 import AdminCardRequestProfile from "./AdminCardRequestProfile";
+import CardManualRepay from "./CardManualRepay";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
 
@@ -106,6 +107,9 @@ export default function AdminCardRequests({ token }: Props) {
                   <div style={{ marginTop: 6, fontSize: 12, color: "#14b8a6" }}>
                     Уже есть карта: {req.cardStatus}{req.cardLimit ? ` · лимит ${req.cardLimit.toLocaleString("ru-RU")} ₽` : ""}
                   </div>
+                )}
+                {req.status === "approved" && !!req.appId && req.cardStatus !== "none" && (
+                  <CardManualRepay token={token} appId={req.appId} debt={req.debt ?? 0} onDone={load} />
                 )}
                 {req.status === "rejected" && req.rejectReason && (
                   <div style={{ marginTop: 6, fontSize: 12, color: "#f87171" }}>Причина отказа: {req.rejectReason}</div>
