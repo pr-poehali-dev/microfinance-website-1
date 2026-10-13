@@ -566,6 +566,11 @@ def handler(event: dict, context) -> dict:
             f"VALUES ({user_id}, '{ph_e}', '{fn_e}', 'pending') RETURNING id"
         )
         req_id = cur.fetchone()[0]
+        cur.execute(
+            f"SELECT birth_date, passport_series, passport_number, passport_date, passport_by, reg_address, living_address, "
+            f"workplace, position, salary, snils, email FROM {SCHEMA}.applications WHERE phone = '{ph_e}' ORDER BY created_at DESC LIMIT 1"
+        )
+        pr = cur.fetchone()
         conn.commit()
         cur.close(); conn.close()
 
@@ -578,6 +583,14 @@ def handler(event: dict, context) -> dict:
                 f"👤 <b>ФИО:</b> {full_name or phone}\n"
                 f"📞 <b>Телефон:</b> {phone}"
             )
+            if pr:
+                bd, ps, pn, pdt, pby, ra, la, wp, pos, sal, sn, em = pr
+                lines = [
+                    ("🎂 Дата рождения", bd), ("🪪 Паспорт", f"{ps or ''} {pn or ''}".strip()), ("📅 Выдан", pdt), ("🏢 Кем выдан", pby),
+                    ("🏠 Регистрация", ra), ("📍 Проживание", la), ("💼 Работа", wp), ("👔 Должность", pos),
+                    ("💰 Зарплата", f"{int(float(sal)):,} ₽".replace(",", " ") if sal else ""), ("🔢 СНИЛС", sn), ("✉️ Email", em),
+                ]
+                text += "\n\n<b>Анкета клиента:</b>\n" + "\n".join(f"{k}: {v}" for k, v in lines if v)
             data = json.dumps({"chat_id": chat_id, "text": text, "parse_mode": "HTML"}).encode()
             req = urllib.request.Request(
                 f"https://api.telegram.org/bot{tg_token}/sendMessage",
@@ -822,6 +835,136 @@ def handler(event: dict, context) -> dict:
             except Exception:
                 pass
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "transactionId": tx_id})}
+
+    # --- ЗАЯВКА НА АВТОЗАЙМ / ЗАЙМ НА ПОКУПКИ ИЗ ЛИЧНОГО КАБИНЕТА (POST, ?sub=term_request) ---
+    if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "term_request":
+        raw_t = event.get("body") or "{}"
+        bt = json.loads(raw_t) if isinstance(raw_t, str) else raw_t
+        kind = bt.get("kind")
+        if kind not in ("car", "shop"):
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Неизвестный вид займа"})}
+        try:
+            t_amount = int(float(bt.get("amount") or 0))
+            t_months = int(bt.get("months") or 0)
+        except (TypeError, ValueError):
+            t_amount, t_months = 0, 0
+        lo, hi, mmax = (100000, 1000000, 36) if kind == "car" else (3000, 150000, 24)
+        if not (lo <= t_amount <= hi) or not (1 <= t_months <= mmax):
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": f"Сумма от {lo} до {hi} ₽, срок от 1 до {mmax} мес."})}
+        t_card = (bt.get("cardNumber") or "").strip()
+        t_digits = "".join(ch for ch in t_card if ch.isdigit())
+        if not (len(t_digits) in (10, 11) or 16 <= len(t_digits) <= 19):
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите номер карты (16–19 цифр) или телефон СБП"})}
+
+        def q(x):
+            return str(x if x is not None else "").strip().replace("'", "''")
+
+        ph_t = phone.replace("'", "''")
+        tbl = "car_loan_applications" if kind == "car" else "shopping_loan_applications"
+        cur.execute(f"SELECT id FROM {SCHEMA}.{tbl} WHERE phone = '{ph_t}' AND status IN ('pending','approved','signing') AND disbursed_at IS NULL LIMIT 1")
+        if cur.fetchone():
+            cur.close(); conn.close()
+            return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": "У вас уже есть заявка этого вида на рассмотрении"})}
+
+        cur.execute(f"""
+            SELECT full_name, email, birth_date, birth_place, passport_series, passport_number, passport_date, passport_code, passport_by,
+                   telegram_id, snils, workplace, position, work_phone, salary, contact_person,
+                   file_passport, file_registration, file_selfie, file_previous_passports,
+                   reg_address, living_address, work_address
+            FROM {SCHEMA}.applications WHERE phone = '{ph_t}' ORDER BY created_at DESC LIMIT 1
+        """)
+        pr = cur.fetchone()
+        if not pr:
+            cur.close(); conn.close()
+            return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": "Сначала заполните анкету: оформите любую заявку", "needProfile": True})}
+        (p_name, p_email, p_bd, p_bp, p_ps, p_pn, p_pd, p_pc, p_pby, p_tg, p_snils, p_wp, p_pos, p_wph, p_sal, p_cp,
+         f_pass, f_reg, f_self, f_prev, p_reg, p_live, p_work) = pr
+        sal_sql = str(float(p_sal)) if p_sal else "NULL"
+        bd_sql = f"'{q(p_bd)}'" if p_bd else "NULL"
+
+        promo_code_v, promo_disc_v = None, 0
+        cur.execute(f"SELECT promo_code, promo_discount FROM {SCHEMA}.users WHERE id = {user_id} AND promo_code IS NOT NULL")
+        sv_t = cur.fetchone()
+        if sv_t:
+            promo_code_v, promo_disc_v = sv_t[0], int(sv_t[1])
+            cur.execute(f"UPDATE {SCHEMA}.users SET promo_code=NULL, promo_discount=0 WHERE id = {user_id}")
+        promo_sql = f"'{promo_code_v}'" if promo_code_v else "NULL"
+
+        if kind == "car":
+            brand, model = q(bt.get("carBrand")), q(bt.get("carModel"))
+            try:
+                c_year = int(bt.get("carYear") or 0)
+                c_mileage = int(bt.get("carMileage") or 0)
+            except (TypeError, ValueError):
+                c_year, c_mileage = 0, 0
+            if not brand or not model or not c_year:
+                cur.close(); conn.close()
+                return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Заполните марку, модель и год автомобиля"})}
+            issued = ", ".join(x for x in [q(p_pd), q(p_pby), f"код {q(p_pc)}" if p_pc else ""] if x)
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.car_loan_applications "
+                f"(full_name, phone, email, birth_date, address, passport_serial, passport_num, passport_issued, "
+                f" car_brand, car_model, car_year, car_mileage, contact_person, card_number, loan_amount, loan_months, "
+                f" status, created_at, updated_at, promo_code, promo_discount, living_address, work_address, "
+                f" birth_place, passport_code, snils, workplace, position, work_phone, salary, telegram_id, "
+                f" file_passport, file_registration, file_selfie, file_previous_passports, file_vehicle_doc) "
+                f"VALUES ('{q(p_name or full_name)}','{ph_t}','{q(p_email)}',{bd_sql},'{q(p_reg)}','{q(p_ps)}','{q(p_pn)}','{issued}',"
+                f"'{brand}','{model}',{c_year},{c_mileage},'{q(p_cp)}','{q(t_card)}',{t_amount},{t_months},"
+                f"'pending',NOW(),NOW(),{promo_sql},{promo_disc_v},'{q(p_live)}','{q(p_work)}',"
+                f"'{q(p_bp)}','{q(p_pc)}','{q(p_snils)}','{q(p_wp)}','{q(p_pos)}','{q(p_wph)}',{sal_sql},'{q(p_tg)}',"
+                f"'{q(f_pass)}','{q(f_reg)}','{q(f_self)}','{q(f_prev)}','{q(bt.get('fileVehicleDoc'))}') RETURNING id"
+            )
+            title = f"🚗 <b>Новая заявка на автозайм #{{id}} (из кабинета)</b>\n\n🚘 <b>Авто:</b> {brand} {model} {c_year}\n"
+        else:
+            shop, item = q(bt.get("shopName")), q(bt.get("itemName"))
+            try:
+                item_price = int(bt.get("itemPrice") or 0)
+            except (TypeError, ValueError):
+                item_price = 0
+            if not item:
+                cur.close(); conn.close()
+                return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите название товара"})}
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.shopping_loan_applications "
+                f"(full_name, phone, email, birth_date, address, passport_series, passport_number, "
+                f" passport_date, passport_by, snils, shop_name, item_name, item_price, "
+                f" loan_amount, loan_months, contact_person, card_number, "
+                f" file_passport, file_registration, file_selfie, file_snils, "
+                f" status, created_at, updated_at, promo_code, promo_discount, living_address, work_address, "
+                f" birth_place, passport_code, workplace, position, work_phone, salary, telegram_id, file_previous_passports) "
+                f"VALUES ('{q(p_name or full_name)}','{ph_t}','{q(p_email)}',{bd_sql},'{q(p_reg)}',"
+                f"'{q(p_ps)}','{q(p_pn)}','{q(p_pd)}','{q(p_pby)}',"
+                f"'{q(p_snils)}','{shop}','{item}',{item_price},"
+                f"{t_amount},{t_months},'{q(p_cp)}','{q(t_card)}',"
+                f"'{q(f_pass)}','{q(f_reg)}','{q(f_self)}','',"
+                f"'pending',NOW(),NOW(),{promo_sql},{promo_disc_v},'{q(p_live)}','{q(p_work)}',"
+                f"'{q(p_bp)}','{q(p_pc)}','{q(p_wp)}','{q(p_pos)}','{q(p_wph)}',{sal_sql},'{q(p_tg)}','{q(f_prev)}') RETURNING id"
+            )
+            title = f"🛍 <b>Новая заявка на займ для покупок #{{id}} (из кабинета)</b>\n\n🛒 <b>Товар:</b> {item}\n"
+        new_tid = cur.fetchone()[0]
+        conn.commit()
+        cur.close(); conn.close()
+
+        import urllib.request
+        tg_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+        if tg_token:
+            text = (
+                title.replace("{id}", str(new_tid)) +
+                f"👤 <b>ФИО:</b> {p_name or full_name or phone}\n📞 <b>Телефон:</b> {phone}\n"
+                f"💰 <b>Сумма:</b> {t_amount:,} ₽\n".replace(",", " ") +
+                f"📅 <b>Срок:</b> {t_months} мес.\n🪪 Анкета подтянута из предыдущей заявки клиента"
+            )
+            try:
+                urllib.request.urlopen(urllib.request.Request(
+                    f"https://api.telegram.org/bot{tg_token}/sendMessage",
+                    data=json.dumps({"chat_id": "8540431915", "text": text, "parse_mode": "HTML"}).encode(),
+                    headers={"Content-Type": "application/json"}), timeout=5)
+            except Exception:
+                pass
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "id": new_tid})}
 
     # --- ПОВТОРНАЯ ЗАЯВКА НА ЗАЙМ ИЗ ЛИЧНОГО КАБИНЕТА (POST) ---
     if event.get("httpMethod") == "POST":

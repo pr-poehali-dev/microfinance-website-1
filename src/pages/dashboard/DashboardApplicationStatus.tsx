@@ -7,6 +7,7 @@ import CardTransactionsList, { CardTransaction } from "./CardTransactionsList";
 import CardPaymentSchedule, { CardPaymentRow } from "./CardPaymentSchedule";
 import CardRepaymentHistory, { CardRepayment } from "./CardRepaymentHistory";
 import CardRequestBlock from "./CardRequestBlock";
+import type { ClientProfile } from "./ClientProfileCard";
 import SavedCards from "./SavedCards";
 import LimitIncreasedModal, { LimitIncrease } from "./LimitIncreasedModal";
 
@@ -94,6 +95,7 @@ interface Application {
   reapplyDaysLeft?: number | null;
   videoCallRequested?: boolean;
   partnerCardUrl?: string;
+  profile?: ClientProfile;
 }
 
 // Займы приходят отсортированными по дате создания (новые первыми) —
@@ -101,6 +103,8 @@ interface Application {
 const mainLoan = (loans: Loan[]) => loans[0] || null;
 
 interface Props {
+  phone?: string;
+  profileEditable?: boolean;
   part: "apps" | "cards";
   application: Application | null;
   cardRequest?: CardRequest | null;
@@ -133,7 +137,7 @@ interface Props {
 }
 
 export default function DashboardApplicationStatus({
-  part, application, cardRequest, loans, isRepeatClient, timerSec, timerDone, fmtTimer, fmtAppId,
+  phone, profileEditable, part, application, cardRequest, loans, isRepeatClient, timerSec, timerDone, fmtTimer, fmtAppId,
   signingId, signMsg, cardInput, cardSaving, cardSaved, cardError,
   confirming, confirmDone, cardActivating, cardActivated, cvvVisible, setCvvVisible,
   onSign, onSaveCard, onConfirm, onActivateCard, onRefresh, setCardInput, setCardSaved, setCardError,
@@ -959,6 +963,10 @@ export default function DashboardApplicationStatus({
         <CardRequestBlock
           cardRequestStatus={cardRequest?.status ?? null}
           cardRequestRejectReason={cardRequest?.rejectReason}
+          profile={application?.profile ?? null}
+          phone={phone ?? ""}
+          profileEditable={profileEditable}
+          onProfileSaved={onRefresh}
           onSuccess={onRefresh}
         />
       )}

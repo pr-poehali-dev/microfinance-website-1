@@ -15,6 +15,7 @@ import RepeatLoanForm from "./dashboard/RepeatLoanForm";
 import PromoCodeCard from "./dashboard/PromoCodeCard";
 import PayLoanModal from "./dashboard/PayLoanModal";
 import PaymentsList from "./dashboard/PaymentsList";
+import NewRequestHub from "./dashboard/NewRequestHub";
 import CardActivatedModal from "./dashboard/CardActivatedModal";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
@@ -597,27 +598,13 @@ export default function DashboardPage() {
           <PromoCodeCard promo={promo} onApplied={() => { const t = localStorage.getItem("token"); if (t) loadData(t, false); }} />
         )}
 
-        {!loading && !error && user && isRepeatClient && (
-          !application ||
-          application.status === "rejected" ||
-          ((application.status === "approved" || application.status === "partner_card") && loans[0]?.status === "paid")
-        ) && (
-          <RepeatLoanForm
-            promo={promo}
-            profile={application?.profile ?? null}
-            profileEditable={profileEditable}
-            onProfileSaved={() => { const t = localStorage.getItem("token"); if (t) loadData(t, false); }}
-            fullName={user.fullName}
-            phone={user.phone}
-            onSuccess={() => { const t = localStorage.getItem("token"); if (t) loadData(t, false); }}
-          />
-        )}
-
         </>)}
 
         {!loading && !error && (section === "apps" || section === "cards") && (
           <>
             <DashboardApplicationStatus
+              phone={user?.phone}
+              profileEditable={profileEditable}
               part={section}
               application={application}
               cardRequest={cardRequest}
@@ -1070,25 +1057,32 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {section === "new" && !loading && !error && (
-          <div className="glass rounded-2xl p-6 mb-6">
-            <h2 className="font-oswald text-2xl font-bold text-emerald-950 mb-4">Новая заявка</h2>
-            <div className="grid sm:grid-cols-2 gap-3">
-              {[
-                { label: "Займ наличными", icon: "Banknote", to: "/apply" },
-                { label: "Карта РУСФИНАНС 24", icon: "CreditCard", to: "/card/apply" },
-                { label: "Займ под залог авто", icon: "Car", to: "/car-loan" },
-                { label: "Займ на покупки", icon: "ShoppingCart", to: "/shop-loan" },
-              ].map((o) => (
-                <button key={o.to} type="button" onClick={() => navigate(o.to)}
-                  className="flex items-center gap-3 rounded-xl px-4 py-4 text-left font-semibold text-emerald-950 hover:border-emerald-500 transition-colors"
-                  style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.25)" }}>
-                  <Icon name={o.icon} size={20} className="text-emerald-600" />
-                  {o.label}
-                </button>
-              ))}
-            </div>
-          </div>
+        {section === "new" && !loading && !error && user && (
+          <NewRequestHub
+            phone={user.phone}
+            profile={application?.profile ?? null}
+            profileEditable={profileEditable}
+            hasCard={!!application?.virtualCard && application.virtualCard.status !== "none"}
+            cardRequestStatus={cardRequest?.status ?? null}
+            cardRequestRejectReason={cardRequest?.rejectReason}
+            onRefresh={() => { const t = localStorage.getItem("token"); if (t) loadData(t, false); }}
+            cashForm={
+              (!application ||
+                application.status === "rejected" ||
+                ((application.status === "approved" || application.status === "partner_card") && loans[0]?.status === "paid"))
+                ? (
+                  <RepeatLoanForm
+                    promo={promo}
+                    profile={application?.profile ?? null}
+                    profileEditable={profileEditable}
+                    onProfileSaved={() => { const t = localStorage.getItem("token"); if (t) loadData(t, false); }}
+                    fullName={user.fullName}
+                    phone={user.phone}
+                    onSuccess={() => { const t = localStorage.getItem("token"); if (t) loadData(t, false); }}
+                  />
+                ) : null
+            }
+          />
         )}
 
         {section === "docs" && !loading && !error && (

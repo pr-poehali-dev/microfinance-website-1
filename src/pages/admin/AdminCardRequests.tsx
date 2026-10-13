@@ -19,7 +19,7 @@ export default function AdminCardRequests({ token }: Props) {
   const [form, setForm] = useState<Record<number, { limit: string; rate: string; days: string }>>({});
   const [rejectOpen, setRejectOpen] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState("");
-  const [profileOpen, setProfileOpen] = useState<number | null>(null);
+  const [profileToggled, setProfileToggled] = useState<Record<number, boolean>>({});
   const [processing, setProcessing] = useState<Record<number, boolean>>({});
 
   const hdrs = useCallback(() => ({ "Content-Type": "application/json", "Authorization": `Bearer ${token}` }), [token]);
@@ -98,9 +98,9 @@ export default function AdminCardRequests({ token }: Props) {
                   </div>
                 )}
                 {!!req.userId && (
-                  <button onClick={() => setProfileOpen(profileOpen === req.id ? null : req.id)}
+                  <button onClick={() => setProfileToggled(p => ({ ...p, [req.id]: !(p[req.id] ?? req.status === "pending") }))}
                     style={{ marginTop: 8, background: "rgba(16,185,129,0.1)", color: "#047857", border: "none", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontWeight: 600, fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                    <Icon name="UserCircle" size={14} />{profileOpen === req.id ? "Скрыть анкету" : "Анкета клиента"}
+                    <Icon name="UserCircle" size={14} />{(profileToggled[req.id] ?? req.status === "pending") ? "Скрыть анкету" : "Анкета клиента"}
                   </button>
                 )}
                 {req.cardStatus !== "none" && (
@@ -180,8 +180,8 @@ export default function AdminCardRequests({ token }: Props) {
                 </span>
               )}
             </div>
-            {profileOpen === req.id && !!req.userId && (
-              <AdminCardRequestProfile token={token} userId={req.userId} onClose={() => setProfileOpen(null)} />
+            {(profileToggled[req.id] ?? req.status === "pending") && !!req.userId && (
+              <AdminCardRequestProfile token={token} userId={req.userId} onClose={() => setProfileToggled(p => ({ ...p, [req.id]: false }))} />
             )}
           </div>
         ))}

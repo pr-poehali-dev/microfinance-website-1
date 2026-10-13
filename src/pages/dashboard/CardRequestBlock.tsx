@@ -1,16 +1,23 @@
 import SignCodeDialog from "@/components/SignCodeDialog";
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
+import ProfileCheck from "./ProfileCheck";
+import type { ClientProfile } from "./ClientProfileCard";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 
 interface Props {
   cardRequestStatus: string | null;
   cardRequestRejectReason?: string;
+  profile?: ClientProfile | null;
+  phone?: string;
+  profileEditable?: boolean;
+  onProfileSaved?: () => void;
   onSuccess: () => void;
 }
 
-export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectReason, onSuccess }: Props) {
+export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectReason, profile = null, phone = "", profileEditable = false, onProfileSaved, onSuccess }: Props) {
+  const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [justSent, setJustSent] = useState(false);
@@ -70,14 +77,23 @@ export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectR
           </div>
         </div>
         <button
-          onClick={submit}
+          onClick={() => (profile ? setOpen(!open) : submit())}
           disabled={sending}
           className="btn-neon text-white font-semibold px-6 py-3 rounded-xl flex items-center gap-2 disabled:opacity-60"
         >
           {sending ? <Icon name="Loader2" size={16} className="animate-spin" /> : <Icon name="Send" size={16} />}
-          {sending ? "Отправляем..." : "Подать заявку на карту"}
+          {sending ? "Отправляем..." : open ? "Свернуть" : "Подать заявку на карту"}
         </button>
       </div>
+      {open && profile && (
+        <div className="px-6 pb-5 space-y-3">
+          <ProfileCheck profile={profile} phone={phone} editable={profileEditable} onSaved={() => onProfileSaved?.()} />
+          <button onClick={submit} disabled={sending}
+            className="w-full btn-neon text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 disabled:opacity-60">
+            <Icon name="Send" size={18} />Всё верно, отправить на рассмотрение
+          </button>
+        </div>
+      )}
       {error && (
         <div className="px-6 pb-5">
           <div className="rounded-xl px-4 py-3 text-sm font-medium" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#dc2626" }}>
