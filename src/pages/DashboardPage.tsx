@@ -13,7 +13,8 @@ import ClientProfileCard from "./dashboard/ClientProfileCard";
 import RepeatLoanForm from "./dashboard/RepeatLoanForm";
 import PromoCodeCard from "./dashboard/PromoCodeCard";
 import PayLoanModal from "./dashboard/PayLoanModal";
-import PaymentsList from "./dashboard/PaymentsList";
+import PaymentsList, { DueItem } from "./dashboard/PaymentsList";
+import { nextPayment } from "./dashboard/nextPayment";
 import NewRequestHub from "./dashboard/NewRequestHub";
 import CardActivatedModal from "./dashboard/CardActivatedModal";
 
@@ -638,7 +639,30 @@ export default function DashboardPage() {
             </>
         )}
 
-        {!loading && !error && section === "repay" && <PaymentsList loans={loans} cardRepayments={application?.virtualCard?.repayments ?? []} />}
+        {!loading && !error && section === "repay" && (() => {
+          const dues: DueItem[] = [];
+          const addTerm = (
+            l: { id: number; status: string; disbursed_at?: string | null; schedule?: { amount: number; dueDate: string | null; month?: number }[]; paidTotal?: number; approved_amount: number | null; loan_amount: number; approved_months: number | null; loan_months: number; approved_rate: number | null } | null,
+            kind: "carloan" | "shoploan", title: string, pref: string, defRate: number,
+          ) => {
+            if (!l || l.status !== "approved" || !l.disbursed_at) return;
+            const a = l.approved_amount || l.loan_amount;
+            const m = l.approved_months || l.loan_months;
+            const total = Math.round(a * (1 + ((l.approved_rate || defRate) / 100) * m));
+            const np = nextPayment(l.schedule || [], l.paidTotal || 0, total);
+            if (!np) return;
+            dues.push({
+              key: `${kind}${l.id}`,
+              title,
+              subtitle: `${np.month ? `${np.month}-й платёж` : "Платёж"}${np.dueDate ? ` · до ${np.dueDate}` : ""}`,
+              amount: np.amount,
+              onPay: () => setPayOther({ contractNumber: `${pref}-${String(l.id).padStart(12, "0")}`, amount: np.amount, loanType: kind, loanId: l.id }),
+            });
+          };
+          addTerm(carLoan, "carloan", "Займ под залог авто", "А", 12);
+          addTerm(shopLoan, "shoploan", "Займ на покупки", "Т", 9);
+          return <PaymentsList loans={loans} cardRepayments={application?.virtualCard?.repayments ?? []} dues={dues} />;
+        })()}
 
         {!loading && !error && (section === "history" || (section === "apps" && loans.some((l) => l.status !== "paid"))) && (
           <>

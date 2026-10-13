@@ -5,14 +5,36 @@ interface PaymentItem { amount: number; paidAt: string; note?: string }
 interface LoanLike { id: number; payments?: PaymentItem[] }
 interface CardRepayment { amount: number; note?: string; createdAt: string }
 
+export interface DueItem { key: string; title: string; subtitle: string; amount: number; onPay: () => void }
+
 const fmt = (n: number) => `${Math.round(n).toLocaleString("ru-RU")} ₽`;
 
-export default function PaymentsList({ loans, cardRepayments = [] }: { loans: LoanLike[]; cardRepayments?: CardRepayment[] }) {
+export default function PaymentsList({ loans, cardRepayments = [], dues = [] }: { loans: LoanLike[]; cardRepayments?: CardRepayment[]; dues?: DueItem[] }) {
   const rows = loans.flatMap((l) => (l.payments || []).map((p) => ({ ...p, loanId: l.id })));
   const hasAny = rows.length > 0 || cardRepayments.length > 0;
 
   return (
     <div className="space-y-4">
+      {dues.length > 0 && (
+        <div className="glass rounded-2xl p-5 space-y-2" style={{ border: "1px solid rgba(16,185,129,0.4)" }}>
+          <div className="flex items-center gap-2 mb-1">
+            <Icon name="CalendarClock" size={18} className="text-emerald-600" />
+            <div className="text-emerald-950 font-bold">К оплате</div>
+          </div>
+          {dues.map((d) => (
+            <div key={d.key} className="flex items-center justify-between gap-3 rounded-lg px-3 py-3" style={{ background: "rgba(16,185,129,0.08)" }}>
+              <div>
+                <div className="text-emerald-950 text-sm font-semibold">{d.title}</div>
+                <div className="text-emerald-950/50 text-xs">{d.subtitle}</div>
+              </div>
+              <button onClick={d.onPay} className="btn-neon text-white text-sm font-semibold px-4 py-2 rounded-lg shrink-0">
+                Оплатить {fmt(d.amount)}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <h2 className="font-oswald text-2xl font-bold text-emerald-950">История выплат</h2>
 
       {rows.length > 0 && (
