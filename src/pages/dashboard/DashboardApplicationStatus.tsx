@@ -458,36 +458,6 @@ export default function DashboardApplicationStatus({
         </div>
       )}
 
-      {/* КОМПАКТНАЯ ИСТОРИЯ: заявка одобрена, займ уже погашен — не показываем громоздкий блок ввода карты/подписи */}
-      {application && (application.status === "approved" || application.status === "partner_card") && mainLoan(loans)?.status === "paid" && (
-        <div className="glass rounded-2xl overflow-hidden mb-6"
-          style={{ border: "1px solid rgba(45,212,191,0.4)", background: "rgba(45,212,191,0.04)" }}>
-          <div className="px-6 py-4 flex items-center gap-3"
-            style={{ background: "linear-gradient(135deg,rgba(16,185,129,0.25),rgba(45,212,191,0.08))" }}>
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: "rgba(45,212,191,0.2)" }}>
-              <Icon name="BadgeCheck" size={20} className="text-teal-600" />
-            </div>
-            <div className="flex-1">
-              <div className="text-emerald-950 font-bold">Заявка №{fmtAppId(application.id)} — займ погашен</div>
-              <div className="text-teal-700 text-xs mt-0.5">Одобрено {application.createdAt}</div>
-            </div>
-            <span className="text-xs px-3 py-1 rounded-full font-semibold"
-              style={{ background: "rgba(45,212,191,0.2)", color: "#0d9488" }}>Погашен ✔️</span>
-          </div>
-          <div className="px-6 py-4">
-            <button
-              onClick={() => document.getElementById("my-loans")?.scrollIntoView({ behavior: "smooth" })}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-emerald-950 transition-all hover:opacity-90"
-              style={{ background: "rgba(45,212,191,0.15)", border: "1px solid rgba(45,212,191,0.35)" }}
-            >
-              <Icon name="History" size={16} />
-              Смотреть историю платежей
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* БЛОК СТАТУСА ЗАЯВКИ: APPROVED */}
       {application && application.status === "approved" && mainLoan(loans)?.status !== "paid" && (
         <div className="glass rounded-2xl overflow-hidden mb-6"

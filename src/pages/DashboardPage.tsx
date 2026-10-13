@@ -169,6 +169,13 @@ export default function DashboardPage() {
   const [isRepeatClient, setIsRepeatClient] = useState(false);
   const [payLoan, setPayLoan] = useState<Loan | null>(null);
   const [payEarly, setPayEarly] = useState(false);
+  const isTermPaid = (l: { approved_amount: number | null; loan_amount: number; approved_months: number | null; loan_months: number; approved_rate: number | null; paidTotal?: number; disbursed_at?: string | null } | null, defRate: number) => {
+    if (!l || !l.disbursed_at) return false;
+    const a = l.approved_amount || l.loan_amount;
+    const m = l.approved_months || l.loan_months;
+    const total = Math.round(a * (1 + ((l.approved_rate || defRate) / 100) * m));
+    return (l.paidTotal || 0) >= total - 0.5;
+  };
   const [payCard, setPayCard] = useState<{ amount: number; dueDate: string } | null>(null);
   const [payOther, setPayOther] = useState<{ contractNumber: string; amount: number; loanType: "carloan" | "shoploan"; loanId: number; early?: boolean } | null>(null);
   const [loanNotices, setLoanNotices] = useState<string[]>([]);
@@ -711,7 +718,7 @@ export default function DashboardPage() {
         )}
 
         {/* БЛОК ТОВАРНОГО ЗАЙМА */}
-        {section === "apps" && shopLoan && (
+        {section === "apps" && shopLoan && !isTermPaid(shopLoan, 9) && (
           <div className="mb-6">
             <div className="glass rounded-2xl overflow-hidden">
               <div className="p-5 flex items-center gap-3"
@@ -907,7 +914,7 @@ export default function DashboardPage() {
         )}
 
         {/* БЛОК АВТО-ЗАЙМА */}
-        {section === "apps" && carLoan && (
+        {section === "apps" && carLoan && !isTermPaid(carLoan, 12) && (
           <div className="mb-6">
             <div className="glass rounded-2xl overflow-hidden">
               <div className="p-5 flex items-center gap-3"
