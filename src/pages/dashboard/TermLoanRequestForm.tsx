@@ -2,6 +2,7 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import SignCodeDialog from "@/components/SignCodeDialog";
 import SavedCardPicker from "@/components/SavedCardPicker";
+import LoanCalculatorCard from "./LoanCalculatorCard";
 import ProfileCheck from "./ProfileCheck";
 import type { ClientProfile } from "./ClientProfileCard";
 
@@ -115,25 +116,12 @@ export default function TermLoanRequestForm({ kind, profile, phone, profileEdita
         </div>
       )}
 
-      <div>
-        <div className="flex justify-between mb-2">
-          <span className="text-emerald-950/60 text-sm">Сумма займа</span>
-          <span className="font-bold gradient-text">{amount.toLocaleString("ru-RU")} ₽</span>
-        </div>
-        <input type="range" min={min} max={max} step={step} value={amount} onChange={(e) => setAmount(Number(e.target.value))} className="slider-custom w-full" />
-      </div>
-      <div>
-        <div className="flex justify-between mb-2">
-          <span className="text-emerald-950/60 text-sm">Срок</span>
-          <span className="font-bold gradient-text">{months} мес.</span>
-        </div>
-        <input type="range" min={1} max={maxMonths} step={1} value={months} onChange={(e) => setMonths(Number(e.target.value))} className="slider-custom w-full" />
-      </div>
-
-      <div className="rounded-xl px-4 py-3 flex justify-between text-sm" style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)" }}>
-        <span className="text-emerald-950/60">Ежемесячно ≈ {monthly.toLocaleString("ru-RU")} ₽</span>
-        <span className="text-emerald-950 font-bold">Итого {total.toLocaleString("ru-RU")} ₽</span>
-      </div>
+      <LoanCalculatorCard
+        amount={amount} amountMin={min} amountMax={max} amountStep={step} onAmount={setAmount}
+        term={months} termMin={1} termMax={maxMonths} termUnit="мес." onTerm={setMonths}
+        total={total} overpay={total - amount}
+        extraLabel="Платёж в месяц" extraValue={monthly}
+      />
 
       <div>
         <div className="text-emerald-950/60 text-sm mb-2">Карта или телефон СБП для получения денег <span className="text-red-500">*</span></div>

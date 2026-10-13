@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import Icon from "@/components/ui/icon";
 import ProfileEditForm from "./ProfileEditForm";
 import type { ClientProfile } from "./ClientProfileCard";
+import LoanCalculatorCard from "./LoanCalculatorCard";
 import RateDisclaimer from "@/components/RateDisclaimer";
 import SavedCardPicker from "@/components/SavedCardPicker";
 
@@ -152,43 +153,12 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
           <div className="text-emerald-950/30 text-xs pt-1">Паспортные и рабочие данные возьмём из вашей предыдущей заявки</div>
         </div>
 
-        {/* Сумма */}
-        <div>
-          <div className="flex justify-between mb-2">
-            <span className="text-emerald-950/60 text-sm">Желаемая сумма</span>
-            <span className="font-bold text-base gradient-text">{amount.toLocaleString("ru-RU")} ₽</span>
-          </div>
-          <input
-            type="range" min={5000} max={200000} step={5000}
-            value={amount}
-            onChange={(e) => setAmount(Number(e.target.value))}
-            className="slider-custom w-full"
-            style={{ background: calc.amountBg }}
-          />
-          <div className="flex justify-between text-emerald-950/30 text-xs mt-1">
-            <span>5 000 ₽</span>
-            <span>200 000 ₽</span>
-          </div>
-        </div>
-
-        {/* Срок */}
-        <div>
-          <div className="flex justify-between mb-2">
-            <span className="text-emerald-950/60 text-sm">Срок займа</span>
-            <span className="font-bold text-base gradient-text">{days} дн.</span>
-          </div>
-          <input
-            type="range" min={5} max={365} step={1}
-            value={days}
-            onChange={(e) => setDays(Number(e.target.value))}
-            className="slider-custom w-full"
-            style={{ background: calc.daysBg }}
-          />
-          <div className="flex justify-between text-emerald-950/30 text-xs mt-1">
-            <span>5 дней</span>
-            <span>365 дней</span>
-          </div>
-        </div>
+        <LoanCalculatorCard
+          amount={amount} amountMin={5000} amountMax={200000} amountStep={5000} onAmount={setAmount}
+          term={days} termMin={5} termMax={365} termUnit="дн." onTerm={setDays}
+          total={calc.total} overpay={calc.interest}
+          extraLabel={`Страховая премия (${calc.insurancePct}%)`} extraValue={calc.insurance}
+        />
 
         {/* Карта для получения денег */}
         <div>
@@ -209,17 +179,6 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
             Применён промокод <b>{promo.code}</b>: скидка {promo.discount}% на проценты
           </div>
         )}
-
-        {/* Итог */}
-        <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>
-          <span className="text-emerald-950/50 text-sm">К возврату</span>
-          <span className="font-bold text-xl gradient-text">{calc.total.toLocaleString("ru-RU")} ₽</span>
-        </div>
-
-        <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.2)" }}>
-          <span className="text-emerald-950/50 text-sm">Страховая премия ({calc.insurancePct}%)</span>
-          <span className="font-bold text-emerald-950">{calc.insurance.toLocaleString("ru-RU")} ₽</span>
-        </div>
 
         <RateDisclaimer />
 
