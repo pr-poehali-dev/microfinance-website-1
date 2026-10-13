@@ -16,6 +16,7 @@ import PayLoanModal from "./dashboard/PayLoanModal";
 import CardPayModal from "./dashboard/CardPayModal";
 import PaymentsList, { DueItem } from "./dashboard/PaymentsList";
 import { nextPayment } from "./dashboard/nextPayment";
+import TermLoanHistoryCard from "./dashboard/TermLoanHistoryCard";
 import NewRequestHub from "./dashboard/NewRequestHub";
 import CardActivatedModal from "./dashboard/CardActivatedModal";
 
@@ -715,6 +716,21 @@ export default function DashboardPage() {
               hideNewLoan={section === "apps"}
             />
           </>
+        )}
+
+        {section === "history" && !loading && !error && carLoan && isTermPaid(carLoan, 12) && (
+          <TermLoanHistoryCard
+            title="Займ под залог авто" icon="Car" number={`А-${String(carLoan.id).padStart(12, "0")}`}
+            amount={carLoan.approved_amount || carLoan.loan_amount} months={carLoan.approved_months || carLoan.loan_months}
+            total={carLoan.paidTotal || 0} payments={carLoan.payments || []} contractUrl={carLoan.contract_url}
+          />
+        )}
+        {section === "history" && !loading && !error && shopLoan && isTermPaid(shopLoan, 9) && (
+          <TermLoanHistoryCard
+            title="Займ на покупки" icon="ShoppingCart" number={`Т-${String(shopLoan.id).padStart(12, "0")}`}
+            amount={shopLoan.approved_amount || shopLoan.loan_amount} months={shopLoan.approved_months || shopLoan.loan_months}
+            total={shopLoan.paidTotal || 0} payments={shopLoan.payments || []} contractUrl={shopLoan.contract_url}
+          />
         )}
 
         {/* БЛОК ТОВАРНОГО ЗАЙМА */}
