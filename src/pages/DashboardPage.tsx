@@ -10,7 +10,6 @@ import DashboardLoans from "./dashboard/DashboardLoans";
 import DashboardSupport from "./dashboard/DashboardSupport";
 import PaymentHistory from "./dashboard/PaymentHistory";
 import ClientProfileCard from "./dashboard/ClientProfileCard";
-import PartnerCardLinks from "./dashboard/PartnerCardLinks";
 import RepeatLoanForm from "./dashboard/RepeatLoanForm";
 import PromoCodeCard from "./dashboard/PromoCodeCard";
 import PayLoanModal from "./dashboard/PayLoanModal";
@@ -752,12 +751,6 @@ export default function DashboardPage() {
                       </div>
                     )}
 
-                    {!shopLoan.contract_signed && (
-                      <div className="mb-4">
-                        <PartnerCardLinks />
-                      </div>
-                    )}
-
                     {shopLoan.contract_signed && (
                       <PaymentHistory
                         schedule={shopLoan.schedule || []}
@@ -958,12 +951,6 @@ export default function DashboardPage() {
                         </div>
                       ))}
                     </div>
-
-                    {!carLoan.contract_signed && (
-                      <div className="mb-4">
-                        <PartnerCardLinks />
-                      </div>
-                    )}
 
                     {carLoan.disbursed_at ? (
                       <div className="space-y-3">
