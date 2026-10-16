@@ -1944,8 +1944,21 @@ def handler(event: dict, context) -> dict:
         )
         for aid, lim, rt, st in cur.fetchall():
             items.append({"type": "card", "id": aid, "title": f"Карта РУСФИНАНС 24 (заявка №{aid})", "amount": float(lim or 0), "rate": float(rt), "unit": "% в неделю", "status": st})
+        history = []
+        keys = [f"('{i['type']}', {int(i['id'])})" for i in items]
+        if keys:
+            cur.execute(
+                f"SELECT product_type, product_id, old_rate, new_rate, unit, created_at FROM {SCHEMA}.rate_changes "
+                f"WHERE (product_type, product_id) IN ({','.join(keys)}) ORDER BY created_at DESC LIMIT 50"
+            )
+            titles = {(i["type"], i["id"]): i["title"] for i in items}
+            for pt, pid, o_, n_, u_, c_ in cur.fetchall():
+                history.append({
+                    "title": titles.get((pt, pid), ""), "oldRate": float(o_), "newRate": float(n_), "unit": u_,
+                    "createdAt": msk(c_).strftime("%d.%m.%Y в %H:%M"),
+                })
         cur.close(); conn.close()
-        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"items": items}, ensure_ascii=False)}
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"items": items, "history": history}, ensure_ascii=False)}
 
     # --- УМЕНЬШИТЬ СТАВКУ (POST, sub='reduce_rate', body: {type, id, rate}) ---
     if sub == "reduce_rate" and method == "POST":
@@ -1981,6 +1994,12 @@ def handler(event: dict, context) -> dict:
             cur.execute(f"UPDATE {SCHEMA}.card_transactions SET rate = {store_rate} WHERE application_id = {r_id} AND status != 'cancelled' AND rate > {store_rate}")
         else:
             cur.execute(f"UPDATE {SCHEMA}.{tbl} SET approved_rate = {store_rate} WHERE id = {r_id}")
+        unit_h = "в день" if r_type == "loan" else ("в неделю" if r_type == "card" else "в месяц")
+        old_h = round(old_rate * 100, 3) if r_type == "loan" else old_rate
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.rate_changes (product_type, product_id, old_rate, new_rate, unit) "
+            f"VALUES ('{r_type}', {r_id}, {old_h}, {new_rate}, '{unit_h}')"
+        )
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "rate": new_rate})}
 

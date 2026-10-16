@@ -13,6 +13,14 @@ interface RateItem {
   status: string;
 }
 
+interface HistoryItem {
+  title: string;
+  oldRate: number;
+  newRate: number;
+  unit: string;
+  createdAt: string;
+}
+
 interface Props {
   userId: number;
   token: string;
@@ -26,6 +34,7 @@ const INPUT: React.CSSProperties = {
 
 export default function ClientRateReducer({ userId, token, onChanged }: Props) {
   const [items, setItems] = useState<RateItem[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [openKey, setOpenKey] = useState("");
   const [value, setValue] = useState("");
@@ -37,6 +46,7 @@ export default function ClientRateReducer({ userId, token, onChanged }: Props) {
     const r = await fetch(`${ADMIN_URL}?sub=client_rates&userId=${userId}`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => null);
     const d = r && r.ok ? await r.json().catch(() => null) : null;
     setItems(d?.items ?? []);
+    setHistory(d?.history ?? []);
     setLoading(false);
   }
 
@@ -107,6 +117,19 @@ export default function ClientRateReducer({ userId, token, onChanged }: Props) {
           );
         })}
       </div>
+      {history.length > 0 && (
+        <div style={{ marginTop: 12, borderTop: "1px solid rgba(16,185,129,0.15)", paddingTop: 10 }}>
+          <div style={{ color: "#059669", fontSize: 12, fontWeight: 700, textTransform: "uppercase", marginBottom: 8 }}>История изменений ставки</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {history.map((h, i) => (
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", fontSize: 12 }}>
+                <span style={{ color: "#022c22" }}>{h.title}: <b>{h.oldRate}%</b> → <b>{h.newRate}%</b> {h.unit}</span>
+                <span style={{ color: "rgba(2,44,34,0.5)" }}>{h.createdAt}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
