@@ -277,7 +277,7 @@ export default function AdminClients({
               ))}
               {selUser && (
                 <button onClick={() => { setClientView("creditdoctor" as typeof clientView); setActionMsg(""); setActionErr(""); }}
-                  style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 6,
+                  style={{ padding: "8px 16px", borderRadius: 10, cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 6,
                     background: clientView === ("creditdoctor" as typeof clientView) ? "linear-gradient(135deg,#14b8a6,#ec4899)" : "rgba(16,185,129,0.15)",
                     color: clientView === ("creditdoctor" as typeof clientView) ? "white" : "#0f766e",
                     border: "1px solid rgba(16,185,129,0.35)",

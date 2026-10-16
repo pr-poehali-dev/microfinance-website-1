@@ -854,7 +854,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
 
         {/* Прогресс */}
         <div className="mt-6 flex justify-center gap-2">
-          {sections.map((s, i) => (
+          {sections.map((s) => (
             <div key={s.id} onClick={() => setActiveSection(s.id)}
               className="w-2 h-2 rounded-full cursor-pointer transition-all"
               style={{
