@@ -4,17 +4,14 @@ import Icon from "@/components/ui/icon";
 
 const AUTH_URL = "https://functions.poehali.dev/81fdd868-863a-42d5-acf7-ab535f8cadae";
 
-type Mode = "login" | "phone_login";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<Mode>("login");
   const [form, setForm] = useState({ phone: "", password: "", fullName: "", email: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
 
-  const switchMode = (m: Mode) => { setMode(m); setError(""); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +21,7 @@ export default function LoginPage() {
       const res = await fetch(AUTH_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: mode, ...form }),
+        body: JSON.stringify({ action: "login", ...form }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -39,11 +36,6 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const titles: Record<Mode, { h: string; sub: string }> = {
-    login:        { h: "Вход для заёмщиков", sub: "Введите номер телефона и пароль" },
-    phone_login:  { h: "Войти по телефону",  sub: "Для клиентов с одобренным займом" },
   };
 
   return (
@@ -69,10 +61,10 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="w-16 h-16 btn-neon rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Icon name={mode === "phone_login" ? "Smartphone" : "User"} size={28} className="text-white" />
+              <Icon name="User" size={28} className="text-white" />
             </div>
-            <h1 className="font-oswald text-3xl font-bold text-emerald-950 mb-2">{titles[mode].h}</h1>
-            <p className="text-emerald-950/50 text-sm">{titles[mode].sub}</p>
+            <h1 className="font-oswald text-3xl font-bold text-emerald-950 mb-2">Вход для заёмщиков</h1>
+            <p className="text-emerald-950/50 text-sm">Введите номер телефона и пароль</p>
           </div>
 
           <div className="glass rounded-2xl p-6">
@@ -93,36 +85,26 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {mode !== "phone_login" && (
-                <div>
-                  <label className="text-emerald-950/70 text-sm mb-2 block">Пароль</label>
-                  <div className="relative">
-                    <Icon name="Lock" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-950/40" />
-                    <input
-                      type={showPass ? "text" : "password"}
-                      placeholder="Введите пароль"
-                      value={form.password}
-                      onChange={(e) => setForm({ ...form, password: e.target.value })}
-                      required
-                      minLength={6}
-                      className="w-full rounded-xl pl-10 pr-12 py-3.5 text-emerald-950 placeholder-emerald-900/30 outline-none border border-emerald-900/15 focus:border-emerald-500 transition-colors"
-                      style={{ background: "rgba(16,185,129,0.05)" }}
-                    />
-                    <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-950/40 hover:text-emerald-950/70">
-                      <Icon name={showPass ? "EyeOff" : "Eye"} size={16} />
-                    </button>
-                  </div>
+              <div>
+                <label className="text-emerald-950/70 text-sm mb-2 block">Пароль</label>
+                <div className="relative">
+                  <Icon name="Lock" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-950/40" />
+                  <input
+                    type={showPass ? "text" : "password"}
+                    placeholder="Введите пароль"
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    required
+                    minLength={6}
+                    className="w-full rounded-xl pl-10 pr-12 py-3.5 text-emerald-950 placeholder-emerald-900/30 outline-none border border-emerald-900/15 focus:border-emerald-500 transition-colors"
+                    style={{ background: "rgba(16,185,129,0.05)" }}
+                  />
+                  <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-950/40 hover:text-emerald-950/70">
+                    <Icon name={showPass ? "EyeOff" : "Eye"} size={16} />
+                  </button>
                 </div>
-              )}
-
-              {/* Подсказка для phone_login */}
-              {mode === "phone_login" && (
-                <div className="rounded-xl px-4 py-3 flex items-start gap-3 text-sm"
-                  style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)" }}>
-                  <Icon name="Info" size={15} className="text-emerald-600 mt-0.5 shrink-0" />
-                  <p className="text-emerald-950/60">Введите номер телефона, который вы указали в заявке. Вход доступен после одобрения займа.</p>
-                </div>
-              )}
+              </div>
+            
 
               {error && (
                 <div className="rounded-xl px-4 py-3 flex items-center gap-2 text-sm" style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#fca5a5" }}>
@@ -137,35 +119,11 @@ export default function LoginPage() {
               >
                 {loading
                   ? <><Icon name="Loader2" size={18} className="animate-spin" /> Загрузка...</>
-                  : mode === "phone_login"
-                    ? <><Icon name="Smartphone" size={18} /> Войти по номеру телефона</>
-                    : <><Icon name="LogIn" size={18} /> Войти</>
+                  : <><Icon name="LogIn" size={18} /> Войти</>
                 }
               </button>
             </form>
 
-            {/* Ссылка на вход по телефону */}
-            {mode !== "phone_login" && (
-              <div className="mt-5 pt-4" style={{ borderTop: "1px solid rgba(16,185,129,0.07)" }}>
-                <p className="text-center text-emerald-950/40 text-sm mb-3">Займ одобрен, но нет пароля?</p>
-                <button
-                  onClick={() => switchMode("phone_login")}
-                  className="w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-80"
-                  style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)", color: "#6ee7b7" }}
-                >
-                  <Icon name="Smartphone" size={16} />
-                  Войти только по номеру телефона
-                </button>
-              </div>
-            )}
-
-            {mode === "phone_login" && (
-              <div className="mt-5 pt-4 text-center" style={{ borderTop: "1px solid rgba(16,185,129,0.07)" }}>
-                <button onClick={() => switchMode("login")} className="text-emerald-950/40 text-sm hover:text-emerald-950/70 transition-colors">
-                  ← Назад к обычному входу
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </div>

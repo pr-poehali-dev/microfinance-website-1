@@ -52,6 +52,9 @@ def handler(event: dict, context) -> dict:
 
     # --- ВХОД ПО НОМЕРУ ТЕЛЕФОНА (для клиентов с одобренной заявкой) ---
     if action == "phone_login":
+        cur.close(); conn.close()
+        return {"statusCode": 403, "headers": CORS, "body": json.dumps({"error": "Вход только по номеру телефона отключён. Войдите по телефону и паролю"})}
+    if action == "phone_login_disabled":
         cur.execute(f"SELECT id, blocked_until FROM {SCHEMA}.users WHERE phone = '{phone}'")
         user_row = cur.fetchone()
         if not user_row:

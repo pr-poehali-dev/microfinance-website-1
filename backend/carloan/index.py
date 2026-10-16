@@ -78,6 +78,10 @@ def known_client_password(cur, phone_e: str):
 
 
 def ensure_client_password(cur, table: str, app_id: int, phone_e: str) -> None:
+    cur.execute(f"SELECT own_password FROM {SCHEMA}.users WHERE phone = '{phone_e}'")
+    _op = cur.fetchone()
+    if _op and _op[0]:
+        return
     cur.execute(f"SELECT client_password FROM {SCHEMA}.{table} WHERE id = {int(app_id)}")
     r = cur.fetchone()
     if r and r[0]:
@@ -208,25 +212,31 @@ def handler(event: dict, context) -> dict:
         new_id = cur.fetchone()[0]
 
         # Создаём/обновляем пользователя и сессию для ЛК
+        own_pw_in = str(b.get("password") or "").strip()
         plain_pw = secrets.token_hex(6)
-        pw_hash = hashlib.sha256(plain_pw.encode()).hexdigest()
+        pw_hash = hashlib.sha256((own_pw_in or plain_pw).encode()).hexdigest()
+        own_flag = "TRUE" if own_pw_in else "FALSE"
         ph_e = phone.replace("'", "''")
         fn_e = full_name.replace("'", "''")
         em_e = email.replace("'", "''")
-        cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = '{ph_e}'")
+        cur.execute(f"SELECT id, own_password FROM {SCHEMA}.users WHERE phone = '{ph_e}'")
         u = cur.fetchone()
         if not u:
             cur.execute(
-                f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email) "
-                f"VALUES ('{ph_e}', '{pw_hash}', '{fn_e}', '{em_e}') RETURNING id"
+                f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email, own_password) "
+                f"VALUES ('{ph_e}', '{pw_hash}', '{fn_e}', '{em_e}', {own_flag}) RETURNING id"
             )
             user_id = cur.fetchone()[0]
-            cur.execute(f"UPDATE {SCHEMA}.car_loan_applications SET client_password = '{plain_pw}' WHERE id = {new_id}")
+            if not own_pw_in:
+                cur.execute(f"UPDATE {SCHEMA}.car_loan_applications SET client_password = '{plain_pw}' WHERE id = {new_id}")
         else:
             user_id = u[0]
-            _kp = known_client_password(cur, ph_e)
-            if _kp:
-                cur.execute(f"UPDATE {SCHEMA}.car_loan_applications SET client_password = '{_kp}' WHERE id = {new_id}")
+            if own_pw_in and not u[1]:
+                cur.execute(f"UPDATE {SCHEMA}.users SET password_hash = '{pw_hash}', own_password = TRUE WHERE id = {user_id}")
+            elif not own_pw_in and not u[1]:
+                _kp = known_client_password(cur, ph_e)
+                if _kp:
+                    cur.execute(f"UPDATE {SCHEMA}.car_loan_applications SET client_password = '{_kp}' WHERE id = {new_id}")
 
         sess_token = secrets.token_hex(32)
         expires_at = datetime.now() + timedelta(days=30)

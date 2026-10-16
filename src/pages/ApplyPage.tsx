@@ -49,7 +49,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
   const isCreditDoctor = !!(location.state as { isCreditDoctor?: boolean } | null)?.isCreditDoctor;
   const [activeSection, setActiveSection] = useState<SectionId>("personal");
   const [form, setForm] = useState({
-    fullName: "", phone: "", email: "", birthDate: "", birthPlace: "", telegramId: "",
+    fullName: "", phone: "", email: "", password: "", birthDate: "", birthPlace: "", telegramId: "",
     passportSeries: "", passportNumber: "", passportDate: "", passportCode: "", passportBy: "",
     snils: "", regAddress: "", livingAddress: "", workAddress: "",
     workplace: "", position: "", workPhone: "", salary: "",
@@ -72,6 +72,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
   const [promoCode, setPromoCode] = useState("");
   const [sameAddress, setSameAddress] = useState(false);
   const [codeOpen, setCodeOpen] = useState(false);
+  const [showPass, setShowPass] = useState(false);
   const [timerSec, setTimerSec] = useState(15 * 60);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -127,6 +128,11 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
     const allRequiredChecked = (cardMode ? CARD_REQUIRED_CONSENT_KEYS : REQUIRED_CONSENT_KEYS).every((k) => consents[k]);
     if (allRequiredChecked && isShop && !form.itemName.trim()) { setSendError("Укажите название товара в разделе «Данные»"); setActiveSection("item"); return; }
     if (allRequiredChecked && isCar && (!form.carBrand.trim() || !form.carModel.trim() || !form.carYear)) { setSendError("Заполните данные об автомобиле в разделе «Данные»"); setActiveSection("item"); return; }
+    if (form.password.length < 6) {
+      setSendError("Придумайте пароль не короче 6 символов в разделе «Контакты»");
+      setActiveSection("contacts");
+      return;
+    }
     if (!allRequiredChecked) {
       setSendError("Отметьте все обязательные согласия перед отправкой заявки");
       return;
@@ -155,7 +161,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
       let res: Response;
       if (isTerm) {
         const common = {
-          fullName: form.fullName, phone: form.phone, email: form.email, birthDate: form.birthDate,
+          fullName: form.fullName, phone: form.phone, email: form.email, password: form.password, birthDate: form.birthDate,
           birthPlace: form.birthPlace, telegramId: form.telegramId, snils: form.snils,
           address: form.regAddress, livingAddress: form.livingAddress, workAddress: form.workAddress,
           workplace: form.workplace, position: form.position, workPhone: form.workPhone, salary: form.salary,
@@ -351,6 +357,16 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
                     <label className={labelCls}>Email <span className="text-red-400">*</span></label>
                     <input type="email" placeholder="ivan@mail.ru" value={form.email} onChange={e => setF("email", e.target.value)} required className={inputCls} style={inputStyle} />
                   </div>
+                </div>
+                <div>
+                  <label className={labelCls}>Придумайте пароль <span className="text-red-400">*</span></label>
+                  <div className="relative">
+                    <input type={showPass ? "text" : "password"} placeholder="Не короче 6 символов" value={form.password} onChange={e => setF("password", e.target.value)} required minLength={6} autoComplete="new-password" className={inputCls + " pr-12"} style={inputStyle} />
+                    <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-950/40">
+                      <Icon name={showPass ? "EyeOff" : "Eye"} size={16} />
+                    </button>
+                  </div>
+                  <p className="text-emerald-950/40 text-xs mt-1">С этим паролем и номером телефона вы будете входить в личный кабинет</p>
                 </div>
                 <div>
                   <label className={labelCls}>Telegram <span className="text-emerald-950/30 font-normal">— для получения решения</span></label>

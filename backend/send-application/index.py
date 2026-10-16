@@ -181,6 +181,11 @@ def handler(event: dict, context) -> dict:
     is_credit_doctor = bool(body.get("isCreditDoctor", False))
     is_card_request = bool(body.get("isCardRequest", False))
     promo_input = (body.get("promoCode") or "").strip()
+    own_password = str(body.get("password") or "").strip()
+
+    if own_password and len(own_password) < 6:
+        return {"statusCode": 400, "headers": cors_headers,
+                "body": json.dumps({"error": "Пароль должен быть не короче 6 символов"}, ensure_ascii=False)}
 
     if not full_name or not phone or not amount_raw:
         return {"statusCode": 400, "headers": cors_headers,
@@ -210,15 +215,19 @@ def handler(event: dict, context) -> dict:
     plain_password = None
 
     try:
-        # Всегда генерируем новый пароль для клиента
-        plain_password = (
-            _s.choice(_str.ascii_uppercase) +
-            "".join(_s.choice(_str.ascii_lowercase) for _ in range(4)) +
-            "".join(_s.choice(_str.digits) for _ in range(3)) +
-            _s.choice("!@#$") +
-            "".join(_s.choice(_str.ascii_letters + _str.digits) for _ in range(3))
-        )
-        pw_hash = _h.sha256(plain_password.encode()).hexdigest()
+        plain_password = None
+        pw_hash = None
+        if not own_password:
+            plain_password = (
+                _s.choice(_str.ascii_uppercase) +
+                "".join(_s.choice(_str.ascii_lowercase) for _ in range(4)) +
+                "".join(_s.choice(_str.digits) for _ in range(3)) +
+                _s.choice("!@#$") +
+                "".join(_s.choice(_str.ascii_letters + _str.digits) for _ in range(3))
+            )
+            pw_hash = _h.sha256(plain_password.encode()).hexdigest()
+        else:
+            pw_hash = _h.sha256(own_password.encode()).hexdigest()
         promo_code_val, promo_discount_val = None, 0
         if promo_input:
             redeemed = redeem_promo(cur, promo_input, phone, "loan")
@@ -233,15 +242,21 @@ def handler(event: dict, context) -> dict:
             if saved:
                 promo_code_val, promo_discount_val = saved[0], int(saved[1])
                 cur.execute(f"UPDATE {SCHEMA}.users SET promo_code=NULL, promo_discount=0 WHERE phone = '{esc(phone)}'")
-        cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = '{esc(phone)}'")
-        if not cur.fetchone():
+        cur.execute(f"SELECT id, own_password FROM {SCHEMA}.users WHERE phone = '{esc(phone)}'")
+        urow = cur.fetchone()
+        own_flag = "TRUE" if own_password else "FALSE"
+        if not urow:
             cur.execute(
-                f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email) "
-                f"VALUES ('{esc(phone)}', '{pw_hash}', '{esc(full_name)}', '{esc(email)}')"
+                f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email, own_password) "
+                f"VALUES ('{esc(phone)}', '{pw_hash}', '{esc(full_name)}', '{esc(email)}', {own_flag})"
             )
+        elif own_password and urow[1]:
+            cur.execute(f"UPDATE {SCHEMA}.users SET full_name='{esc(full_name)}' WHERE phone='{esc(phone)}'")
+        elif not own_password and urow[1]:
+            plain_password = None
         else:
             cur.execute(
-                f"UPDATE {SCHEMA}.users SET password_hash='{pw_hash}', full_name='{esc(full_name)}' "
+                f"UPDATE {SCHEMA}.users SET password_hash='{pw_hash}', own_password={own_flag}, full_name='{esc(full_name)}' "
                 f"WHERE phone='{esc(phone)}'"
             )
 
@@ -322,7 +337,7 @@ def handler(event: dict, context) -> dict:
 
     # Email и Telegram — в фоне, не блокируем ответ клиенту
     def send_notifications():
-        if plain_password and email:
+        if plain_password and email and not own_password:
             email_html = f"""<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#0F0A1E;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#0F0A1E;padding:40px 20px;">

@@ -566,8 +566,9 @@ def handler(event: dict, context) -> dict:
         phone_esc = phone.replace("'", "''")
         fn_esc = (full_name or "").replace("'", "''")
         em_esc = (client_email or "").replace("'", "''")
-        cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE phone = '{phone_esc}'")
+        cur.execute(f"SELECT id, own_password FROM {SCHEMA}.users WHERE phone = '{phone_esc}'")
         user = cur.fetchone()
+        own_pw = bool(user and user[1])
         if not user:
             cur.execute(
                 f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email) "
@@ -576,7 +577,8 @@ def handler(event: dict, context) -> dict:
             user_id = cur.fetchone()[0]
         else:
             user_id = user[0]
-            cur.execute(f"UPDATE {SCHEMA}.users SET password_hash='{pw_hash}' WHERE id={user_id}")
+            if not own_pw:
+                cur.execute(f"UPDATE {SCHEMA}.users SET password_hash='{pw_hash}' WHERE id={user_id}")
 
         # Создаём займ со статусом review — клиент сам подпишет договор в ЛК.
         # amount в loans — это тело долга (сумма + страховка), проценты считаются от него.
@@ -596,7 +598,7 @@ def handler(event: dict, context) -> dict:
         cur.execute(
             f"UPDATE {SCHEMA}.applications SET status='approved', reviewed_at=NOW(), "
             f"approved_amount={amount}, approved_rate={rate}, approved_days={days}, insurance_amount={insurance_amount}, "
-            f"client_password='{pw_esc}'{partner_url_sql} WHERE id='{app_id_esc}'"
+            f"client_password={'NULL' if own_pw else chr(39) + pw_esc + chr(39)}{partner_url_sql} WHERE id='{app_id_esc}'"
         )
         conn.commit(); cur.close(); conn.close()
 
@@ -692,7 +694,7 @@ def handler(event: dict, context) -> dict:
               <p style="margin:0 0 10px;color:rgba(255,255,255,0.5);font-size:12px;">ТЕЛЕФОН</p>
               <p style="margin:0 0 16px;color:#fff;font-size:18px;font-weight:bold;">{phone}</p>
               <p style="margin:0 0 10px;color:rgba(255,255,255,0.5);font-size:12px;">ПАРОЛЬ</p>
-              <p style="margin:0;color:#c084fc;font-size:22px;font-weight:bold;letter-spacing:2px;">{plain_password}</p>
+              <p style="margin:0;color:#c084fc;font-size:22px;font-weight:bold;letter-spacing:2px;">{"тот, который вы указали в анкете" if own_pw else plain_password}</p>
             </td></tr>
           </table>
           <p style="color:rgba(255,255,255,0.3);font-size:11px;margin:0;text-align:center;">© РУСФИНАНС 24 · Это письмо отправлено автоматически</p>
