@@ -1,3 +1,4 @@
+import ReduceRateButton from "./ReduceRateButton";
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import AdminAppTimeline from "./AdminAppTimeline";
@@ -20,11 +21,13 @@ export interface TermLoanLike {
   contact_person?: string | null;
   sb_score?: string | null;
   card_number?: string | null;
+  approved_rate?: number | string | null;
 }
 
 interface Props {
   app: TermLoanLike;
   baseUrl: string;
+  kind?: "carloan" | "shoploan";
   token: string;
   onSaved: () => void;
 }
@@ -52,7 +55,7 @@ const inpStyle: React.CSSProperties = {
   padding: "7px 10px", color: "#022c22", fontSize: 13, width: "100%", boxSizing: "border-box", outline: "none",
 };
 
-export default function TermLoanExtras({ app, baseUrl, token, onSaved }: Props) {
+export default function TermLoanExtras({ app, baseUrl, kind, token, onSaved }: Props) {
   const initial = () => ({
     workplace: app.workplace || "", position: app.position || "", activeLoans: app.active_loans || "",
     salary: app.salary ? String(app.salary).replace(/\.0$/, "") : "", contactPerson: app.contact_person || "",
@@ -127,6 +130,12 @@ export default function TermLoanExtras({ app, baseUrl, token, onSaved }: Props) 
             <Icon name="Clock" size={14} />Договор формируется
           </div>
         )
+      )}
+
+      {kind && Number(app.approved_rate) > 0 && (
+        <div style={{ marginBottom: 12 }}>
+          <ReduceRateButton token={token} type={kind} id={app.id} rate={Number(app.approved_rate)} unit="в месяц" onDone={onSaved} />
+        </div>
       )}
 
       <AdminAppTimeline app={{

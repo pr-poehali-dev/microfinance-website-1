@@ -1,3 +1,4 @@
+import ReduceRateButton from "./ReduceRateButton";
 import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 import { waitingStyle } from "./waiting";
@@ -126,6 +127,10 @@ export default function AdminCards({ token, onChanged }: Props) {
                 ) : (
                   <span style={{ fontSize: 12, color: "#b45309" }}>Договор по карте ещё не создан</span>
                 )}
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <ReduceRateButton token={token} type="card" id={c.appId} rate={c.rate} unit="в неделю" onDone={() => { load(); onChanged?.(); }} />
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 10, marginTop: 14 }}>

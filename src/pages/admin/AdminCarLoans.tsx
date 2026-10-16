@@ -257,7 +257,7 @@ export default function AdminCarLoans({ token }: Props) {
                       ))}
                     </div>
 
-                    <TermLoanExtras app={app} baseUrl={CAR_URL} token={token} onSaved={load} />
+                    <TermLoanExtras app={app} kind="carloan" baseUrl={CAR_URL} token={token} onSaved={load} />
 
                     {(app.file_passport || app.file_registration || app.file_selfie || app.file_previous_passports || app.file_vehicle_doc) && (
                       <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>

@@ -1,3 +1,4 @@
+import ReduceRateButton from "./ReduceRateButton";
 import AddPaymentModal from "./AddPaymentModal";
 import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
@@ -206,6 +207,19 @@ export default function AdminLoanDetailModal({ token, type, id, onClose }: Props
                 ))}
               </div>
             </div>
+
+            {data.rate != null && data.rate > 0 && (
+              <div style={{ marginBottom: 12 }}>
+                <ReduceRateButton
+                  token={token}
+                  type={data.type as "loan" | "carloan" | "shoploan"}
+                  id={data.id}
+                  rate={data.type === "loan" ? Math.round(data.rate * 100000) / 1000 : data.rate}
+                  unit={data.type === "loan" ? "в день" : "в месяц"}
+                  onDone={loadDetail}
+                />
+              </div>
+            )}
 
             {/* Условия займа */}
             <div style={{ ...G, padding: 16, marginBottom: 16 }}>

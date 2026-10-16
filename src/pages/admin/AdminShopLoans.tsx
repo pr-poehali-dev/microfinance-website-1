@@ -272,7 +272,7 @@ export default function AdminShopLoans({ token }: Props) {
                     )}
                     {app.notes && <div style={{ marginTop: 6, color: "rgba(2,44,34,0.4)", fontSize: 13 }}>📝 {app.notes}</div>}
 
-                    <TermLoanExtras app={app} baseUrl={SHOP_URL} token={token} onSaved={load} />
+                    <TermLoanExtras app={app} kind="shoploan" baseUrl={SHOP_URL} token={token} onSaved={load} />
 
                     {/* Документы */}
                     {(app.file_passport || app.file_registration || app.file_selfie || app.file_snils || app.file_previous_passports) && (
