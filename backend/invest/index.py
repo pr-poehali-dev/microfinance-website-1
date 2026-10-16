@@ -34,7 +34,7 @@ def tg(text: str):
         data=data, headers={"Content-Type": "application/json"},
     )
     try:
-        urllib.request.urlopen(req, timeout=5)
+        urllib.request.urlopen(req, timeout=1.5)
     except Exception:
         pass
 

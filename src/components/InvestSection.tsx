@@ -41,11 +41,15 @@ export default function InvestSection() {
       setError("Выберите срок и способ выплаты процентов");
       return;
     }
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 20000);
     const r = await fetch(INVEST_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...form, termMonths: Number(form.termMonths) }),
+      signal: ctrl.signal,
     }).catch(() => null);
+    clearTimeout(timer);
     const d = r ? await r.json().catch(() => ({})) : {};
     setBusy(false);
     if (r && r.ok) {
