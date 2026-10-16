@@ -4,22 +4,21 @@ import Icon from "@/components/ui/icon";
 
 const AUTH_URL = "https://functions.poehali.dev/81fdd868-863a-42d5-acf7-ab535f8cadae";
 
-type Mode = "login" | "register" | "phone_login";
+type Mode = "login" | "phone_login";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("login");
   const [form, setForm] = useState({ phone: "", password: "", fullName: "", email: "" });
   const [error, setError] = useState("");
-  const [isExisting, setIsExisting] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
 
-  const switchMode = (m: Mode) => { setMode(m); setError(""); setIsExisting(false); };
+  const switchMode = (m: Mode) => { setMode(m); setError(""); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(""); setIsExisting(false);
+    setError("");
     setLoading(true);
     try {
       const res = await fetch(AUTH_URL, {
@@ -29,7 +28,6 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        if (res.status === 409) setIsExisting(true);
         setError(data.error || "Ошибка");
         return;
       }
@@ -44,8 +42,7 @@ export default function LoginPage() {
   };
 
   const titles: Record<Mode, { h: string; sub: string }> = {
-    login:        { h: "Вход в кабинет",    sub: "Введите номер телефона и пароль" },
-    register:     { h: "Регистрация",        sub: "Создайте аккаунт для доступа к кабинету" },
+    login:        { h: "Вход для заёмщиков", sub: "Введите номер телефона и пароль" },
     phone_login:  { h: "Войти по телефону",  sub: "Для клиентов с одобренным займом" },
   };
 
@@ -79,35 +76,7 @@ export default function LoginPage() {
           </div>
 
           <div className="glass rounded-2xl p-6">
-            {/* TABS */}
-            <div className="flex rounded-xl mb-6 p-1" style={{ background: "rgba(16,185,129,0.05)" }}>
-              {(["login", "register"] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => switchMode(m)}
-                  className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all"
-                  style={mode === m ? { background: "linear-gradient(135deg,#10b981,#14b8a6)", color: "white" } : { color: "rgba(16,185,129,0.5)" }}
-                >
-                  {m === "login" ? "Войти" : "Регистрация"}
-                </button>
-              ))}
-            </div>
-
             <form onSubmit={handleSubmit} className="space-y-4">
-              {mode === "register" && (
-                <div>
-                  <label className="text-emerald-950/70 text-sm mb-2 block">ФИО</label>
-                  <input
-                    type="text"
-                    placeholder="Иванов Иван Иванович"
-                    value={form.fullName}
-                    onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                    className="w-full rounded-xl px-4 py-3.5 text-emerald-950 placeholder-emerald-900/30 outline-none border border-emerald-900/15 focus:border-emerald-500 transition-colors"
-                    style={{ background: "rgba(16,185,129,0.05)" }}
-                  />
-                </div>
-              )}
-
               <div>
                 <label className="text-emerald-950/70 text-sm mb-2 block">Номер телефона</label>
                 <div className="relative">
@@ -123,20 +92,6 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
-
-              {mode === "register" && (
-                <div>
-                  <label className="text-emerald-950/70 text-sm mb-2 block">Email (необязательно)</label>
-                  <input
-                    type="email"
-                    placeholder="example@mail.ru"
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="w-full rounded-xl px-4 py-3.5 text-emerald-950 placeholder-emerald-900/30 outline-none border border-emerald-900/15 focus:border-emerald-500 transition-colors"
-                    style={{ background: "rgba(16,185,129,0.05)" }}
-                  />
-                </div>
-              )}
 
               {mode !== "phone_login" && (
                 <div>
@@ -157,7 +112,6 @@ export default function LoginPage() {
                       <Icon name={showPass ? "EyeOff" : "Eye"} size={16} />
                     </button>
                   </div>
-                  {mode === "register" && <p className="text-emerald-950/30 text-xs mt-1">Минимум 6 символов</p>}
                 </div>
               )}
 
@@ -170,30 +124,12 @@ export default function LoginPage() {
                 </div>
               )}
 
-              {error && !isExisting && (
+              {error && (
                 <div className="rounded-xl px-4 py-3 flex items-center gap-2 text-sm" style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#fca5a5" }}>
                   <Icon name="AlertCircle" size={16} />
                   {error}
                 </div>
               )}
-              {isExisting && (
-                <div className="rounded-xl px-4 py-4 text-sm" style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.4)" }}>
-                  <div className="flex items-center gap-2 mb-3" style={{ color: "#fca5a5" }}>
-                    <Icon name="UserX" size={16} />
-                    <span className="font-semibold">Повторная регистрация невозможна.</span>
-                  </div>
-                  <p className="text-emerald-950/50 mb-3">Аккаунт с этим номером уже существует. Войдите в личный кабинет.</p>
-                  <button
-                    type="button"
-                    onClick={() => switchMode("login")}
-                    className="w-full py-2.5 rounded-xl font-semibold text-white text-sm"
-                    style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)" }}
-                  >
-                    Войти в кабинет
-                  </button>
-                </div>
-              )}
-
               <button
                 type="submit"
                 disabled={loading}
@@ -203,7 +139,7 @@ export default function LoginPage() {
                   ? <><Icon name="Loader2" size={18} className="animate-spin" /> Загрузка...</>
                   : mode === "phone_login"
                     ? <><Icon name="Smartphone" size={18} /> Войти по номеру телефона</>
-                    : <><Icon name={mode === "login" ? "LogIn" : "UserPlus"} size={18} /> {mode === "login" ? "Войти" : "Создать аккаунт"}</>
+                    : <><Icon name="LogIn" size={18} /> Войти</>
                 }
               </button>
             </form>

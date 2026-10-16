@@ -54,7 +54,7 @@ export default function Navbar({ mobileOpen, setMobileOpen, scrollTo }: NavbarPr
             className="flex items-center gap-2 text-sm text-emerald-950/70 hover:text-emerald-950 border border-emerald-900/15 hover:border-emerald-500 px-4 py-2.5 rounded-xl transition-all"
           >
             <Icon name="User" size={15} />
-            {localStorage.getItem("token") ? "Кабинет" : "Войти"}
+            {localStorage.getItem("token") ? "Кабинет" : "Войти для заёмщиков"}
           </button>
           <button
             onClick={() => navigate("/apply")}
@@ -95,7 +95,7 @@ export default function Navbar({ mobileOpen, setMobileOpen, scrollTo }: NavbarPr
             className="text-left text-emerald-950/80 hover:text-emerald-600 py-2 flex items-center gap-2 transition-colors"
           >
             <Icon name="User" size={16} />
-            {localStorage.getItem("token") ? "Личный кабинет" : "Войти в кабинет"}
+            {localStorage.getItem("token") ? "Личный кабинет" : "Войти для заёмщиков"}
           </button>
           <button
             onClick={() => { setMobileOpen(false); navigate("/apply"); }}
