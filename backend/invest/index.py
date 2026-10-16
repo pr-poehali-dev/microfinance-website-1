@@ -77,12 +77,13 @@ def handler(event: dict, context) -> dict:
             return resp(200, {"ok": True})
 
         cur.execute(
-            f"SELECT id, full_name, birth_date, phone, email, status, created_at "
+            f"SELECT id, full_name, birth_date, phone, email, status, created_at, amount "
             f"FROM {SCHEMA}.investment_requests ORDER BY (status = 'processed'), created_at DESC LIMIT 500"
         )
         items = [{
             "id": r[0], "fullName": r[1], "birthDate": r[2], "phone": r[3], "email": r[4], "status": r[5],
             "createdAt": (r[6] + timedelta(hours=3)).strftime("%d.%m.%Y %H:%M"),
+            "amount": int(r[7]) if r[7] else None,
         } for r in cur.fetchall()]
         cur.close(); conn.close()
         return resp(200, {"items": items})
@@ -94,9 +95,15 @@ def handler(event: dict, context) -> dict:
     birth_date = str(body.get("birthDate", "")).strip()[:32]
     phone = str(body.get("phone", "")).strip()[:32]
     email = str(body.get("email", "")).strip()[:255]
+    try:
+        amount = int(float(str(body.get("amount", "")).replace(" ", "").replace(",", ".")))
+    except ValueError:
+        amount = 0
 
     if len(full_name.split()) < 2:
         return resp(400, {"error": "Укажите фамилию, имя и отчество"})
+    if amount < 300000 or amount > 15000000:
+        return resp(400, {"error": "Сумма должна быть от 300 000 до 15 000 000 ₽"})
     if not birth_date:
         return resp(400, {"error": "Укажите дату рождения"})
     if len(re.sub(r"\D", "", phone)) < 10:
@@ -107,11 +114,11 @@ def handler(event: dict, context) -> dict:
     conn = psycopg2.connect(os.environ["DATABASE_URL"])
     cur = conn.cursor()
     cur.execute(
-        f"INSERT INTO {SCHEMA}.investment_requests (full_name, birth_date, phone, email) "
-        f"VALUES ('{esc(full_name)}', '{esc(birth_date)}', '{esc(phone)}', '{esc(email)}') RETURNING id"
+        f"INSERT INTO {SCHEMA}.investment_requests (full_name, birth_date, phone, email, amount) "
+        f"VALUES ('{esc(full_name)}', '{esc(birth_date)}', '{esc(phone)}', '{esc(email)}', {amount}) RETURNING id"
     )
     rid = cur.fetchone()[0]
     conn.commit(); cur.close(); conn.close()
 
-    tg(f"💼 <b>Заявка на инвестирование #{rid}</b>\n{full_name}\nДата рождения: {birth_date}\nТел.: {phone}\nПочта: {email}")
+    tg(f"💼 <b>Заявка на инвестирование #{rid}</b>\n{full_name}\nДата рождения: {birth_date}\nТел.: {phone}\nПочта: {email}\nСумма: {amount:,} ₽".replace(",", " "))
     return resp(200, {"ok": True, "id": rid})

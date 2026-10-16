@@ -14,7 +14,7 @@ const TERMS = [
 const INPUT = "w-full rounded-xl px-4 py-3 text-sm text-emerald-950 bg-white border border-emerald-900/15 focus:border-emerald-500 focus:outline-none placeholder:text-emerald-950/35";
 
 export default function InvestSection() {
-  const [form, setForm] = useState({ fullName: "", birthDate: "", phone: "", email: "" });
+  const [form, setForm] = useState({ fullName: "", birthDate: "", phone: "", email: "", amount: "" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
@@ -33,7 +33,7 @@ export default function InvestSection() {
     setBusy(false);
     if (r && r.ok) {
       setSent(true);
-      setForm({ fullName: "", birthDate: "", phone: "", email: "" });
+      setForm({ fullName: "", birthDate: "", phone: "", email: "", amount: "" });
     } else {
       setError(d.error || "Не удалось отправить заявку. Попробуйте ещё раз");
     }
@@ -84,6 +84,10 @@ export default function InvestSection() {
                 <div>
                   <label className="text-emerald-950/45 text-xs block mb-1 ml-1">Дата рождения</label>
                   <input className={INPUT} type="date" value={form.birthDate} onChange={set("birthDate")} required />
+                </div>
+                <div>
+                  <label className="text-emerald-950/45 text-xs block mb-1 ml-1">Сумма инвестирования, ₽ (от 300 000 до 15 000 000)</label>
+                  <input className={INPUT} type="number" inputMode="numeric" min={300000} max={15000000} step={1000} placeholder="Например, 500000" value={form.amount} onChange={set("amount")} required />
                 </div>
                 <input className={INPUT} type="tel" placeholder="Номер телефона" value={form.phone} onChange={set("phone")} required />
                 <input className={INPUT} type="email" placeholder="Адрес электронной почты" value={form.email} onChange={set("email")} required />

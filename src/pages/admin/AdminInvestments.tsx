@@ -11,6 +11,7 @@ interface Item {
   email: string;
   status: string;
   createdAt: string;
+  amount: number | null;
 }
 
 export default function AdminInvestments({ token, onChanged }: { token: string; onChanged?: () => void }) {
@@ -60,6 +61,7 @@ export default function AdminInvestments({ token, onChanged }: { token: string; 
             display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", opacity: i.status === "processed" ? 0.7 : 1 }}>
             <div style={{ flex: 1, minWidth: 220 }}>
               <div style={{ fontWeight: 700, color: "#022c22", fontSize: 16 }}>{i.fullName}</div>
+              {i.amount && <div style={{ fontWeight: 800, color: "#047857", fontSize: 18, marginTop: 2 }}>{i.amount.toLocaleString("ru-RU")} ₽</div>}
               <div style={{ fontSize: 13, color: "rgba(2,44,34,0.55)", marginTop: 2 }}>Дата рождения: {i.birthDate} · Заявка от {i.createdAt}</div>
               <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 6, fontSize: 14 }}>
                 <a href={`tel:${i.phone}`} style={{ color: "#047857", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 5 }}><Icon name="Phone" size={14} />{i.phone}</a>

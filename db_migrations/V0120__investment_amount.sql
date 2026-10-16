@@ -1,0 +1,1 @@
+ALTER TABLE t_p30184577_microfinance_website.investment_requests ADD COLUMN IF NOT EXISTS amount BIGINT;
