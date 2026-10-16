@@ -35,7 +35,7 @@ MKK = {
     "phone": "+7-996-201-95-00",
     "email": "support@rusfinans24.ru",
     "site": "rusfinans24.ru",
-    "director": "Ребров Александр Сергеевич",
+    "director": "Соколова Светлана Александровна",
 }
 
 
@@ -204,7 +204,7 @@ def generate_contract_html(app_data: dict, loan_num: int) -> str:
 <h2>№ {contract_num}</h2>
 <p class="center num">г. Москва &nbsp;&nbsp;&nbsp; {date_str}</p>
 
-<p><span class="bold">{MKK["name"]}</span>, именуемое в дальнейшем <span class="bold">«Займодавец»</span>, в лице директора {MKK["director"]}, действующего на основании Устава, с одной стороны, и</p>
+<p><span class="bold">{MKK["name"]}</span>, именуемое в дальнейшем <span class="bold">«Займодавец»</span>, в лице директора {MKK["director"]}, действующей на основании Устава, с одной стороны, и</p>
 
 <p><span class="bold">{full_name}</span>, дата рождения: {birth_date or "—"}, место рождения: {birth_place or "—"}, паспорт: {passport_str}, именуемый(-ая) в дальнейшем <span class="bold">«Заёмщик»</span>, с другой стороны,</p>
 
@@ -465,7 +465,7 @@ def generate_card_contract_html(d: dict, num: int) -> str:
 <h2>(кредитный лимит по карте РУСФИНАНС 24) № {contract_num}</h2>
 <p class="center num">г. Москва &nbsp;&nbsp;&nbsp; {date_str}</p>
 
-<p><span class="bold">{MKK["name"]}</span>, именуемое в дальнейшем <span class="bold">«Займодавец»</span>, в лице директора {MKK["director"]}, действующего на основании Устава, с одной стороны, и</p>
+<p><span class="bold">{MKK["name"]}</span>, именуемое в дальнейшем <span class="bold">«Займодавец»</span>, в лице директора {MKK["director"]}, действующей на основании Устава, с одной стороны, и</p>
 
 <p><span class="bold">{full_name}</span>, дата рождения: {birth_date or "—"}, место рождения: {birth_place or "—"}, паспорт: {passport_str}, именуемый(-ая) в дальнейшем <span class="bold">«Заёмщик»</span>, с другой стороны, заключили настоящий Договор о нижеследующем:</p>
 
@@ -698,7 +698,7 @@ def generate_term_contract_html(kind: str, d: dict) -> str:
 <h2>{k["subtitle"]} № {contract_num}</h2>
 <p class="center num">г. Москва &nbsp;&nbsp;&nbsp; {date_str}</p>
 
-<p><span class="bold">{MKK["name"]}</span>, именуемое в дальнейшем <span class="bold">«Займодавец»</span>, в лице директора {MKK["director"]}, действующего на основании Устава, с одной стороны, и</p>
+<p><span class="bold">{MKK["name"]}</span>, именуемое в дальнейшем <span class="bold">«Займодавец»</span>, в лице директора {MKK["director"]}, действующей на основании Устава, с одной стороны, и</p>
 
 <p><span class="bold">{full_name}</span>, дата рождения: {d.get("birth_date") or "—"}, паспорт: {passport_str}, именуемый(-ая) в дальнейшем <span class="bold">«Заёмщик»</span>, с другой стороны, заключили настоящий Договор о нижеследующем:</p>
 
