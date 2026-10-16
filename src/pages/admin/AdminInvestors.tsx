@@ -24,6 +24,8 @@ export default function AdminInvestors({ token }: { token: string }) {
   const [msg, setMsg] = useState("");
   const [payForm, setPayForm] = useState<{ invId: number; amount: string; kind: string; note: string } | null>(null);
   const [addForm, setAddForm] = useState<{ investorId: number; amount: string; termMonths: string; payout: string; rate: string } | null>(null);
+  const [paid, setPaid] = useState<{ invId: number; amount: number; number: string; holder: string } | null>(null);
+  const [copied, setCopied] = useState(false);
   const [pwForm, setPwForm] = useState<{ investorId: number; password: string } | null>(null);
 
   const hdrs = useCallback(() => ({ "Content-Type": "application/json", Authorization: `Bearer ${token}` }), [token]);
@@ -35,6 +37,23 @@ export default function AdminInvestors({ token }: { token: string }) {
   }, [hdrs]);
 
   useEffect(() => { load(); }, [load]);
+
+  async function payToCard(inv: Investor, i: Investment) {
+    setMsg(""); setPaid(null);
+    const card = inv.cards.find(c => c.isDefault) || inv.cards[0];
+    if (!card) { setMsg("Инвестор ещё не добавил карту для выплат"); return; }
+    const amount = Math.round(i.toPay);
+    if (amount < 1) { setMsg("Сейчас нет начисленных процентов к выплате"); return; }
+    if (!window.confirm(`Записать выплату ${fmt(amount)} на карту •••• ${card.number.slice(-4)}?`)) return;
+    const ok = await post("payout_add", { investmentId: i.id, amount, kind: "interest", note: `На карту •••• ${card.number.slice(-4)}` }, "Выплата записана");
+    if (ok) setPaid({ invId: i.id, amount, number: card.number, holder: card.holder });
+  }
+
+  function copyCard(number: string) {
+    navigator.clipboard.writeText(number.replace(/\s/g, ""));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
 
   async function makeContract(investmentId: number) {
     setMsg("");
@@ -141,6 +160,17 @@ export default function AdminInvestors({ token }: { token: string }) {
                         </div>
                       )}
 
+                      {paid?.invId === i.id && (
+                        <div style={{ marginTop: 10, background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.45)", borderRadius: 12, padding: 12 }}>
+                          <div style={{ fontSize: 13, color: "#064e3b", fontWeight: 700 }}>Выплата записана. Переведите {fmt(paid.amount)} на карту:</div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 6 }}>
+                            <span style={{ fontFamily: "monospace", fontSize: 20, fontWeight: 800, color: "#022c22", letterSpacing: 1 }}>{paid.number}</span>
+                            <button style={BTN2} onClick={() => copyCard(paid.number)}>{copied ? "Скопировано" : "Копировать"}</button>
+                          </div>
+                          {paid.holder && <div style={{ fontSize: 12, color: "rgba(2,44,34,0.6)", marginTop: 4 }}>Владелец: {paid.holder}</div>}
+                        </div>
+                      )}
+
                       {i.status === "active" && (
                         payForm?.invId === i.id ? (
                           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10, alignItems: "center" }}>
@@ -153,7 +183,10 @@ export default function AdminInvestors({ token }: { token: string }) {
                             <button style={BTN2} onClick={() => setPayForm(null)}>Отмена</button>
                           </div>
                         ) : (
-                          <button style={{ ...BTN2, marginTop: 10 }} onClick={() => setPayForm({ invId: i.id, amount: String(i.toPay || ""), kind: "interest", note: "" })}>Записать выплату</button>
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+                            <button style={BTN} onClick={() => payToCard(inv, i)}>Выплатить на карту</button>
+                            <button style={BTN2} onClick={() => setPayForm({ invId: i.id, amount: String(i.toPay || ""), kind: "interest", note: "" })}>Записать выплату</button>
+                          </div>
                         )
                       )}
                     </div>
