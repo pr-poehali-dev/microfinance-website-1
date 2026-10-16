@@ -349,10 +349,10 @@ BACKFILL_WHERE = f"""
 def store_contract_file(html: str, app_id: str, now_ts: str):
     """PDF, а если конвертер недоступен — готовая HTML-страница договора."""
     try:
-        return f"contracts/contract_{app_id}_{now_ts}_v7.pdf", html_to_pdf_bytes(html), "application/pdf"
+        return f"contracts/contract_{app_id}_{now_ts}_v8.pdf", html_to_pdf_bytes(html), "application/pdf"
     except Exception as ex:
         print(f"[contract] pdf unavailable, saving html: {ex}")
-        return f"contracts/contract_{app_id}_{now_ts}_v7.html", html.encode("utf-8"), "text/html; charset=utf-8"
+        return f"contracts/contract_{app_id}_{now_ts}_v8.html", html.encode("utf-8"), "text/html; charset=utf-8"
 
 
 def build_and_store(cur, app_id: str, loan_id: int) -> str:
@@ -391,9 +391,8 @@ def build_and_store(cur, app_id: str, loan_id: int) -> str:
 
 REFRESH_WHERE = f"""
     a.status IN ('approved','partner_card')
-    AND COALESCE(a.insurance_amount, 0) > 0
     AND a.contract_url IS NOT NULL AND a.contract_url <> ''
-    AND a.contract_url NOT LIKE '%v7.pdf' AND a.contract_url NOT LIKE '%v7.html'
+    AND a.contract_url NOT LIKE '%v8.pdf' AND a.contract_url NOT LIKE '%v8.html'
     AND a.id = (SELECT x.id FROM {SCHEMA}.applications x WHERE x.phone = a.phone ORDER BY x.created_at DESC LIMIT 1)
     AND COALESCE((SELECT lo.signed FROM {SCHEMA}.loans lo JOIN {SCHEMA}.users u ON u.id = lo.user_id
                   WHERE u.phone = a.phone ORDER BY lo.created_at DESC LIMIT 1), FALSE) = FALSE
@@ -595,7 +594,7 @@ CARD_BACKFILL_WHERE = """
     a.virtual_card_number IS NOT NULL AND a.virtual_card_status IN ('pending','active','blocked')
     AND (a.card_contract_url IS NULL OR a.card_contract_url = ''
          OR (a.virtual_card_status = 'pending'
-             AND a.card_contract_url NOT LIKE '%v7.pdf' AND a.card_contract_url NOT LIKE '%v7.html'))
+             AND a.card_contract_url NOT LIKE '%v8.pdf' AND a.card_contract_url NOT LIKE '%v8.html'))
 """
 
 
@@ -838,6 +837,35 @@ def build_term_contract(cur, kind: str, app_id: int) -> str:
     return url
 
 
+def backfill_term_contracts(cur, conn) -> dict:
+    """Пересоздаёт неподписанные договоры по автозаймам и займам на покупки (старая версия файла), пачкой по 3."""
+    where_tpl = (
+        "contract_url IS NOT NULL AND contract_url <> '' AND contract_url NOT LIKE '%v8.pdf' AND contract_url NOT LIKE '%v8.html' "
+        "AND COALESCE(contract_signed, FALSE) = FALSE AND status IN ('approved','signing') AND approved_rate IS NOT NULL"
+    )
+    pending = []
+    for kind, k in TERM_KINDS.items():
+        cur.execute(f"SELECT id FROM {SCHEMA}.{k['table']} WHERE {where_tpl} ORDER BY id DESC")
+        pending += [(kind, r[0]) for r in cur.fetchall()]
+    total_before = len(pending)
+    done, failed = 0, 0
+    for kind, aid in pending[:3]:
+        try:
+            build_term_contract(cur, kind, int(aid))
+            conn.commit()
+            done += 1
+        except Exception as ex:
+            conn.rollback()
+            failed += 1
+            print(f"[term-backfill] {kind} {aid} error: {ex}")
+    cur.close(); conn.close()
+    return {
+        "statusCode": 200, "headers": CORS,
+        "body": json.dumps({"ok": True, "created": done, "failed": failed,
+                            "remaining": max(0, total_before - done)}, ensure_ascii=False),
+    }
+
+
 def ensure_term_contracts(cur, conn, phone_e: str) -> dict:
     out = {}
     for kind, k in TERM_KINDS.items():
@@ -949,6 +977,9 @@ def handler(event: dict, context) -> dict:
         url = build_term_contract(cur, body["termKind"], int(body["termId"]))
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "contractUrl": url}, ensure_ascii=False)}
+
+    if body.get("termBackfill"):
+        return backfill_term_contracts(cur, conn)
 
     if body.get("cardBackfill"):
         return backfill_card_contracts(cur, conn)

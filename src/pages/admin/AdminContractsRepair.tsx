@@ -29,7 +29,7 @@ export default function AdminContractsRepair({ token }: Props) {
     setAddBusy(false);
   }
 
-  async function run(refresh: boolean, card = false) {
+  async function run(refresh: boolean, card = false, term = false) {
     setRunning(true); setDone(false); setCreated(0); setFailed(0);
     let guard = 0;
     let totalCreated = 0;
@@ -38,7 +38,7 @@ export default function AdminContractsRepair({ token }: Props) {
       const r = await fetch(CONTRACT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify(card ? { cardBackfill: true } : { backfill: true, refresh }),
+        body: JSON.stringify(term ? { termBackfill: true } : card ? { cardBackfill: true } : { backfill: true, refresh }),
       }).catch(() => null);
       if (!r || !r.ok) break;
       const d = await r.json();
@@ -72,6 +72,10 @@ export default function AdminContractsRepair({ token }: Props) {
       <button onClick={() => run(false, true)} disabled={running}
         style={{ background: "rgba(16,185,129,0.15)", color: "#047857", border: "1px solid rgba(16,185,129,0.5)", borderRadius: 10, padding: "10px 18px", cursor: running ? "default" : "pointer", fontWeight: 700, fontSize: 14, opacity: running ? 0.7 : 1 }}>
         Договоры по картам
+      </button>
+      <button onClick={() => run(false, false, true)} disabled={running}
+        style={{ background: "rgba(16,185,129,0.15)", color: "#047857", border: "1px solid rgba(16,185,129,0.5)", borderRadius: 10, padding: "10px 18px", cursor: running ? "default" : "pointer", fontWeight: 700, fontSize: 14, opacity: running ? 0.6 : 1 }}>
+        Договоры авто и товарных займов
       </button>
       <button onClick={() => run(true)} disabled={running}
         style={{ background: "rgba(245,158,11,0.15)", color: "#92400e", border: "1px solid rgba(245,158,11,0.5)", borderRadius: 10, padding: "10px 18px", cursor: running ? "default" : "pointer", fontWeight: 700, fontSize: 14, opacity: running ? 0.7 : 1 }}>
