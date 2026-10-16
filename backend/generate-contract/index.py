@@ -171,7 +171,7 @@ def generate_contract_html(app_data: dict, loan_num: int) -> str:
     total = debt + interest
     rate_pct = round(rate * 100, 1)
 
-    today = msk(datetime.now())
+    today = app_data.get("contract_dt") or msk(datetime.now())
     date_str = today.strftime("%d.%m.%Y")
     due_date = (today + timedelta(days=days)).strftime("%d.%m.%Y")
     contract_num = f"{str(loan_num).zfill(12)}/{today.strftime('%Y')}"
@@ -355,7 +355,7 @@ def store_contract_file(html: str, app_id: str, now_ts: str):
         return f"contracts/contract_{app_id}_{now_ts}_v10.html", html.encode("utf-8"), "text/html; charset=utf-8"
 
 
-def build_and_store(cur, app_id: str, loan_id: int) -> str:
+def build_and_store(cur, app_id: str, loan_id: int, when=None) -> str:
     app_id_e = str(app_id).replace("'", "''")
     cur.execute(f"""
         SELECT full_name, phone, email, birth_date, birth_place,
@@ -380,6 +380,8 @@ def build_and_store(cur, app_id: str, loan_id: int) -> str:
         "insurance": float(insurance_amount) if insurance_amount else 0,
         "wheel_rub": int(wheel_discount_rub) if wheel_discount_rub else 0,
     }
+    if when:
+        app_data["contract_dt"] = msk(when)
     html = generate_contract_html(app_data, loan_id or int(app_id_e))
     now_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     s3_key, body_bytes, ctype = store_contract_file(html, str(app_id), now_ts)
@@ -1041,6 +1043,68 @@ def backfill_invest_contracts(cur, conn) -> dict:
             "body": json.dumps({"ok": True, "created": done, "failed": failed, "remaining": max(0, len(ids) - done)}, ensure_ascii=False)}
 
 
+NOT_CURRENT = "NOT LIKE '%v10.pdf' AND {c} NOT LIKE '%v10.html'"
+
+
+def rebuild_all(cur, conn, kind: str) -> dict:
+    """Пересоздаёт все договоры выбранного вида (в том числе подписанные), сохраняя исходные номер и дату. Пачками по 3."""
+    todo = []
+    if kind == "loans":
+        cur.execute(f"""
+            SELECT a.id, lo.id, lo.created_at
+            FROM {SCHEMA}.applications a
+            LEFT JOIN LATERAL (
+                SELECT l.id, l.created_at FROM {SCHEMA}.loans l JOIN {SCHEMA}.users u ON u.id = l.user_id
+                WHERE u.phone = a.phone
+                ORDER BY abs(extract(epoch from (l.created_at - COALESCE(a.reviewed_at, a.created_at)))) LIMIT 1
+            ) lo ON TRUE
+            WHERE a.status IN ('approved','partner_card') AND a.contract_url IS NOT NULL AND a.contract_url <> ''
+              AND a.contract_url {NOT_CURRENT.format(c='a.contract_url')}
+            ORDER BY a.id DESC
+        """)
+        todo = [("loans", r[0], r[1], r[2]) for r in cur.fetchall()]
+    elif kind == "cards":
+        cur.execute(
+            f"SELECT id FROM {SCHEMA}.applications WHERE virtual_card_number IS NOT NULL AND card_contract_url IS NOT NULL "
+            f"AND card_contract_url <> '' AND card_contract_url {NOT_CURRENT.format(c='card_contract_url')} ORDER BY id DESC"
+        )
+        todo = [("cards", r[0], None, None) for r in cur.fetchall()]
+    elif kind == "term":
+        for tk, k in TERM_KINDS.items():
+            cur.execute(
+                f"SELECT id FROM {SCHEMA}.{k['table']} WHERE contract_url IS NOT NULL AND contract_url <> '' "
+                f"AND contract_url {NOT_CURRENT.format(c='contract_url')} ORDER BY id DESC"
+            )
+            todo += [(tk, r[0], None, None) for r in cur.fetchall()]
+    elif kind == "invest":
+        cur.execute(
+            f"SELECT id FROM {SCHEMA}.investments WHERE contract_url IS NOT NULL AND contract_url <> '' "
+            f"AND contract_url {NOT_CURRENT.format(c='contract_url')} ORDER BY id"
+        )
+        todo = [("invest", r[0], None, None) for r in cur.fetchall()]
+
+    done, failed = 0, 0
+    for what, rid, loan_id, loan_dt in todo[:3]:
+        try:
+            if what == "loans":
+                build_and_store(cur, str(rid), int(loan_id) if loan_id else 0, loan_dt)
+            elif what == "cards":
+                build_card_contract(cur, str(rid))
+            elif what == "invest":
+                build_invest_contract(cur, int(rid))
+            else:
+                build_term_contract(cur, what, int(rid))
+            conn.commit()
+            done += 1
+        except Exception as ex:
+            conn.rollback()
+            failed += 1
+            print(f"[rebuild-all] {kind} {rid} error: {ex}")
+    cur.close(); conn.close()
+    return {"statusCode": 200, "headers": CORS,
+            "body": json.dumps({"ok": True, "created": done, "failed": failed, "remaining": max(0, len(todo) - done)}, ensure_ascii=False)}
+
+
 def ensure_term_contracts(cur, conn, phone_e: str) -> dict:
     out = {}
     for kind, k in TERM_KINDS.items():
@@ -1173,6 +1237,9 @@ def handler(event: dict, context) -> dict:
         url = build_term_contract(cur, body["termKind"], int(body["termId"]))
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "contractUrl": url}, ensure_ascii=False)}
+
+    if body.get("rebuildAll"):
+        return rebuild_all(cur, conn, str(body["rebuildAll"]))
 
     if body.get("investBackfill"):
         return backfill_invest_contracts(cur, conn)
