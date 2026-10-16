@@ -1996,9 +1996,17 @@ def handler(event: dict, context) -> dict:
             cur.execute(f"UPDATE {SCHEMA}.{tbl} SET approved_rate = {store_rate} WHERE id = {r_id}")
         unit_h = "в день" if r_type == "loan" else ("в неделю" if r_type == "card" else "в месяц")
         old_h = round(old_rate * 100, 3) if r_type == "loan" else old_rate
+        if r_type == "loan":
+            cur.execute(f"SELECT u.phone FROM {SCHEMA}.loans l JOIN {SCHEMA}.users u ON u.id = l.user_id WHERE l.id = {r_id}")
+        elif r_type == "card":
+            cur.execute(f"SELECT phone FROM {SCHEMA}.applications WHERE id = {r_id}")
+        else:
+            cur.execute(f"SELECT phone FROM {SCHEMA}.{tbl} WHERE id = {r_id}")
+        prow = cur.fetchone()
+        ph_n = str(prow[0] if prow and prow[0] else "").replace("'", "''")
         cur.execute(
-            f"INSERT INTO {SCHEMA}.rate_changes (product_type, product_id, old_rate, new_rate, unit) "
-            f"VALUES ('{r_type}', {r_id}, {old_h}, {new_rate}, '{unit_h}')"
+            f"INSERT INTO {SCHEMA}.rate_changes (product_type, product_id, old_rate, new_rate, unit, phone, seen) "
+            f"VALUES ('{r_type}', {r_id}, {old_h}, {new_rate}, '{unit_h}', '{ph_n}', FALSE)"
         )
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "rate": new_rate})}

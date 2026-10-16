@@ -624,6 +624,14 @@ def handler(event: dict, context) -> dict:
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
+    # --- КЛИЕНТ ЗАКРЫЛ ПЛАШКУ «СТАВКА СНИЖЕНА» (POST, ?sub=rate_seen) ---
+    if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "rate_seen":
+        ph_e = phone.replace("'", "''")
+        cur.execute(f"UPDATE {SCHEMA}.rate_changes SET seen = TRUE WHERE phone = '{ph_e}' AND seen = FALSE")
+        conn.commit()
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     # --- КЛИЕНТ СООБЩАЕТ ОБ ОПЛАТЕ ЗАЙМА (POST, ?sub=loan_paid, body: {loanType, loanId, amount}) ---
     if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "loan_paid":
         raw_b = event.get("body") or "{}"
@@ -1415,6 +1423,11 @@ def handler(event: dict, context) -> dict:
     loan_notices = [f"{r_[0]}|{r_[1]}" for r_ in cur.fetchall()]
     cur.execute(f"SELECT 1 FROM {SCHEMA}.agreement_addenda WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' AND version = 'v1' AND signed_at IS NULL LIMIT 1")
     addendum_pending = bool(cur.fetchone())
+    cur.execute(
+        f"SELECT product_type, old_rate, new_rate, unit FROM {SCHEMA}.rate_changes "
+        f"WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' AND seen = FALSE ORDER BY created_at ASC"
+    )
+    rate_news = [{"type": t_, "oldRate": float(o_), "newRate": float(n_), "unit": u_} for t_, o_, n_, u_ in cur.fetchall()]
     cur.close(); conn.close()
 
     is_cd = bool(application and application.get("isCreditDoctor"))
@@ -1531,6 +1544,7 @@ def handler(event: dict, context) -> dict:
         "headers": CORS,
         "body": json.dumps({
             "user": {"id": user_id, "phone": phone, "fullName": full_name or "", "email": email or ""},
+            "rateNews": rate_news,
             "loans": loans,
             "application": application,
             "isRepeatClient": len(loans) > 0,

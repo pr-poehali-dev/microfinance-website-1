@@ -14,6 +14,7 @@ import RepeatLoanForm from "./dashboard/RepeatLoanForm";
 import PromoCodeCard from "./dashboard/PromoCodeCard";
 import PayLoanModal from "./dashboard/PayLoanModal";
 import CardPayModal from "./dashboard/CardPayModal";
+import RateReducedModal, { RateNews } from "./dashboard/RateReducedModal";
 import PaymentsList, { DueItem } from "./dashboard/PaymentsList";
 import { nextPayment } from "./dashboard/nextPayment";
 import TermLoanHistoryCard from "./dashboard/TermLoanHistoryCard";
@@ -170,6 +171,7 @@ export default function DashboardPage() {
   const [isRepeatClient, setIsRepeatClient] = useState(false);
   const [payLoan, setPayLoan] = useState<Loan | null>(null);
   const [payEarly, setPayEarly] = useState(false);
+  const [rateNews, setRateNews] = useState<RateNews[]>([]);
   const isTermPaid = (l: { approved_amount: number | null; loan_amount: number; approved_months: number | null; loan_months: number; approved_rate: number | null; paidTotal?: number; disbursed_at?: string | null } | null, defRate: number) => {
     if (!l || !l.disbursed_at) return false;
     const a = l.approved_amount || l.loan_amount;
@@ -270,6 +272,7 @@ export default function DashboardPage() {
         }
         setUser(data.user);
         setLoans(data.loans || []);
+        setRateNews(data.rateNews || []);
         setAddendumPending(!!data.addendumPending);
         setLoanNotices(data.loanNotices || []);
         setPromo(data.promo || null);
@@ -529,6 +532,9 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen font-golos" style={{ background: "#ffffff" }}>
       <DashboardNavbar user={user} onLogout={handleLogout} />
+      {rateNews.length > 0 && !showCardCongrats && (
+        <RateReducedModal news={rateNews} onClose={() => setRateNews([])} />
+      )}
       {showCardCongrats && application?.virtualCard && (
         <CardActivatedModal
           limit={application.virtualCard.limit}
