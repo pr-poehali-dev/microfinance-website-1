@@ -2,13 +2,15 @@ import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 
 const INVEST_URL = "https://functions.poehali.dev/1244293e-9832-493e-bbb5-de820fbe56c6";
+const CONTRACT_URL = "https://functions.poehali.dev/9cdc3bea-1348-49df-a7a3-4aeef6088ff3";
 
 interface Payout { id: number; amount: number; kind: string; note: string; paidAt: string }
 interface Investment {
   id: number; amount: number; termMonths: number; payout: string; rate: number; startDate: string; endDate: string;
-  status: string; monthlyIncome: number; accrued: number; paidInterest: number; toPay: number; nextDate: string | null; payouts: Payout[];
+  status: string; monthlyIncome: number; accrued: number; paidInterest: number; toPay: number; nextDate: string | null; payouts: Payout[]; contractUrl: string;
 }
-interface Investor { id: number; fullName: string; phone: string; email: string; createdAt: string; investments: Investment[] }
+interface AdminCard { id: number; number: string; holder: string; isDefault: boolean }
+interface Investor { id: number; fullName: string; phone: string; email: string; createdAt: string; investments: Investment[]; cards: AdminCard[] }
 
 const fmt = (n: number) => `${Math.round(n).toLocaleString("ru-RU")} ₽`;
 const INPUT: React.CSSProperties = { background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.35)", borderRadius: 8, padding: "8px 10px", color: "#022c22", fontSize: 13, outline: "none" };
@@ -33,6 +35,12 @@ export default function AdminInvestors({ token }: { token: string }) {
   }, [hdrs]);
 
   useEffect(() => { load(); }, [load]);
+
+  async function makeContract(investmentId: number) {
+    setMsg("");
+    const r = await fetch(CONTRACT_URL, { method: "POST", headers: hdrs(), body: JSON.stringify({ investmentId }) }).catch(() => null);
+    if (r && r.ok) { setMsg("Договор сформирован"); load(); } else setMsg("Не удалось сформировать договор");
+  }
 
   async function post(sub: string, body: object, okText: string) {
     setMsg("");
@@ -95,6 +103,17 @@ export default function AdminInvestors({ token }: { token: string }) {
                     </div>
                   )}
 
+                  <div style={{ background: "#ffffff", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 12, padding: 12 }}>
+                    <div style={{ fontWeight: 700, color: "#022c22", fontSize: 13, marginBottom: 6 }}>Карты для выплат</div>
+                    {inv.cards.length === 0 ? (
+                      <div style={{ fontSize: 13, color: "rgba(2,44,34,0.5)" }}>Инвестор ещё не добавил карту</div>
+                    ) : inv.cards.map(c => (
+                      <div key={c.id} style={{ fontSize: 14, color: "#022c22", fontFamily: "monospace" }}>
+                        {c.number}{c.holder ? ` · ${c.holder}` : ""}{c.isDefault ? " · для выплат" : ""}
+                      </div>
+                    ))}
+                  </div>
+
                   {inv.investments.map(i => (
                     <div key={i.id} style={{ background: "#ffffff", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 12, padding: 12, opacity: i.status === "closed" ? 0.65 : 1 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
@@ -106,6 +125,14 @@ export default function AdminInvestors({ token }: { token: string }) {
                       </div>
                       <div style={{ fontSize: 13, color: "#064e3b", marginTop: 4, fontWeight: 600 }}>
                         Начислено {fmt(i.accrued)} · выплачено процентов {fmt(i.paidInterest)} · к выплате {fmt(i.toPay)}{i.nextDate ? ` · ближайшая дата ${i.nextDate}` : ""}
+                      </div>
+
+                      <div style={{ marginTop: 6 }}>
+                        {i.contractUrl ? (
+                          <a href={i.contractUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#047857", fontWeight: 700, fontSize: 13 }}>Договор инвестирования</a>
+                        ) : (
+                          <button style={BTN2} onClick={() => makeContract(i.id)}>Сформировать договор</button>
+                        )}
                       </div>
 
                       {i.payouts.length > 0 && (

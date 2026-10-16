@@ -42,6 +42,22 @@
       "method": "GET",
       "path": "/?sub=me",
       "expectedStatus": 401
+    },
+    {
+      "name": "Card add without token",
+      "method": "POST",
+      "path": "/?sub=card_add",
+      "body": {
+        "number": "1"
+      },
+      "expectedStatus": 401
+    },
+    {
+      "name": "Request create without token",
+      "method": "POST",
+      "path": "/?sub=request_create",
+      "body": {},
+      "expectedStatus": 401
     }
   ]
 }

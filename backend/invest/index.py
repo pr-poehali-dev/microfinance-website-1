@@ -81,7 +81,7 @@ def months_passed(start: date, today: date) -> int:
 
 
 def inv_view(r, paid_interest: int, paid_total: int, payouts: list) -> dict:
-    inv_id, amount, term, payout, rate, start, status = r
+    inv_id, amount, term, payout, rate, start, status, contract_url = r
     today = date.today()
     monthly = round(float(amount) * float(rate) / 100)
     passed = min(months_passed(start, today), int(term))
@@ -101,12 +101,13 @@ def inv_view(r, paid_interest: int, paid_total: int, payouts: list) -> dict:
         "toPay": max(accrued - paid_interest, 0),
         "nextDate": nxt.strftime("%d.%m.%Y") if nxt else None,
         "payouts": payouts,
+        "contractUrl": contract_url or "",
     }
 
 
 def load_investments(cur, investor_id: int) -> list:
     cur.execute(
-        f"SELECT id, amount, term_months, payout, rate, start_date, status FROM {SCHEMA}.investments "
+        f"SELECT id, amount, term_months, payout, rate, start_date, status, contract_url FROM {SCHEMA}.investments "
         f"WHERE investor_id = {investor_id} ORDER BY id DESC"
     )
     rows = cur.fetchall()
@@ -119,6 +120,38 @@ def load_investments(cur, investor_id: int) -> list:
         pt = sum(p["amount"] for p in pays)
         out.append(inv_view(r, pi, pt, pays))
     return out
+
+
+def luhn_ok(num: str) -> bool:
+    total = 0
+    for i, ch in enumerate(reversed(num)):
+        d = int(ch)
+        if i % 2 == 1:
+            d *= 2
+            if d > 9:
+                d -= 9
+        total += d
+    return total % 10 == 0
+
+
+def load_cards(cur, investor_id: int, full: bool) -> list:
+    cur.execute(f"SELECT id, card_number, holder, is_default FROM {SCHEMA}.investor_cards WHERE investor_id = {investor_id} ORDER BY is_default DESC, id")
+    out = []
+    for r in cur.fetchall():
+        item = {"id": r[0], "last4": r[1][-4:], "holder": r[2] or "", "isDefault": bool(r[3])}
+        if full:
+            item["number"] = " ".join(r[1][i:i + 4] for i in range(0, len(r[1]), 4))
+        out.append(item)
+    return out
+
+
+def load_my_requests(cur, investor_id: int) -> list:
+    cur.execute(
+        f"SELECT id, amount, term_months, payout, status, created_at FROM {SCHEMA}.investment_requests "
+        f"WHERE investor_id = {investor_id} ORDER BY id DESC LIMIT 50"
+    )
+    return [{"id": r[0], "amount": int(r[1]) if r[1] else 0, "termMonths": int(r[2]) if r[2] else 0, "payout": r[3] or "",
+             "status": r[4], "createdAt": (r[5] + timedelta(hours=3)).strftime("%d.%m.%Y %H:%M")} for r in cur.fetchall()]
 
 
 def admin_ok(cur, event) -> bool:
@@ -161,8 +194,84 @@ def investor_block(event, method, sub, body):
             cur.close(); conn.close()
             return resp(401, {"error": "Не авторизован"})
         items = load_investments(cur, inv[0])
+        cards = load_cards(cur, inv[0], False)
+        reqs = load_my_requests(cur, inv[0])
         cur.close(); conn.close()
-        return resp(200, {"investor": {"id": inv[0], "fullName": inv[1], "phone": inv[2], "email": inv[3] or ""}, "investments": items})
+        return resp(200, {"investor": {"id": inv[0], "fullName": inv[1], "phone": inv[2], "email": inv[3] or ""},
+                          "investments": items, "cards": cards, "requests": reqs})
+
+    if sub in ("card_add", "card_delete", "card_default", "request_create") and method == "POST":
+        inv = investor_from_token(cur, event)
+        if not inv:
+            cur.close(); conn.close()
+            return resp(401, {"error": "Не авторизован"})
+        iid = inv[0]
+
+        if sub == "card_add":
+            num = re.sub(r"\D", "", str(body.get("number") or ""))
+            holder = " ".join(str(body.get("holder") or "").upper().split())[:120]
+            if len(num) < 16 or len(num) > 19 or not luhn_ok(num):
+                cur.close(); conn.close()
+                return resp(400, {"error": "Проверьте номер карты"})
+            cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.investor_cards WHERE investor_id = {iid}")
+            cnt = cur.fetchone()[0]
+            if cnt >= 5:
+                cur.close(); conn.close()
+                return resp(400, {"error": "Можно добавить не больше 5 карт"})
+            cur.execute(f"SELECT id FROM {SCHEMA}.investor_cards WHERE investor_id = {iid} AND card_number = '{num}'")
+            if cur.fetchone():
+                cur.close(); conn.close()
+                return resp(409, {"error": "Эта карта уже добавлена"})
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.investor_cards (investor_id, card_number, holder, is_default) "
+                f"VALUES ({iid}, '{num}', '{esc(holder)}', {'TRUE' if cnt == 0 else 'FALSE'})"
+            )
+            conn.commit(); cur.close(); conn.close()
+            return resp(200, {"ok": True})
+
+        if sub == "card_delete":
+            cid = int(body.get("id") or 0)
+            cur.execute(f"SELECT is_default FROM {SCHEMA}.investor_cards WHERE id = {cid} AND investor_id = {iid}")
+            row = cur.fetchone()
+            if row:
+                cur.execute(f"DELETE FROM {SCHEMA}.investor_cards WHERE id = {cid} AND investor_id = {iid}")
+                if row[0]:
+                    cur.execute(f"UPDATE {SCHEMA}.investor_cards SET is_default = TRUE WHERE id = (SELECT id FROM {SCHEMA}.investor_cards WHERE investor_id = {iid} ORDER BY id LIMIT 1)")
+                conn.commit()
+            cur.close(); conn.close()
+            return resp(200, {"ok": True})
+
+        if sub == "card_default":
+            cid = int(body.get("id") or 0)
+            cur.execute(f"SELECT id FROM {SCHEMA}.investor_cards WHERE id = {cid} AND investor_id = {iid}")
+            if cur.fetchone():
+                cur.execute(f"UPDATE {SCHEMA}.investor_cards SET is_default = (id = {cid}) WHERE investor_id = {iid}")
+                conn.commit()
+            cur.close(); conn.close()
+            return resp(200, {"ok": True})
+
+        try:
+            amount = int(float(str(body.get("amount") or "0").replace(" ", "")))
+            term = int(body.get("termMonths") or 0)
+        except ValueError:
+            amount, term = 0, 0
+        payout = str(body.get("payout") or "")
+        if amount < 300000 or amount > 15000000:
+            cur.close(); conn.close()
+            return resp(400, {"error": "Сумма должна быть от 300 000 до 15 000 000 ₽"})
+        if term not in (6, 12, 36, 60) or payout not in ("monthly", "end"):
+            cur.close(); conn.close()
+            return resp(400, {"error": "Выберите срок и способ выплаты процентов"})
+        cur.execute(f"SELECT birth_date FROM {SCHEMA}.investors WHERE id = {iid}")
+        bd = (cur.fetchone() or [""])[0] or ""
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.investment_requests (full_name, birth_date, phone, email, amount, term_months, payout, investor_id) "
+            f"VALUES ('{esc(inv[1])}', '{esc(bd)}', '{esc(inv[2])}', '{esc(inv[3] or '')}', {amount}, {term}, '{payout}', {iid}) RETURNING id"
+        )
+        rid = cur.fetchone()[0]
+        conn.commit(); cur.close(); conn.close()
+        tg(f"💼 <b>Новая инвестиция из кабинета #{rid}</b>\n{inv[1]}\nТел.: {inv[2]}\nСумма: {amount:,} ₽\nСрок: {term_label(term)}\nВыплата процентов: {payout_label(payout)}".replace(",", " "))
+        return resp(200, {"ok": True, "id": rid})
 
     if not admin_ok(cur, event):
         cur.close(); conn.close()
@@ -174,7 +283,8 @@ def investor_block(event, method, sub, body):
         out = []
         for r in rows:
             out.append({"id": r[0], "fullName": r[1], "phone": r[2], "email": r[3] or "", "birthDate": r[4] or "",
-                        "createdAt": (r[5] + timedelta(hours=3)).strftime("%d.%m.%Y"), "investments": load_investments(cur, r[0])})
+                        "createdAt": (r[5] + timedelta(hours=3)).strftime("%d.%m.%Y"), "investments": load_investments(cur, r[0]),
+                        "cards": load_cards(cur, r[0], True)})
         cur.close(); conn.close()
         return resp(200, {"items": out})
 
@@ -209,12 +319,13 @@ def investor_block(event, method, sub, body):
         iid = cur.fetchone()[0]
         cur.execute(
             f"INSERT INTO {SCHEMA}.investments (investor_id, amount, term_months, payout, rate) "
-            f"VALUES ({iid}, {amount}, {term}, '{payout}', {rate})"
+            f"VALUES ({iid}, {amount}, {term}, '{payout}', {rate}) RETURNING id"
         )
+        new_inv = cur.fetchone()[0]
         if req_id:
-            cur.execute(f"UPDATE {SCHEMA}.investment_requests SET status = 'processed' WHERE id = {req_id}")
+            cur.execute(f"UPDATE {SCHEMA}.investment_requests SET status = 'processed', investor_id = {iid} WHERE id = {req_id}")
         conn.commit(); cur.close(); conn.close()
-        return resp(200, {"ok": True, "id": iid})
+        return resp(200, {"ok": True, "id": iid, "investmentId": new_inv})
 
     if sub == "investment_add" and method == "POST":
         try:
@@ -231,10 +342,35 @@ def investor_block(event, method, sub, body):
             return resp(400, {"error": "Укажите сумму, срок и способ выплаты"})
         cur.execute(
             f"INSERT INTO {SCHEMA}.investments (investor_id, amount, term_months, payout, rate) "
-            f"VALUES ({iid}, {amount}, {term}, '{payout}', {rate})"
+            f"VALUES ({iid}, {amount}, {term}, '{payout}', {rate}) RETURNING id"
         )
+        new_inv = cur.fetchone()[0]
         conn.commit(); cur.close(); conn.close()
-        return resp(200, {"ok": True})
+        return resp(200, {"ok": True, "investmentId": new_inv})
+
+    if sub == "request_accept" and method == "POST":
+        try:
+            rid = int(body.get("requestId") or 0)
+            rate = float(body.get("rate") or 8)
+        except ValueError:
+            cur.close(); conn.close()
+            return resp(400, {"error": "Проверьте числа"})
+        cur.execute(f"SELECT investor_id, amount, term_months, payout, status FROM {SCHEMA}.investment_requests WHERE id = {rid}")
+        rq = cur.fetchone()
+        if not rq or not rq[0] or not rq[1] or not rq[2] or not rq[3]:
+            cur.close(); conn.close()
+            return resp(400, {"error": "Заявка не из кабинета инвестора или в ней не хватает данных"})
+        if rq[4] == "processed":
+            cur.close(); conn.close()
+            return resp(409, {"error": "Заявка уже обработана"})
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.investments (investor_id, amount, term_months, payout, rate) "
+            f"VALUES ({rq[0]}, {rq[1]}, {rq[2]}, '{rq[3]}', {rate}) RETURNING id"
+        )
+        new_inv = cur.fetchone()[0]
+        cur.execute(f"UPDATE {SCHEMA}.investment_requests SET status = 'processed' WHERE id = {rid}")
+        conn.commit(); cur.close(); conn.close()
+        return resp(200, {"ok": True, "investmentId": new_inv})
 
     if sub == "payout_add" and method == "POST":
         try:
@@ -290,7 +426,8 @@ def handler(event: dict, context) -> dict:
     raw = event.get("body") or "{}"
     body = json.loads(raw) if isinstance(raw, str) else raw
 
-    if sub in ("login", "me", "investors", "investor_create", "investment_add", "payout_add", "investor_password"):
+    if sub in ("login", "me", "investors", "investor_create", "investment_add", "payout_add", "investor_password",
+               "card_add", "card_delete", "card_default", "request_create", "request_accept"):
         return investor_block(event, method, sub, body)
 
     if sub in ("list", "status", "count"):
@@ -320,7 +457,7 @@ def handler(event: dict, context) -> dict:
             return resp(200, {"ok": True})
 
         cur.execute(
-            f"SELECT id, full_name, birth_date, phone, email, status, created_at, amount, term_months, payout "
+            f"SELECT id, full_name, birth_date, phone, email, status, created_at, amount, term_months, payout, investor_id "
             f"FROM {SCHEMA}.investment_requests ORDER BY (status = 'processed'), created_at DESC LIMIT 500"
         )
         items = [{
@@ -329,6 +466,7 @@ def handler(event: dict, context) -> dict:
             "amount": int(r[7]) if r[7] else None,
             "termMonths": int(r[8]) if r[8] else None,
             "payout": r[9] or "",
+            "investorId": r[10],
         } for r in cur.fetchall()]
         cur.close(); conn.close()
         return resp(200, {"items": items})

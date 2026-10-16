@@ -866,6 +866,181 @@ def backfill_term_contracts(cur, conn) -> dict:
     }
 
 
+def generate_invest_contract_html(d: dict) -> str:
+    full_name = d.get("full_name", "")
+    amount = int(d.get("amount", 0))
+    term = int(d.get("term", 12))
+    rate = float(d.get("rate", 8))
+    payout = d.get("payout", "monthly")
+    start = d["start"]
+    end = d["end"]
+    contract_num = f"И-{str(d['id']).zfill(12)}"
+    date_str = start.strftime("%d.%m.%Y")
+    monthly = round(amount * rate / 100)
+    total_income = monthly * term
+    amount_words = num_to_words(amount)
+    if term % 12 == 0:
+        y = term // 12
+        term_text = f"{y} {_plural(y, 'год', 'года', 'лет')}"
+    else:
+        term_text = f"{term} {_plural(term, 'месяц', 'месяца', 'месяцев')}"
+    if payout == "monthly":
+        payout_text = f"Ежемесячно, не позднее даты, соответствующей дате внесения средств. Размер ежемесячной выплаты: {monthly:,} ₽"
+        payout_p = ("3.2. Проценты выплачиваются Инвестору ежемесячно на банковскую карту, указанную Инвестором в личном кабинете. "
+                    "Возврат суммы вложения осуществляется в последний день срока договора.")
+    else:
+        payout_text = f"Единовременно в конце срока вместе с возвратом суммы вложения. Общая сумма процентов: {total_income:,} ₽"
+        payout_p = ("3.2. Проценты начисляются ежемесячно и выплачиваются Инвестору единовременно в конце срока договора вместе с возвратом "
+                    "суммы вложения на банковскую карту, указанную Инвестором в личном кабинете.")
+    phone = d.get("phone", "")
+    email = d.get("email", "")
+    _bd = str(d.get("birth_date") or "")
+    if len(_bd) == 10 and _bd[4] == "-" and _bd[7] == "-":
+        d = {**d, "birth_date": f"{_bd[8:10]}.{_bd[5:7]}.{_bd[0:4]}"}
+    return f"""<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Договор инвестирования №{contract_num}</title>
+<style>{CONTRACT_CSS}</style>
+</head>
+<body>
+
+<h1>Договор инвестирования</h1>
+<h2>(привлечение денежных средств) № {contract_num}</h2>
+<p class="center num">г. Москва &nbsp;&nbsp;&nbsp; {date_str}</p>
+
+<p><span class="bold">{MKK["name"]}</span>, именуемое в дальнейшем <span class="bold">«Компания»</span>, в лице директора {MKK["director"]}, действующей на основании Устава, с одной стороны, и</p>
+
+<p><span class="bold">{full_name}</span>, дата рождения: {d.get("birth_date") or "—"}, именуемый(-ая) в дальнейшем <span class="bold">«Инвестор»</span>, с другой стороны, заключили настоящий Договор о нижеследующем.</p>
+
+<h3>1. Индивидуальные условия</h3>
+
+<table class="params">
+  <tr><td class="label">Сумма вложения</td><td class="value"><span class="bold">{amount:,} ₽</span> ({amount_words} рублей 00 копеек)</td></tr>
+  <tr><td class="label">Срок договора</td><td class="value"><span class="bold">{term_text}</span> (с {date_str} по {end.strftime("%d.%m.%Y")})</td></tr>
+  <tr><td class="label">Доходность</td><td class="value"><span class="bold">{rate:g}% в месяц</span> от суммы вложения</td></tr>
+  <tr><td class="label">Ежемесячный доход</td><td class="value"><span class="bold">{monthly:,} ₽</span></td></tr>
+  <tr><td class="label">Выплата процентов</td><td class="value">{payout_text}</td></tr>
+  <tr><td class="label">Общий доход за срок</td><td class="value"><span class="bold">{total_income:,} ₽</span></td></tr>
+  <tr><td class="label">Пополнение</td><td class="value">Допускается в любое время на условиях отдельного договора</td></tr>
+  <tr><td class="label">Контактный телефон Инвестора</td><td class="value">{phone}</td></tr>
+  {f'<tr><td class="label">Email Инвестора</td><td class="value">{email}</td></tr>' if email else ''}
+</table>
+
+<h3>2. Предмет договора</h3>
+
+<p>2.1. Инвестор передаёт Компании денежные средства в сумме, указанной в п. 1, для использования в деятельности Компании по предоставлению займов, а Компания обязуется вернуть сумму вложения по окончании срока договора и выплачивать Инвестору доход в размере и в сроки, предусмотренные настоящим Договором.</p>
+
+<p>2.2. Средства считаются переданными Компании с момента их поступления на расчётный счёт Компании, реквизиты которого указаны в разделе 6.</p>
+
+<h3>3. Доход и порядок расчётов</h3>
+
+<p>3.1. Доход Инвестора составляет {rate:g}% в месяц от суммы вложения и начисляется за каждый полный месяц срока договора.</p>
+
+<p>{payout_p}</p>
+
+<p>3.3. Выплаты осуществляются в безналичном порядке. Инвестор самостоятельно указывает и при необходимости обновляет реквизиты банковской карты в личном кабинете. Компания не несёт ответственности за задержку выплат, вызванную неверно указанными реквизитами.</p>
+
+<p>3.4. Инвестор вправе в любой момент пополнить сумму вложения. Каждое пополнение оформляется отдельным договором с собственными условиями и сроком.</p>
+
+<h3>4. Права и обязанности сторон</h3>
+
+<p>4.1. Компания обязуется использовать средства Инвестора в своей деятельности, своевременно выплачивать доход и вернуть сумму вложения по окончании срока.</p>
+
+<p>4.2. Инвестор обязуется передать средства в порядке и в сроки, указанные в Договоре, и предоставлять достоверные сведения о себе.</p>
+
+<p>4.3. Стороны несут ответственность за неисполнение обязательств в соответствии с законодательством Российской Федерации.</p>
+
+<h3>5. Заключительные положения</h3>
+
+<p>5.1. Подписывая настоящий Договор, Инвестор даёт согласие на обработку персональных данных в целях его исполнения.</p>
+
+<p>5.2. Договор вступает в силу с момента его подписания сторонами и действует до полного исполнения обязательств. Договор подписывается простой электронной подписью.</p>
+
+<p>5.3. Споры разрешаются путём переговоров, а при недостижении согласия — в судебном порядке по месту нахождения Компании.</p>
+
+<h3>6. Реквизиты и подписи сторон</h3>
+
+<table class="sign">
+  <tr>
+    <td>
+      <p class="bold">КОМПАНИЯ:</p>
+      <p>{MKK["name"]}</p>
+      <p>Адрес: {MKK["address"]}</p>
+      <p>Банк: {MKK["bank"]}</p>
+      <p>р/с: {MKK["rs"]}</p>
+      <p>к/с: {MKK["ks"]}</p>
+      <p>БИК: {MKK["bik"]}</p>
+      <p>Тел.: {MKK["phone"]}</p>
+      <br>
+      <p>Директор:</p>
+      <p>{MKK["director"]}</p>
+      <p style="position:relative;height:34pt;"><span class="sign-line"></span>{SIGN_IMG}</p>
+      <p style="margin-top:8pt;position:relative;height:90pt;">М.П.{SEAL_IMG}</p>
+    </td>
+    <td>
+      <p class="bold">ИНВЕСТОР:</p>
+      <p>{full_name}</p>
+      <p>Дата рождения: {d.get("birth_date") or "—"}</p>
+      <p>Тел.: {phone}</p>
+      {f'<p>Email: {email}</p>' if email else ''}
+      <br>
+      {digital_sign_block(contract_num)}
+      <p style="margin-top:4pt;font-size:10pt;">({full_name})</p>
+      <br>
+      <p>Дата: {date_str}</p>
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>"""
+
+
+def build_invest_contract(cur, investment_id: int) -> str:
+    cur.execute(
+        f"SELECT v.id, v.amount, v.term_months, v.payout, v.rate, v.start_date, i.full_name, i.birth_date, i.phone, i.email "
+        f"FROM {SCHEMA}.investments v JOIN {SCHEMA}.investors i ON i.id = v.investor_id WHERE v.id = {int(investment_id)}"
+    )
+    r = cur.fetchone()
+    if not r:
+        raise ValueError("investment not found")
+    start = r[5]
+    m = start.month - 1 + int(r[2])
+    y = start.year + m // 12
+    m = m % 12 + 1
+    import calendar
+    end = start.replace(year=y, month=m, day=min(start.day, calendar.monthrange(y, m)[1]))
+    d = {"id": r[0], "amount": int(r[1]), "term": int(r[2]), "payout": r[3], "rate": float(r[4]), "start": start, "end": end,
+         "full_name": r[6] or "", "birth_date": r[7] or "", "phone": r[8] or "", "email": r[9] or ""}
+    html = generate_invest_contract_html(d)
+    now_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    key, body_bytes, ctype = store_contract_file(html, f"invest_{investment_id}", now_ts)
+    s3_client().put_object(Bucket="files", Key=key, Body=body_bytes, ContentType=ctype)
+    url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{key}"
+    cur.execute(f"UPDATE {SCHEMA}.investments SET contract_url = '{url}' WHERE id = {int(investment_id)}")
+    return url
+
+
+def backfill_invest_contracts(cur, conn) -> dict:
+    cur.execute(f"SELECT id FROM {SCHEMA}.investments WHERE contract_url IS NULL OR contract_url = '' ORDER BY id")
+    ids = [r[0] for r in cur.fetchall()]
+    done, failed = 0, 0
+    for iid in ids[:3]:
+        try:
+            build_invest_contract(cur, iid)
+            conn.commit()
+            done += 1
+        except Exception as ex:
+            conn.rollback()
+            failed += 1
+            print(f"[invest-backfill] {iid} error: {ex}")
+    cur.close(); conn.close()
+    return {"statusCode": 200, "headers": CORS,
+            "body": json.dumps({"ok": True, "created": done, "failed": failed, "remaining": max(0, len(ids) - done)}, ensure_ascii=False)}
+
+
 def ensure_term_contracts(cur, conn, phone_e: str) -> dict:
     out = {}
     for kind, k in TERM_KINDS.items():
@@ -967,6 +1142,27 @@ def handler(event: dict, context) -> dict:
     if body.get("ensure"):
         return ensure_client_contracts(cur, conn, t)
 
+    if body.get("investorEnsure"):
+        cur.execute(
+            f"SELECT s.investor_id FROM {SCHEMA}.investor_sessions s WHERE s.token = '{t}' AND s.expires_at > NOW()"
+        )
+        sess = cur.fetchone()
+        if not sess:
+            cur.close(); conn.close()
+            return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
+        cur.execute(f"SELECT id FROM {SCHEMA}.investments WHERE investor_id = {int(sess[0])} AND (contract_url IS NULL OR contract_url = '') ORDER BY id")
+        made = 0
+        for (iid,) in cur.fetchall():
+            try:
+                build_invest_contract(cur, iid)
+                conn.commit()
+                made += 1
+            except Exception as ex:
+                conn.rollback()
+                print(f"[invest-ensure] {iid} error: {ex}")
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "created": made})}
+
     # Проверяем admin-токен
     cur.execute(f"SELECT id FROM {SCHEMA}.admin_sessions WHERE token = '{t}' AND expires_at > NOW()")
     if not cur.fetchone():
@@ -975,6 +1171,14 @@ def handler(event: dict, context) -> dict:
 
     if body.get("termKind") in TERM_KINDS and body.get("termId"):
         url = build_term_contract(cur, body["termKind"], int(body["termId"]))
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "contractUrl": url}, ensure_ascii=False)}
+
+    if body.get("investBackfill"):
+        return backfill_invest_contracts(cur, conn)
+
+    if body.get("investmentId"):
+        url = build_invest_contract(cur, int(body["investmentId"]))
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "contractUrl": url}, ensure_ascii=False)}
 

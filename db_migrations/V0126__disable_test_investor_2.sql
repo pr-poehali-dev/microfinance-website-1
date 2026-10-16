@@ -1,0 +1,4 @@
+UPDATE t_p30184577_microfinance_website.investors SET password_hash = 'disabled', full_name = 'ТЕСТ (удалить)' WHERE phone = '79990003344';
+UPDATE t_p30184577_microfinance_website.investor_sessions SET expires_at = NOW() - INTERVAL '1 day' WHERE investor_id IN (SELECT id FROM t_p30184577_microfinance_website.investors WHERE phone = '79990003344');
+UPDATE t_p30184577_microfinance_website.investment_requests SET status = 'processed', full_name = 'ТЕСТ (удалить)' WHERE phone = '79990003344';
+UPDATE t_p30184577_microfinance_website.investments SET status = 'closed' WHERE investor_id IN (SELECT id FROM t_p30184577_microfinance_website.investors WHERE phone = '79990003344');

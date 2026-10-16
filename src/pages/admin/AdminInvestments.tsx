@@ -15,6 +15,7 @@ interface Item {
   amount: number | null;
   termMonths: number | null;
   payout: string;
+  investorId: number | null;
 }
 
 const TERM_LABEL: Record<number, string> = { 6: "6 месяцев", 12: "1 год", 36: "3 года", 60: "5 лет" };
@@ -61,6 +62,15 @@ export default function AdminInvestments({ token, onChanged }: { token: string; 
     else setCmsg(d.error || "Не удалось создать кабинет");
   };
 
+  const acceptRequest = async (id: number) => {
+    const rate = window.prompt("Ставка, % в месяц", "8");
+    if (!rate) return;
+    const r = await fetch(`${INVEST_URL}?sub=request_accept`, { method: "POST", headers: hdrs(), body: JSON.stringify({ requestId: id, rate }) }).catch(() => null);
+    const d = r ? await r.json().catch(() => ({})) : {};
+    if (r && r.ok) { load(); onChanged?.(); setView("investors"); }
+    else window.alert(d.error || "Не удалось принять заявку");
+  };
+
   const shown = items.filter(i => filter === "all" ? true : i.status === filter);
   const newCount = items.filter(i => i.status === "new").length;
 
@@ -102,16 +112,25 @@ export default function AdminInvestments({ token, onChanged }: { token: string; 
                   {i.payout ? `Проценты: ${i.payout === "monthly" ? "каждый месяц" : "в конце срока"}` : ""}
                 </div>
               )}
-              <div style={{ fontSize: 13, color: "rgba(2,44,34,0.55)", marginTop: 2 }}>Дата рождения: {i.birthDate} · Заявка от {i.createdAt}</div>
+              <div style={{ fontSize: 13, color: "rgba(2,44,34,0.55)", marginTop: 2 }}>{i.investorId ? "Заявка из кабинета инвестора · " : ""}Дата рождения: {i.birthDate || "—"} · Заявка от {i.createdAt}</div>
               <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 6, fontSize: 14 }}>
                 <a href={`tel:${i.phone}`} style={{ color: "#047857", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 5 }}><Icon name="Phone" size={14} />{i.phone}</a>
                 <a href={`mailto:${i.email}`} style={{ color: "#047857", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 5 }}><Icon name="Mail" size={14} />{i.email}</a>
               </div>
             </div>
+            {i.investorId ? (
+              i.status === "new" && (
+                <button onClick={() => acceptRequest(i.id)}
+                  style={{ background: "#064e3b", color: "#ffffff", border: "none", borderRadius: 10, padding: "9px 16px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <Icon name="BadgeCheck" size={14} />Принять инвестицию
+                </button>
+              )
+            ) : (
             <button onClick={() => { setCreate(i); setCf({ phone: i.phone, password: "", rate: "8" }); setCmsg(""); }}
               style={{ background: "#064e3b", color: "#ffffff", border: "none", borderRadius: 10, padding: "9px 16px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}>
               <Icon name="UserPlus" size={14} />Создать кабинет
             </button>
+            )}
             {i.status === "new" ? (
               <button onClick={() => setStatus(i.id, "processed")}
                 style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)", color: "white", border: "none", borderRadius: 10, padding: "9px 16px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}>
