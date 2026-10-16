@@ -48,7 +48,22 @@ export default function CardWithdrawForm({ available, defaultCard, onSuccess }: 
     onSuccess();
   }
 
-  if (available < 1000 + transferFee(1000)) return null;
+  const minNeeded = 1000 + transferFee(1000);
+  if (available < minNeeded) {
+    return (
+      <div className="space-y-2">
+        <button disabled
+          className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white opacity-50 cursor-not-allowed"
+          style={{ background: "linear-gradient(135deg,#16a34a,#4ade80)" }}>
+          <Icon name="Wallet" size={18} />
+          Перевести деньги на мою карту
+        </button>
+        <div className="text-emerald-950/60 text-xs text-center">
+          Перевод доступен от {minNeeded.toLocaleString("ru-RU")} ₽ свободного лимита (минимум 1 000 ₽ + комиссия). Сейчас доступно {Math.max(0, Math.round(available)).toLocaleString("ru-RU")} ₽. Лимит освободится после погашения.
+        </div>
+      </div>
+    );
+  }
 
   if (done) {
     return (
