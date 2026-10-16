@@ -11,6 +11,7 @@ import AdminDisbursed from "./admin/AdminDisbursed";
 import AdminCardRequests from "./admin/AdminCardRequests";
 import AdminCards from "./admin/AdminCards";
 import AdminYooKassa from "./admin/AdminYooKassa";
+import AdminInvestments from "./admin/AdminInvestments";
 import AdminPromoCodes from "./admin/AdminPromoCodes";
 import AdminWheelPrizes from "./admin/AdminWheelPrizes";
 import AdminContractsRepair from "./admin/AdminContractsRepair";
@@ -25,7 +26,7 @@ export default function AdminPage() {
   const [err, setErr]     = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [tab, setTab]   = useState<"apps" | "clients" | "carloan" | "shoploan" | "disbursed" | "cardrequests" | "cards" | "promo" | "wheel" | "yookassa">("apps");
+  const [tab, setTab]   = useState<"apps" | "clients" | "carloan" | "shoploan" | "disbursed" | "cardrequests" | "cards" | "promo" | "wheel" | "yookassa" | "invest">("apps");
   const [apps, setApps] = useState<App[]>([]);
   const [appFilter, setAppFilter] = useState<"pending"|"approved"|"rejected"|"postponed"|"partner_card"|"creditdoctor"|"paid_loans">("pending");
   const [appsLoading, setAppsLoading] = useState(false);
@@ -58,6 +59,7 @@ export default function AdminPage() {
   const [lightbox, setLightbox] = useState("");
 
   const [cardNotices, setCardNotices] = useState(0);
+  const [investNew, setInvestNew] = useState(0);
   const hdrs = (tok = token) => ({ "Content-Type": "application/json", "Authorization": `Bearer ${tok}` });
 
   function loadApps(_filter?: string, tok = token) {
@@ -96,6 +98,12 @@ export default function AdminPage() {
   const totalWaiting = waiting.apps + waiting.car + waiting.shop + waiting.cardReq + cardNotices + loanNotices;
   const sound = useWaitingSound(totalWaiting, countsReady);
 
+  const loadInvestNew = () => {
+    if (!token) return;
+    fetch("https://functions.poehali.dev/1244293e-9832-493e-bbb5-de820fbe56c6?sub=count", { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(d => setInvestNew(d.new || 0)).catch(() => {});
+  };
+
   const loadCardNotices = () => {
     if (!token) return;
     fetch(`${ADMIN_URL}?sub=card_notices_count`, { headers: hdrs() })
@@ -107,7 +115,8 @@ export default function AdminPage() {
   useEffect(() => {
     if (!token) return;
     loadCardNotices();
-    const t = setInterval(loadCardNotices, 30000);
+    loadInvestNew();
+    const t = setInterval(() => { loadCardNotices(); loadInvestNew(); }, 30000);
     return () => clearInterval(t);
   }, [token]);
 
@@ -370,6 +379,14 @@ export default function AdminPage() {
             background: tab === "yookassa" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "yookassa" ? "white" : "rgba(2,44,34,0.5)" }}>
           💰 Платежи ЮKassa
         </button>
+        <button onClick={() => setTab("invest")}
+          style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
+            background: tab === "invest" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "invest" ? "white" : "rgba(2,44,34,0.5)" }}>
+          💼 Инвестиции
+          {investNew > 0 && (
+            <span style={{ background: "#ef4444", color: "white", borderRadius: 20, padding: "1px 8px", fontSize: 12, fontWeight: 700 }}>{investNew}</span>
+          )}
+        </button>
         <button onClick={() => setTab("promo")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
             background: tab === "promo" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "promo" ? "white" : "rgba(2,44,34,0.5)" }}>
@@ -433,6 +450,8 @@ export default function AdminPage() {
         {tab === "wheel" && (
           <AdminWheelPrizes token={token} />
         )}
+
+        {tab === "invest" && <AdminInvestments token={token} onChanged={loadInvestNew} />}
 
         {tab === "promo" && (
           <AdminPromoCodes token={token} />

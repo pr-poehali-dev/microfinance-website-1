@@ -1,0 +1,7 @@
+{
+  "tests": [
+    {"name": "OPTIONS preflight", "method": "OPTIONS", "path": "/", "expectedStatus": 200},
+    {"name": "Empty form returns 400", "method": "POST", "path": "/", "body": {"fullName": "", "birthDate": "", "phone": "", "email": ""}, "expectedStatus": 400},
+    {"name": "List without token returns 401", "method": "GET", "path": "/?sub=list", "expectedStatus": 401}
+  ]
+}

@@ -5,6 +5,7 @@ const NAV_LINKS = [
   { label: "Главная", href: "#home" },
   { label: "О компании", href: "#about" },
   { label: "Услуги", href: "#services" },
+  { label: "Инвестиции", href: "#invest" },
   { label: "Отзывы", href: "#reviews" },
   { label: "Контакты", href: "#contacts" },
   { label: "FAQ", href: "#faq" },
