@@ -29,7 +29,7 @@ MKK = {
     "name": "Русфинанс 24",
     "address": "г. Москва, Проспект Мира д.112",
     "bank": 'АО "Альфа-Банк", г. Москва',
-    "rs": "4081781078541066730",
+    "rs": "40817810718541066730",
     "ks": "30101810200000000593",
     "bik": "044525593",
     "phone": "+7-996-201-95-00",
@@ -349,10 +349,10 @@ BACKFILL_WHERE = f"""
 def store_contract_file(html: str, app_id: str, now_ts: str):
     """PDF, а если конвертер недоступен — готовая HTML-страница договора."""
     try:
-        return f"contracts/contract_{app_id}_{now_ts}_v9.pdf", html_to_pdf_bytes(html), "application/pdf"
+        return f"contracts/contract_{app_id}_{now_ts}_v10.pdf", html_to_pdf_bytes(html), "application/pdf"
     except Exception as ex:
         print(f"[contract] pdf unavailable, saving html: {ex}")
-        return f"contracts/contract_{app_id}_{now_ts}_v9.html", html.encode("utf-8"), "text/html; charset=utf-8"
+        return f"contracts/contract_{app_id}_{now_ts}_v10.html", html.encode("utf-8"), "text/html; charset=utf-8"
 
 
 def build_and_store(cur, app_id: str, loan_id: int) -> str:
@@ -392,7 +392,7 @@ def build_and_store(cur, app_id: str, loan_id: int) -> str:
 REFRESH_WHERE = f"""
     a.status IN ('approved','partner_card')
     AND a.contract_url IS NOT NULL AND a.contract_url <> ''
-    AND a.contract_url NOT LIKE '%v9.pdf' AND a.contract_url NOT LIKE '%v9.html'
+    AND a.contract_url NOT LIKE '%v10.pdf' AND a.contract_url NOT LIKE '%v10.html'
     AND a.id = (SELECT x.id FROM {SCHEMA}.applications x WHERE x.phone = a.phone ORDER BY x.created_at DESC LIMIT 1)
     AND COALESCE((SELECT lo.signed FROM {SCHEMA}.loans lo JOIN {SCHEMA}.users u ON u.id = lo.user_id
                   WHERE u.phone = a.phone ORDER BY lo.created_at DESC LIMIT 1), FALSE) = FALSE
@@ -594,7 +594,7 @@ CARD_BACKFILL_WHERE = """
     a.virtual_card_number IS NOT NULL AND a.virtual_card_status IN ('pending','active','blocked')
     AND (a.card_contract_url IS NULL OR a.card_contract_url = ''
          OR (a.virtual_card_status = 'pending'
-             AND a.card_contract_url NOT LIKE '%v9.pdf' AND a.card_contract_url NOT LIKE '%v9.html'))
+             AND a.card_contract_url NOT LIKE '%v10.pdf' AND a.card_contract_url NOT LIKE '%v10.html'))
 """
 
 
@@ -840,7 +840,7 @@ def build_term_contract(cur, kind: str, app_id: int) -> str:
 def backfill_term_contracts(cur, conn) -> dict:
     """Пересоздаёт неподписанные договоры по автозаймам и займам на покупки (старая версия файла), пачкой по 3."""
     where_tpl = (
-        "contract_url IS NOT NULL AND contract_url <> '' AND contract_url NOT LIKE '%v9.pdf' AND contract_url NOT LIKE '%v9.html' "
+        "contract_url IS NOT NULL AND contract_url <> '' AND contract_url NOT LIKE '%v10.pdf' AND contract_url NOT LIKE '%v10.html' "
         "AND COALESCE(contract_signed, FALSE) = FALSE AND status IN ('approved','signing') AND approved_rate IS NOT NULL"
     )
     pending = []
