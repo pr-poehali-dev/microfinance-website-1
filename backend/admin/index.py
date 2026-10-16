@@ -1918,6 +1918,72 @@ def handler(event: dict, context) -> dict:
         tg(f"✏️ <b>Условия карты РУСФИНАНС 24 изменены</b>\n\n👤 {full_name or phone}\n📞 {phone}")
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
+    # --- СТАВКИ КЛИЕНТА (GET, sub='client_rates', userId=...) ---
+    if sub == "client_rates" and method == "GET":
+        uid = int(qs.get("userId", 0) or 0)
+        cur.execute(f"SELECT phone FROM {SCHEMA}.users WHERE id = {uid}")
+        urow = cur.fetchone()
+        if not urow:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Клиент не найден"})}
+        ph_e = str(urow[0]).replace("'", "''")
+        items = []
+        cur.execute(f"SELECT id, amount, rate, status FROM {SCHEMA}.loans WHERE user_id = {uid} AND status IN ('active','overdue','review') ORDER BY id DESC")
+        for lid, amt, rt, st in cur.fetchall():
+            items.append({"type": "loan", "id": lid, "title": f"Займ №{lid}", "amount": float(amt), "rate": round(float(rt) * 100, 3), "unit": "% в день", "status": st})
+        for t, tbl, ttl in (("carloan", "car_loan_applications", "Займ под залог авто"), ("shoploan", "shopping_loan_applications", "Займ на покупки")):
+            cur.execute(
+                f"SELECT id, COALESCE(approved_amount, loan_amount), approved_rate, status FROM {SCHEMA}.{tbl} "
+                f"WHERE phone = '{ph_e}' AND approved_rate IS NOT NULL AND status IN ('approved','signing') ORDER BY id DESC"
+            )
+            for aid, amt, rt, st in cur.fetchall():
+                items.append({"type": t, "id": aid, "title": f"{ttl} №{aid}", "amount": float(amt or 0), "rate": float(rt), "unit": "% в месяц", "status": st})
+        cur.execute(
+            f"SELECT id, virtual_card_limit, virtual_card_rate, virtual_card_status FROM {SCHEMA}.applications "
+            f"WHERE phone = '{ph_e}' AND virtual_card_status IN ('active','blocked') AND virtual_card_rate IS NOT NULL ORDER BY id DESC"
+        )
+        for aid, lim, rt, st in cur.fetchall():
+            items.append({"type": "card", "id": aid, "title": f"Карта РУСФИНАНС 24 (заявка №{aid})", "amount": float(lim or 0), "rate": float(rt), "unit": "% в неделю", "status": st})
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"items": items}, ensure_ascii=False)}
+
+    # --- УМЕНЬШИТЬ СТАВКУ (POST, sub='reduce_rate', body: {type, id, rate}) ---
+    if sub == "reduce_rate" and method == "POST":
+        r_type = str(body.get("type") or "")
+        r_id = int(body.get("id") or 0)
+        try:
+            new_rate = float(body.get("rate"))
+        except (TypeError, ValueError):
+            new_rate = -1
+        if r_type not in ("loan", "carloan", "shoploan", "card") or not r_id or new_rate < 0:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Некорректные параметры"})}
+        if r_type == "loan":
+            cur.execute(f"SELECT rate FROM {SCHEMA}.loans WHERE id = {r_id}")
+        elif r_type == "card":
+            cur.execute(f"SELECT virtual_card_rate FROM {SCHEMA}.applications WHERE id = {r_id} AND virtual_card_number IS NOT NULL")
+        else:
+            tbl = "car_loan_applications" if r_type == "carloan" else "shopping_loan_applications"
+            cur.execute(f"SELECT approved_rate FROM {SCHEMA}.{tbl} WHERE id = {r_id}")
+        cr = cur.fetchone()
+        if not cr or cr[0] is None:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Продукт не найден"})}
+        old_rate = float(cr[0])
+        store_rate = new_rate / 100 if r_type == "loan" else new_rate
+        if store_rate >= old_rate - 1e-9:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Новая ставка должна быть ниже текущей"})}
+        if r_type == "loan":
+            cur.execute(f"UPDATE {SCHEMA}.loans SET rate = {store_rate} WHERE id = {r_id}")
+        elif r_type == "card":
+            cur.execute(f"UPDATE {SCHEMA}.applications SET virtual_card_rate = {store_rate} WHERE id = {r_id}")
+            cur.execute(f"UPDATE {SCHEMA}.card_transactions SET rate = {store_rate} WHERE application_id = {r_id} AND status != 'cancelled' AND rate > {store_rate}")
+        else:
+            cur.execute(f"UPDATE {SCHEMA}.{tbl} SET approved_rate = {store_rate} WHERE id = {r_id}")
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "rate": new_rate})}
+
     # --- УВЕЛИЧИТЬ ЛИМИТ ВЫДАННОЙ КАРТЫ (POST, sub='increase_limit', appId=..., body: {amount}) ---
     if sub == "increase_limit" and method == "POST":
         app_id_e = str(qs.get("appId", "")).replace("'", "''")
