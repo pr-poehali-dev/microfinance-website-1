@@ -1,0 +1,142 @@
+import { useState, useEffect, useCallback } from "react";
+import Icon from "@/components/ui/icon";
+
+const INVEST_URL = "https://functions.poehali.dev/1244293e-9832-493e-bbb5-de820fbe56c6";
+
+interface Payout { id: number; amount: number; kind: string; note: string; paidAt: string }
+interface Investment {
+  id: number; amount: number; termMonths: number; payout: string; rate: number; startDate: string; endDate: string;
+  status: string; monthlyIncome: number; accrued: number; paidInterest: number; toPay: number; nextDate: string | null; payouts: Payout[];
+}
+interface Investor { id: number; fullName: string; phone: string; email: string; createdAt: string; investments: Investment[] }
+
+const fmt = (n: number) => `${Math.round(n).toLocaleString("ru-RU")} ₽`;
+const INPUT: React.CSSProperties = { background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.35)", borderRadius: 8, padding: "8px 10px", color: "#022c22", fontSize: 13, outline: "none" };
+const BTN: React.CSSProperties = { background: "linear-gradient(135deg,#10b981,#14b8a6)", color: "white", border: "none", borderRadius: 8, padding: "8px 14px", fontWeight: 700, fontSize: 13, cursor: "pointer" };
+const BTN2: React.CSSProperties = { background: "rgba(16,185,129,0.1)", color: "#047857", border: "none", borderRadius: 8, padding: "8px 12px", fontWeight: 600, fontSize: 12, cursor: "pointer" };
+
+export default function AdminInvestors({ token }: { token: string }) {
+  const [items, setItems] = useState<Investor[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [openId, setOpenId] = useState<number | null>(null);
+  const [msg, setMsg] = useState("");
+  const [payForm, setPayForm] = useState<{ invId: number; amount: string; kind: string; note: string } | null>(null);
+  const [addForm, setAddForm] = useState<{ investorId: number; amount: string; termMonths: string; payout: string; rate: string } | null>(null);
+  const [pwForm, setPwForm] = useState<{ investorId: number; password: string } | null>(null);
+
+  const hdrs = useCallback(() => ({ "Content-Type": "application/json", Authorization: `Bearer ${token}` }), [token]);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    fetch(`${INVEST_URL}?sub=investors`, { headers: hdrs() })
+      .then(r => r.json()).then(d => setItems(d.items || [])).finally(() => setLoading(false));
+  }, [hdrs]);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function post(sub: string, body: object, okText: string) {
+    setMsg("");
+    const r = await fetch(`${INVEST_URL}?sub=${sub}`, { method: "POST", headers: hdrs(), body: JSON.stringify(body) }).catch(() => null);
+    const d = r ? await r.json().catch(() => ({})) : {};
+    if (r && r.ok) { setMsg(okText); load(); return true; }
+    setMsg(d.error || "Не удалось сохранить");
+    return false;
+  }
+
+  return (
+    <div>
+      {msg && <div style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", color: "#064e3b", borderRadius: 10, padding: "10px 14px", marginBottom: 12, fontSize: 13, fontWeight: 600 }}>{msg}</div>}
+      {loading && <div style={{ color: "rgba(2,44,34,0.5)", padding: 16 }}>Загрузка...</div>}
+      {!loading && items.length === 0 && <div style={{ color: "rgba(2,44,34,0.5)", padding: 16 }}>Инвесторов пока нет. Создайте кабинет из заявки на вкладке «Заявки».</div>}
+
+      <div style={{ display: "grid", gap: 10 }}>
+        {items.map(inv => {
+          const open = openId === inv.id;
+          const total = inv.investments.filter(i => i.status === "active").reduce((s, i) => s + i.amount, 0);
+          return (
+            <div key={inv.id} style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 14, padding: 16 }}>
+              <div onClick={() => setOpenId(open ? null : inv.id)} style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", cursor: "pointer", flexWrap: "wrap" }}>
+                <div>
+                  <div style={{ fontWeight: 700, color: "#022c22", fontSize: 16 }}>{inv.fullName}</div>
+                  <div style={{ fontSize: 13, color: "rgba(2,44,34,0.55)" }}>{inv.phone}{inv.email ? ` · ${inv.email}` : ""}</div>
+                </div>
+                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  <span style={{ fontWeight: 800, color: "#047857" }}>{fmt(total)}</span>
+                  <Icon name={open ? "ChevronUp" : "ChevronDown"} size={18} className="text-emerald-600" />
+                </div>
+              </div>
+
+              {open && (
+                <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button style={BTN2} onClick={() => setAddForm({ investorId: inv.id, amount: "", termMonths: "12", payout: "monthly", rate: "8" })}>+ Новая инвестиция</button>
+                    <button style={BTN2} onClick={() => setPwForm({ investorId: inv.id, password: "" })}>Сменить пароль</button>
+                  </div>
+
+                  {pwForm?.investorId === inv.id && (
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <input style={INPUT} placeholder="Новый пароль (от 6 символов)" value={pwForm.password} onChange={e => setPwForm({ ...pwForm, password: e.target.value })} />
+                      <button style={BTN} onClick={async () => { if (await post("investor_password", pwForm, "Пароль изменён")) setPwForm(null); }}>Сохранить</button>
+                    </div>
+                  )}
+
+                  {addForm?.investorId === inv.id && (
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                      <input style={{ ...INPUT, width: 130 }} type="number" placeholder="Сумма, ₽" value={addForm.amount} onChange={e => setAddForm({ ...addForm, amount: e.target.value })} />
+                      <select style={INPUT} value={addForm.termMonths} onChange={e => setAddForm({ ...addForm, termMonths: e.target.value })}>
+                        <option value="6">6 мес.</option><option value="12">1 год</option><option value="36">3 года</option><option value="60">5 лет</option>
+                      </select>
+                      <select style={INPUT} value={addForm.payout} onChange={e => setAddForm({ ...addForm, payout: e.target.value })}>
+                        <option value="monthly">Проценты каждый месяц</option><option value="end">Проценты в конце срока</option>
+                      </select>
+                      <input style={{ ...INPUT, width: 80 }} type="number" step="0.1" value={addForm.rate} onChange={e => setAddForm({ ...addForm, rate: e.target.value })} />
+                      <span style={{ fontSize: 12, color: "rgba(2,44,34,0.5)" }}>% в мес.</span>
+                      <button style={BTN} onClick={async () => { if (await post("investment_add", addForm, "Инвестиция добавлена")) setAddForm(null); }}>Добавить</button>
+                    </div>
+                  )}
+
+                  {inv.investments.map(i => (
+                    <div key={i.id} style={{ background: "#ffffff", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 12, padding: 12, opacity: i.status === "closed" ? 0.65 : 1 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+                        <b style={{ color: "#022c22" }}>{fmt(i.amount)} · {i.termMonths} мес. · {i.rate}% в мес.</b>
+                        <span style={{ fontSize: 12, color: i.status === "active" ? "#047857" : "#64748b", fontWeight: 700 }}>{i.status === "active" ? "Действует" : "Завершена"}</span>
+                      </div>
+                      <div style={{ fontSize: 13, color: "rgba(2,44,34,0.6)", marginTop: 4 }}>
+                        {i.startDate} — {i.endDate} · проценты {i.payout === "monthly" ? "каждый месяц" : "в конце срока"} · доход {fmt(i.monthlyIncome)}/мес.
+                      </div>
+                      <div style={{ fontSize: 13, color: "#064e3b", marginTop: 4, fontWeight: 600 }}>
+                        Начислено {fmt(i.accrued)} · выплачено процентов {fmt(i.paidInterest)} · к выплате {fmt(i.toPay)}{i.nextDate ? ` · ближайшая дата ${i.nextDate}` : ""}
+                      </div>
+
+                      {i.payouts.length > 0 && (
+                        <div style={{ marginTop: 8, fontSize: 12, color: "rgba(2,44,34,0.6)" }}>
+                          {i.payouts.map(p => <div key={p.id}>{p.paidAt} · {p.kind === "principal" ? "возврат вложения" : "проценты"} · {fmt(p.amount)}{p.note ? ` · ${p.note}` : ""}</div>)}
+                        </div>
+                      )}
+
+                      {i.status === "active" && (
+                        payForm?.invId === i.id ? (
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10, alignItems: "center" }}>
+                            <input style={{ ...INPUT, width: 120 }} type="number" placeholder="Сумма, ₽" value={payForm.amount} onChange={e => setPayForm({ ...payForm, amount: e.target.value })} />
+                            <select style={INPUT} value={payForm.kind} onChange={e => setPayForm({ ...payForm, kind: e.target.value })}>
+                              <option value="interest">Проценты</option><option value="principal">Возврат вложения (закрыть)</option>
+                            </select>
+                            <input style={{ ...INPUT, width: 150 }} placeholder="Комментарий" value={payForm.note} onChange={e => setPayForm({ ...payForm, note: e.target.value })} />
+                            <button style={BTN} onClick={async () => { if (await post("payout_add", { investmentId: i.id, amount: payForm.amount, kind: payForm.kind, note: payForm.note }, "Выплата записана")) setPayForm(null); }}>Записать</button>
+                            <button style={BTN2} onClick={() => setPayForm(null)}>Отмена</button>
+                          </div>
+                        ) : (
+                          <button style={{ ...BTN2, marginTop: 10 }} onClick={() => setPayForm({ invId: i.id, amount: String(i.toPay || ""), kind: "interest", note: "" })}>Записать выплату</button>
+                        )
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

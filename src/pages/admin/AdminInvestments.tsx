@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
+import AdminInvestors from "./AdminInvestors";
 
 const INVEST_URL = "https://functions.poehali.dev/1244293e-9832-493e-bbb5-de820fbe56c6";
 
@@ -22,6 +23,10 @@ export default function AdminInvestments({ token, onChanged }: { token: string; 
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<"new" | "processed" | "all">("new");
+  const [view, setView] = useState<"requests" | "investors">("requests");
+  const [create, setCreate] = useState<Item | null>(null);
+  const [cf, setCf] = useState({ phone: "", password: "", rate: "8" });
+  const [cmsg, setCmsg] = useState("");
 
   const hdrs = useCallback(() => ({ "Content-Type": "application/json", Authorization: `Bearer ${token}` }), [token]);
 
@@ -41,11 +46,35 @@ export default function AdminInvestments({ token, onChanged }: { token: string; 
     onChanged?.();
   };
 
+  const createCabinet = async () => {
+    if (!create) return;
+    setCmsg("");
+    const r = await fetch(`${INVEST_URL}?sub=investor_create`, {
+      method: "POST", headers: hdrs(),
+      body: JSON.stringify({
+        requestId: create.id, fullName: create.fullName, email: create.email, birthDate: create.birthDate,
+        phone: cf.phone, password: cf.password, rate: cf.rate, amount: create.amount, termMonths: create.termMonths, payout: create.payout,
+      }),
+    }).catch(() => null);
+    const d = r ? await r.json().catch(() => ({})) : {};
+    if (r && r.ok) { setCreate(null); setView("investors"); load(); onChanged?.(); }
+    else setCmsg(d.error || "Не удалось создать кабинет");
+  };
+
   const shown = items.filter(i => filter === "all" ? true : i.status === filter);
   const newCount = items.filter(i => i.status === "new").length;
 
+  const tabBtn = (active: boolean): React.CSSProperties => ({ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 700, fontSize: 14,
+    background: active ? "#064e3b" : "rgba(16,185,129,0.1)", color: active ? "#ffffff" : "#047857" });
+
   return (
     <div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+        <button style={tabBtn(view === "requests")} onClick={() => setView("requests")}>Заявки</button>
+        <button style={tabBtn(view === "investors")} onClick={() => setView("investors")}>Кабинеты инвесторов</button>
+      </div>
+      {view === "investors" && <AdminInvestors token={token} />}
+      {view === "requests" && (<>
       <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
         {([["new", `Новые (${newCount})`], ["processed", "Обработанные"], ["all", "Все"]] as const).map(([k, label]) => (
           <button key={k} onClick={() => setFilter(k)}
@@ -79,6 +108,10 @@ export default function AdminInvestments({ token, onChanged }: { token: string; 
                 <a href={`mailto:${i.email}`} style={{ color: "#047857", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 5 }}><Icon name="Mail" size={14} />{i.email}</a>
               </div>
             </div>
+            <button onClick={() => { setCreate(i); setCf({ phone: i.phone, password: "", rate: "8" }); setCmsg(""); }}
+              style={{ background: "#064e3b", color: "#ffffff", border: "none", borderRadius: 10, padding: "9px 16px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <Icon name="UserPlus" size={14} />Создать кабинет
+            </button>
             {i.status === "new" ? (
               <button onClick={() => setStatus(i.id, "processed")}
                 style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)", color: "white", border: "none", borderRadius: 10, padding: "9px 16px", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}>
@@ -93,6 +126,32 @@ export default function AdminInvestments({ token, onChanged }: { token: string; 
           </div>
         ))}
       </div>
+      </>)}
+
+      {create && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={() => setCreate(null)}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#ffffff", borderRadius: 18, padding: 22, width: "100%", maxWidth: 420, display: "grid", gap: 10 }}>
+            <div style={{ fontWeight: 800, fontSize: 18, color: "#022c22" }}>Кабинет инвестора</div>
+            <div style={{ fontSize: 13, color: "rgba(2,44,34,0.6)" }}>
+              {create.fullName}{create.amount ? ` · ${create.amount.toLocaleString("ru-RU")} ₽` : ""}{create.termMonths ? ` · ${create.termMonths} мес.` : ""}
+            </div>
+            {!create.amount || !create.termMonths || !create.payout ? (
+              <div style={{ fontSize: 13, color: "#b45309" }}>В заявке нет суммы, срока или способа выплаты. Такой кабинет создать нельзя — добавьте инвестицию вручную после создания инвестора через новую заявку.</div>
+            ) : null}
+            <label style={{ fontSize: 12, color: "rgba(2,44,34,0.55)" }}>Телефон для входа</label>
+            <input style={{ border: "1px solid rgba(16,185,129,0.4)", borderRadius: 8, padding: "9px 10px", color: "#022c22" }} value={cf.phone} onChange={e => setCf({ ...cf, phone: e.target.value })} />
+            <label style={{ fontSize: 12, color: "rgba(2,44,34,0.55)" }}>Пароль (от 6 символов)</label>
+            <input style={{ border: "1px solid rgba(16,185,129,0.4)", borderRadius: 8, padding: "9px 10px", color: "#022c22" }} value={cf.password} onChange={e => setCf({ ...cf, password: e.target.value })} />
+            <label style={{ fontSize: 12, color: "rgba(2,44,34,0.55)" }}>Ставка, % в месяц</label>
+            <input style={{ border: "1px solid rgba(16,185,129,0.4)", borderRadius: 8, padding: "9px 10px", color: "#022c22" }} type="number" step="0.1" value={cf.rate} onChange={e => setCf({ ...cf, rate: e.target.value })} />
+            {cmsg && <div style={{ color: "#dc2626", fontSize: 13, fontWeight: 600 }}>{cmsg}</div>}
+            <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+              <button onClick={createCabinet} style={{ flex: 1, background: "linear-gradient(135deg,#10b981,#14b8a6)", color: "white", border: "none", borderRadius: 10, padding: "11px 14px", fontWeight: 700, cursor: "pointer" }}>Создать</button>
+              <button onClick={() => setCreate(null)} style={{ background: "rgba(16,185,129,0.1)", color: "#047857", border: "none", borderRadius: 10, padding: "11px 14px", fontWeight: 600, cursor: "pointer" }}>Отмена</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

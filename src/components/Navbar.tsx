@@ -57,6 +57,13 @@ export default function Navbar({ mobileOpen, setMobileOpen, scrollTo }: NavbarPr
             {localStorage.getItem("token") ? "Кабинет" : "Войти для заёмщиков"}
           </button>
           <button
+            onClick={() => navigate(localStorage.getItem("investor_token") ? "/investor" : "/investor/login")}
+            className="flex items-center gap-2 text-sm text-emerald-950/70 hover:text-emerald-950 border border-emerald-900/15 hover:border-emerald-500 px-4 py-2.5 rounded-xl transition-all"
+          >
+            <Icon name="Briefcase" size={15} />
+            Войти для инвесторов
+          </button>
+          <button
             onClick={() => navigate("/apply")}
             className="btn-neon text-white text-sm font-semibold px-5 py-2.5 rounded-xl"
           >
@@ -96,6 +103,13 @@ export default function Navbar({ mobileOpen, setMobileOpen, scrollTo }: NavbarPr
           >
             <Icon name="User" size={16} />
             {localStorage.getItem("token") ? "Личный кабинет" : "Войти для заёмщиков"}
+          </button>
+          <button
+            onClick={() => { setMobileOpen(false); navigate(localStorage.getItem("investor_token") ? "/investor" : "/investor/login"); }}
+            className="text-left text-emerald-950/80 hover:text-emerald-600 py-2 flex items-center gap-2 transition-colors"
+          >
+            <Icon name="Briefcase" size={16} />
+            Войти для инвесторов
           </button>
           <button
             onClick={() => { setMobileOpen(false); navigate("/apply"); }}

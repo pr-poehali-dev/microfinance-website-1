@@ -12,6 +12,8 @@ import ChatWidget from "./components/ChatWidget";
 const Index = lazy(() => import("./pages/Index"));
 const CardPage = lazy(() => import("./pages/CardPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
+const InvestorLoginPage = lazy(() => import("./pages/InvestorLoginPage"));
+const InvestorPage = lazy(() => import("./pages/InvestorPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const CreditDoctorPage = lazy(() => import("./pages/CreditDoctorPage"));
@@ -60,6 +62,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/card" element={<CardPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/investor/login" element={<InvestorLoginPage />} />
+            <Route path="/investor" element={<InvestorPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/credit-doctor" element={<CreditDoctorPage />} />
