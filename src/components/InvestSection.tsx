@@ -11,10 +11,22 @@ const TERMS = [
   { icon: "PlusCircle", label: "Пополнение", value: "доступно в любой момент" },
 ];
 
+const TERM_OPTIONS = [
+  { value: "6", label: "6 месяцев" },
+  { value: "12", label: "1 год" },
+  { value: "36", label: "3 года" },
+  { value: "60", label: "5 лет" },
+];
+
+const PAYOUT_OPTIONS = [
+  { value: "monthly", label: "Каждый месяц" },
+  { value: "end", label: "В конце срока" },
+];
+
 const INPUT = "w-full rounded-xl px-4 py-3 text-sm text-emerald-950 bg-white border border-emerald-900/15 focus:border-emerald-500 focus:outline-none placeholder:text-emerald-950/35";
 
 export default function InvestSection() {
-  const [form, setForm] = useState({ fullName: "", birthDate: "", phone: "", email: "", amount: "" });
+  const [form, setForm] = useState({ fullName: "", birthDate: "", phone: "", email: "", amount: "", termMonths: "", payout: "" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
@@ -24,16 +36,21 @@ export default function InvestSection() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true); setError("");
+    if (!form.termMonths || !form.payout) {
+      setBusy(false);
+      setError("Выберите срок и способ выплаты процентов");
+      return;
+    }
     const r = await fetch(INVEST_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, termMonths: Number(form.termMonths) }),
     }).catch(() => null);
     const d = r ? await r.json().catch(() => ({})) : {};
     setBusy(false);
     if (r && r.ok) {
       setSent(true);
-      setForm({ fullName: "", birthDate: "", phone: "", email: "", amount: "" });
+      setForm({ fullName: "", birthDate: "", phone: "", email: "", amount: "", termMonths: "", payout: "" });
     } else {
       setError(d.error || "Не удалось отправить заявку. Попробуйте ещё раз");
     }
@@ -88,6 +105,34 @@ export default function InvestSection() {
                 <div>
                   <label className="text-emerald-950/45 text-xs block mb-1 ml-1">Сумма инвестирования, ₽ (от 300 000 до 15 000 000)</label>
                   <input className={INPUT} type="number" inputMode="numeric" min={300000} max={15000000} step={1000} placeholder="Например, 500000" value={form.amount} onChange={set("amount")} required />
+                </div>
+                <div>
+                  <label className="text-emerald-950/45 text-xs block mb-2 ml-1">Срок инвестирования</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {TERM_OPTIONS.map((o) => (
+                      <button key={o.value} type="button" onClick={() => setForm({ ...form, termMonths: o.value })}
+                        className="rounded-xl py-2.5 text-sm font-semibold transition-colors"
+                        style={form.termMonths === o.value
+                          ? { background: "linear-gradient(135deg,#10b981,#14b8a6)", color: "#ffffff", border: "1px solid transparent" }
+                          : { background: "#ffffff", color: "#064e3b", border: "1px solid rgba(6,78,59,0.15)" }}>
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-emerald-950/45 text-xs block mb-2 ml-1">Выплата процентов</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {PAYOUT_OPTIONS.map((o) => (
+                      <button key={o.value} type="button" onClick={() => setForm({ ...form, payout: o.value })}
+                        className="rounded-xl py-2.5 text-sm font-semibold transition-colors"
+                        style={form.payout === o.value
+                          ? { background: "linear-gradient(135deg,#10b981,#14b8a6)", color: "#ffffff", border: "1px solid transparent" }
+                          : { background: "#ffffff", color: "#064e3b", border: "1px solid rgba(6,78,59,0.15)" }}>
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <input className={INPUT} type="tel" placeholder="Номер телефона" value={form.phone} onChange={set("phone")} required />
                 <input className={INPUT} type="email" placeholder="Адрес электронной почты" value={form.email} onChange={set("email")} required />

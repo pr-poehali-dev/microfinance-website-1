@@ -1,0 +1,2 @@
+ALTER TABLE t_p30184577_microfinance_website.investment_requests ADD COLUMN IF NOT EXISTS term_months INTEGER;
+ALTER TABLE t_p30184577_microfinance_website.investment_requests ADD COLUMN IF NOT EXISTS payout VARCHAR(16);

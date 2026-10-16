@@ -12,7 +12,11 @@ interface Item {
   status: string;
   createdAt: string;
   amount: number | null;
+  termMonths: number | null;
+  payout: string;
 }
+
+const TERM_LABEL: Record<number, string> = { 6: "6 месяцев", 12: "1 год", 36: "3 года", 60: "5 лет" };
 
 export default function AdminInvestments({ token, onChanged }: { token: string; onChanged?: () => void }) {
   const [items, setItems] = useState<Item[]>([]);
@@ -62,6 +66,13 @@ export default function AdminInvestments({ token, onChanged }: { token: string; 
             <div style={{ flex: 1, minWidth: 220 }}>
               <div style={{ fontWeight: 700, color: "#022c22", fontSize: 16 }}>{i.fullName}</div>
               {i.amount && <div style={{ fontWeight: 800, color: "#047857", fontSize: 18, marginTop: 2 }}>{i.amount.toLocaleString("ru-RU")} ₽</div>}
+              {(i.termMonths || i.payout) && (
+                <div style={{ fontSize: 13, color: "#064e3b", fontWeight: 600, marginTop: 2 }}>
+                  {i.termMonths ? `Срок: ${TERM_LABEL[i.termMonths] || `${i.termMonths} мес.`}` : ""}
+                  {i.termMonths && i.payout ? " · " : ""}
+                  {i.payout ? `Проценты: ${i.payout === "monthly" ? "каждый месяц" : "в конце срока"}` : ""}
+                </div>
+              )}
               <div style={{ fontSize: 13, color: "rgba(2,44,34,0.55)", marginTop: 2 }}>Дата рождения: {i.birthDate} · Заявка от {i.createdAt}</div>
               <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 6, fontSize: 14 }}>
                 <a href={`tel:${i.phone}`} style={{ color: "#047857", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 5 }}><Icon name="Phone" size={14} />{i.phone}</a>

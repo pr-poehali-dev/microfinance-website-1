@@ -39,6 +39,14 @@ def tg(text: str):
         pass
 
 
+def term_label(m: int) -> str:
+    return {6: "6 месяцев", 12: "1 год", 36: "3 года", 60: "5 лет"}.get(m, f"{m} мес.")
+
+
+def payout_label(p: str) -> str:
+    return "каждый месяц" if p == "monthly" else "в конце срока"
+
+
 def handler(event: dict, context) -> dict:
     """Приём заявок инвесторов (POST) и список для админки (GET, ?sub=list; POST ?sub=status)."""
     if event.get("httpMethod") == "OPTIONS":
@@ -77,13 +85,15 @@ def handler(event: dict, context) -> dict:
             return resp(200, {"ok": True})
 
         cur.execute(
-            f"SELECT id, full_name, birth_date, phone, email, status, created_at, amount "
+            f"SELECT id, full_name, birth_date, phone, email, status, created_at, amount, term_months, payout "
             f"FROM {SCHEMA}.investment_requests ORDER BY (status = 'processed'), created_at DESC LIMIT 500"
         )
         items = [{
             "id": r[0], "fullName": r[1], "birthDate": r[2], "phone": r[3], "email": r[4], "status": r[5],
             "createdAt": (r[6] + timedelta(hours=3)).strftime("%d.%m.%Y %H:%M"),
             "amount": int(r[7]) if r[7] else None,
+            "termMonths": int(r[8]) if r[8] else None,
+            "payout": r[9] or "",
         } for r in cur.fetchall()]
         cur.close(); conn.close()
         return resp(200, {"items": items})
@@ -102,6 +112,15 @@ def handler(event: dict, context) -> dict:
 
     if len(full_name.split()) < 2:
         return resp(400, {"error": "Укажите фамилию, имя и отчество"})
+    try:
+        term_months = int(body.get("termMonths", 0) or 0)
+    except ValueError:
+        term_months = 0
+    payout = str(body.get("payout", "")).strip()
+    if term_months not in (6, 12, 36, 60):
+        return resp(400, {"error": "Выберите срок инвестирования"})
+    if payout not in ("monthly", "end"):
+        return resp(400, {"error": "Выберите способ выплаты процентов"})
     if amount < 300000 or amount > 15000000:
         return resp(400, {"error": "Сумма должна быть от 300 000 до 15 000 000 ₽"})
     if not birth_date:
@@ -114,11 +133,11 @@ def handler(event: dict, context) -> dict:
     conn = psycopg2.connect(os.environ["DATABASE_URL"])
     cur = conn.cursor()
     cur.execute(
-        f"INSERT INTO {SCHEMA}.investment_requests (full_name, birth_date, phone, email, amount) "
-        f"VALUES ('{esc(full_name)}', '{esc(birth_date)}', '{esc(phone)}', '{esc(email)}', {amount}) RETURNING id"
+        f"INSERT INTO {SCHEMA}.investment_requests (full_name, birth_date, phone, email, amount, term_months, payout) "
+        f"VALUES ('{esc(full_name)}', '{esc(birth_date)}', '{esc(phone)}', '{esc(email)}', {amount}, {term_months}, '{payout}') RETURNING id"
     )
     rid = cur.fetchone()[0]
     conn.commit(); cur.close(); conn.close()
 
-    tg(f"💼 <b>Заявка на инвестирование #{rid}</b>\n{full_name}\nДата рождения: {birth_date}\nТел.: {phone}\nПочта: {email}\nСумма: {amount:,} ₽".replace(",", " "))
+    tg(f"💼 <b>Заявка на инвестирование #{rid}</b>\n{full_name}\nДата рождения: {birth_date}\nТел.: {phone}\nПочта: {email}\nСумма: {amount:,} ₽\nСрок: {term_label(term_months)}\nВыплата процентов: {payout_label(payout)}".replace(",", " "))
     return resp(200, {"ok": True, "id": rid})
