@@ -12,6 +12,7 @@ import psycopg2
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
 YK_API = "https://api.yookassa.ru/v3/payments"
 TG_CHAT = "8540431915"
+CD_PRICE = 1799.0
 
 CORS = {
     "Access-Control-Allow-Origin": "*",
@@ -113,6 +114,22 @@ def credit_payment(cur, row):
     if not cur.fetchone():
         return False
     note = "Оплата через ЮKassa"
+    if loan_type == "creditdoctor":
+        cur.execute(
+            f"UPDATE {SCHEMA}.applications SET cd_paid = TRUE, cd_paid_at = NOW(), is_credit_doctor = TRUE, "
+            f"status = CASE WHEN status = 'rejected' THEN 'pending' ELSE status END, "
+            f"reviewed_at = CASE WHEN status = 'rejected' THEN NULL ELSE reviewed_at END, "
+            f"reject_reason = CASE WHEN status = 'rejected' THEN NULL ELSE reject_reason END "
+            f"WHERE id = {int(loan_id)}"
+        )
+        cur.execute(f"SELECT full_name FROM {SCHEMA}.applications WHERE id = {int(loan_id)}")
+        _n = cur.fetchone()
+        tg(
+            f"💊 <b>Клиент оплатил «Кредитный Доктор»</b>\n\n👤 {(_n[0] if _n and _n[0] else phone)}\n📞 {phone}\n"
+            f"🔖 Заявка №{loan_id}\n💵 Сумма: {int(amount):,} ₽\n\n".replace(",", " ")
+            + "Заявка ждёт решения в разделе «Кред. Доктор»."
+        )
+        return True
     if loan_type == "card":
         if meta.get("early"):
             for k, w in (meta.get("weeks") or {}).items():
@@ -260,13 +277,30 @@ def handler(event: dict, context) -> dict:
         except (TypeError, ValueError):
             loan_id, amount = 0, 0
         return_url = str(body.get("returnUrl") or "")
-        if loan_type not in ("loan", "carloan", "shoploan", "card") or amount <= 0 or amount > 10000000 or not return_url.startswith("http"):
+        if loan_type == "creditdoctor":
+            amount = CD_PRICE
+        if loan_type not in ("loan", "carloan", "shoploan", "card", "creditdoctor") or amount <= 0 or amount > 10000000 or not return_url.startswith("http"):
             cur.close(); conn.close()
             return resp(400, {"error": "Некорректные данные платежа"})
 
         ph_e = phone.replace("'", "''")
         meta = {}
-        if loan_type == "card":
+        if loan_type == "creditdoctor":
+            cur.execute(
+                f"SELECT id, status, COALESCE(cd_paid, FALSE) FROM {SCHEMA}.applications "
+                f"WHERE phone = '{ph_e}' ORDER BY created_at DESC LIMIT 1"
+            )
+            cd_row = cur.fetchone()
+            if not cd_row or cd_row[1] != "rejected":
+                cur.close(); conn.close()
+                return resp(400, {"error": "Услуга доступна только после отказа по заявке"})
+            if cd_row[2]:
+                cur.close(); conn.close()
+                return resp(400, {"error": "Услуга уже оплачена"})
+            loan_id = cd_row[0]
+            amount = CD_PRICE
+            desc = "Услуга «Кредитный Доктор»"
+        elif loan_type == "card":
             app_id = card_app_id(cur, phone)
             if not app_id:
                 cur.close(); conn.close()

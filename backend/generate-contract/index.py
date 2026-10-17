@@ -201,7 +201,7 @@ def generate_contract_html(app_data: dict, loan_num: int) -> str:
 <body>
 
 <h1>Договор потребительского займа</h1>
-<h2>№ {contract_num}</h2>
+<h2>{"(программа «Кредитный Доктор») " if app_data.get("credit_doctor") else ""}№ {contract_num}</h2>
 <p class="center num">г. Москва &nbsp;&nbsp;&nbsp; {date_str}</p>
 
 <p><span class="bold">{MKK["name"]}</span>, именуемое в дальнейшем <span class="bold">«Займодавец»</span>, в лице директора {MKK["director"]}, действующей на основании Устава, с одной стороны, и</p>
@@ -361,12 +361,12 @@ def build_and_store(cur, app_id: str, loan_id: int, when=None) -> str:
         SELECT full_name, phone, email, birth_date, birth_place,
                passport_series, passport_number, passport_date, passport_code, passport_by,
                approved_amount, approved_rate, approved_days, amount, days, reg_address, living_address,
-               insurance_amount, wheel_discount_rub
+               insurance_amount, wheel_discount_rub, COALESCE(is_credit_doctor, FALSE)
         FROM {SCHEMA}.applications WHERE id = '{app_id_e}'
     """)
     (full_name, phone, email, birth_date, birth_place, ps, pn, pd, pc, pb,
      approved_amount, approved_rate, approved_days, amount, days, reg_address, living_address,
-     insurance_amount, wheel_discount_rub) = cur.fetchone()
+     insurance_amount, wheel_discount_rub, is_cd) = cur.fetchone()
     app_data = {
         "full_name": full_name or "", "phone": phone or "", "email": email or "",
         "birth_date": str(birth_date) if birth_date else "", "birth_place": birth_place or "",
@@ -379,6 +379,7 @@ def build_and_store(cur, app_id: str, loan_id: int, when=None) -> str:
         "living_address": living_address or "",
         "insurance": float(insurance_amount) if insurance_amount else 0,
         "wheel_rub": int(wheel_discount_rub) if wheel_discount_rub else 0,
+        "credit_doctor": bool(is_cd),
     }
     if when:
         app_data["contract_dt"] = msk(when)

@@ -5,7 +5,7 @@ const YK_URL = "https://functions.poehali.dev/64ba6f22-6243-4b3f-ab24-f5bb294d5b
 
 interface Item { id: string; loanType: string; loanId: number; amount: number; status: string; date: string; }
 
-const TYPE_LABEL: Record<string, string> = { loan: "Займ", carloan: "Автозайм", shoploan: "Займ на покупки", card: "Карта РУСФИНАНС 24" };
+const TYPE_LABEL: Record<string, string> = { loan: "Займ", carloan: "Автозайм", shoploan: "Займ на покупки", card: "Карта РУСФИНАНС 24", creditdoctor: "Услуга «Кредитный Доктор»" };
 const fmt = (n: number) => `${Math.round(n).toLocaleString("ru-RU")} ₽`;
 
 const STATUS: Record<string, { label: string; bg: string; color: string }> = {
@@ -55,7 +55,7 @@ export default function YooKassaHistory({ showEmpty = false }: { showEmpty?: boo
           return (
             <div key={p.id} className="flex items-center justify-between gap-3 rounded-lg px-3 py-2" style={{ background: "rgba(16,185,129,0.05)" }}>
               <div>
-                <div className="text-emerald-950 text-sm font-semibold">{TYPE_LABEL[p.loanType] || "Платёж"}{p.loanType !== "card" ? ` №${p.loanId}` : ""}</div>
+                <div className="text-emerald-950 text-sm font-semibold">{TYPE_LABEL[p.loanType] || "Платёж"}{p.loanType !== "card" && p.loanType !== "creditdoctor" ? ` №${p.loanId}` : ""}</div>
                 <div className="text-emerald-950/50 text-xs">{p.date}</div>
               </div>
               <div className="text-right">

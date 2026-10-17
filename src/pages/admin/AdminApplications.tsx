@@ -4,6 +4,7 @@ import { App, GLASS } from "./adminTypes";
 import AddPaymentModal from "./AddPaymentModal";
 import AdminPayoutBanner from "./AdminPayoutBanner";
 import AdminPartnerIdentification from "./AdminPartnerIdentification";
+import AdminCreditDoctorPaid from "./AdminCreditDoctorPaid";
 import { waitingStyle, WAITING_BADGE_STYLE } from "./waiting";
 import AdminAppTimeline from "./AdminAppTimeline";
 import AdminCardControl from "./AdminCardControl";
@@ -116,6 +117,7 @@ export default function AdminApplications({
     setTimeout(() => setSbSaved(p => ({ ...p, [app.id]: false })), 2000);
   }
 
+  const cdWaitCount = apps.filter(a => a.status === "pending" && a.isCreditDoctor && a.cdPaid).length;
   const identCount = apps.filter(a => a.status === "partner_card" && a.partnerCardStatus === "pending").length;
 
   const filtered = apps.filter(a => {
@@ -128,7 +130,7 @@ export default function AdminApplications({
     if (appFilter === "paid_loans") {
       if (a.loanStatus !== "paid") return false;
     } else if (appFilter === "creditdoctor") {
-      if (!a.isCreditDoctor) return false;
+      if (!a.isCreditDoctor && !a.cdPaid) return false;
     } else if (appFilter === "partner_card") {
       if (a.status !== "partner_card" || a.isCreditDoctor) return false;
     } else {
@@ -163,7 +165,7 @@ export default function AdminApplications({
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
         {([
           ["pending","Ожидают","Clock","#f59e0b"],
-          ["creditdoctor","💊 Кред. Доктор","HeartPulse","linear-gradient(135deg,#14b8a6,#ec4899)"],
+          ["creditdoctor",`💊 Кред. Доктор${cdWaitCount > 0 ? ` (${cdWaitCount})` : ""}`,"HeartPulse","linear-gradient(135deg,#14b8a6,#ec4899)"],
           ["postponed","Отложенные","PhoneMissed","#60a5fa"],
           ["approved","Одобренные","CheckCircle","#22c55e"],
           ["paid_loans","Погашенные","BadgeCheck","#14b8a6"],
@@ -244,7 +246,8 @@ export default function AdminApplications({
           const waitSigned = (app.status === "approved" || app.status === "partner_card") && !!app.loanId && app.loanSigned && !disbursed[app.id] && !app.loanDisbursedAt;
           const waitNew = app.status === "pending";
           const waitIdent = app.status === "partner_card" && app.partnerCardStatus === "pending";
-          const waiting = waitNew || waitSigned || waitIdent;
+          const waitCd = app.status === "pending" && !!app.cdPaid;
+          const waiting = waitNew || waitSigned || waitIdent || waitCd;
           return (
           <div key={app.id} style={{ ...GLASS, padding: 20, ...waitingStyle(waiting) }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
@@ -254,6 +257,7 @@ export default function AdminApplications({
                   <FsspCheckButton fullName={app.fullName} birthDate={app.birthDate} />
                   {waitNew && <span style={WAITING_BADGE_STYLE}>🔴 Новая заявка — клиент ждёт решения</span>}
                   {waitIdent && <span style={WAITING_BADGE_STYLE}>🔴 Карта партнёра — ждёт идентификации</span>}
+                  {waitCd && <span style={WAITING_BADGE_STYLE}>🔴 Кредитный Доктор оплачен — ждёт решения</span>}
                   {waitSigned && <span style={WAITING_BADGE_STYLE}>🔴 Договор подписан — клиент ждёт деньги</span>}
                   {!!app.profileUpdatedAt && (
                     <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(245,158,11,0.15)", color: "#b45309", border: "1px solid rgba(245,158,11,0.4)" }}>
@@ -268,6 +272,11 @@ export default function AdminApplications({
                   {app.isCardRequest && (
                     <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(16,185,129,0.15)", color: "#047857", border: "1px solid rgba(16,185,129,0.4)" }}>
                       💳 Заявка на карту · лимит {app.amount.toLocaleString("ru-RU")} ₽
+                    </span>
+                  )}
+                  {app.cdPaid && (
+                    <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 800, background: "#16a34a", color: "#fff" }}>
+                      ✅ КД оплачен 1 799 ₽
                     </span>
                   )}
                   {app.isCreditDoctor && (
@@ -358,6 +367,11 @@ export default function AdminApplications({
                     sentAt={app.partnerCardSentAt} rejectReason={app.partnerCardRejectReason}
                     onDone={onRefresh} onZoom={setLightbox}
                   />
+                )}
+
+                {(app.cdPaid || (app.isCreditDoctor && app.status === "rejected")) && (
+                  <AdminCreditDoctorPaid appId={app.id} token={token} paid={!!app.cdPaid} paidAt={app.cdPaidAt}
+                    rejected={app.status === "rejected"} refundDone={!!app.cdRefundDone} onDone={onRefresh} />
                 )}
 
                 {/* Блок условий партнёра */}

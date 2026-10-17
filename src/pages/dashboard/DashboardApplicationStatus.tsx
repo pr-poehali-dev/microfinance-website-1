@@ -10,6 +10,7 @@ import CardRequestBlock from "./CardRequestBlock";
 import type { ClientProfile } from "./ClientProfileCard";
 import SavedCards from "./SavedCards";
 import PartnerCardIdentification, { PartnerCardInfo } from "./PartnerCardIdentification";
+import CreditDoctorOffer from "./CreditDoctorOffer";
 import PayoutField from "@/components/PayoutField";
 import LimitIncreasedModal, { LimitIncrease } from "./LimitIncreasedModal";
 
@@ -99,6 +100,7 @@ interface Application {
   partnerCardUrl?: string;
   partnerCard?: PartnerCardInfo;
   rejectPartnerUrl?: string;
+  cdPaid?: boolean;
   profile?: ClientProfile;
 }
 
@@ -266,6 +268,16 @@ export default function DashboardApplicationStatus({
             <span className="text-xs px-3 py-1 rounded-full font-semibold"
               style={{ background: "rgba(239,68,68,0.2)", color: "#dc2626" }}>На рассмотрении</span>
           </div>
+          {application.cdPaid && (
+            <div className="mx-4 sm:mx-6 mt-4 rounded-xl px-4 py-3 flex items-start gap-3"
+              style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.35)" }}>
+              <Icon name="BadgeCheck" size={20} className="text-emerald-600 shrink-0 mt-0.5" />
+              <div>
+                <div className="text-emerald-900 text-sm font-semibold">Услуга «Кредитный Доктор» оплачена</div>
+                <div className="text-emerald-950/60 text-xs mt-0.5">Ожидайте одобрения займа. Мы сообщим о решении в личном кабинете.</div>
+              </div>
+            </div>
+          )}
           <div className="px-4 sm:px-6 py-8 flex flex-col items-center text-center">
             {!timerDone ? (
               <>
@@ -636,7 +648,7 @@ export default function DashboardApplicationStatus({
                   className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-60"
                   style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)", boxShadow: "0 4px 20px rgba(16,185,129,0.35)" }}>
                   {confirming ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="PenLine" size={18} />}
-                  {confirming ? "Подписываем..." : "Подписать договор"}
+                  {confirming ? "Подписываем..." : application.isCreditDoctor ? "Подписать кредитный договор" : "Подписать договор"}
                 </button>
               );
             })()}
@@ -677,6 +689,7 @@ export default function DashboardApplicationStatus({
                 <div className="text-emerald-950/80 text-sm">{application.rejectReason}</div>
               </div>
             )}
+            {!application.cdPaid && <CreditDoctorOffer />}
             {application.rejectPartnerUrl && (
               <div className="rounded-xl p-4 space-y-3"
                 style={{ background: "rgba(16,185,129,0.08)", border: "2px solid rgba(16,185,129,0.45)" }}>

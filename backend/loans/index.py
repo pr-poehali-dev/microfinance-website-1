@@ -1230,7 +1230,10 @@ def handler(event: dict, context) -> dict:
     card_app_id = app_row[0] if app_row else None
     partner_card_info = {"status": "none", "number": "", "photo": "", "rejectReason": ""}
     reject_partner_url = ""
+    cd_paid = False
     if app_row:
+        cur.execute(f"SELECT COALESCE(cd_paid, FALSE) FROM {SCHEMA}.applications WHERE id = {int(app_row[0])}")
+        cd_paid = bool((cur.fetchone() or (False,))[0])
         cur.execute(
             f"SELECT partner_card_status, partner_card_number, partner_card_photo, partner_card_reject_reason, reject_partner_url "
             f"FROM {SCHEMA}.applications WHERE id = {int(app_row[0])}"
@@ -1448,6 +1451,7 @@ def handler(event: dict, context) -> dict:
             "partnerCardUrl": app_row[37] or "",
             "partnerCard": partner_card_info,
             "rejectPartnerUrl": reject_partner_url,
+            "cdPaid": cd_paid,
             "insuranceAmount": insurance_amount_app,
         }
         cur.execute(f"SELECT reg_address, living_address, work_address FROM {SCHEMA}.applications WHERE id = {int(app_row[0])}")

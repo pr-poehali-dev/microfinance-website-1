@@ -4,7 +4,7 @@ import Icon from "@/components/ui/icon";
 const YK_URL = "https://functions.poehali.dev/64ba6f22-6243-4b3f-ab24-f5bb294d5bfe";
 
 interface Props {
-  loanType: "loan" | "carloan" | "shoploan" | "card";
+  loanType: "loan" | "carloan" | "shoploan" | "card" | "creditdoctor";
   loanId?: number;
   amount: number;
   txId?: number;

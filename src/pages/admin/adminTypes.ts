@@ -39,6 +39,9 @@ export interface App {
   partnerCardStatus?: string;
   partnerCardSentAt?: string | null;
   partnerCardRejectReason?: string;
+  cdPaid?: boolean;
+  cdPaidAt?: string | null;
+  cdRefundDone?: boolean;
   virtualCardStatus?: string;
   virtualCardLimit?: number | null;
   cardContractUrl?: string;

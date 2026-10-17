@@ -436,7 +436,8 @@ def handler(event: dict, context) -> dict:
                    a.virtual_card_status, a.virtual_card_limit, a.virtual_card_signed_at, a.is_card_request,
                    a.promo_code, a.promo_discount, a.profile_updated_at, a.profile_changes, a.card_contract_url,
                    a.reg_address, a.living_address, a.work_address, a.contract_url, a.wheel_prize,
-                   a.partner_card_number, a.partner_card_photo, a.partner_card_status, a.partner_card_sent_at, a.partner_card_reject_reason
+                   a.partner_card_number, a.partner_card_photo, a.partner_card_status, a.partner_card_sent_at, a.partner_card_reject_reason,
+                   COALESCE(a.cd_paid, FALSE), a.cd_paid_at, COALESCE(a.cd_refund_done, FALSE)
             FROM {SCHEMA}.applications a
             LEFT JOIN LATERAL (
                 SELECT lo.id, lo.signed, lo.signed_at, lo.status, lo.disbursed_at, lo.created_at
@@ -520,6 +521,9 @@ def handler(event: dict, context) -> dict:
             "partnerCardStatus": (r[68] if len(r) > 68 and r[68] else "none"),
             "partnerCardSentAt": msk(r[69]).strftime("%d.%m.%Y в %H:%M") if len(r) > 69 and r[69] else None,
             "partnerCardRejectReason": r[70] if len(r) > 70 and r[70] else "",
+            "cdPaid": bool(r[71]) if len(r) > 71 else False,
+            "cdPaidAt": msk(r[72]).strftime("%d.%m.%Y в %H:%M") if len(r) > 72 and r[72] else None,
+            "cdRefundDone": bool(r[73]) if len(r) > 73 else False,
             "virtualCardStatus": r[52] or "none",
             "virtualCardLimit": float(r[53]) if r[53] else None,
             "virtualCardSignedAt": msk(r[54]).strftime("%d.%m.%Y в %H:%M") if r[54] else None,
@@ -735,7 +739,7 @@ def handler(event: dict, context) -> dict:
         full_name, phone, amount, tg_username, client_email = app
         reason_val = f"'{reason_esc}'" if reason_esc else "NULL"
         partner_url_val = f"'{partner_url.replace(chr(39), chr(39)*2)}'" if partner_url else "NULL"
-        cur.execute(f"UPDATE {SCHEMA}.applications SET status='rejected', reviewed_at=NOW(), reject_reason={reason_val}, reject_partner_url={partner_url_val} WHERE id='{app_id_esc}'")
+        cur.execute(f"UPDATE {SCHEMA}.applications SET status='rejected', reviewed_at=NOW(), reject_reason={reason_val}, reject_partner_url={partner_url_val}, cd_refund_done=FALSE WHERE id='{app_id_esc}'")
         conn.commit(); cur.close(); conn.close()
 
         now = msk(datetime.now()).strftime("%d.%m.%Y в %H:%M")
@@ -863,6 +867,13 @@ def handler(event: dict, context) -> dict:
         app_id = qs.get("appId", "")
         app_id_e = str(app_id).replace("'", "''")
         cur.execute(f"UPDATE {SCHEMA}.applications SET status='postponed', reviewed_at=NOW() WHERE id='{app_id_e}' AND status='pending'")
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    # --- КРЕДИТНЫЙ ДОКТОР: отметить возврат 1 799 ₽ выполненным (POST, sub='cd_refund_done', appId=...) ---
+    if sub == "cd_refund_done" and method == "POST":
+        app_id_e = str(qs.get("appId", "")).replace("'", "''")
+        cur.execute(f"UPDATE {SCHEMA}.applications SET cd_refund_done = TRUE WHERE id = '{app_id_e}' AND cd_paid = TRUE")
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
