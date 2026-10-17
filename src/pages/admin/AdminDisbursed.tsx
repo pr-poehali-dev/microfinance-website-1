@@ -45,6 +45,7 @@ export default function AdminDisbursed({ token }: Props) {
   const [loading, setLoading] = useState(false);
   const [typeFilter, setTypeFilter] = useState<"all" | "loan" | "carloan" | "shoploan">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "overdue">("all");
+  const [bucket, setBucket] = useState<"all" | "d30" | "d60" | "d60p">("all");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<{ type: string; id: number } | null>(null);
   const [payItem, setPayItem] = useState<DisbursedItem | null>(null);
@@ -71,12 +72,19 @@ export default function AdminDisbursed({ token }: Props) {
   const fmt = (n: number) => n ? `${n.toLocaleString("ru-RU")} ₽` : "—";
 
   const overdueCount = items.filter(i => i.isOverdue).length;
+  const bucketOf = (i: DisbursedItem): "d30" | "d60" | "d60p" => {
+    const d = i.overdueDays || 0;
+    return d <= 30 ? "d30" : d <= 60 ? "d60" : "d60p";
+  };
+  const bucketCount = (b: "d30" | "d60" | "d60p") => items.filter(i => i.isOverdue && bucketOf(i) === b).length;
+  const bucketSum = (b: "d30" | "d60" | "d60p") => items.filter(i => i.isOverdue && bucketOf(i) === b).reduce((s, i) => s + Math.max((i.totalDue || 0) - (i.paidTotal || 0), 0), 0);
   const activeCount = items.length - overdueCount;
   const noticeCount = items.filter(i => i.pendingNotice).length;
 
   const filtered = items.filter(item => {
     if (typeFilter !== "all" && item.type !== typeFilter) return false;
     if (!onlyNotices && (statusFilter === "overdue" ? !item.isOverdue : item.isOverdue)) return false;
+    if (statusFilter === "overdue" && bucket !== "all" && bucketOf(item) !== bucket) return false;
     if (onlyNotices && !item.pendingNotice) return false;
     if (search) {
       const q = search.toLowerCase();
@@ -85,7 +93,9 @@ export default function AdminDisbursed({ token }: Props) {
     return true;
   });
 
-  filtered.sort((a, b) => (b.disbursedTs || "").localeCompare(a.disbursedTs || ""));
+  filtered.sort((a, b) => statusFilter === "overdue" && !onlyNotices
+    ? (b.overdueDays || 0) - (a.overdueDays || 0)
+    : (b.disbursedTs || "").localeCompare(a.disbursedTs || ""));
 
   const totalAmount = filtered.reduce((sum, i) => sum + (i.approvedAmount || i.loanAmount || 0), 0);
 
@@ -129,7 +139,7 @@ export default function AdminDisbursed({ token }: Props) {
 
       {/* Фильтр по статусу — Все / Просроченные */}
       <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-        <button onClick={() => setStatusFilter("all")}
+        <button onClick={() => { setStatusFilter("all"); setBucket("all"); }}
           style={{
             padding: "8px 18px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 700, fontSize: 13,
             background: statusFilter === "all" ? "linear-gradient(135deg,#0ea5e9,#38bdf8)" : "rgba(16,185,129,0.07)",
@@ -156,6 +166,26 @@ export default function AdminDisbursed({ token }: Props) {
           <Icon name="BellRing" size={14} />Клиент оплатил{noticeCount > 0 ? ` (${noticeCount})` : ""}
         </button>
       </div>
+
+      {statusFilter === "overdue" && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, marginBottom: 14 }}>
+          {([
+            { k: "d30", label: "До 30 дней", color: "#d97706", bg: "rgba(245,158,11,0.12)" },
+            { k: "d60", label: "До 60 дней", color: "#ea580c", bg: "rgba(249,115,22,0.14)" },
+            { k: "d60p", label: "Свыше 60 дней", color: "#dc2626", bg: "rgba(239,68,68,0.14)" },
+          ] as const).map(b => {
+            const on = bucket === b.k;
+            return (
+              <button key={b.k} onClick={() => setBucket(on ? "all" : b.k)}
+                style={{ textAlign: "left", cursor: "pointer", borderRadius: 14, padding: "12px 16px", background: b.bg, border: `2px solid ${on ? b.color : "transparent"}` }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: b.color }}>{b.label}</div>
+                <div style={{ fontSize: 26, fontWeight: 800, color: "#022c22", lineHeight: 1.2 }}>{bucketCount(b.k)}</div>
+                <div style={{ fontSize: 12, color: "rgba(2,44,34,0.6)" }}>долг: {fmt(Math.round(bucketSum(b.k)))}</div>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Фильтры типа и поиск */}
       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>

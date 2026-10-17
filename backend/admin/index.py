@@ -1528,6 +1528,7 @@ def handler(event: dict, context) -> dict:
                 "paidTotal": paid_total,
                 "totalDue": total_due,
                 "isOverdue": bool(overdue),
+                "overdueDays": max((now - next_due).days, 0) if (overdue and next_due) else 0,
                 "nextDueDate": next_due.strftime("%d.%m.%Y") if next_due else None,
             })
         for r in shop_rows:
@@ -1551,6 +1552,7 @@ def handler(event: dict, context) -> dict:
                 "paidTotal": paid_total,
                 "totalDue": total_due,
                 "isOverdue": bool(overdue),
+                "overdueDays": max((now - next_due).days, 0) if (overdue and next_due) else 0,
                 "nextDueDate": next_due.strftime("%d.%m.%Y") if next_due else None,
             })
 
