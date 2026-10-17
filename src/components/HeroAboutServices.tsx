@@ -2,7 +2,7 @@ import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 
-const HERO_IMAGE = "https://cdn.poehali.dev/projects/90d9ac81-f75d-4f07-a891-12ef6edb872c/files/ce73ebf4-d796-4671-bf2d-ce095688b5fb.jpg";
+const HERO_IMAGE = "https://cdn.poehali.dev/projects/90d9ac81-f75d-4f07-a891-12ef6edb872c/files/46a05386-e2c1-4762-a71c-5cf2215e7126.jpg";
 
 const SERVICES = [
   {
@@ -181,7 +181,7 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
               className="relative rounded-3xl overflow-hidden"
               style={{ boxShadow: "0 0 60px rgba(16,185,129,0.2)" }}
             >
-              <img src={HERO_IMAGE} alt="Быстрый займ" className="w-full h-96 object-cover" />
+              <img src={HERO_IMAGE} alt="РУСФИНАНС 24 — быстрые займы онлайн" className="w-full h-96 object-cover object-top" />
               <div
                 className="absolute inset-0"
                 style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.15), rgba(20,184,166,0.08))" }}
