@@ -1,6 +1,6 @@
 import Icon from "@/components/ui/icon";
 
-export type DashboardSection = "apps" | "history" | "repay" | "new" | "cards" | "docs" | "profile";
+export type DashboardSection = "apps" | "history" | "repay" | "new" | "cards" | "docs" | "photos" | "profile";
 
 const ITEMS: { key: DashboardSection; label: string; icon: string }[] = [
   { key: "apps", label: "Мои заявки", icon: "ClipboardList" },
@@ -9,6 +9,7 @@ const ITEMS: { key: DashboardSection; label: string; icon: string }[] = [
   { key: "new", label: "Новая заявка", icon: "FilePlus" },
   { key: "cards", label: "Мои карты", icon: "CreditCard" },
   { key: "docs", label: "Документы", icon: "FileText" },
+  { key: "photos", label: "Фото документов", icon: "Camera" },
   { key: "profile", label: "Профиль", icon: "User" },
 ];
 

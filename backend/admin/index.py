@@ -2446,6 +2446,34 @@ def handler(event: dict, context) -> dict:
         )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "debt": debt - amt})}
 
+    # --- ДОКУМЕНТЫ ОТ КЛИЕНТОВ: список (GET, sub='client_docs') ---
+    if sub == "client_docs" and method == "GET":
+        cur.execute(
+            f"SELECT id, phone, full_name, title, comment, file_url, status, created_at FROM {SCHEMA}.client_documents "
+            f"ORDER BY (status = 'new') DESC, created_at DESC, id DESC LIMIT 500"
+        )
+        docs = [{"id": r[0], "phone": r[1], "fullName": r[2] or "", "title": r[3], "comment": r[4], "url": r[5],
+                 "status": r[6], "date": msk(r[7]).strftime("%d.%m.%Y в %H:%M")} for r in cur.fetchall()]
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"docs": docs}, ensure_ascii=False)}
+
+    # --- ДОКУМЕНТЫ ОТ КЛИЕНТОВ: счётчик новых (GET, sub='client_docs_count') ---
+    if sub == "client_docs_count" and method == "GET":
+        cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.client_documents WHERE status = 'new'")
+        cnt = cur.fetchone()[0]
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"count": cnt})}
+
+    # --- ДОКУМЕНТЫ ОТ КЛИЕНТОВ: отметить просмотренным (POST, sub='client_doc_seen') ---
+    if sub == "client_doc_seen" and method == "POST":
+        try:
+            doc_id = int(qs.get("docId", 0))
+        except (TypeError, ValueError):
+            doc_id = 0
+        cur.execute(f"UPDATE {SCHEMA}.client_documents SET status = 'seen' WHERE id = {doc_id}")
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     # --- ПЛАТЕЖИ ЧЕРЕЗ ЮKASSA (GET, sub='yookassa_payments') ---
     if sub == "yookassa_payments" and method == "GET":
         cur.execute(

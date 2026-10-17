@@ -306,6 +306,55 @@ def handler(event: dict, context) -> dict:
 
     user_id, phone, full_name, email = user
 
+    # --- ДОКУМЕНТЫ КЛИЕНТА: список (GET sub=my_docs) ---
+    if event.get("httpMethod") == "GET" and (event.get("queryStringParameters") or {}).get("sub") == "my_docs":
+        cur.execute(
+            f"SELECT id, title, comment, file_url, status, created_at FROM {SCHEMA}.client_documents "
+            f"WHERE user_id = {int(user_id)} ORDER BY created_at DESC, id DESC LIMIT 100"
+        )
+        docs = [{"id": r_[0], "title": r_[1], "comment": r_[2], "url": r_[3], "status": r_[4],
+                 "date": msk(r_[5]).strftime("%d.%m.%Y в %H:%M")} for r_ in cur.fetchall()]
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"docs": docs}, ensure_ascii=False)}
+
+    # --- ДОКУМЕНТЫ КЛИЕНТА: отправить админу (POST sub=doc_send) ---
+    if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "doc_send":
+        raw_d = event.get("body") or "{}"
+        bd = json.loads(raw_d) if isinstance(raw_d, str) else raw_d
+        d_title = str(bd.get("title") or "").strip()[:120] or "Документ"
+        d_comment = str(bd.get("comment") or "").strip()[:1000]
+        d_urls = [str(u) for u in (bd.get("urls") or []) if str(u).startswith("https://")][:10]
+        if not d_urls:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Прикрепите хотя бы один файл"}, ensure_ascii=False)}
+        ph_d = phone.replace("'", "''")
+        fn_d = (full_name or "").replace("'", "''")
+        t_d = d_title.replace("'", "''")
+        c_d = d_comment.replace("'", "''")
+        for u in d_urls:
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.client_documents (user_id, phone, full_name, title, comment, file_url) "
+                f"VALUES ({int(user_id)}, '{ph_d}', '{fn_d}', '{t_d}', '{c_d}', '{u.replace(chr(39), chr(39)*2)}')"
+            )
+        conn.commit()
+        cur.close(); conn.close()
+        import urllib.request as _urd
+        tg_token_d = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+        if tg_token_d:
+            try:
+                _urd.urlopen(_urd.Request(
+                    f"https://api.telegram.org/bot{tg_token_d}/sendMessage",
+                    data=json.dumps({"chat_id": "8540431915", "parse_mode": "HTML", "text": (
+                        f"📎 <b>Клиент прислал документы</b>\n\n"
+                        f"👤 <b>ФИО:</b> {full_name or phone}\n📞 <b>Телефон:</b> {phone}\n"
+                        f"📄 <b>Что:</b> {d_title}\n🗂 <b>Файлов:</b> {len(d_urls)}\n"
+                        + (f"💬 <b>Комментарий:</b> {d_comment}\n" if d_comment else "")
+                        + "\nОткройте админку, раздел «Документы клиентов».")}).encode(),
+                    headers={"Content-Type": "application/json"}), timeout=5)
+            except Exception:
+                pass
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "count": len(d_urls)})}
+
     # --- МОИ КАРТЫ: список (GET sub=saved_cards) ---
     if event.get("httpMethod") == "GET" and (event.get("queryStringParameters") or {}).get("sub") == "saved_cards":
         sync_saved_cards(cur, phone)
