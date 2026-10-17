@@ -56,6 +56,119 @@ def passport_taken(cur, series, number, phone, snils_raw="") -> bool:
     return cur.fetchone() is not None
 
 
+
+SITE_URL = "https://rusfinans24.ru"
+
+
+def _mail_html(title: str, color: str, name: str, lines: list, button: str = "") -> str:
+    body = "".join(f'<p style="color:#334155;font-size:14px;margin:0 0 12px;line-height:1.6;">{l}</p>' for l in lines)
+    btn = (f'<p style="text-align:center;margin:24px 0 0;"><a href="{SITE_URL}/login" style="background:{color};color:#ffffff;'
+           f'text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:bold;font-size:14px;display:inline-block;">{button}</a></p>') if button else ""
+    return (
+        '<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"></head>'
+        '<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif;">'
+        '<table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;"><tr><td align="center">'
+        '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;">'
+        f'<tr><td style="background:{color};padding:28px 36px;text-align:center;">'
+        '<h1 style="margin:0;color:#ffffff;font-size:22px;">РУСФИНАНС 24</h1>'
+        f'<p style="margin:8px 0 0;color:#ffffff;font-size:15px;">{title}</p></td></tr>'
+        '<tr><td style="padding:32px 36px;">'
+        f'<p style="color:#0f172a;font-size:16px;margin:0 0 16px;">Здравствуйте, <b>{name}</b>!</p>'
+        f'{body}{btn}'
+        '<p style="color:#94a3b8;font-size:11px;margin:28px 0 0;text-align:center;">© РУСФИНАНС 24. Это письмо отправлено автоматически, отвечать на него не нужно.</p>'
+        '</td></tr></table></td></tr></table></body></html>'
+    )
+
+
+def notify_email(to: str, kind: str, name: str, **kw) -> None:
+    """Письмо клиенту о событии по заявке. Ошибки не прерывают работу, результат пишется в email_log."""
+    to = (to or "").strip()
+    if not to or "@" not in to:
+        return
+    name = name or "клиент"
+    num = kw.get("num")
+    n = f" №{num}" if num else ""
+    amt = f"{int(float(kw['amount'])):,} ₽".replace(",", " ") if kw.get("amount") else ""
+    green, red, amber, blue = "#10b981", "#dc2626", "#f59e0b", "#0ea5e9"
+    templates = {
+        "postponed": (f"Заявка{n} отложена", "Заявка отложена", amber,
+                      ["Ваша заявка временно отложена. Мы вернёмся к её рассмотрению позже и сообщим о решении.",
+                       "Статус заявки всегда можно посмотреть в личном кабинете."], "Открыть личный кабинет"),
+        "partner_approved": (f"Заявка{n} одобрена — РУСФИНАНС 24", "Заявка одобрена!", green,
+                             [f"Ваша заявка одобрена{(' на сумму <b>' + amt + '</b>') if amt else ''}.",
+                              "Чтобы получить займ, оформите карту нашего партнёра и пройдите идентификацию. Подробная инструкция — в личном кабинете."], "Открыть личный кабинет"),
+        "creditdoctor_approved": (f"Заявка{n} одобрена по программе «Кредитный Доктор»", "Заявка одобрена", green,
+                                  ["Ваша заявка одобрена по программе «Кредитный Доктор». Программа поможет восстановить вашу кредитную историю.",
+                                   "Подробности — в личном кабинете."], "Открыть личный кабинет"),
+        "identification_ok": (f"Идентификация пройдена{n}", "Идентификация пройдена", green,
+                              ["Идентификация карты успешно пройдена. Теперь вы можете подписать договор в личном кабинете."], "Подписать договор"),
+        "identification_fail": (f"Идентификация не пройдена{n}", "Идентификация не пройдена", red,
+                                ["Идентификация карты не пройдена. Проверьте данные карты и отправьте их повторно в личном кабинете."], "Открыть личный кабинет"),
+        "disbursed": (f"Займ{n} выдан — РУСФИНАНС 24", "Деньги отправлены!", green,
+                      [f"Мы перевели вам <b>{amt}</b>." if amt else "Мы перевели вам деньги.",
+                       "Зачисление на карту может занять некоторое время. Условия и график платежей — в личном кабинете."], "Открыть личный кабинет"),
+        "car_approved": (f"Автозайм{n} одобрен — РУСФИНАНС 24", "Автозайм одобрен!", green,
+                         [f"Ваша заявка на автозайм одобрена{(' на сумму <b>' + amt + '</b>') if amt else ''}.",
+                          "Ознакомьтесь с условиями и подпишите договор в личном кабинете."], "Открыть личный кабинет"),
+        "car_signing": (f"Автозайм{n}: ждём вашу подпись", "Подпишите договор", blue,
+                        ["По вашему автозайму подготовлен договор. Подпишите его в личном кабинете."], "Подписать договор"),
+        "car_rejected": (f"По заявке на автозайм{n} принято решение", "По заявке принято решение", red,
+                         ["К сожалению, по вашей заявке на автозайм принято отрицательное решение." + (f" Причина: {kw['reason']}." if kw.get("reason") else ""),
+                          "Вы можете подать новую заявку позже."], ""),
+        "car_disbursed": (f"Автозайм{n} выдан — РУСФИНАНС 24", "Деньги отправлены!", green,
+                          [f"Мы перевели вам <b>{amt}</b> по автозайму." if amt else "Автозайм выдан.", "Условия и график платежей — в личном кабинете."], "Открыть личный кабинет"),
+        "shop_approved": (f"Займ на покупки{n} одобрен — РУСФИНАНС 24", "Займ на покупки одобрен!", green,
+                          [f"Ваша заявка на займ на покупки одобрена{(' на сумму <b>' + amt + '</b>') if amt else ''}.",
+                           "Ознакомьтесь с условиями и подпишите договор в личном кабинете."], "Открыть личный кабинет"),
+        "shop_signing": (f"Займ на покупки{n}: ждём вашу подпись", "Подпишите договор", blue,
+                         ["По вашему займу на покупки подготовлен договор. Подпишите его в личном кабинете."], "Подписать договор"),
+        "shop_rejected": (f"По заявке на займ на покупки{n} принято решение", "По заявке принято решение", red,
+                          ["К сожалению, по вашей заявке на займ на покупки принято отрицательное решение." + (f" Причина: {kw['reason']}." if kw.get("reason") else ""),
+                           "Вы можете подать новую заявку позже."], ""),
+        "shop_disbursed": (f"Займ на покупки{n} выдан — РУСФИНАНС 24", "Деньги отправлены!", green,
+                           [f"Мы перевели вам <b>{amt}</b> по займу на покупки." if amt else "Займ на покупки выдан.", "Условия и график платежей — в личном кабинете."], "Открыть личный кабинет"),
+        "support_reply": ("Ответ службы поддержки — РУСФИНАНС 24", "Ответ службы поддержки", blue,
+                          ["Мы ответили на ваше сообщение в чате поддержки. Откройте личный кабинет, чтобы прочитать ответ."], "Открыть личный кабинет"),
+    }
+    t = templates.get(kind)
+    if not t:
+        return
+    subject, title, color, lines, button = t
+    html = _mail_html(title, color, name, lines, button)
+    status, err = "sent", None
+    smtp_user = os.environ.get("SMTP_USER", "")
+    smtp_pass = os.environ.get("SMTP_PASSWORD", "")
+    if not smtp_user or not smtp_pass:
+        status, err = "failed", "Не заданы SMTP_USER / SMTP_PASSWORD"
+    else:
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = f"РУСФИНАНС 24 <{smtp_user}>"
+        msg["To"] = to
+        msg.attach(MIMEText(html, "html", "utf-8"))
+        try:
+            with smtplib.SMTP_SSL("smtp.yandex.ru", 465, timeout=5) as server:
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(smtp_user, to, msg.as_string())
+        except Exception as ex:
+            status, err = "failed", str(ex)[:300]
+    try:
+        c = psycopg2.connect(os.environ["DATABASE_URL"])
+        k = c.cursor()
+        e = lambda v: str(v or "").replace("'", "''")
+        k.execute(
+            f"INSERT INTO {SCHEMA}.email_log (to_email, subject, kind, status, error) "
+            f"VALUES ('{e(to)}', '{e(subject)}', '{e(kind)}', '{status}', {('NULL' if not err else chr(39) + e(err) + chr(39))})"
+        )
+        c.commit(); k.close(); c.close()
+    except Exception as ex:
+        print(f"[notify_email] log error: {ex}")
+    print(f"[notify_email] {kind} -> {to}: {status} {err or ''}")
+
+
 def get_conn():
     return psycopg2.connect(os.environ["DATABASE_URL"])
 
@@ -504,6 +617,16 @@ def handler(event: dict, context) -> dict:
 
         if row:
             phone_n, fname, amt = row
+            _em = None
+            try:
+                k9 = conn.cursor()
+                k9.execute(f"SELECT email FROM {SCHEMA}.car_loan_applications WHERE id = {app_id}")
+                _r9 = k9.fetchone(); _em = _r9[0] if _r9 else None; k9.close()
+            except Exception:
+                conn.rollback()
+            _ns = b.get("status", "")
+            if _em and _ns in ("approved", "signing", "rejected"):
+                notify_email(_em, "car_" + _ns, fname, num=app_id, amount=(b.get("approved_amount") or amt), reason=b.get("reject_reason", ""))
             if b.get("status") in ("approved", "signing"):
                 ensure_client_password(cur, "car_loan_applications", app_id, str(phone_n).replace("'", "''"))
                 conn.commit()
@@ -577,6 +700,10 @@ def handler(event: dict, context) -> dict:
         )
         row = cur.fetchone()
         conn.commit()
+        _em2 = None
+        if row:
+            cur.execute(f"SELECT email FROM {SCHEMA}.car_loan_applications WHERE id = {app_id}")
+            _r2 = cur.fetchone(); _em2 = _r2[0] if _r2 else None
         cur.close(); conn.close()
 
         if not row:
@@ -584,6 +711,8 @@ def handler(event: dict, context) -> dict:
 
         fname, phone_n, aa, la = row
         amt = aa or la
+        if _em2:
+            notify_email(_em2, "car_disbursed", fname, num=app_id, amount=amt)
         tg(
             f"💸 <b>Автозайм #{app_id} выдан</b>\n"
             f"👤 {fname or '—'} | 📞 {phone_n}\n"

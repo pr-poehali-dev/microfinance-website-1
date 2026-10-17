@@ -15,6 +15,7 @@ import AdminClientDocs from "./admin/AdminClientDocs";
 import AdminPauseSwitch from "./admin/AdminPauseSwitch";
 import AdminSupport from "./admin/AdminSupport";
 import AdminDuplicates from "./admin/AdminDuplicates";
+import AdminEmailLog from "./admin/AdminEmailLog";
 import AdminInvestments from "./admin/AdminInvestments";
 import AdminPromoCodes from "./admin/AdminPromoCodes";
 import AdminWheelPrizes from "./admin/AdminWheelPrizes";
@@ -31,7 +32,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
 
   const [clientDocsNew, setClientDocsNew] = useState(0);
-  const [tab, setTab]   = useState<"apps" | "clients" | "carloan" | "shoploan" | "disbursed" | "cardrequests" | "cards" | "promo" | "wheel" | "yookassa" | "clientdocs" | "invest" | "support" | "duplicates">("apps");
+  const [tab, setTab]   = useState<"apps" | "clients" | "carloan" | "shoploan" | "disbursed" | "cardrequests" | "cards" | "promo" | "wheel" | "yookassa" | "clientdocs" | "invest" | "support" | "duplicates" | "emails">("apps");
   const [apps, setApps] = useState<App[]>([]);
   const [appFilter, setAppFilter] = useState<"pending"|"approved"|"rejected"|"postponed"|"partner_card"|"creditdoctor"|"paid_loans">("pending");
   const [appsLoading, setAppsLoading] = useState(false);
@@ -440,6 +441,11 @@ export default function AdminPage() {
             background: tab === "duplicates" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "duplicates" ? "white" : "rgba(2,44,34,0.5)" }}>
           👥 Дубли
         </button>
+        <button onClick={() => setTab("emails")}
+          style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
+            background: tab === "emails" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "emails" ? "white" : "rgba(2,44,34,0.5)" }}>
+          ✉️ Письма
+        </button>
         <button onClick={() => setTab("promo")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
             background: tab === "promo" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "promo" ? "white" : "rgba(2,44,34,0.5)" }}>
@@ -464,6 +470,7 @@ export default function AdminPage() {
 
       <div className="admin-content" style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 16px" }}>
         <AdminPauseSwitch token={token} />
+        {tab === "emails" && <AdminEmailLog token={token} />}
         {tab === "duplicates" && <AdminDuplicates token={token} />}
         {tab === "support" && <AdminSupport token={token} onChanged={loadSupportUnread} />}
         {tab === "apps" && <AdminContractsRepair token={token} />}
