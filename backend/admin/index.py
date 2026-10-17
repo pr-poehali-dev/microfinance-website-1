@@ -2494,6 +2494,58 @@ def handler(event: dict, context) -> dict:
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"docs": docs}, ensure_ascii=False)}
 
+    # --- ОТЧЁТ: ДУБЛИ КЛИЕНТОВ ПО ПАСПОРТУ / СНИЛС (GET, sub='duplicates') ---
+    if sub == "duplicates" and method == "GET":
+        cur.execute(f"""
+            WITH src AS (
+                SELECT 'Займ' AS kind, id, full_name, phone, status, created_at,
+                       regexp_replace(COALESCE(passport_series,''), '\\D', '', 'g') AS ps,
+                       regexp_replace(COALESCE(passport_number,''), '\\D', '', 'g') AS pn,
+                       regexp_replace(COALESCE(snils,''), '\\D', '', 'g') AS sn
+                FROM {SCHEMA}.applications
+                UNION ALL
+                SELECT 'Автозайм', id, full_name, phone, status, created_at,
+                       regexp_replace(COALESCE(passport_serial,''), '\\D', '', 'g'),
+                       regexp_replace(COALESCE(passport_num,''), '\\D', '', 'g'),
+                       regexp_replace(COALESCE(snils,''), '\\D', '', 'g')
+                FROM {SCHEMA}.car_loan_applications
+                UNION ALL
+                SELECT 'Товарный', id, full_name, phone, status, created_at,
+                       regexp_replace(COALESCE(passport_series,''), '\\D', '', 'g'),
+                       regexp_replace(COALESCE(passport_number,''), '\\D', '', 'g'),
+                       regexp_replace(COALESCE(snils,''), '\\D', '', 'g')
+                FROM {SCHEMA}.shopping_loan_applications
+            ),
+            keyed AS (
+                SELECT kind, id, full_name, phone, status, created_at,
+                       right(regexp_replace(COALESCE(phone,''), '\\D', '', 'g'), 10) AS ph,
+                       CASE WHEN ps <> '' AND pn <> '' THEN 'p:' || ps || pn END AS pkey,
+                       CASE WHEN length(sn) = 11 THEN 's:' || sn END AS skey
+                FROM src
+            ),
+            keys AS (
+                SELECT pkey AS k, 'Паспорт' AS what, kind, id, full_name, phone, status, created_at, ph FROM keyed WHERE pkey IS NOT NULL
+                UNION ALL
+                SELECT skey, 'СНИЛС', kind, id, full_name, phone, status, created_at, ph FROM keyed WHERE skey IS NOT NULL
+            ),
+            dup AS (
+                SELECT k FROM keys GROUP BY k HAVING COUNT(DISTINCT ph) > 1
+            )
+            SELECT k.k, k.what, k.kind, k.id, k.full_name, k.phone, k.status, k.created_at
+            FROM keys k JOIN dup d ON d.k = k.k
+            ORDER BY k.k, k.created_at
+            LIMIT 1000
+        """)
+        groups = {}
+        for r in cur.fetchall():
+            g = groups.setdefault(r[0], {"what": r[1], "items": []})
+            g["items"].append({
+                "kind": r[2], "id": r[3], "name": r[4] or "", "phone": r[5] or "",
+                "status": r[6] or "", "createdAt": msk(r[7]).strftime("%d.%m.%Y %H:%M") if r[7] else "",
+            })
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"groups": list(groups.values())}, ensure_ascii=False)}
+
     # --- ДОКУМЕНТЫ ОТ КЛИЕНТОВ: счётчик новых (GET, sub='client_docs_count') ---
     if sub == "client_docs_count" and method == "GET":
         cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.client_documents WHERE status = 'new'")
