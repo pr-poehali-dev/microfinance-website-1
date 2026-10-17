@@ -222,6 +222,11 @@ def notify_email(to: str, kind: str, name: str, **kw) -> None:
         "rejected": ("По вашей заявке принято решение — РУСФИНАНС 24", "По заявке принято решение", red,
                      ["К сожалению, по вашей заявке на займ принято отрицательное решение.",
                       "Вы можете подать новую заявку позже. Статус заявки доступен в личном кабинете."], "Открыть личный кабинет"),
+        "overdue": (f"Просроченная задолженность по займу{n} — РУСФИНАНС 24", "Напоминание о платеже", red,
+                    [f"По вашему займу{n} есть просроченная задолженность" + (f": просрочка <b>{kw['days']} дн.</b>" if kw.get("days") else "") + ".",
+                     (f"Сумма к оплате: <b>{int(float(kw['debt'])):,} ₽</b>.".replace(",", " ") if kw.get("debt") else ""),
+                     "За каждый день просрочки начисляется пеня, поэтому рекомендуем оплатить как можно скорее. Оплатить можно в личном кабинете.",
+                     "Если вы уже оплатили, проигнорируйте это письмо."], "Оплатить в личном кабинете"),
         "support_reply": ("Ответ службы поддержки — РУСФИНАНС 24", "Ответ службы поддержки", blue,
                           ["Мы ответили на ваше сообщение в чате поддержки. Откройте личный кабинет, чтобы прочитать ответ."], "Открыть личный кабинет"),
     }
@@ -2664,7 +2669,7 @@ def handler(event: dict, context) -> dict:
             cur.close(); conn.close()
             notify_email(me, "rejected", "Тест")
             return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "to": me})}
-        cur.execute(f"{pending_sql} LIMIT 8")
+        cur.execute(f"{pending_sql} LIMIT 4")
         batch = cur.fetchall()
         cur.close(); conn.close()
         sent, failed, last_err = 0, 0, ""
@@ -2678,6 +2683,45 @@ def handler(event: dict, context) -> dict:
             else: failed = n; last_err = er or ""
         k4.close(); c4.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"processed": len(batch), "sent": sent, "failed": failed, "error": last_err}, ensure_ascii=False)}
+
+    # --- НАПОМИНАНИЕ О ПРОСРОЧКЕ ПО ПОЧТЕ: пачка (POST, sub='bulk_overdue_remind') ---
+    if sub == "bulk_overdue_remind" and method == "POST":
+        items = body.get("items") or []
+        sent, skipped, failed, last_err = 0, 0, 0, ""
+        for it in items[:4]:
+            tp = str(it.get("type") or "")
+            try:
+                lid = int(it.get("id") or 0)
+            except (TypeError, ValueError):
+                continue
+            if tp == "loan":
+                cur.execute(f"SELECT u.email, u.full_name FROM {SCHEMA}.loans l JOIN {SCHEMA}.users u ON u.id = l.user_id WHERE l.id = {lid}")
+            elif tp == "carloan":
+                cur.execute(f"SELECT email, full_name FROM {SCHEMA}.car_loan_applications WHERE id = {lid}")
+            elif tp == "shoploan":
+                cur.execute(f"SELECT email, full_name FROM {SCHEMA}.shopping_loan_applications WHERE id = {lid}")
+            else:
+                continue
+            r = cur.fetchone()
+            em = (r[0] or "").strip() if r else ""
+            if not em or "@" not in em:
+                skipped += 1
+                continue
+            em_e = em.lower().replace("'", "''")
+            cur.execute(f"SELECT 1 FROM {SCHEMA}.email_log WHERE kind = 'overdue' AND status = 'sent' AND lower(to_email) = '{em_e}' AND created_at > NOW() - INTERVAL '1 day' LIMIT 1")
+            if cur.fetchone():
+                skipped += 1
+                continue
+            notify_email(em, "overdue", r[1], num=lid, days=int(it.get("days") or 0), debt=float(it.get("debt") or 0))
+            cur.execute(f"SELECT status, error FROM {SCHEMA}.email_log WHERE kind = 'overdue' AND lower(to_email) = '{em_e}' ORDER BY id DESC LIMIT 1")
+            lg = cur.fetchone()
+            if lg and lg[0] == "sent":
+                sent += 1
+            else:
+                failed += 1
+                last_err = (lg[1] if lg else "") or ""
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"sent": sent, "skipped": skipped, "failed": failed, "error": last_err}, ensure_ascii=False)}
 
     # --- ЖУРНАЛ ПИСЕМ (GET, sub='email_log') ---
     if sub == "email_log" and method == "GET":

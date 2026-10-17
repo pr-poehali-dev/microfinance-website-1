@@ -30,7 +30,7 @@ export default function AdminEmailLog({ token }: { token: string }) {
     if (!window.confirm(`Отправить письмо об отказе ${left} клиентам? Отменить отправку будет нельзя.`)) return;
     setRunning(true); setInfo("");
     let total = 0;
-    for (let i = 0; i < 80; i++) {
+    for (let i = 0; i < 120; i++) {
       const r = await fetch(`${ADMIN_URL}?sub=bulk_reject_send`, { method: "POST", headers: H, body: "{}" });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) { setInfo(`Остановлено: ${d.error || "ошибка сервера"}`); break; }

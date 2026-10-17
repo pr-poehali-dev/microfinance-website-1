@@ -50,6 +50,8 @@ export default function AdminDisbursed({ token }: Props) {
   const [selected, setSelected] = useState<{ type: string; id: number } | null>(null);
   const [payItem, setPayItem] = useState<DisbursedItem | null>(null);
   const [onlyNotices, setOnlyNotices] = useState(false);
+  const [remindBusy, setRemindBusy] = useState(false);
+  const [remindInfo, setRemindInfo] = useState("");
 
   const closeNotice = async (item: DisbursedItem) => {
     await fetch(`${ADMIN_URL}?sub=loan_notice_done&type=${item.type}&id=${item.id}`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
@@ -96,6 +98,26 @@ export default function AdminDisbursed({ token }: Props) {
   filtered.sort((a, b) => statusFilter === "overdue" && !onlyNotices
     ? (b.overdueDays || 0) - (a.overdueDays || 0)
     : (b.disbursedTs || "").localeCompare(a.disbursedTs || ""));
+
+  const remindAll = async () => {
+    const list = filtered.filter(i => i.isOverdue && i.email);
+    if (!list.length) { setRemindInfo("Нет клиентов с почтой в выбранной группе"); return; }
+    const label = bucket === "all" ? "всем просроченным" : bucket === "d30" ? "просроченным до 30 дней" : bucket === "d60" ? "просроченным до 60 дней" : "просроченным свыше 60 дней";
+    if (!window.confirm(`Отправить напоминание по почте ${label}? Клиентов с почтой: ${list.length}. Тем, кому уже писали за последние сутки, письмо не уйдёт.`)) return;
+    setRemindBusy(true); setRemindInfo("");
+    let sent = 0, skipped = 0, failed = 0;
+    for (let i = 0; i < list.length; i += 4) {
+      const chunk = list.slice(i, i + 4).map(x => ({ type: x.type, id: x.id, days: x.overdueDays || 0, debt: Math.max((x.totalDue || 0) - (x.paidTotal || 0), 0) }));
+      const r = await fetch(`${ADMIN_URL}?sub=bulk_overdue_remind`, { method: "POST", headers: hdrs, body: JSON.stringify({ items: chunk }) }).catch(() => null);
+      const d = r ? await r.json().catch(() => ({})) : {};
+      if (!r || !r.ok) { setRemindInfo(`Остановлено после ${sent} писем: ошибка сервера`); setRemindBusy(false); return; }
+      sent += d.sent || 0; skipped += d.skipped || 0; failed += d.failed || 0;
+      setRemindInfo(`Отправлено: ${sent}, пропущено: ${skipped}${failed ? `, не ушло: ${failed}` : ""}`);
+      if (failed > 0 && sent === 0 && i >= 8) { setRemindInfo(`Остановлено: письма не уходят. ${d.error || ""}`); setRemindBusy(false); return; }
+    }
+    setRemindInfo(`Готово. Отправлено: ${sent}, пропущено: ${skipped}${failed ? `, не ушло: ${failed}` : ""}`);
+    setRemindBusy(false);
+  };
 
   const totalAmount = filtered.reduce((sum, i) => sum + (i.approvedAmount || i.loanAmount || 0), 0);
 
@@ -184,6 +206,17 @@ export default function AdminDisbursed({ token }: Props) {
               </button>
             );
           })}
+        </div>
+      )}
+
+      {statusFilter === "overdue" && (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
+          <button onClick={remindAll} disabled={remindBusy}
+            style={{ border: "none", borderRadius: 10, padding: "9px 16px", fontWeight: 700, fontSize: 13, cursor: "pointer", color: "#fff", background: "linear-gradient(135deg,#dc2626,#f97316)", opacity: remindBusy ? 0.6 : 1, display: "flex", alignItems: "center", gap: 6 }}>
+            <Icon name="Mail" size={14} />{remindBusy ? "Отправляю..." : "Напомнить по почте"}
+          </button>
+          <span style={{ fontSize: 12, color: "rgba(2,44,34,0.55)" }}>Письмо уйдёт клиентам из выбранной группы (по текущим фильтрам)</span>
+          {remindInfo && <span style={{ fontSize: 13, fontWeight: 600, color: "#064e3b" }}>{remindInfo}</span>}
         </div>
       )}
 
