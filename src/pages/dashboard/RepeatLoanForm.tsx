@@ -18,9 +18,10 @@ interface Props {
   fullName: string;
   phone: string;
   onSuccess: () => void;
+  creditDoctor?: boolean;
 }
 
-export default function RepeatLoanForm({ promo, profile, profileEditable = false, onProfileSaved, fullName, phone, onSuccess }: Props) {
+export default function RepeatLoanForm({ promo, profile, profileEditable = false, onProfileSaved, fullName, phone, onSuccess, creditDoctor = false }: Props) {
   const [codeOpen, setCodeOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState(20000);
@@ -57,7 +58,7 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
     const res = await fetch(LOANS_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}` },
-      body: JSON.stringify({ amount, days, cardNumber: cardNumber.trim(), wheelVisitorId: localStorage.getItem("wheel_visitor_id") || "" }),
+      body: JSON.stringify({ amount, days, isCreditDoctor: creditDoctor, cardNumber: cardNumber.trim(), wheelVisitorId: localStorage.getItem("wheel_visitor_id") || "" }),
     });
     const data = await res.json();
     setSending(false);

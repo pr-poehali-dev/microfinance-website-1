@@ -268,6 +268,9 @@ export default function DashboardApplicationStatus({
             <span className="text-xs px-3 py-1 rounded-full font-semibold"
               style={{ background: "rgba(239,68,68,0.2)", color: "#dc2626" }}>На рассмотрении</span>
           </div>
+          {application.isCreditDoctor && !application.cdPaid && (
+            <div className="mx-4 sm:mx-6 mt-4"><CreditDoctorOffer pending /></div>
+          )}
           {application.cdPaid && (
             <div className="mx-4 sm:mx-6 mt-4 rounded-xl px-4 py-3 flex items-start gap-3"
               style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.35)" }}>

@@ -5,7 +5,7 @@ import YooKassaPayButton from "./YooKassaPayButton";
 
 export const CREDIT_DOCTOR_PRICE = 1799;
 
-export default function CreditDoctorOffer() {
+export default function CreditDoctorOffer({ pending = false }: { pending?: boolean }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -18,7 +18,7 @@ export default function CreditDoctorOffer() {
           </div>
           <div>
             <div className="text-emerald-950 font-semibold text-sm leading-snug">
-              Вы можете воспользоваться услугой «Кредитный Доктор»
+              {pending ? "Для рассмотрения заявки оплатите услугу «Кредитный Доктор»" : "Вы можете воспользоваться услугой «Кредитный Доктор»"}
             </div>
             <div className="text-emerald-950/50 text-xs mt-1">
               Программа для клиентов с плохой кредитной историей: помогает получить деньги и исправить кредитную историю
@@ -29,7 +29,7 @@ export default function CreditDoctorOffer() {
           className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white transition-all hover:opacity-90"
           style={{ background: "linear-gradient(135deg,#be123c,#f43f5e)", boxShadow: "0 4px 20px rgba(244,63,94,0.3)" }}>
           <Icon name="HeartPulse" size={18} />
-          Оформить Кредитный Доктор
+          {pending ? `Оплатить ${CREDIT_DOCTOR_PRICE.toLocaleString("ru-RU")} ₽` : "Оформить Кредитный Доктор"}
         </button>
       </div>
 

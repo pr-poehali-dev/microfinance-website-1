@@ -1159,6 +1159,23 @@ export default function DashboardPage() {
                   />
                 ) : null
             }
+            cdForm={
+              (!application ||
+                application.status === "rejected" ||
+                ((application.status === "approved" || application.status === "partner_card") && loans[0]?.status === "paid"))
+                ? (
+                  <RepeatLoanForm
+                    creditDoctor
+                    promo={promo}
+                    profile={application?.profile ?? null}
+                    profileEditable={profileEditable}
+                    onProfileSaved={() => { const t = localStorage.getItem("token"); if (t) loadData(t, false); }}
+                    fullName={user.fullName}
+                    phone={user.phone}
+                    onSuccess={() => { const t = localStorage.getItem("token"); if (t) loadData(t, false); }}
+                  />
+                ) : null
+            }
           />
         )}
 

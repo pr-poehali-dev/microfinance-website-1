@@ -1144,14 +1144,14 @@ def handler(event: dict, context) -> dict:
                  telegram_id, status, file_passport, file_registration, file_selfie, file_previous_passports,
                  snils, workplace, position, work_phone, salary, contact_person, card_number_transfer,
                  promo_code, promo_discount, profile_updated_at, profile_changes,
-                 reg_address, living_address, work_address)
+                 reg_address, living_address, work_address, is_credit_doctor)
             VALUES (
                 '{fn_e}', '{ph_e}', {email_val}, {amount}, {days},
                 {v(birth_date)}, {v(birth_place)}, {v(passport_series)}, {v(passport_number)}, {v(passport_date)}, {v(passport_code)}, {v(passport_by)},
                 {v(telegram_id)}, 'pending', {v(file_passport)}, {v(file_registration)}, {v(file_selfie)}, {v(file_previous_passports)},
                 {v(snils)}, {v(workplace)}, {v(position)}, {v(work_phone)}, {salary_val}, {v(contact_person)}, {v(card_number_transfer)},
                 {promo_sql}, {promo_disc_v}, {v(prev_profile_updated)}, {v(prev_profile_changes)},
-                {v(reg_address)}, {v(living_address)}, {v(work_address)}
+                {v(reg_address)}, {v(living_address)}, {v(work_address)}, {"TRUE" if b.get("isCreditDoctor") else "FALSE"}
             ) RETURNING id
         """)
         new_app_id = cur.fetchone()[0]

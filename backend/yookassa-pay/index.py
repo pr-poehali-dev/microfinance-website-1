@@ -287,13 +287,13 @@ def handler(event: dict, context) -> dict:
         meta = {}
         if loan_type == "creditdoctor":
             cur.execute(
-                f"SELECT id, status, COALESCE(cd_paid, FALSE) FROM {SCHEMA}.applications "
+                f"SELECT id, status, COALESCE(cd_paid, FALSE), COALESCE(is_credit_doctor, FALSE) FROM {SCHEMA}.applications "
                 f"WHERE phone = '{ph_e}' ORDER BY created_at DESC LIMIT 1"
             )
             cd_row = cur.fetchone()
-            if not cd_row or cd_row[1] != "rejected":
+            if not cd_row or not (cd_row[1] == "rejected" or (cd_row[1] == "pending" and cd_row[3])):
                 cur.close(); conn.close()
-                return resp(400, {"error": "Услуга доступна только после отказа по заявке"})
+                return resp(400, {"error": "Услуга доступна после отказа или по заявке «Кредитный Доктор»"})
             if cd_row[2]:
                 cur.close(); conn.close()
                 return resp(400, {"error": "Услуга уже оплачена"})

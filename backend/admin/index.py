@@ -2469,7 +2469,10 @@ def handler(event: dict, context) -> dict:
         cnt = cur.fetchone()[0]
         cur.execute(f"SELECT COUNT(DISTINCT (loan_type, loan_id)) FROM {SCHEMA}.loan_payment_notices WHERE status = 'new'")
         loan_cnt = cur.fetchone()[0]
-        cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.applications WHERE status = 'pending' AND COALESCE(is_card_request, FALSE) = FALSE")
+        cur.execute(
+            f"SELECT COUNT(*) FROM {SCHEMA}.applications WHERE status = 'pending' AND COALESCE(is_card_request, FALSE) = FALSE "
+            f"AND (COALESCE(is_credit_doctor, FALSE) = FALSE OR COALESCE(cd_paid, FALSE) = TRUE)"
+        )
         apps_wait = cur.fetchone()[0]
         cur.execute(f"""
             SELECT COUNT(*) FROM {SCHEMA}.applications a

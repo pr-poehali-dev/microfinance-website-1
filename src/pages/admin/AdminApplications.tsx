@@ -244,7 +244,7 @@ export default function AdminApplications({
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {filtered.map(app => {
           const waitSigned = (app.status === "approved" || app.status === "partner_card") && !!app.loanId && app.loanSigned && !disbursed[app.id] && !app.loanDisbursedAt;
-          const waitNew = app.status === "pending";
+          const waitNew = app.status === "pending" && !(app.isCreditDoctor && !app.cdPaid);
           const waitIdent = app.status === "partner_card" && app.partnerCardStatus === "pending";
           const waitCd = app.status === "pending" && !!app.cdPaid;
           const waiting = waitNew || waitSigned || waitIdent || waitCd;
@@ -272,6 +272,11 @@ export default function AdminApplications({
                   {app.isCardRequest && (
                     <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(16,185,129,0.15)", color: "#047857", border: "1px solid rgba(16,185,129,0.4)" }}>
                       💳 Заявка на карту · лимит {app.amount.toLocaleString("ru-RU")} ₽
+                    </span>
+                  )}
+                  {app.status === "pending" && app.isCreditDoctor && !app.cdPaid && (
+                    <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 800, background: "rgba(245,158,11,0.18)", color: "#b45309", border: "1px solid rgba(245,158,11,0.5)" }}>
+                      ⏳ КД ещё не оплачен
                     </span>
                   )}
                   {app.cdPaid && (
