@@ -29,23 +29,29 @@ CORS = {
 DUPLICATE_MSG = "Вы уже есть в системе. Повторная регистрация невозможна: у каждого клиента только один личный кабинет. Войдите в личный кабинет по номеру телефона, указанному при первой заявке."
 
 
-def passport_taken(cur, series, number, phone) -> bool:
-    """True, если такой паспорт уже есть в заявках с другим номером телефона."""
+def passport_taken(cur, series, number, phone, snils_raw="") -> bool:
+    """True, если такие паспорт или СНИЛС уже есть в заявках с другим номером телефона."""
     import re
     s = re.sub(r"\D", "", str(series or ""))
     n = re.sub(r"\D", "", str(number or ""))
     ph = re.sub(r"\D", "", str(phone or ""))[-10:]
-    if not s or not n:
+    sn = re.sub(r"\D", "", str(snils_raw or ""))
+    if not (s and n) and len(sn) != 11:
         return False
     parts = []
     for tbl, cs, cn in (("applications", "passport_series", "passport_number"),
                         ("car_loan_applications", "passport_serial", "passport_num"),
                         ("shopping_loan_applications", "passport_series", "passport_number")):
-        parts.append(
-            f"SELECT 1 FROM {SCHEMA}.{tbl} WHERE regexp_replace(COALESCE({cs}, ''), '\\D', '', 'g') = '{s}' "
-            f"AND regexp_replace(COALESCE({cn}, ''), '\\D', '', 'g') = '{n}' "
-            f"AND right(regexp_replace(COALESCE(phone, ''), '\\D', '', 'g'), 10) <> '{ph}'"
-        )
+        other = f"right(regexp_replace(COALESCE(phone, ''), '\\D', '', 'g'), 10) <> '{ph}'"
+        conds = []
+        if s and n:
+            conds.append(
+                f"(regexp_replace(COALESCE({cs}, ''), '\\D', '', 'g') = '{s}' "
+                f"AND regexp_replace(COALESCE({cn}, ''), '\\D', '', 'g') = '{n}')"
+            )
+        if len(sn) == 11:
+            conds.append(f"regexp_replace(COALESCE(snils, ''), '\\D', '', 'g') = '{sn}'")
+        parts.append(f"SELECT 1 FROM {SCHEMA}.{tbl} WHERE ({' OR '.join(conds)}) AND {other}")
     cur.execute(" UNION ALL ".join(parts) + " LIMIT 1")
     return cur.fetchone() is not None
 
@@ -206,7 +212,7 @@ def handler(event: dict, context) -> dict:
         position        = s("position")
         work_phone      = s("workPhone")
         telegram_id     = s("telegramId")
-        if passport_taken(cur, b.get("passportSerial"), b.get("passportNum"), b.get("phone")):
+        if passport_taken(cur, b.get("passportSerial"), b.get("passportNum"), b.get("phone"), b.get("snils")):
             cur.close(); conn.close()
             return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": DUPLICATE_MSG}, ensure_ascii=False)}
         file_passport   = s("filePassport")
