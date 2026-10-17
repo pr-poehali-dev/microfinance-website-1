@@ -285,6 +285,9 @@ def mask_card(value: str) -> str:
     return value
 
 
+APPLICATIONS_PAUSED = True
+PAUSED_MSG = "Новые заявки временно не принимаются. Уже поданные заявки обрабатываются, в течение 1 дня все будут рассмотрены. Приносим извинения."
+
 def handler(event: dict, context) -> dict:
     """Получение займов пользователя и подписание оффера."""
     if event.get("httpMethod") == "OPTIONS":
@@ -678,6 +681,9 @@ def handler(event: dict, context) -> dict:
 
     # --- ПОДАТЬ ЗАЯВКУ НА КАРТУ РУСФИНАНС 24 (POST, ?sub=card_request) ---
     if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "card_request":
+        if APPLICATIONS_PAUSED:
+            cur.close(); conn.close()
+            return {"statusCode": 503, "headers": CORS, "body": json.dumps({"error": PAUSED_MSG}, ensure_ascii=False)}
         ph_e = phone.replace("'", "''")
         fn_e = (full_name or "").replace("'", "''")
         cur.execute(
@@ -977,6 +983,9 @@ def handler(event: dict, context) -> dict:
 
     # --- ЗАЯВКА НА АВТОЗАЙМ / ЗАЙМ НА ПОКУПКИ ИЗ ЛИЧНОГО КАБИНЕТА (POST, ?sub=term_request) ---
     if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "term_request":
+        if APPLICATIONS_PAUSED:
+            cur.close(); conn.close()
+            return {"statusCode": 503, "headers": CORS, "body": json.dumps({"error": PAUSED_MSG}, ensure_ascii=False)}
         raw_t = event.get("body") or "{}"
         bt = json.loads(raw_t) if isinstance(raw_t, str) else raw_t
         kind = bt.get("kind")
@@ -1107,6 +1116,9 @@ def handler(event: dict, context) -> dict:
 
     # --- ПОВТОРНАЯ ЗАЯВКА НА ЗАЙМ ИЗ ЛИЧНОГО КАБИНЕТА (POST) ---
     if event.get("httpMethod") == "POST":
+        if APPLICATIONS_PAUSED:
+            cur.close(); conn.close()
+            return {"statusCode": 503, "headers": CORS, "body": json.dumps({"error": PAUSED_MSG}, ensure_ascii=False)}
         raw_b = event.get("body") or "{}"
         b = json.loads(raw_b) if isinstance(raw_b, str) else raw_b
         try:

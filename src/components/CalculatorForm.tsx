@@ -146,7 +146,8 @@ export default function CalculatorForm() {
         }
         navigate("/dashboard");
       } else {
-        setSendError("Ошибка при отправке. Попробуйте ещё раз.");
+        const err = await res.json().catch(() => ({}));
+        setSendError(res.status === 503 && err.error ? err.error : "Ошибка при отправке. Попробуйте ещё раз.");
       }
     } catch {
       setSendError("Нет связи с сервером. Попробуйте позже.");

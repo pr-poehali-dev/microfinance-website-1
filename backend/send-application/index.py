@@ -127,6 +127,9 @@ def redeem_promo(cur, code: str, phone: str, used_for: str):
     return (r[0], int(r[1])) if r else None
 
 
+APPLICATIONS_PAUSED = True
+PAUSED_MSG = "Новые заявки временно не принимаются. Уже поданные заявки обрабатываются, в течение 1 дня все будут рассмотрены. Приносим извинения."
+
 def handler(event: dict, context) -> dict:
     """Приём заявки на займ: данные + параллельная загрузка фото в S3."""
     cors_headers = {
@@ -190,6 +193,9 @@ def handler(event: dict, context) -> dict:
     if not full_name or not phone or not amount_raw:
         return {"statusCode": 400, "headers": cors_headers,
                 "body": json.dumps({"error": "Заполните все поля"}, ensure_ascii=False)}
+
+    if APPLICATIONS_PAUSED:
+        return {"statusCode": 503, "headers": cors_headers, "body": json.dumps({"error": PAUSED_MSG}, ensure_ascii=False)}
 
     try:
         amount = float(amount_raw)
