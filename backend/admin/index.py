@@ -435,7 +435,8 @@ def handler(event: dict, context) -> dict:
                    COALESCE(hist.total_borrowed, 0), COALESCE(hist.apps_count, 0), a.partner_card_url,
                    a.virtual_card_status, a.virtual_card_limit, a.virtual_card_signed_at, a.is_card_request,
                    a.promo_code, a.promo_discount, a.profile_updated_at, a.profile_changes, a.card_contract_url,
-                   a.reg_address, a.living_address, a.work_address, a.contract_url, a.wheel_prize
+                   a.reg_address, a.living_address, a.work_address, a.contract_url, a.wheel_prize,
+                   a.partner_card_number, a.partner_card_photo, a.partner_card_status, a.partner_card_sent_at, a.partner_card_reject_reason
             FROM {SCHEMA}.applications a
             LEFT JOIN LATERAL (
                 SELECT lo.id, lo.signed, lo.signed_at, lo.status, lo.disbursed_at, lo.created_at
@@ -514,6 +515,11 @@ def handler(event: dict, context) -> dict:
             "totalBorrowed": float(r[49]) if r[49] else 0,
             "isRepeatClient": (int(r[46]) if r[46] else 0) > 0 or (int(r[50]) if r[50] else 0) > 0,
             "partnerCardUrl": r[51] or "",
+            "partnerCardNumber": r[66] if len(r) > 66 and r[66] else "",
+            "partnerCardPhoto": r[67] if len(r) > 67 and r[67] else "",
+            "partnerCardStatus": (r[68] if len(r) > 68 and r[68] else "none"),
+            "partnerCardSentAt": msk(r[69]).strftime("%d.%m.%Y в %H:%M") if len(r) > 69 and r[69] else None,
+            "partnerCardRejectReason": r[70] if len(r) > 70 and r[70] else "",
             "virtualCardStatus": r[52] or "none",
             "virtualCardLimit": float(r[53]) if r[53] else None,
             "virtualCardSignedAt": msk(r[54]).strftime("%d.%m.%Y в %H:%M") if r[54] else None,
@@ -855,6 +861,32 @@ def handler(event: dict, context) -> dict:
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
+    # --- ИДЕНТИФИКАЦИЯ КАРТЫ ПАРТНЁРА: решение админа (POST, sub='partner_card_decision', appId=..., body: {decision, reason}) ---
+    if sub == "partner_card_decision" and method == "POST":
+        app_id_e = str(qs.get("appId", "")).replace("'", "''")
+        body = json.loads(event.get("body") or "{}") if isinstance(event.get("body"), str) else (event.get("body") or {})
+        decision = str(body.get("decision") or "")
+        reason = str(body.get("reason") or "").strip().replace("'", "''")
+        if decision not in ("approve", "reject"):
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Неверное решение"}, ensure_ascii=False)}
+        cur.execute(f"SELECT full_name, telegram_id FROM {SCHEMA}.applications WHERE id='{app_id_e}' AND status='partner_card' AND partner_card_status='pending'")
+        pc_app = cur.fetchone()
+        if not pc_app:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Нет заявки на идентификацию"}, ensure_ascii=False)}
+        if decision == "approve":
+            cur.execute(f"UPDATE {SCHEMA}.applications SET partner_card_status='approved', partner_card_reject_reason=NULL WHERE id='{app_id_e}'")
+        else:
+            cur.execute(f"UPDATE {SCHEMA}.applications SET partner_card_status='rejected', partner_card_reject_reason='{reason}' WHERE id='{app_id_e}'")
+        conn.commit(); cur.close(); conn.close()
+        if pc_app[1]:
+            if decision == "approve":
+                tg_client(pc_app[1], "✅ <b>Идентификация пройдена!</b>\n\nВы можете подписать договор в личном кабинете.")
+            else:
+                tg_client(pc_app[1], "❌ <b>Идентификация не пройдена.</b>\n\nПроверьте данные карты партнёра и отправьте их ещё раз в личном кабинете.")
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     # --- ПАРТНЁРСКОЕ ОДОБРЕНИЕ (POST, sub='partner_approve', appId=..., body: {amount, days, rate}) ---
     if sub == "partner_approve" and method == "POST":
         app_id = qs.get("appId", "")
@@ -1145,6 +1177,14 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Займ не найден"})}
 
         amount, days, rate, phone, full_name, user_id = row
+        cur.execute(
+            f"SELECT status, partner_card_status FROM {SCHEMA}.applications "
+            f"WHERE phone = '{str(phone).replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1"
+        )
+        _pcs = cur.fetchone()
+        if _pcs and _pcs[0] == "partner_card" and (_pcs[1] or "none") != "approved":
+            cur.close(); conn.close()
+            return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": "Сначала одобрите идентификацию карты партнёра"}, ensure_ascii=False)}
         cur.execute(
             f"UPDATE {SCHEMA}.loans SET status='active', signed=TRUE, signed_at=COALESCE(signed_at, NOW()), disbursed_at=NOW() WHERE id={loan_id}"
         )

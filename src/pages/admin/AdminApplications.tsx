@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import { App, GLASS } from "./adminTypes";
 import AddPaymentModal from "./AddPaymentModal";
 import AdminPayoutBanner from "./AdminPayoutBanner";
+import AdminPartnerIdentification from "./AdminPartnerIdentification";
 import { waitingStyle, WAITING_BADGE_STYLE } from "./waiting";
 import AdminAppTimeline from "./AdminAppTimeline";
 import AdminCardControl from "./AdminCardControl";
@@ -226,7 +227,8 @@ export default function AdminApplications({
         {filtered.map(app => {
           const waitSigned = (app.status === "approved" || app.status === "partner_card") && !!app.loanId && app.loanSigned && !disbursed[app.id] && !app.loanDisbursedAt;
           const waitNew = app.status === "pending";
-          const waiting = waitNew || waitSigned;
+          const waitIdent = app.status === "partner_card" && app.partnerCardStatus === "pending";
+          const waiting = waitNew || waitSigned || waitIdent;
           return (
           <div key={app.id} style={{ ...GLASS, padding: 20, ...waitingStyle(waiting) }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
@@ -235,6 +237,7 @@ export default function AdminApplications({
                   <span style={{ color: "#022c22", fontWeight: 700, fontSize: 18 }}>{app.fullName || app.phone}</span>
                   <FsspCheckButton fullName={app.fullName} birthDate={app.birthDate} />
                   {waitNew && <span style={WAITING_BADGE_STYLE}>🔴 Новая заявка — клиент ждёт решения</span>}
+                  {waitIdent && <span style={WAITING_BADGE_STYLE}>🔴 Карта партнёра — ждёт идентификации</span>}
                   {waitSigned && <span style={WAITING_BADGE_STYLE}>🔴 Договор подписан — клиент ждёт деньги</span>}
                   {!!app.profileUpdatedAt && (
                     <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(245,158,11,0.15)", color: "#b45309", border: "1px solid rgba(245,158,11,0.4)" }}>
@@ -330,6 +333,15 @@ export default function AdminApplications({
                       </div>
                     </div>
                   </div>
+                )}
+
+                {app.status === "partner_card" && (
+                  <AdminPartnerIdentification
+                    appId={app.id} token={token} status={app.partnerCardStatus}
+                    number={app.partnerCardNumber} photo={app.partnerCardPhoto}
+                    sentAt={app.partnerCardSentAt} rejectReason={app.partnerCardRejectReason}
+                    onDone={onRefresh} onZoom={setLightbox}
+                  />
                 )}
 
                 {/* Блок условий партнёра */}

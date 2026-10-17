@@ -34,6 +34,11 @@ export interface App {
   totalBorrowed: number;
   isRepeatClient: boolean;
   partnerCardUrl: string;
+  partnerCardNumber?: string;
+  partnerCardPhoto?: string;
+  partnerCardStatus?: string;
+  partnerCardSentAt?: string | null;
+  partnerCardRejectReason?: string;
   virtualCardStatus?: string;
   virtualCardLimit?: number | null;
   cardContractUrl?: string;

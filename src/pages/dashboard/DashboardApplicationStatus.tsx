@@ -9,6 +9,7 @@ import CardRepaymentHistory, { CardRepayment } from "./CardRepaymentHistory";
 import CardRequestBlock from "./CardRequestBlock";
 import type { ClientProfile } from "./ClientProfileCard";
 import SavedCards from "./SavedCards";
+import PartnerCardIdentification, { PartnerCardInfo } from "./PartnerCardIdentification";
 import PayoutField from "@/components/PayoutField";
 import LimitIncreasedModal, { LimitIncrease } from "./LimitIncreasedModal";
 
@@ -96,6 +97,7 @@ interface Application {
   reapplyDaysLeft?: number | null;
   videoCallRequested?: boolean;
   partnerCardUrl?: string;
+  partnerCard?: PartnerCardInfo;
   profile?: ClientProfile;
 }
 
@@ -391,11 +393,16 @@ export default function DashboardApplicationStatus({
               {/* Ссылка на оформление партнёрской карты — показываем ДО подписания договора */}
               {!(mainLoan(loans)?.signed || confirmDone) && <PartnerCardLinks customUrl={application.partnerCardUrl} />}
 
+              {!(mainLoan(loans)?.signed || confirmDone) && (
+                <PartnerCardIdentification info={application.partnerCard} phone={phone ?? ""} onSent={onRefresh} />
+              )}
+
               {/* Подписать договор → Ожидайте выдачу → Займ выдан */}
               {(() => {
                 const loan = mainLoan(loans);
                 const isSigned = loan?.signed || confirmDone;
                 const isDisbursed = !!loan?.disbursedAt;
+                const identOk = application.partnerCard?.status === "approved";
 
                 if (isDisbursed) {
                   return (
@@ -421,12 +428,17 @@ export default function DashboardApplicationStatus({
                 }
 
                 return (
-                  <button onClick={onConfirm} disabled={confirming}
-                    className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-60"
-                    style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)", boxShadow: "0 4px 20px rgba(16,185,129,0.35)" }}>
-                    {confirming ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="PenLine" size={18} />}
-                    {confirming ? "Подписываем..." : "Подписать договор"}
-                  </button>
+                  <div className="space-y-2">
+                    <button onClick={onConfirm} disabled={confirming || !identOk}
+                      className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ background: identOk ? "linear-gradient(135deg,#10b981,#14b8a6)" : "#9ca3af", boxShadow: identOk ? "0 4px 20px rgba(16,185,129,0.35)" : "none" }}>
+                      {confirming ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name={identOk ? "PenLine" : "Lock"} size={18} />}
+                      {confirming ? "Подписываем..." : "Подписать договор"}
+                    </button>
+                    {!identOk && (
+                      <p className="text-emerald-950/50 text-xs text-center">Кнопка станет активной после одобрения идентификации карты партнёра</p>
+                    )}
+                  </div>
                 );
               })()}
 

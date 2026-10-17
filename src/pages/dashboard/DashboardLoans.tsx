@@ -52,6 +52,7 @@ interface Application {
   rejectReason: string;
   cardNumber: string;
   contractUrl: string;
+  partnerCard?: { status: string };
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
@@ -113,6 +114,7 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
           {loans.map((loan) => {
             const effectiveStatus = loan.status === "review" && loan.signed ? "signed" : loan.status;
             const st = STATUS_MAP[effectiveStatus] || STATUS_MAP.active;
+            const partnerBlocked = application?.status === "partner_card" && application?.partnerCard?.status !== "approved";
             return (
               <div key={loan.id} className="glass rounded-2xl overflow-hidden">
                 <div className="px-6 py-4 flex items-center justify-between border-b border-emerald-900/15"
@@ -188,14 +190,17 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                           <Icon name="CheckCircle" size={14} className="inline mr-2" />{signMsg}
                         </div>
                       )}
-                      <button onClick={() => onSign(loan)} disabled={signingId === loan.id}
-                        className="w-full text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-60"
-                        style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)", boxShadow: "0 4px 20px rgba(16,185,129,0.3)" }}>
+                      <button onClick={() => onSign(loan)} disabled={signingId === loan.id || partnerBlocked}
+                        className="w-full text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{ background: partnerBlocked ? "#9ca3af" : "linear-gradient(135deg,#10b981,#14b8a6)", boxShadow: partnerBlocked ? "none" : "0 4px 20px rgba(16,185,129,0.3)" }}>
                         {signingId === loan.id
                           ? <><Icon name="Loader2" size={16} className="animate-spin" />Подписываем...</>
-                          : <><Icon name="PenLine" size={16} />Подписать договор</>
+                          : <><Icon name={partnerBlocked ? "Lock" : "PenLine"} size={16} />Подписать договор</>
                         }
                       </button>
+                      {partnerBlocked && (
+                        <p className="text-emerald-950/50 text-xs text-center">Станет доступно после одобрения идентификации карты партнёра</p>
+                      )}
                     </div>
                   )}
 
