@@ -12,6 +12,7 @@ import AdminCardRequests from "./admin/AdminCardRequests";
 import AdminCards from "./admin/AdminCards";
 import AdminYooKassa from "./admin/AdminYooKassa";
 import AdminClientDocs from "./admin/AdminClientDocs";
+import AdminPauseSwitch from "./admin/AdminPauseSwitch";
 import AdminInvestments from "./admin/AdminInvestments";
 import AdminPromoCodes from "./admin/AdminPromoCodes";
 import AdminWheelPrizes from "./admin/AdminWheelPrizes";
@@ -436,6 +437,7 @@ export default function AdminPage() {
       </div>
 
       <div className="admin-content" style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 16px" }}>
+        <AdminPauseSwitch token={token} />
         {tab === "apps" && <AdminContractsRepair token={token} />}
         {tab === "apps" && (
           <AdminApplications

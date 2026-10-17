@@ -118,7 +118,14 @@ def reset_client_password(cur, phone_e: str) -> str:
     return pw
 
 
-APPLICATIONS_PAUSED = True
+def applications_paused() -> bool:
+    c = psycopg2.connect(os.environ["DATABASE_URL"])
+    k = c.cursor()
+    k.execute(f"SELECT value FROM {SCHEMA}.site_settings WHERE key = 'applications_paused'")
+    r = k.fetchone()
+    k.close(); c.close()
+    return bool(r) and r[0] == "true"
+
 PAUSED_MSG = "Новые заявки временно не принимаются. Уже поданные заявки обрабатываются, в течение 1 дня все будут рассмотрены. Приносим извинения."
 
 def handler(event: dict, context) -> dict:
@@ -140,7 +147,7 @@ def handler(event: dict, context) -> dict:
 
     # --- POST / — принять новую заявку (публичный) ---
     if method == "POST" and not sub:
-        if APPLICATIONS_PAUSED:
+        if applications_paused():
             return {"statusCode": 503, "headers": CORS, "body": json.dumps({"error": PAUSED_MSG}, ensure_ascii=False)}
         raw_b = event.get("body") or "{}"
         b = json.loads(raw_b) if isinstance(raw_b, str) else raw_b

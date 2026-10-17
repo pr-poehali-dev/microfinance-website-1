@@ -5,12 +5,13 @@ import Testimonials from "@/components/Testimonials";
 import InvestSection from "@/components/InvestSection";
 import PauseBanner from "@/components/PauseBanner";
 import FortuneWheel from "@/components/FortuneWheel";
-import { APPLICATIONS_PAUSED } from "@/config/pause";
+import usePaused from "@/hooks/usePaused";
 
 const FaqContactsFooter = lazy(() => import("@/components/FaqContactsFooter"));
 
 export default function Index() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const paused = usePaused();
 
   const scrollTo = (href: string) => {
     setMobileOpen(false);
@@ -20,7 +21,8 @@ export default function Index() {
 
   return (
     <div className="min-h-screen font-golos" style={{ background: "#ffffff" }}>
-      {APPLICATIONS_PAUSED ? <PauseBanner /> : <FortuneWheel />}
+      {paused === true && <PauseBanner />}
+      {paused === false && <FortuneWheel />}
       <Navbar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} scrollTo={scrollTo} />
       <HeroAboutServices scrollTo={scrollTo} />
       <InvestSection />

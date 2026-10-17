@@ -205,12 +205,29 @@ def handler(event: dict, context) -> dict:
         conn.commit(); cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"token": tok})}
 
+    # --- ПАУЗА ПРИЁМА ЗАЯВОК: публичный статус (GET, sub='pause_status') ---
+    if sub == "pause_status" and method == "GET":
+        cur.execute(f"SELECT value FROM {SCHEMA}.site_settings WHERE key = 'applications_paused'")
+        pr = cur.fetchone()
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"paused": bool(pr) and pr[0] == "true"})}
+
     # --- ПРОВЕРКА ТОКЕНА ---
     token_valid = check_admin_token(cur, token)
     print(f"[admin] token_valid={token_valid}")
     if not token_valid:
         cur.close(); conn.close()
         return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
+
+    # --- ПАУЗА ПРИЁМА ЗАЯВОК: переключить (POST, sub='pause_set') ---
+    if sub == "pause_set" and method == "POST":
+        val = "true" if body.get("paused") else "false"
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.site_settings (key, value, updated_at) VALUES ('applications_paused', '{val}', NOW()) "
+            f"ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"
+        )
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"paused": val == "true"})}
 
     # --- СПИСОК КЛИЕНТОВ (GET, sub='') ---
     if sub == "" and method == "GET":

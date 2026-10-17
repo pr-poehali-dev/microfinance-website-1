@@ -127,7 +127,14 @@ def redeem_promo(cur, code: str, phone: str, used_for: str):
     return (r[0], int(r[1])) if r else None
 
 
-APPLICATIONS_PAUSED = True
+def applications_paused() -> bool:
+    c = psycopg2.connect(os.environ["DATABASE_URL"])
+    k = c.cursor()
+    k.execute(f"SELECT value FROM {SCHEMA}.site_settings WHERE key = 'applications_paused'")
+    r = k.fetchone()
+    k.close(); c.close()
+    return bool(r) and r[0] == "true"
+
 PAUSED_MSG = "Новые заявки временно не принимаются. Уже поданные заявки обрабатываются, в течение 1 дня все будут рассмотрены. Приносим извинения."
 
 def handler(event: dict, context) -> dict:
@@ -194,7 +201,7 @@ def handler(event: dict, context) -> dict:
         return {"statusCode": 400, "headers": cors_headers,
                 "body": json.dumps({"error": "Заполните все поля"}, ensure_ascii=False)}
 
-    if APPLICATIONS_PAUSED:
+    if applications_paused():
         return {"statusCode": 503, "headers": cors_headers, "body": json.dumps({"error": PAUSED_MSG}, ensure_ascii=False)}
 
     try:

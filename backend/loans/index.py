@@ -285,7 +285,14 @@ def mask_card(value: str) -> str:
     return value
 
 
-APPLICATIONS_PAUSED = True
+def applications_paused() -> bool:
+    c = psycopg2.connect(os.environ["DATABASE_URL"])
+    k = c.cursor()
+    k.execute(f"SELECT value FROM {SCHEMA}.site_settings WHERE key = 'applications_paused'")
+    r = k.fetchone()
+    k.close(); c.close()
+    return bool(r) and r[0] == "true"
+
 PAUSED_MSG = "Новые заявки временно не принимаются. Уже поданные заявки обрабатываются, в течение 1 дня все будут рассмотрены. Приносим извинения."
 
 def handler(event: dict, context) -> dict:
@@ -681,7 +688,7 @@ def handler(event: dict, context) -> dict:
 
     # --- ПОДАТЬ ЗАЯВКУ НА КАРТУ РУСФИНАНС 24 (POST, ?sub=card_request) ---
     if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "card_request":
-        if APPLICATIONS_PAUSED:
+        if applications_paused():
             cur.close(); conn.close()
             return {"statusCode": 503, "headers": CORS, "body": json.dumps({"error": PAUSED_MSG}, ensure_ascii=False)}
         ph_e = phone.replace("'", "''")
@@ -983,7 +990,7 @@ def handler(event: dict, context) -> dict:
 
     # --- ЗАЯВКА НА АВТОЗАЙМ / ЗАЙМ НА ПОКУПКИ ИЗ ЛИЧНОГО КАБИНЕТА (POST, ?sub=term_request) ---
     if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "term_request":
-        if APPLICATIONS_PAUSED:
+        if applications_paused():
             cur.close(); conn.close()
             return {"statusCode": 503, "headers": CORS, "body": json.dumps({"error": PAUSED_MSG}, ensure_ascii=False)}
         raw_t = event.get("body") or "{}"
@@ -1116,7 +1123,7 @@ def handler(event: dict, context) -> dict:
 
     # --- ПОВТОРНАЯ ЗАЯВКА НА ЗАЙМ ИЗ ЛИЧНОГО КАБИНЕТА (POST) ---
     if event.get("httpMethod") == "POST":
-        if APPLICATIONS_PAUSED:
+        if applications_paused():
             cur.close(); conn.close()
             return {"statusCode": 503, "headers": CORS, "body": json.dumps({"error": PAUSED_MSG}, ensure_ascii=False)}
         raw_b = event.get("body") or "{}"
