@@ -1497,6 +1497,7 @@ def handler(event: dict, context) -> dict:
                 "approvedAmount": None,
                 "carInfo": "", "itemInfo": "",
                 "disbursedAt": msk(disbursed_at).strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
+                "disbursedTs": msk(disbursed_at).strftime("%Y-%m-%d %H:%M:%S") if disbursed_at else "",
                 "createdAt": created_at.strftime("%d.%m.%Y") if created_at else "",
                 "telegramId": tg_id or "",
                 "paidTotal": paid_total,
@@ -1521,6 +1522,7 @@ def handler(event: dict, context) -> dict:
                 "approvedAmount": float(appr_amount) if appr_amount else None,
                 "carInfo": car_info or "", "itemInfo": "",
                 "disbursedAt": msk(disbursed_at).strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
+                "disbursedTs": msk(disbursed_at).strftime("%Y-%m-%d %H:%M:%S") if disbursed_at else "",
                 "createdAt": created_at.strftime("%d.%m.%Y") if created_at else "",
                 "telegramId": "",
                 "paidTotal": paid_total,
@@ -1543,6 +1545,7 @@ def handler(event: dict, context) -> dict:
                 "approvedAmount": float(appr_amount) if appr_amount else None,
                 "carInfo": "", "itemInfo": item_info or "",
                 "disbursedAt": msk(disbursed_at).strftime("%d.%m.%Y в %H:%M") if disbursed_at else None,
+                "disbursedTs": msk(disbursed_at).strftime("%Y-%m-%d %H:%M:%S") if disbursed_at else "",
                 "createdAt": created_at.strftime("%d.%m.%Y") if created_at else "",
                 "telegramId": "",
                 "paidTotal": paid_total,
@@ -1553,7 +1556,7 @@ def handler(event: dict, context) -> dict:
 
         for it in all_items:
             it["pendingNotice"] = notice_map.get((it["type"], it["id"]))
-        all_items.sort(key=lambda x: x["disbursedAt"] or "", reverse=True)
+        all_items.sort(key=lambda x: x.get("disbursedTs") or "", reverse=True)
 
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"items": all_items, "total": len(all_items)}, ensure_ascii=False)}
 

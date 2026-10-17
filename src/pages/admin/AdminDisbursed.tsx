@@ -24,6 +24,7 @@ interface DisbursedItem {
   carInfo: string;
   itemInfo: string;
   disbursedAt: string | null;
+  disbursedTs?: string;
   createdAt: string;
   telegramId: string;
   paidTotal: number;
@@ -70,11 +71,12 @@ export default function AdminDisbursed({ token }: Props) {
   const fmt = (n: number) => n ? `${n.toLocaleString("ru-RU")} ₽` : "—";
 
   const overdueCount = items.filter(i => i.isOverdue).length;
+  const activeCount = items.length - overdueCount;
   const noticeCount = items.filter(i => i.pendingNotice).length;
 
   const filtered = items.filter(item => {
     if (typeFilter !== "all" && item.type !== typeFilter) return false;
-    if (statusFilter === "overdue" && !item.isOverdue) return false;
+    if (!onlyNotices && (statusFilter === "overdue" ? !item.isOverdue : item.isOverdue)) return false;
     if (onlyNotices && !item.pendingNotice) return false;
     if (search) {
       const q = search.toLowerCase();
@@ -82,6 +84,8 @@ export default function AdminDisbursed({ token }: Props) {
     }
     return true;
   });
+
+  filtered.sort((a, b) => (b.disbursedTs || "").localeCompare(a.disbursedTs || ""));
 
   const totalAmount = filtered.reduce((sum, i) => sum + (i.approvedAmount || i.loanAmount || 0), 0);
 
@@ -131,7 +135,7 @@ export default function AdminDisbursed({ token }: Props) {
             background: statusFilter === "all" ? "linear-gradient(135deg,#0ea5e9,#38bdf8)" : "rgba(16,185,129,0.07)",
             color: statusFilter === "all" ? "white" : "rgba(2,44,34,0.5)",
           }}>
-          Все займы
+          Выданные ({activeCount})
         </button>
         <button onClick={() => setStatusFilter("overdue")}
           style={{
