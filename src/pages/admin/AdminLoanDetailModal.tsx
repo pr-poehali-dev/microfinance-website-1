@@ -315,7 +315,7 @@ export default function AdminLoanDetailModal({ token, type, id, onClose }: Props
                   ["Рабочий телефон", data.profile.workPhone],
                   ["Зарплата", data.profile.salary ? fmt(data.profile.salary) : ""],
                   ["Контактное лицо", data.profile.contactPerson],
-                  ["Карта/СБП", data.profile.cardNumber],
+                  ["СБП / карта", data.profile.cardNumber],
                   ["Telegram", data.profile.telegramId ? `@${data.profile.telegramId}` : ""],
                 ].filter(([, v]) => v).map(([l, v]) => (
                   <div key={l}>

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import SignCodeDialog from "@/components/SignCodeDialog";
-import SavedCardPicker from "@/components/SavedCardPicker";
+import PayoutField from "@/components/PayoutField";
+import { validatePayout } from "@/data/banks";
 import LoanCalculatorCard from "./LoanCalculatorCard";
 import ProfileCheck from "./ProfileCheck";
 import type { ClientProfile } from "./ClientProfileCard";
@@ -47,10 +48,8 @@ export default function TermLoanRequestForm({ kind, profile, phone, profileEdita
   const monthly = Math.round(total / months);
 
   function submit() {
-    const digits = cardNumber.replace(/\D/g, "");
-    if (!(digits.length === 10 || digits.length === 11 || (digits.length >= 16 && digits.length <= 19))) {
-      setError("Укажите номер карты (16–19 цифр) или телефон СБП, куда перевести деньги"); return;
-    }
+    const payoutError = validatePayout(cardNumber);
+    if (payoutError) { setError(payoutError); return; }
     if (isCar && (!carBrand.trim() || !carModel.trim() || !carYear)) { setError("Заполните марку, модель и год автомобиля"); return; }
     if (!isCar && !itemName.trim()) { setError("Укажите название товара"); return; }
     if (!profile) { setError("Сначала должна быть заполнена анкета"); return; }
@@ -123,12 +122,7 @@ export default function TermLoanRequestForm({ kind, profile, phone, profileEdita
         extraLabel="Платёж в месяц" extraValue={monthly}
       />
 
-      <div>
-        <div className="text-emerald-950/60 text-sm mb-2">Карта или телефон СБП для получения денег <span className="text-red-500">*</span></div>
-        <SavedCardPicker autoFill value={cardNumber} onPick={setCardNumber} />
-        <input type="text" inputMode="numeric" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)}
-          placeholder="2200 1234 5678 9012 или +7 900 000-00-00" className={INPUT} style={INPUT_STYLE} />
-      </div>
+      <PayoutField value={cardNumber} onChange={setCardNumber} inputClassName={INPUT} inputStyle={INPUT_STYLE} />
 
       {error && (
         <div className="rounded-xl px-4 py-3 text-sm font-medium" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#dc2626" }}>{error}</div>

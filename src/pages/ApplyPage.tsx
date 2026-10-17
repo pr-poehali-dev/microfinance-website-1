@@ -1,5 +1,6 @@
 import SignCodeDialog from "@/components/SignCodeDialog";
-import SavedCardPicker from "@/components/SavedCardPicker";
+import PayoutField from "@/components/PayoutField";
+import { validatePayout } from "@/data/banks";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import PromoCodeField from "@/components/PromoCodeField";
@@ -130,6 +131,12 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
     if (allRequiredChecked && isCar && (!form.carBrand.trim() || !form.carModel.trim() || !form.carYear)) { setSendError("Заполните данные об автомобиле в разделе «Данные»"); setActiveSection("item"); return; }
     if (form.password.length < 6) {
       setSendError("Придумайте пароль не короче 6 символов в разделе «Контакты»");
+      setActiveSection("contacts");
+      return;
+    }
+    const payoutError = validatePayout(form.cardNumber);
+    if (payoutError) {
+      setSendError(payoutError);
       setActiveSection("contacts");
       return;
     }
@@ -506,12 +513,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
                   <input type="tel" placeholder="+7 (900) 000-00-00 (ФИО)" value={form.contactPerson} onChange={e => setF("contactPerson", e.target.value)} required className={inputCls} style={inputStyle} />
                   <p className="text-emerald-950/30 text-xs mt-1">Укажите имя и телефон контактного лица</p>
                 </div>
-                <div>
-                  <label className={labelCls}>Номер карты или телефон СБП для перевода <span className="text-red-400">*</span></label>
-                  <SavedCardPicker autoFill value={form.cardNumber} onPick={(v) => setF("cardNumber", v)} />
-                  <input type="text" placeholder="2200 1234 5678 9012 или +7 (900) 000-00-00" value={form.cardNumber} onChange={e => setF("cardNumber", e.target.value)} required className={inputCls} style={inputStyle} />
-                  <p className="text-emerald-950/30 text-xs mt-1">На этот реквизит поступят деньги после одобрения</p>
-                </div>
+                <PayoutField value={form.cardNumber} onChange={(v) => setF("cardNumber", v)} inputClassName={inputCls} inputStyle={inputStyle} labelClassName={labelCls} />
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setActiveSection("work")}
                     className="glass text-emerald-950/60 font-semibold px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">

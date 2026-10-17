@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
+import AdminPayoutField from "./AdminPayoutField";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
 
-interface Field { key: string; label: string; type?: string; wide?: boolean }
+interface Field { key: string; label: string; type?: string; wide?: boolean; payout?: boolean }
 const SECTIONS: { title: string; fields: Field[] }[] = [
   { title: "Личные данные", fields: [
     { key: "fullName", label: "ФИО", wide: true },
@@ -33,9 +34,9 @@ const SECTIONS: { title: string; fields: Field[] }[] = [
     { key: "salary", label: "Зарплата, ₽" },
     { key: "contactPerson", label: "Контактное лицо", wide: true },
   ] },
-  { title: "Банковская карта", fields: [
-    { key: "cardNumber", label: "Карта / СБП для выплаты" },
-    { key: "cardNumberTransfer", label: "Карта для перевода" },
+  { title: "СБП для выплаты", fields: [
+    { key: "cardNumber", label: "Телефон СБП для выплаты", payout: true },
+    { key: "cardNumberTransfer", label: "Телефон СБП для перевода", payout: true },
   ] },
 ];
 
@@ -153,7 +154,11 @@ export default function AdminCardRequestProfile({ token, userId, onClose }: Prop
             <div key={sec.title} style={{ marginBottom: 14 }}>
               <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{sec.title}</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 10 }}>
-                {sec.fields.map(f => (
+                {sec.fields.map(f => f.payout ? (
+                  <AdminPayoutField key={f.key} label={f.label} value={data[f.key] ?? ""}
+                    onChange={v => setData(p => ({ ...p, [f.key]: v }))}
+                    inputStyle={INPUT} labelStyle={{ color: "rgba(2,44,34,0.45)", fontSize: 12, marginBottom: 4 }} />
+                ) : (
                   <label key={f.key} style={{ gridColumn: f.wide ? "1 / -1" : undefined }}>
                     <span style={{ color: "rgba(2,44,34,0.45)", fontSize: 12, display: "block", marginBottom: 4 }}>{f.label}</span>
                     <input type={f.type || "text"} value={data[f.key] ?? ""} style={INPUT}

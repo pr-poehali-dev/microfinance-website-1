@@ -47,7 +47,7 @@ const SB_FIELDS: [keyof TermLoanLike, string][] = [
   ["active_loans", "Действующие займы"],
   ["salary", "Зарплата (₽)"],
   ["contact_person", "Контактное лицо"],
-  ["card_number", "Карта/СБП"],
+  ["card_number", "СБП / карта (телефон · банк)"],
 ];
 
 const inpStyle: React.CSSProperties = {

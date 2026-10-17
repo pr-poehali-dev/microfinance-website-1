@@ -5,7 +5,8 @@ import ProfileEditForm from "./ProfileEditForm";
 import type { ClientProfile } from "./ClientProfileCard";
 import LoanCalculatorCard from "./LoanCalculatorCard";
 import RateDisclaimer from "@/components/RateDisclaimer";
-import SavedCardPicker from "@/components/SavedCardPicker";
+import PayoutField from "@/components/PayoutField";
+import { validatePayout } from "@/data/banks";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 
@@ -41,9 +42,8 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
   }, [amount, days, promo]);
 
   function submit() {
-    const digits = cardNumber.replace(/\D/g, "");
-    const valid = digits.length === 10 || digits.length === 11 || (digits.length >= 16 && digits.length <= 19);
-    if (!valid) { setError("Укажите номер карты (16–19 цифр) или телефон СБП, куда перевести деньги"); return; }
+    const payoutError = validatePayout(cardNumber);
+    if (payoutError) { setError(payoutError); return; }
     setError("");
     setCodeOpen(true);
   }
@@ -161,18 +161,11 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
         />
 
         {/* Карта для получения денег */}
-        <div>
-          <div className="text-emerald-950/60 text-sm mb-2">Карта или телефон СБП для получения денег <span className="text-red-500">*</span></div>
-          <SavedCardPicker autoFill value={cardNumber} onPick={setCardNumber} />
-          <input
-            type="text" inputMode="numeric" value={cardNumber}
-            onChange={(e) => setCardNumber(e.target.value)}
-            placeholder="2200 1234 5678 9012 или +7 900 000-00-00"
-            className="w-full rounded-xl px-4 py-2.5 text-emerald-950 text-sm outline-none"
-            style={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.25)" }}
-          />
-          <div className="text-emerald-950/30 text-xs mt-1">Можно выбрать сохранённую карту или ввести новую</div>
-        </div>
+        <PayoutField
+          value={cardNumber} onChange={setCardNumber}
+          inputClassName="w-full rounded-xl px-4 py-2.5 text-emerald-950 text-sm outline-none"
+          inputStyle={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.25)" }}
+        />
 
         {promo && (
           <div className="rounded-xl px-4 py-3 text-sm text-emerald-950" style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)" }}>

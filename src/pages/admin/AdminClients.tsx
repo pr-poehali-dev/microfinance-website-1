@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 import ClientRateReducer from "./ClientRateReducer";
 import { User, Loan, GLASS, PURPLE, STATUS } from "./adminTypes";
+import AdminPayoutField from "./AdminPayoutField";
 
 interface Props {
   users: User[];
@@ -37,7 +38,7 @@ interface Props {
   onWaivePenalty: (loanId: number, mode: "full" | "amount", amount?: number) => Promise<unknown>;
 }
 
-interface ProfileField { key: string; label: string; placeholder?: string; type?: string; wide?: boolean }
+interface ProfileField { key: string; label: string; placeholder?: string; type?: string; wide?: boolean; payout?: boolean }
 const PROFILE_SECTIONS: { title: string; fields: ProfileField[] }[] = [
   { title: "Личные данные", fields: [
     { key: "fullName", label: "ФИО", placeholder: "Иванов Иван Иванович", wide: true },
@@ -68,9 +69,9 @@ const PROFILE_SECTIONS: { title: string; fields: ProfileField[] }[] = [
     { key: "salary", label: "Зарплата, ₽" },
     { key: "contactPerson", label: "Контактное лицо", wide: true },
   ] },
-  { title: "Банковская карта", fields: [
-    { key: "cardNumber", label: "Карта / СБП для выплаты" },
-    { key: "cardNumberTransfer", label: "Карта для перевода" },
+  { title: "СБП для выплаты", fields: [
+    { key: "cardNumber", label: "Телефон СБП для выплаты", payout: true },
+    { key: "cardNumberTransfer", label: "Телефон СБП для перевода", payout: true },
   ] },
 ];
 
@@ -415,7 +416,11 @@ export default function AdminClients({
                     <div key={sec.title}>
                       <div style={{ color: "#059669", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>{sec.title}</div>
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12 }}>
-                        {sec.fields.filter(f => editHasApp || ["fullName", "phone", "email", "password"].includes(f.key)).map(f => (
+                        {sec.fields.filter(f => editHasApp || ["fullName", "phone", "email", "password"].includes(f.key)).map(f => f.payout ? (
+                          <AdminPayoutField key={f.key} label={f.label} value={editForm[f.key] ?? ""}
+                            onChange={v => setEditForm({ ...editForm, [f.key]: v })}
+                            inputStyle={INPUT} labelStyle={{ color: "rgba(2,44,34,0.5)", fontSize: 12, marginBottom: 6 }} />
+                        ) : (
                           <div key={f.key} style={f.wide ? { gridColumn: "1 / -1" } : undefined}>
                             <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, marginBottom: 6 }}>{f.label}</div>
                             <input

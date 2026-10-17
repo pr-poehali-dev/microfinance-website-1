@@ -4,6 +4,7 @@ import Icon from "@/components/ui/icon";
 import AddPaymentModal from "./AddPaymentModal";
 import { waitingStyle, WAITING_BADGE_STYLE } from "./waiting";
 import FsspCheckButton from "./FsspCheckButton";
+import AdminPayoutBanner from "./AdminPayoutBanner";
 
 const CAR_URL = "https://functions.poehali.dev/651adde1-4432-4e5a-8086-3cda9898b7ac";
 
@@ -232,6 +233,7 @@ export default function AdminCarLoans({ token }: Props) {
                       <span style={{ color: "rgba(2,44,34,0.3)", fontSize: 12 }}>#{app.id} · {new Date(app.created_at).toLocaleDateString("ru-RU")}</span>
                     </div>
 
+                    <AdminPayoutBanner value={app.card_number} />
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "6px 16px", marginBottom: 10 }}>
                       {[
                         { l: "Телефон", v: app.phone },
@@ -243,7 +245,7 @@ export default function AdminCarLoans({ token }: Props) {
                         { l: "Адрес регистрации", v: app.address || "—" },
                         { l: "Адрес проживания", v: app.living_address || "—" },
                         { l: "Адрес организации", v: app.work_address || "—" },
-                        { l: "Карта/СБП", v: app.card_number || "—" },
+                        
                         { l: "Контакт", v: app.contact_person || "—" },
                         { l: "Дата рождения / место", v: [app.birth_date, app.birth_place].filter(Boolean).join(", ") || "—" },
                         { l: "СНИЛС", v: app.snils || "—" },

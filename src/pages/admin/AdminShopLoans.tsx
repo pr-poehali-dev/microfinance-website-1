@@ -4,6 +4,7 @@ import Icon from "@/components/ui/icon";
 import AddPaymentModal from "./AddPaymentModal";
 import { waitingStyle, WAITING_BADGE_STYLE } from "./waiting";
 import FsspCheckButton from "./FsspCheckButton";
+import AdminPayoutBanner from "./AdminPayoutBanner";
 
 const SHOP_URL = "https://functions.poehali.dev/f0312370-20d7-488e-b072-dc4c0b2af2aa";
 
@@ -235,6 +236,7 @@ export default function AdminShopLoans({ token }: Props) {
                     </div>
 
                     {/* Поля */}
+                    <AdminPayoutBanner value={app.card_number} />
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: "6px 16px", marginBottom: 10 }}>
                       {[
                         { l: "Телефон",    v: app.phone },
@@ -248,8 +250,7 @@ export default function AdminShopLoans({ token }: Props) {
                         { l: "Адрес регистрации", v: app.address || "—" },
                         { l: "Адрес проживания", v: app.living_address || "—" },
                         { l: "Адрес организации", v: app.work_address || "—" },
-                        { l: "Карта/СБП",  v: app.card_number || "—" },
-                        { l: "Дата рождения / место", v: [app.birth_date, app.birth_place].filter(Boolean).join(", ") || "—" },
+                                                { l: "Дата рождения / место", v: [app.birth_date, app.birth_place].filter(Boolean).join(", ") || "—" },
                         { l: "Работа", v: [app.workplace, app.position].filter(Boolean).join(", ") || "—" },
                         { l: "Рабочий телефон", v: app.work_phone || "—" },
                         { l: "Зарплата", v: app.salary ? `${Number(app.salary).toLocaleString("ru-RU")} ₽` : "—" },

@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 import { App, GLASS } from "./adminTypes";
 import AddPaymentModal from "./AddPaymentModal";
+import AdminPayoutBanner from "./AdminPayoutBanner";
 import { waitingStyle, WAITING_BADGE_STYLE } from "./waiting";
 import AdminAppTimeline from "./AdminAppTimeline";
 import AdminCardControl from "./AdminCardControl";
@@ -302,6 +303,8 @@ export default function AdminApplications({
                   <div><div style={{ color: "rgba(2,44,34,0.4)", fontSize: 11, marginBottom: 2 }}>Срок</div><div style={{ color: "#022c22", fontWeight: 600 }}>{app.days} дн.</div></div>
                 </div>
 
+                <AdminPayoutBanner value={app.cardNumber || app.cardNumberTransfer} />
+
                 {/* История клиента — сколько раньше брал займов, как гасил */}
                 {app.isRepeatClient && (
                   <div style={{ background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.25)", borderRadius: 12, padding: "14px 16px", marginBottom: 12 }}>
@@ -384,7 +387,7 @@ export default function AdminApplications({
                           return `${Math.round(amt + amt * rate * days).toLocaleString("ru-RU")} ₽`;
                         })()],
                         ...(app.loanDisbursedAt ? [["Выдан", app.loanDisbursedAt]] : []),
-                        ...(app.cardNumber ? [["Карта/СБП", app.cardNumber]] : []),
+                        ...(app.cardNumber ? [["СБП / карта", app.cardNumber]] : []),
                       ].map(([label, value]) => (
                         <div key={label}>
                           <div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>{label}</div>
@@ -469,7 +472,7 @@ export default function AdminApplications({
                       )}
                       {app.cardNumberTransfer && (
                         <div style={{ gridColumn: app.workPhone ? "auto" : "1/-1" }}>
-                          <div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>Карта / СБП для перевода</div>
+                          <div style={{ color: "rgba(2,44,34,0.35)", fontSize: 11, marginBottom: 2 }}>СБП для перевода</div>
                           <div style={{ color: "#4ade80", fontSize: 13, fontWeight: 700, letterSpacing: 0.5 }}>{app.cardNumberTransfer}</div>
                         </div>
                       )}
