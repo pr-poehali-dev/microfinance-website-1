@@ -717,6 +717,9 @@ def handler(event: dict, context) -> dict:
     if sub == "reject" and method == "POST":
         app_id = qs.get("appId")
         reason = (body.get("reason") or "").strip()
+        partner_url = (body.get("partnerUrl") or "").strip()
+        if partner_url and not partner_url.lower().startswith(("http://", "https://")):
+            partner_url = "https://" + partner_url
 
         app_id_esc = str(app_id).replace("'", "''")
         reason_esc = reason.replace("'", "''")
@@ -731,7 +734,8 @@ def handler(event: dict, context) -> dict:
 
         full_name, phone, amount, tg_username, client_email = app
         reason_val = f"'{reason_esc}'" if reason_esc else "NULL"
-        cur.execute(f"UPDATE {SCHEMA}.applications SET status='rejected', reviewed_at=NOW(), reject_reason={reason_val} WHERE id='{app_id_esc}'")
+        partner_url_val = f"'{partner_url.replace(chr(39), chr(39)*2)}'" if partner_url else "NULL"
+        cur.execute(f"UPDATE {SCHEMA}.applications SET status='rejected', reviewed_at=NOW(), reject_reason={reason_val}, reject_partner_url={partner_url_val} WHERE id='{app_id_esc}'")
         conn.commit(); cur.close(); conn.close()
 
         now = msk(datetime.now()).strftime("%d.%m.%Y в %H:%M")
@@ -748,6 +752,7 @@ def handler(event: dict, context) -> dict:
                 f"❌ <b>По вашей заявке принято отрицательное решение.</b>\n\n"
                 + (f"📝 <b>Причина:</b> {reason}\n\n" if reason else "")
                 + "Вы можете подать новую заявку позже или связаться с нами для уточнения деталей."
+                + (f"\n\n🤝 Оформить займ у нашего партнёра (вероятность одобрения 99%): {partner_url}" if partner_url else "")
             )
         if client_email:
             reason_block = f'<p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0 0 16px;"><b style="color:#f87171;">Причина:</b> {reason}</p>' if reason else ""

@@ -1229,14 +1229,16 @@ def handler(event: dict, context) -> dict:
     app_row = cur.fetchone()
     card_app_id = app_row[0] if app_row else None
     partner_card_info = {"status": "none", "number": "", "photo": "", "rejectReason": ""}
+    reject_partner_url = ""
     if app_row:
         cur.execute(
-            f"SELECT partner_card_status, partner_card_number, partner_card_photo, partner_card_reject_reason "
+            f"SELECT partner_card_status, partner_card_number, partner_card_photo, partner_card_reject_reason, reject_partner_url "
             f"FROM {SCHEMA}.applications WHERE id = {int(app_row[0])}"
         )
         _pc = cur.fetchone()
         if _pc:
             partner_card_info = {"status": _pc[0] or "none", "number": _pc[1] or "", "photo": _pc[2] or "", "rejectReason": _pc[3] or ""}
+            reject_partner_url = _pc[4] or ""
     if app_row and not app_row[11]:
         cur.execute(
             f"SELECT id, virtual_card_number, virtual_card_expiry, virtual_card_cvv, virtual_card_holder, virtual_card_limit, "
@@ -1445,6 +1447,7 @@ def handler(event: dict, context) -> dict:
             "videoCallRequested": bool(app_row[35]) if app_row[35] is not None else False,
             "partnerCardUrl": app_row[37] or "",
             "partnerCard": partner_card_info,
+            "rejectPartnerUrl": reject_partner_url,
             "insuranceAmount": insurance_amount_app,
         }
         cur.execute(f"SELECT reg_address, living_address, work_address FROM {SCHEMA}.applications WHERE id = {int(app_row[0])}")

@@ -98,6 +98,7 @@ interface Application {
   videoCallRequested?: boolean;
   partnerCardUrl?: string;
   partnerCard?: PartnerCardInfo;
+  rejectPartnerUrl?: string;
   profile?: ClientProfile;
 }
 
@@ -674,6 +675,28 @@ export default function DashboardApplicationStatus({
                 style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
                 <div className="text-emerald-950/40 text-xs mb-1">Причина отказа</div>
                 <div className="text-emerald-950/80 text-sm">{application.rejectReason}</div>
+              </div>
+            )}
+            {application.rejectPartnerUrl && (
+              <div className="rounded-xl p-4 space-y-3"
+                style={{ background: "rgba(16,185,129,0.08)", border: "2px solid rgba(16,185,129,0.45)" }}>
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(16,185,129,0.2)" }}>
+                    <Icon name="Handshake" fallback="Gift" size={18} className="text-emerald-700" />
+                  </div>
+                  <div>
+                    <div className="text-emerald-950 font-semibold text-sm leading-snug">
+                      В нашей компании вам отказано, но вы можете оформить займ у нашего партнёра с 99% вероятностью одобрения
+                    </div>
+                    <div className="text-emerald-950/50 text-xs mt-1">Перейдите по кнопке ниже и оформите заявку на сайте партнёра</div>
+                  </div>
+                </div>
+                <a href={application.rejectPartnerUrl} target="_blank" rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white transition-all hover:opacity-90"
+                  style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)", boxShadow: "0 4px 20px rgba(16,185,129,0.35)", textDecoration: "none" }}>
+                  <Icon name="ExternalLink" size={18} />
+                  Перейти на сайт партнёра
+                </a>
               </div>
             )}
             {application.reapplyDaysLeft !== undefined && application.reapplyDaysLeft !== null && application.reapplyDaysLeft > 0 ? (

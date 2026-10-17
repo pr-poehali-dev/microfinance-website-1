@@ -39,6 +39,8 @@ interface Props {
   setAppPartnerUrl: (v: string) => void;
   rejectReason: string;
   setRejectReason: (v: string) => void;
+  rejectPartnerUrl: string;
+  setRejectPartnerUrl: (v: string) => void;
   onApprove: () => void;
   onReject: () => void;
   onPostpone: (appId: number) => void;
@@ -59,7 +61,7 @@ export default function AdminApplications({
   apps, appsLoading, appFilter, setAppFilter,
   appMsg, appErr2, appProcessing,
   selApp, setSelApp, appAction, setAppAction, setAppMsg, setAppErr2,
-  appRate, setAppRate, appAmount, setAppAmount, appDays, setAppDays, appPartnerUrl, setAppPartnerUrl, rejectReason, setRejectReason,
+  appRate, setAppRate, appAmount, setAppAmount, appDays, setAppDays, appPartnerUrl, setAppPartnerUrl, rejectReason, setRejectReason, rejectPartnerUrl, setRejectPartnerUrl,
   onApprove, onReject, onPostpone, onRestore, onPartnerRemind, onCreditDoctorApprove, onPartnerApprove,
   onDeleteApplication, onBlockClient, onUnblockClient, onRequestVideoCall, onRefresh, setLightbox, token,
 }: Props) {
@@ -740,6 +742,9 @@ export default function AdminApplications({
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       <textarea placeholder="Причина отказа" value={rejectReason} onChange={e => setRejectReason(e.target.value)} rows={3}
                         style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 10, padding: "10px 12px", color: "#022c22", fontSize: 13, resize: "none", width: 130, boxSizing: "border-box" }} />
+                      <input type="url" placeholder="Ссылка на займ у партнёра" value={rejectPartnerUrl} onChange={e => setRejectPartnerUrl(e.target.value)}
+                        style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 10, padding: "10px 12px", color: "#022c22", fontSize: 13, width: 190, boxSizing: "border-box" }} />
+                      <span style={{ color: "rgba(2,44,34,0.45)", fontSize: 11, maxWidth: 190, lineHeight: 1.3 }}>Клиент увидит кнопку «Перейти на сайт партнёра». Можно оставить пустым.</span>
                       {appErr2 && <p style={{ color: "#f87171", fontSize: 12, margin: 0 }}>{appErr2}</p>}
                       <button onClick={onReject} disabled={appProcessing}
                         style={{ background: "linear-gradient(135deg,#dc2626,#ef4444)", color: "white", border: "none", borderRadius: 10, padding: "10px", cursor: "pointer", fontWeight: 700, fontSize: 14 }}>
