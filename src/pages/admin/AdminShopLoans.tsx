@@ -374,7 +374,7 @@ export default function AdminShopLoans({ token }: Props) {
                     <input style={INP} type="number" placeholder={String(selected.loan_amount)} value={ef.approved_amount}
                       onChange={e => setEf(p => ({ ...p, approved_amount: e.target.value }))} />
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div className="admin-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                     <div>
                       <label style={LBL}>СРОК (МЕС.)</label>
                       <input style={INP} type="number" placeholder={String(selected.loan_months)} value={ef.approved_months}

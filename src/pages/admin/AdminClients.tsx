@@ -206,9 +206,9 @@ export default function AdminClients({
   }
 
   return (
-    <div style={{ display: "flex", gap: 20 }}>
+    <div className="admin-split" style={{ display: "flex", gap: 20 }}>
       {/* Левая колонка */}
-      <div style={{ width: 300, flexShrink: 0 }}>
+      <div className="admin-split-left" style={{ width: 300, flexShrink: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <h2 style={{ color: "#022c22", fontWeight: 700, fontSize: 20, margin: 0 }}>Клиенты <span style={{ color: "rgba(2,44,34,0.3)", fontSize: 14 }}>{filtered.length}</span></h2>
           <button onClick={() => { setSelUser(null); setClientView("addclient"); setActionMsg(""); setActionErr(""); }}
@@ -247,7 +247,7 @@ export default function AdminClients({
       </div>
 
       {/* Правая колонка */}
-      <div style={{ flex: 1 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
         {!selUser && clientView !== "addclient" ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 400, color: "rgba(2,44,34,0.3)", gap: 16 }}>
             <Icon name="Users" size={48} />
@@ -306,7 +306,7 @@ export default function AdminClients({
                 <h3 style={{ color: "#022c22", fontWeight: 700, margin: "0 0 6px" }}>Загрузить документы</h3>
                 <p style={{ color: "rgba(2,44,34,0.4)", fontSize: 13, margin: "0 0 20px" }}>Загруженные файлы обновят документы в заявке клиента</p>
                 <form onSubmit={handleDocsSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div className="admin-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     {DOC_LABELS.map(({ key, label }) => (
                       <label key={key} style={{ ...GLASS, padding: 16, borderRadius: 14, cursor: "pointer", display: "flex", flexDirection: "column", gap: 8, border: docFiles[key] ? "1px solid rgba(16,185,129,0.5)" : "1px solid rgba(16,185,129,0.1)" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -361,7 +361,7 @@ export default function AdminClients({
                     setCdSaving(false);
                   }
                 }} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                  <div className="admin-grid-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
                     {[
                       { label: "Сумма (₽)", key: "amount" as const, placeholder: "5000" },
                       { label: "Срок (дней)", key: "days" as const, placeholder: "30" },
@@ -530,7 +530,7 @@ export default function AdminClients({
                 <h3 style={{ color: "#022c22", fontWeight: 700, margin: "0 0 6px" }}>Создать оффер</h3>
                 <p style={{ color: "rgba(2,44,34,0.4)", fontSize: 13, margin: "0 0 20px" }}>Клиент увидит условия в личном кабинете и сможет подписать</p>
                 <form onSubmit={onSendOffer} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                  <div className="admin-grid-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
                     {[["Одобренная сумма (₽)","amount","50000"],["Срок (дней)","days","15"],["Ставка (%/день)","rate","0.8"]].map(([label, key, ph]) => (
                       <div key={key}>
                         <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, marginBottom: 6 }}>{label}</div>
@@ -558,7 +558,7 @@ export default function AdminClients({
               <div style={{ ...GLASS, padding: 24 }}>
                 <h3 style={{ color: "#022c22", fontWeight: 700, margin: "0 0 20px" }}>Добавить займ</h3>
                 <form onSubmit={onAddLoan} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                  <div className="admin-grid-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
                     {[["Сумма (₽)","amount","50000"],["Срок (дней)","days","15"],["Ставка (%/день)","rate","0.8"]].map(([label, key, ph]) => (
                       <div key={key}>
                         <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, marginBottom: 6 }}>{label}</div>

@@ -183,7 +183,7 @@ export default function AdminCardControl({ app, token, onDone }: Props) {
         </button>
       )}
       {hasCard && showSchedule && (
-        <div style={{ minWidth: 280 }}>
+        <div style={{ minWidth: 0, width: "100%", maxWidth: 420 }}>
           {scheduleLoading && <div style={{ textAlign: "center", padding: 12 }}><Icon name="Loader2" size={18} className="animate-spin text-emerald-600" /></div>}
           {!scheduleLoading && schedule && (
             <CardPaymentSchedule debt={schedule.debt} minPaymentPercent={schedule.minPaymentPercent} minPayment={schedule.minPayment} schedule={schedule.paymentSchedule} paidNotices={schedule.paidNotices ?? []} highlightPaid />

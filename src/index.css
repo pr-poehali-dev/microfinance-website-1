@@ -229,3 +229,28 @@
   0%, 100% { box-shadow: 0 0 0 2px rgba(239,68,68,0.55), 0 0 10px rgba(239,68,68,0.25); }
   50% { box-shadow: 0 0 0 3px rgba(239,68,68,0.9), 0 0 22px rgba(239,68,68,0.5); }
 }
+
+@media (max-width: 768px) {
+  .admin-nav {
+    padding: 8px 12px !important;
+    gap: 8px !important;
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .admin-nav::-webkit-scrollbar { display: none; }
+  .admin-nav > * { flex-shrink: 0; }
+  .admin-nav-title { display: none; }
+  .admin-nav button { white-space: nowrap; min-height: 40px; }
+  .admin-content { padding: 12px 10px !important; }
+  .admin-split { flex-direction: column !important; }
+  .admin-split-left { width: 100% !important; }
+  .admin-grid-3 { grid-template-columns: 1fr 1fr !important; }
+  .admin-grid-2 { grid-template-columns: 1fr !important; }
+  .admin-content table { display: block; overflow-x: auto; }
+  .admin-content input,
+  .admin-content select,
+  .admin-content textarea { font-size: 16px !important; max-width: 100%; box-sizing: border-box; }
+  .admin-content button { min-height: 40px; }
+}

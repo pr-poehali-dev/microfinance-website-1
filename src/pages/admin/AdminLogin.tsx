@@ -14,7 +14,7 @@ const S = { background: "#ffffff", minHeight: "100vh" };
 export default function AdminLogin({ pwd, setPwd, err, loading, onSubmit }: Props) {
   return (
     <div style={{ ...S, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ width: 360, padding: "0 16px" }}>
+      <div style={{ width: "100%", maxWidth: 360, padding: "0 16px", boxSizing: "border-box" }}>
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ width: 64, height: 64, ...PURPLE, borderRadius: 18, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
             <Icon name="ShieldCheck" size={28} className="text-white" />

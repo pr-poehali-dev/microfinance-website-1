@@ -375,7 +375,7 @@ export default function AdminCarLoans({ token }: Props) {
                     <input style={inp} type="number" placeholder={String(selected.loan_amount)} value={editForm.approved_amount}
                       onChange={e => setEditForm(p => ({ ...p, approved_amount: e.target.value }))} />
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div className="admin-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                     <div>
                       <label style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Срок (мес.)</label>
                       <input style={inp} type="number" placeholder={String(selected.loan_months)} value={editForm.approved_months}

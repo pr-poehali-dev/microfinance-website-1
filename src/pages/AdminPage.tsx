@@ -324,11 +324,11 @@ export default function AdminPage() {
       )}
 
       {/* NAVBAR */}
-      <div style={{ background: "rgba(255,255,255,0.95)", borderBottom: "1px solid rgba(16,185,129,0.3)", padding: "12px 20px", display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
+      <div className="admin-nav" style={{ background: "rgba(255,255,255,0.95)", borderBottom: "1px solid rgba(16,185,129,0.3)", padding: "12px 20px", display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
         <div style={{ width: 36, height: 36, ...PURPLE, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Icon name="ShieldCheck" size={18} className="text-white" />
         </div>
-        <span style={{ color: "#022c22", fontWeight: 700, fontSize: 18, flex: 1 }}>РУСФИНАНС 24 Admin</span>
+        <span className="admin-nav-title" style={{ color: "#022c22", fontWeight: 700, fontSize: 18, flex: 1 }}>РУСФИНАНС 24 Admin</span>
         <button onClick={() => setTab("apps")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
             background: tab === "apps" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "apps" ? "white" : "rgba(2,44,34,0.5)" }}>
@@ -414,7 +414,7 @@ export default function AdminPage() {
         </button>
       </div>
 
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 16px" }}>
+      <div className="admin-content" style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 16px" }}>
         {tab === "apps" && <AdminContractsRepair token={token} />}
         {tab === "apps" && (
           <AdminApplications
