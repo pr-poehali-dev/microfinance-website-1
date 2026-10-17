@@ -40,9 +40,6 @@ function MaintenanceBanner() {
       position: "relative",
     }}>
       Уважаемые заёмщики, наша компания предоставляет займы от частных инвесторов. Перед подписанием договора просим внимательно ознакомиться с его условиями, и только после этого подписывать!
-      <div style={{ color: "#d1fae5", fontWeight: 700, marginTop: 6 }}>
-        🎉 Мы открылись! Добро пожаловать!
-      </div>
     </div>
   );
 }
@@ -53,7 +50,6 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <MaintenanceBanner />
         <CookieBanner />
         <InstallAppButton />
         <Suspense fallback={null}>
@@ -76,6 +72,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <MaintenanceBanner />
         </Suspense>
       </BrowserRouter>
     </TooltipProvider>
