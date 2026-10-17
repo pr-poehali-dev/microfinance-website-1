@@ -1,3 +1,4 @@
+import { validatePayout } from "@/data/banks";
 import SignCodeDialog from "@/components/SignCodeDialog";
 import AddendumDialog from "./dashboard/AddendumDialog";
 import DashboardSidebar, { DashboardSection } from "./dashboard/DashboardSidebar";
@@ -415,7 +416,8 @@ export default function DashboardPage() {
   const handleShopSign = () => askCode(() => doShopSign());
   const handleCarSign = () => askCode(() => doCarSign());
   const handleConfirm = () => {
-    if (!cardInput.trim()) { setCardError("Введите номер карты или телефон СБП для подтверждения займа"); return; }
+    const payoutErr = validatePayout(cardInput, true);
+    if (payoutErr) { setCardError(payoutErr); return; }
     askCode(() => doConfirm());
   };
 
@@ -443,7 +445,8 @@ export default function DashboardPage() {
   };
 
   const handleSaveCard = async () => {
-    if (!cardInput.trim()) { setCardError("Введите номер карты или телефон СБП"); return; }
+    const payoutErr = validatePayout(cardInput, true);
+    if (payoutErr) { setCardError(payoutErr); return; }
     const token = localStorage.getItem("token");
     if (!token) return;
     setCardSaving(true);

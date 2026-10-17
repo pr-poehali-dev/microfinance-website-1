@@ -48,7 +48,7 @@ export default function TermLoanRequestForm({ kind, profile, phone, profileEdita
   const monthly = Math.round(total / months);
 
   function submit() {
-    const payoutError = validatePayout(cardNumber);
+    const payoutError = validatePayout(cardNumber, true);
     if (payoutError) { setError(payoutError); return; }
     if (isCar && (!carBrand.trim() || !carModel.trim() || !carYear)) { setError("Заполните марку, модель и год автомобиля"); return; }
     if (!isCar && !itemName.trim()) { setError("Укажите название товара"); return; }
@@ -122,7 +122,7 @@ export default function TermLoanRequestForm({ kind, profile, phone, profileEdita
         extraLabel="Платёж в месяц" extraValue={monthly}
       />
 
-      <PayoutField value={cardNumber} onChange={setCardNumber} inputClassName={INPUT} inputStyle={INPUT_STYLE} />
+      <PayoutField sbpOnly value={cardNumber} onChange={setCardNumber} inputClassName={INPUT} inputStyle={INPUT_STYLE} />
 
       {error && (
         <div className="rounded-xl px-4 py-3 text-sm font-medium" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#dc2626" }}>{error}</div>

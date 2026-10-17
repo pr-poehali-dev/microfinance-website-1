@@ -9,9 +9,10 @@ interface Props {
   value: string;
   onPick: (value: string) => void;
   autoFill?: boolean;
+  onlyPhones?: boolean;
 }
 
-export default function SavedCardPicker({ value, onPick, autoFill = false }: Props) {
+export default function SavedCardPicker({ value, onPick, autoFill = false, onlyPhones = false }: Props) {
   const [cards, setCards] = useState<SavedCard[]>([]);
   const filled = useRef(false);
   const valueRef = useRef(value);
@@ -26,10 +27,11 @@ export default function SavedCardPicker({ value, onPick, autoFill = false }: Pro
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!d?.cards) return;
-        setCards(d.cards);
-        if (autoFill && !filled.current && d.cards.length > 0 && !valueRef.current.trim()) {
+        const list: SavedCard[] = onlyPhones ? d.cards.filter((c: SavedCard) => !c.isCard) : d.cards;
+        setCards(list);
+        if (autoFill && !filled.current && list.length > 0 && !valueRef.current.trim()) {
           filled.current = true;
-          onPick(d.cards[0].value);
+          onPick(list[0].value);
         }
       })
       .catch(() => null);
@@ -42,7 +44,7 @@ export default function SavedCardPicker({ value, onPick, autoFill = false }: Pro
 
   return (
     <div className="mb-2">
-      <div className="text-emerald-950/50 text-xs mb-1.5">Выберите сохранённую карту или введите новую</div>
+      <div className="text-emerald-950/50 text-xs mb-1.5">Выберите сохранённый вариант или введите новый</div>
       <div className="flex flex-wrap gap-2">
         {cards.map((c) => {
           const on = norm(c.value) === norm(value);

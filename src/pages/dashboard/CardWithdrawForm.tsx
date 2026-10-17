@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import SavedCardPicker from "@/components/SavedCardPicker";
+import PayoutField from "@/components/PayoutField";
+import { validatePayout, isCardValue, splitPayout } from "@/data/banks";
 import Icon from "@/components/ui/icon";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
@@ -13,7 +14,7 @@ interface Props {
 }
 
 export default function CardWithdrawForm({ available, defaultCard, onSuccess }: Props) {
-  const [cardNumber, setCardNumber] = useState(defaultCard || "");
+  const [cardNumber, setCardNumber] = useState(defaultCard && !isCardValue(splitPayout(defaultCard).main) ? defaultCard : "");
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState(Math.min(5000, Math.max(1000, Math.round(available / 2))));
   const [weeks, setWeeks] = useState(4);
@@ -32,7 +33,8 @@ export default function CardWithdrawForm({ available, defaultCard, onSuccess }: 
 
   async function submit() {
     if (amount <= 0 || amount + transferFee(amount) > available) { setError("Проверьте сумму перевода"); return; }
-    if (cardNumber.replace(/\s/g, "").length < 10) { setError("Укажите номер вашей карты, куда перевести деньги"); return; }
+    const payoutError = validatePayout(cardNumber, true);
+    if (payoutError) { setError(payoutError); return; }
     const token = localStorage.getItem("token");
     if (!token) return;
     setSending(true); setError("");
@@ -56,7 +58,7 @@ export default function CardWithdrawForm({ available, defaultCard, onSuccess }: 
           className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white opacity-50 cursor-not-allowed"
           style={{ background: "linear-gradient(135deg,#16a34a,#4ade80)" }}>
           <Icon name="Wallet" size={18} />
-          Перевести деньги на мою карту
+          Перевести деньги по СБП
         </button>
         <div className="text-emerald-950/60 text-xs text-center">
           Перевод доступен от {minNeeded.toLocaleString("ru-RU")} ₽ свободного лимита (минимум 1 000 ₽ + комиссия). Сейчас доступно {Math.max(0, Math.round(available)).toLocaleString("ru-RU")} ₽. Лимит освободится после погашения.
@@ -81,7 +83,7 @@ export default function CardWithdrawForm({ available, defaultCard, onSuccess }: 
         className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90"
         style={{ background: "linear-gradient(135deg,#16a34a,#4ade80)", boxShadow: "0 4px 20px rgba(74,222,128,0.25)" }}>
         <Icon name="Wallet" size={18} />
-        Перевести деньги на мою карту
+        Перевести деньги по СБП
       </button>
     );
   }
@@ -141,17 +143,11 @@ export default function CardWithdrawForm({ available, defaultCard, onSuccess }: 
         </div>
       </div>
 
-      <div>
-        <div className="text-emerald-950/60 text-sm mb-2">Номер вашей карты, куда перевести деньги</div>
-        <SavedCardPicker autoFill value={cardNumber} onPick={setCardNumber} />
-        <input
-          type="text" inputMode="numeric" value={cardNumber}
-          onChange={(e) => setCardNumber(e.target.value)}
-          placeholder="0000 0000 0000 0000"
-          className="w-full rounded-xl px-4 py-2.5 text-emerald-950 text-sm outline-none"
-          style={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.25)" }}
-        />
-      </div>
+      <PayoutField
+        sbpOnly value={cardNumber} onChange={setCardNumber}
+        inputClassName="w-full rounded-xl px-4 py-2.5 text-emerald-950 text-sm outline-none"
+        inputStyle={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.25)" }}
+      />
 
       <div className="rounded-lg p-3 space-y-1.5" style={{ background: "rgba(16,185,129,0.05)" }}>
         <div className="flex justify-between text-sm">
@@ -182,7 +178,7 @@ export default function CardWithdrawForm({ available, defaultCard, onSuccess }: 
         className="w-full flex items-center justify-center gap-3 py-3.5 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-60"
         style={{ background: "linear-gradient(135deg,#16a34a,#4ade80)" }}>
         {sending ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="CheckCircle" size={18} />}
-        {sending ? "Отправляем..." : "Перевести на мою карту"}
+        {sending ? "Отправляем..." : "Перевести по СБП"}
       </button>
     </div>
   );

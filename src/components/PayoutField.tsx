@@ -7,11 +7,12 @@ interface Props {
   inputClassName: string;
   inputStyle?: React.CSSProperties;
   labelClassName?: string;
+  sbpOnly?: boolean;
 }
 
-export default function PayoutField({ value, onChange, inputClassName, inputStyle, labelClassName = "text-emerald-950/60 text-sm mb-2 block" }: Props) {
+export default function PayoutField({ value, onChange, inputClassName, inputStyle, labelClassName = "text-emerald-950/60 text-sm mb-2 block", sbpOnly = false }: Props) {
   const { main, bank } = splitPayout(value);
-  const card = isCardValue(main);
+  const card = !sbpOnly && isCardValue(main);
   const other = isOtherBank(bank);
 
   return (
@@ -20,13 +21,13 @@ export default function PayoutField({ value, onChange, inputClassName, inputStyl
         <label className={labelClassName}>
           {card ? "Карта для получения денег" : "Телефон для получения денег по СБП"} <span className="text-red-500">*</span>
         </label>
-        <SavedCardPicker autoFill value={value} onPick={onChange} />
+        <SavedCardPicker autoFill onlyPhones={sbpOnly} value={value} onPick={onChange} />
         <input
           type="text"
           inputMode="tel"
           placeholder="+7 (900) 000-00-00"
           value={main}
-          onChange={(e) => onChange(joinPayout(e.target.value, isCardValue(e.target.value) ? "" : bank))}
+          onChange={(e) => onChange(joinPayout(e.target.value, !sbpOnly && isCardValue(e.target.value) ? "" : bank))}
           className={inputClassName}
           style={inputStyle}
         />

@@ -9,6 +9,7 @@ import CardRepaymentHistory, { CardRepayment } from "./CardRepaymentHistory";
 import CardRequestBlock from "./CardRequestBlock";
 import type { ClientProfile } from "./ClientProfileCard";
 import SavedCards from "./SavedCards";
+import PayoutField from "@/components/PayoutField";
 import LimitIncreasedModal, { LimitIncrease } from "./LimitIncreasedModal";
 
 interface LoanOffer {
@@ -361,16 +362,12 @@ export default function DashboardApplicationStatus({
                   <Icon name="Wallet" size={15} className="text-emerald-600" />
                   Укажите реквизиты для перевода займа
                 </div>
+                <div style={{ pointerEvents: cardSaved ? "none" : "auto", opacity: cardSaved ? 0.7 : 1 }}>
+                  <PayoutField sbpOnly value={cardInput} onChange={(v) => { setCardInput(v); setCardSaved(false); setCardError(""); }}
+                    inputClassName="w-full px-4 py-3 rounded-xl text-emerald-950 text-sm outline-none"
+                    inputStyle={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)" }} />
+                </div>
                 <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={cardInput}
-                    onChange={(e) => { setCardInput(e.target.value); setCardSaved(false); setCardError(""); }}
-                    placeholder="Номер карты или телефон СБП"
-                    className="flex-1 px-4 py-3 rounded-xl text-emerald-950 text-sm outline-none"
-                    style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)" }}
-                    disabled={cardSaved}
-                  />
                   {!cardSaved ? (
                     <button onClick={onSaveCard} disabled={cardSaving}
                       className="px-4 py-3 rounded-xl text-white text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-60 flex items-center gap-2"
@@ -388,7 +385,7 @@ export default function DashboardApplicationStatus({
                   )}
                 </div>
                 {cardError && <p className="text-red-600 text-xs">{cardError}</p>}
-                <p className="text-emerald-950/30 text-xs">Номер карты или номер телефона (СБП) для получения займа</p>
+                <p className="text-emerald-950/30 text-xs">Деньги поступят по СБП на указанный номер в выбранный банк</p>
               </div>
 
               {/* Ссылка на оформление партнёрской карты — показываем ДО подписания договора */}
@@ -524,16 +521,12 @@ export default function DashboardApplicationStatus({
                 <Icon name="CreditCard" size={16} className="text-emerald-600" />
                 Укажите реквизиты для перевода
               </div>
+              <div style={{ pointerEvents: cardSaved ? "none" : "auto", opacity: cardSaved ? 0.7 : 1 }}>
+                <PayoutField sbpOnly value={cardInput} onChange={(v) => { setCardInput(v); setCardSaved(false); setCardError(""); }}
+                  inputClassName="w-full px-4 py-3 rounded-xl text-emerald-950 text-sm outline-none"
+                  inputStyle={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)" }} />
+              </div>
               <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={cardInput}
-                  onChange={(e) => { setCardInput(e.target.value); setCardSaved(false); setCardError(""); }}
-                  placeholder="Номер карты или телефон СБП"
-                  className="flex-1 px-4 py-3 rounded-xl text-emerald-950 text-sm outline-none"
-                  style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)" }}
-                  disabled={cardSaved}
-                />
                 {!cardSaved ? (
                   <button
                     onClick={onSaveCard}
@@ -559,7 +552,7 @@ export default function DashboardApplicationStatus({
                 )}
               </div>
               {cardError && <p className="text-red-600 text-xs">{cardError}</p>}
-              <p className="text-emerald-950/30 text-xs">Введите номер карты или номер телефона (СБП) для получения займа</p>
+              <p className="text-emerald-950/30 text-xs">Деньги поступят по СБП на указанный номер в выбранный банк</p>
             </div>
 
             {/* Партнёрские ссылки на оформление карты — показываем ДО подписания договора */}

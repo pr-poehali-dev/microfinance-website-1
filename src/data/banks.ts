@@ -44,11 +44,11 @@ export function isCardValue(main: string): boolean {
   return main.replace(/\D/g, "").length >= 16;
 }
 
-export function validatePayout(value: string): string {
+export function validatePayout(value: string, sbpOnly = false): string {
   const { main, bank } = splitPayout(value);
   const digits = main.replace(/\D/g, "");
   const phoneOk = digits.length === 10 || digits.length === 11;
-  const cardOk = digits.length >= 16 && digits.length <= 19;
+  const cardOk = !sbpOnly && digits.length >= 16 && digits.length <= 19;
   if (!phoneOk && !cardOk) return "Укажите телефон для перевода по СБП";
   if (phoneOk && !bank) return "Выберите банк, на который перевести деньги по СБП";
   if (phoneOk && bank === OTHER_BANK) return "Впишите название вашего банка";

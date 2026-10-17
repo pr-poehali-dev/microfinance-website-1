@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
+import PayoutField from "@/components/PayoutField";
+import { validatePayout } from "@/data/banks";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 
@@ -10,11 +12,6 @@ const headers = (token: string) => ({
   Authorization: `Bearer ${token}`,
   "X-Authorization": `Bearer ${token}`,
 });
-
-const formatInput = (v: string) => {
-  const d = v.replace(/\D/g, "").slice(0, 19);
-  return d.length > 11 ? d.replace(/(.{4})/g, "$1 ").trim() : d;
-};
 
 export default function SavedCards() {
   const [cards, setCards] = useState<SavedCard[]>([]);
@@ -37,7 +34,7 @@ export default function SavedCards() {
   useEffect(load, [load]);
 
   const remove = async (id: number) => {
-    if (!window.confirm("Удалить эту карту из списка?")) return;
+    if (!window.confirm("Удалить эти реквизиты из списка?")) return;
     const token = localStorage.getItem("token");
     if (!token) return;
     setCards((prev) => prev.filter((c) => c.id !== id));
@@ -50,6 +47,8 @@ export default function SavedCards() {
   const save = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
+    const payoutErr = validatePayout(value, true);
+    if (payoutErr) { setError(payoutErr); return; }
     setSaving(true);
     setError("");
     const r = await fetch(`${LOANS_URL}?sub=card_add`, {
@@ -64,23 +63,20 @@ export default function SavedCards() {
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-oswald text-lg font-bold text-emerald-950">Мои карты для выплат</h3>
+        <h3 className="font-oswald text-lg font-bold text-emerald-950">Мои реквизиты для выплат (СБП)</h3>
         {!adding && (
           <button onClick={() => setAdding(true)}
             className="btn-neon text-white font-semibold text-sm px-4 py-2 rounded-xl inline-flex items-center gap-2">
-            <Icon name="Plus" size={16} />Добавить новую карту
+            <Icon name="Plus" size={16} />Добавить номер СБП
           </button>
         )}
       </div>
 
       {adding && (
         <div className="glass rounded-2xl p-4 mb-3 space-y-3">
-          <input
-            value={value}
-            onChange={(e) => setValue(formatInput(e.target.value))}
-            placeholder="Номер карты или телефон СБП"
-            inputMode="numeric"
-            className="w-full rounded-xl px-4 py-3 text-emerald-950 bg-white border border-emerald-900/20 outline-none focus:border-emerald-500"
+          <PayoutField
+            sbpOnly value={value} onChange={setValue}
+            inputClassName="w-full rounded-xl px-4 py-3 text-emerald-950 bg-white border border-emerald-900/20 outline-none focus:border-emerald-500"
           />
           {error && <div className="text-sm text-red-600">{error}</div>}
           <div className="flex gap-2">
@@ -100,7 +96,7 @@ export default function SavedCards() {
         <div className="glass rounded-2xl p-6 text-center text-emerald-950/50 text-sm">Загружаем карты...</div>
       ) : cards.length === 0 ? (
         <div className="glass rounded-2xl p-6 text-center text-emerald-950/50 text-sm">
-          Карт пока нет. Карта, которую вы укажете при оформлении займа, появится здесь автоматически.
+          Реквизитов пока нет. Номер СБП и банк, которые вы укажете при оформлении займа, появятся здесь автоматически.
         </div>
       ) : (
         <div className="space-y-2">
@@ -115,7 +111,7 @@ export default function SavedCards() {
                   {c.isCard ? "Банковская карта" : "СБП"}{c.source === "loan" ? " · указана при оформлении займа" : " · добавлена вами"}
                 </div>
               </div>
-              <button onClick={() => remove(c.id)} aria-label="Удалить карту"
+              <button onClick={() => remove(c.id)} aria-label="Удалить"
                 className="shrink-0 p-2 rounded-lg text-red-500/70 hover:text-red-600 hover:bg-red-500/10 transition-colors">
                 <Icon name="Trash2" size={18} />
               </button>
