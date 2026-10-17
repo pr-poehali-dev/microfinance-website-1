@@ -8,7 +8,7 @@ interface YkPayment {
   status: string; credited: boolean; createdAt: string; creditedAt: string | null;
 }
 
-const TYPE_LABEL: Record<string, string> = { loan: "Займ", carloan: "Авто займ", shoploan: "Товарный займ", card: "Карта РУСФИНАНС 24", creditdoctor: "Кредитный Доктор (услуга)" };
+const TYPE_LABEL: Record<string, string> = { loan: "Займ", carloan: "Авто займ", shoploan: "Товарный займ", card: "Карта РУСФИНАНС 24", creditdoctor: "Кредитный Доктор (услуга)", investor: "Пополнение баланса инвестора" };
 const fmt = (n: number) => `${Math.round(n).toLocaleString("ru-RU")} ₽`;
 const G = { background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.08)", borderRadius: 14 };
 

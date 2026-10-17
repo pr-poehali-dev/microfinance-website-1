@@ -9,10 +9,13 @@ export default function InvestorOverview({ items }: { items: Investment[] }) {
       {items.map((i) => (
         <div key={i.id} className="glass rounded-3xl p-6" style={{ opacity: i.status === "closed" ? 0.75 : 1 }}>
           <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-            <div className="font-oswald text-2xl font-bold text-emerald-950">{fmt(i.amount)}</div>
+            <div>
+              <div className="font-oswald text-2xl font-bold text-emerald-950">{fmt(i.amount)}</div>
+              <div className="text-emerald-950/55 text-xs">{i.funded ? "Вложено" : "Будет вложено после внесения средств"}</div>
+            </div>
             <span className="px-3 py-1 rounded-full text-xs font-semibold"
-              style={i.status === "active" ? { background: "rgba(16,185,129,0.15)", color: "#047857" } : { background: "rgba(100,116,139,0.15)", color: "#475569" }}>
-              {i.status === "active" ? "Действует" : "Завершена"}
+              style={!i.funded && i.status === "active" ? { background: "rgba(245,158,11,0.18)", color: "#b45309" } : i.status === "active" ? { background: "rgba(16,185,129,0.15)", color: "#047857" } : { background: "rgba(100,116,139,0.15)", color: "#475569" }}>
+              {!i.funded && i.status === "active" ? "Ожидает внесения" : i.status === "active" ? "Действует" : "Завершена"}
             </span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
@@ -32,7 +35,12 @@ export default function InvestorOverview({ items }: { items: Investment[] }) {
               </div>
             ))}
           </div>
-          {i.status === "active" && (
+          {!i.funded && i.status === "active" && (
+            <div className="rounded-xl px-4 py-3 text-sm" style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.35)", color: "#78350f" }}>
+              Будет вложено <b>{fmt(i.amount)}</b>. Чтобы вложение начало работать, внесите сумму в разделе «Пополнить баланс».
+            </div>
+          )}
+          {i.funded && i.status === "active" && (
             <div className="rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-2" style={{ background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.3)" }}>
               <div className="text-emerald-950 text-sm">К выплате по начисленным процентам: <b>{fmt(i.toPay)}</b></div>
               {i.nextDate && <div className="text-emerald-950/60 text-sm">Ближайшая дата: <b>{i.nextDate}</b></div>}

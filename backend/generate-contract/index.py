@@ -1027,7 +1027,7 @@ def build_invest_contract(cur, investment_id: int) -> str:
 
 
 def backfill_invest_contracts(cur, conn) -> dict:
-    cur.execute(f"SELECT id FROM {SCHEMA}.investments WHERE contract_url IS NULL OR contract_url = '' ORDER BY id")
+    cur.execute(f"SELECT id FROM {SCHEMA}.investments WHERE funded = TRUE AND (contract_url IS NULL OR contract_url = '') ORDER BY id")
     ids = [r[0] for r in cur.fetchall()]
     done, failed = 0, 0
     for iid in ids[:3]:
@@ -1215,7 +1215,7 @@ def handler(event: dict, context) -> dict:
         if not sess:
             cur.close(); conn.close()
             return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
-        cur.execute(f"SELECT id FROM {SCHEMA}.investments WHERE investor_id = {int(sess[0])} AND (contract_url IS NULL OR contract_url = '') ORDER BY id")
+        cur.execute(f"SELECT id FROM {SCHEMA}.investments WHERE investor_id = {int(sess[0])} AND funded = TRUE AND (contract_url IS NULL OR contract_url = '') ORDER BY id")
         made = 0
         for (iid,) in cur.fetchall():
             try:

@@ -114,6 +114,15 @@ def credit_payment(cur, row):
     if not cur.fetchone():
         return False
     note = "Оплата через ЮKassa"
+    if loan_type == "investor":
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.investor_topups (investor_id, yk_payment_id, amount) "
+            f"VALUES ({int(loan_id)}, '{yk_id}', {amount}) ON CONFLICT (yk_payment_id) DO NOTHING"
+        )
+        funded = fund_from_balance(cur, loan_id)
+        extra = ("\n✅ Оплачены вложения: " + ", ".join(f"{a:,} ₽" for a in funded)).replace(",", " ") if funded else "\nВложений на эту сумму пока нет — деньги на балансе."
+        tg(f"💰 <b>Пополнение баланса инвестора</b>\n\n📞 {phone}\n💵 Сумма: {int(amount):,} ₽".replace(",", " ") + extra)
+        return True
     if loan_type == "creditdoctor":
         cur.execute(
             f"UPDATE {SCHEMA}.applications SET cd_paid = TRUE, cd_paid_at = NOW(), is_credit_doctor = TRUE, "
@@ -182,6 +191,25 @@ def credit_payment(cur, row):
     return True
 
 
+def fund_from_balance(cur, investor_id):
+    """Оплачивает ожидающие вложения из баланса пополнений (по порядку). Возвращает список сумм."""
+    cur.execute(f"SELECT COALESCE(SUM(amount), 0) FROM {SCHEMA}.investor_topups WHERE investor_id = {int(investor_id)}")
+    topped = float(cur.fetchone()[0])
+    cur.execute(f"SELECT COALESCE(SUM(amount), 0) FROM {SCHEMA}.investments WHERE investor_id = {int(investor_id)} AND funded_by = 'topup'")
+    balance = topped - float(cur.fetchone()[0])
+    cur.execute(f"SELECT id, amount FROM {SCHEMA}.investments WHERE investor_id = {int(investor_id)} AND funded = FALSE AND status = 'active' ORDER BY id")
+    done = []
+    for iid, amt in cur.fetchall():
+        if float(amt) <= balance:
+            cur.execute(
+                f"UPDATE {SCHEMA}.investments SET funded = TRUE, funded_at = NOW(), funded_by = 'topup', "
+                f"start_date = CURRENT_DATE, contract_url = NULL WHERE id = {int(iid)}"
+            )
+            balance -= float(amt)
+            done.append(int(amt))
+    return done
+
+
 def load_row(cur, yk_id):
     cur.execute(
         f"SELECT yk_payment_id, loan_type, loan_id, phone, amount, meta FROM {SCHEMA}.yookassa_payments WHERE yk_payment_id = '{yk_id}'"
@@ -239,6 +267,54 @@ def handler(event: dict, context) -> dict:
 
     auth = headers.get("x-authorization") or headers.get("authorization") or ""
     token = auth.replace("Bearer ", "").strip()
+
+    if sub in ("invest_create", "invest_check"):
+        t_e = token.replace("'", "''")
+        cur.execute(
+            f"SELECT i.id, i.phone FROM {SCHEMA}.investor_sessions s JOIN {SCHEMA}.investors i ON i.id = s.investor_id "
+            f"WHERE s.token = '{t_e}' AND s.expires_at > NOW()"
+        )
+        iv = cur.fetchone() if token else None
+        if not iv:
+            cur.close(); conn.close()
+            return resp(401, {"error": "Требуется авторизация"})
+        inv_id, inv_phone = iv
+        if sub == "invest_check":
+            yk_id = str(body.get("paymentId") or "").replace("'", "")
+            cur.execute(f"SELECT 1 FROM {SCHEMA}.yookassa_payments WHERE yk_payment_id='{yk_id}' AND loan_type='investor' AND loan_id={int(inv_id)}")
+            if not cur.fetchone():
+                cur.close(); conn.close()
+                return resp(404, {"error": "Платёж не найден"})
+            status = sync_payment(cur, conn, yk_id)
+            cur.close(); conn.close()
+            return resp(200, {"status": status})
+        try:
+            amount = round(float(body.get("amount") or 0), 2)
+        except (TypeError, ValueError):
+            amount = 0
+        return_url = str(body.get("returnUrl") or "")
+        if amount < 1000 or amount > 15000000 or not return_url.startswith("http"):
+            cur.close(); conn.close()
+            return resp(400, {"error": "Сумма пополнения — от 1 000 до 15 000 000 ₽"})
+        payload = {
+            "amount": {"value": f"{amount:.2f}", "currency": "RUB"},
+            "capture": True,
+            "confirmation": {"type": "redirect", "return_url": return_url},
+            "description": "Пополнение баланса инвестиций РУСФИНАНС 24",
+            "metadata": {"loanType": "investor", "loanId": str(inv_id), "phone": inv_phone},
+        }
+        code, data = yk_request("POST", YK_API, payload, idem=str(uuid.uuid4()))
+        if code not in (200, 201) or not data.get("confirmation", {}).get("confirmation_url"):
+            cur.close(); conn.close()
+            return resp(502, {"error": data.get("description") or "Не удалось создать платёж. Попробуйте позже."})
+        yk_id = data["id"]
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.yookassa_payments (yk_payment_id, loan_type, loan_id, phone, amount, meta) "
+            f"VALUES ('{yk_id}', 'investor', {int(inv_id)}, '{inv_phone.replace(chr(39), '')}', {amount}, '{{}}')"
+        )
+        conn.commit(); cur.close(); conn.close()
+        return resp(200, {"paymentId": yk_id, "confirmationUrl": data["confirmation"]["confirmation_url"]})
+
     user = get_user(cur, token) if token else None
     if not user:
         cur.close(); conn.close()

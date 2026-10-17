@@ -5,7 +5,7 @@ export default function InvestorPayouts({ items }: { items: Investment[] }) {
     .flatMap((i) => i.payouts.map((p) => ({ ...p, invAmount: i.amount })))
     .sort((a, b) => b.id - a.id);
   const total = all.reduce((s, p) => s + p.amount, 0);
-  const upcoming = items.filter((i) => i.status === "active" && i.nextDate);
+  const upcoming = items.filter((i) => i.funded && i.status === "active" && i.nextDate);
 
   return (
     <div className="space-y-6">

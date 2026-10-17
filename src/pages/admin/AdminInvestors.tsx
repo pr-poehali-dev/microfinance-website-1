@@ -7,7 +7,7 @@ const CONTRACT_URL = "https://functions.poehali.dev/9cdc3bea-1348-49df-a7a3-4aee
 interface Payout { id: number; amount: number; kind: string; note: string; paidAt: string }
 interface Investment {
   id: number; amount: number; termMonths: number; payout: string; rate: number; startDate: string; endDate: string;
-  status: string; monthlyIncome: number; accrued: number; paidInterest: number; toPay: number; nextDate: string | null; payouts: Payout[]; contractUrl: string;
+  status: string; monthlyIncome: number; accrued: number; paidInterest: number; toPay: number; nextDate: string | null; payouts: Payout[]; contractUrl: string; funded: boolean;
 }
 interface AdminCard { id: number; number: string; holder: string; isDefault: boolean }
 interface Investor { id: number; fullName: string; phone: string; email: string; createdAt: string; investments: Investment[]; cards: AdminCard[] }
@@ -79,7 +79,7 @@ export default function AdminInvestors({ token }: { token: string }) {
       <div style={{ display: "grid", gap: 10 }}>
         {items.map(inv => {
           const open = openId === inv.id;
-          const total = inv.investments.filter(i => i.status === "active").reduce((s, i) => s + i.amount, 0);
+          const total = inv.investments.filter(i => i.status === "active" && i.funded).reduce((s, i) => s + i.amount, 0);
           return (
             <div key={inv.id} style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 14, padding: 16 }}>
               <div onClick={() => setOpenId(open ? null : inv.id)} style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", cursor: "pointer", flexWrap: "wrap" }}>
@@ -137,8 +137,14 @@ export default function AdminInvestors({ token }: { token: string }) {
                     <div key={i.id} style={{ background: "#ffffff", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 12, padding: 12, opacity: i.status === "closed" ? 0.65 : 1 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
                         <b style={{ color: "#022c22" }}>{fmt(i.amount)} · {i.termMonths} мес. · {i.rate}% в мес.</b>
-                        <span style={{ fontSize: 12, color: i.status === "active" ? "#047857" : "#64748b", fontWeight: 700 }}>{i.status === "active" ? "Действует" : "Завершена"}</span>
+                        <span style={{ fontSize: 12, color: i.status === "active" ? "#047857" : "#64748b", fontWeight: 700 }}>{i.status !== "active" ? "Завершена" : i.funded ? "Действует" : "Ожидает внесения"}</span>
                       </div>
+                      {i.status === "active" && !i.funded && (
+                        <div style={{ marginTop: 8, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 13, color: "#b45309", fontWeight: 600 }}>Клиент ещё не внёс сумму через ЮKassa</span>
+                          <button style={BTN2} onClick={async () => { if (window.confirm("Отметить, что деньги получены (например, переводом)? Вложение начнёт действовать с сегодняшнего дня.")) await post("investment_fund", { investmentId: i.id }, "Вложение отмечено как внесённое"); }}>Отметить как внесённое</button>
+                        </div>
+                      )}
                       <div style={{ fontSize: 13, color: "rgba(2,44,34,0.6)", marginTop: 4 }}>
                         {i.startDate} — {i.endDate} · проценты {i.payout === "monthly" ? "каждый месяц" : "в конце срока"} · доход {fmt(i.monthlyIncome)}/мес.
                       </div>

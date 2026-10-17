@@ -81,14 +81,14 @@ def months_passed(start: date, today: date) -> int:
 
 
 def inv_view(r, paid_interest: int, paid_total: int, payouts: list) -> dict:
-    inv_id, amount, term, payout, rate, start, status, contract_url = r
+    inv_id, amount, term, payout, rate, start, status, contract_url, funded = r
     today = date.today()
     monthly = round(float(amount) * float(rate) / 100)
-    passed = min(months_passed(start, today), int(term))
+    passed = min(months_passed(start, today), int(term)) if funded else 0
     accrued = monthly * passed
     end_date = add_months(start, int(term))
     nxt = None
-    if status == "active" and today < end_date:
+    if funded and status == "active" and today < end_date:
         if payout == "monthly":
             nxt = add_months(start, passed + 1)
         else:
@@ -102,12 +102,13 @@ def inv_view(r, paid_interest: int, paid_total: int, payouts: list) -> dict:
         "nextDate": nxt.strftime("%d.%m.%Y") if nxt else None,
         "payouts": payouts,
         "contractUrl": contract_url or "",
+        "funded": bool(funded),
     }
 
 
 def load_investments(cur, investor_id: int) -> list:
     cur.execute(
-        f"SELECT id, amount, term_months, payout, rate, start_date, status, contract_url FROM {SCHEMA}.investments "
+        f"SELECT id, amount, term_months, payout, rate, start_date, status, contract_url, funded FROM {SCHEMA}.investments "
         f"WHERE investor_id = {investor_id} ORDER BY id DESC"
     )
     rows = cur.fetchall()
@@ -143,6 +144,15 @@ def load_cards(cur, investor_id: int, full: bool) -> list:
             item["number"] = " ".join(r[1][i:i + 4] for i in range(0, len(r[1]), 4))
         out.append(item)
     return out
+
+
+def investor_balance(cur, investor_id: int) -> int:
+    """Свободный остаток пополнений: всё пополненное минус суммы вложений, оплаченных с баланса."""
+    cur.execute(f"SELECT COALESCE(SUM(amount), 0) FROM {SCHEMA}.investor_topups WHERE investor_id = {investor_id}")
+    topped = float(cur.fetchone()[0])
+    cur.execute(f"SELECT COALESCE(SUM(amount), 0) FROM {SCHEMA}.investments WHERE investor_id = {investor_id} AND funded_by = 'topup'")
+    used = float(cur.fetchone()[0])
+    return max(int(topped - used), 0)
 
 
 def load_my_requests(cur, investor_id: int) -> list:
@@ -196,9 +206,10 @@ def investor_block(event, method, sub, body):
         items = load_investments(cur, inv[0])
         cards = load_cards(cur, inv[0], False)
         reqs = load_my_requests(cur, inv[0])
+        balance = investor_balance(cur, inv[0])
         cur.close(); conn.close()
         return resp(200, {"investor": {"id": inv[0], "fullName": inv[1], "phone": inv[2], "email": inv[3] or ""},
-                          "investments": items, "cards": cards, "requests": reqs})
+                          "investments": items, "cards": cards, "requests": reqs, "balance": balance})
 
     if sub in ("card_add", "card_delete", "card_default", "request_create") and method == "POST":
         inv = investor_from_token(cur, event)
@@ -372,6 +383,23 @@ def investor_block(event, method, sub, body):
         conn.commit(); cur.close(); conn.close()
         return resp(200, {"ok": True, "investmentId": new_inv})
 
+    if sub == "investment_fund" and method == "POST":
+        inv_id = int(body.get("investmentId") or 0)
+        cur.execute(f"SELECT funded FROM {SCHEMA}.investments WHERE id = {inv_id}")
+        row = cur.fetchone()
+        if not row:
+            cur.close(); conn.close()
+            return resp(404, {"error": "Вложение не найдено"})
+        if row[0]:
+            cur.close(); conn.close()
+            return resp(409, {"error": "Вложение уже отмечено как внесённое"})
+        cur.execute(
+            f"UPDATE {SCHEMA}.investments SET funded = TRUE, funded_at = NOW(), funded_by = 'admin', "
+            f"start_date = CURRENT_DATE, contract_url = NULL WHERE id = {inv_id}"
+        )
+        conn.commit(); cur.close(); conn.close()
+        return resp(200, {"ok": True})
+
     if sub == "payout_add" and method == "POST":
         try:
             inv_id = int(body.get("investmentId") or 0)
@@ -426,7 +454,7 @@ def handler(event: dict, context) -> dict:
     raw = event.get("body") or "{}"
     body = json.loads(raw) if isinstance(raw, str) else raw
 
-    if sub in ("login", "me", "investors", "investor_create", "investment_add", "payout_add", "investor_password",
+    if sub in ("login", "me", "investors", "investor_create", "investment_add", "payout_add", "investor_password", "investment_fund",
                "card_add", "card_delete", "card_default", "request_create", "request_accept"):
         return investor_block(event, method, sub, body)
 

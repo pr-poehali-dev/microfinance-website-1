@@ -6,11 +6,11 @@ export default function InvestorDocs({ items, preparing }: { items: Investment[]
     <div className="glass rounded-3xl p-6">
       <div className="font-oswald text-2xl font-bold text-emerald-950 mb-1">Договоры</div>
       <p className="text-emerald-950/55 text-sm mb-5">На каждую инвестицию оформляется отдельный договор.</p>
-      {items.length === 0 ? (
+      {items.filter((i) => i.funded).length === 0 ? (
         <div className="text-emerald-950/40 text-sm">Договоров пока нет</div>
       ) : (
         <div className="space-y-2">
-          {items.map((i) => (
+          {items.filter((i) => i.funded).map((i) => (
             <div key={i.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl px-4 py-3" style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.15)" }}>
               <div>
                 <div className="text-emerald-950 font-semibold">Договор инвестирования № И-{String(i.id).padStart(12, "0")}</div>

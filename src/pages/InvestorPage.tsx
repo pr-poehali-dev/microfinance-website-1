@@ -7,7 +7,8 @@ import InvestorRequest from "./investor/InvestorRequest";
 import InvestorPayouts from "./investor/InvestorPayouts";
 import InvestorCards from "./investor/InvestorCards";
 import InvestorDocs from "./investor/InvestorDocs";
-import { INVEST_URL, CONTRACT_URL, InvestorMe, authHeaders, fmt } from "./investor/investorTypes";
+import InvestorTopup from "./investor/InvestorTopup";
+import { INVEST_URL, CONTRACT_URL, YK_URL, InvestorMe, authHeaders, fmt } from "./investor/investorTypes";
 
 export default function InvestorPage() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export default function InvestorPage() {
   const [loading, setLoading] = useState(true);
   const [section, setSection] = useState<InvestorSection>("invest");
   const [preparing, setPreparing] = useState(false);
+  const [paidToast, setPaidToast] = useState(false);
   const token = localStorage.getItem("investor_token") || "";
 
   const load = useCallback(async () => {
@@ -38,9 +40,22 @@ export default function InvestorPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  useEffect(() => {
+    const pid = localStorage.getItem("invest_payment_id");
+    if (!pid || !token) return;
+    localStorage.removeItem("invest_payment_id");
+    fetch(`${YK_URL}?sub=invest_check`, { method: "POST", headers: authHeaders(token), body: JSON.stringify({ paymentId: pid }) })
+      .then((r) => r.json().catch(() => ({})))
+      .then((d) => {
+        if (d.status === "succeeded") { setPaidToast(true); setSection("invest"); setTimeout(() => setPaidToast(false), 7000); }
+        load();
+      })
+      .catch(() => {});
+  }, [token, load]);
+
   const logout = () => { localStorage.removeItem("investor_token"); navigate("/"); };
 
-  const active = (data?.investments || []).filter((i) => i.status === "active");
+  const active = (data?.investments || []).filter((i) => i.status === "active" && i.funded);
   const totalInvested = active.reduce((s, i) => s + i.amount, 0);
   const totalMonthly = active.reduce((s, i) => s + i.monthlyIncome, 0);
   const totalPaid = (data?.investments || []).reduce((s, i) => s + i.paidTotal, 0);
@@ -64,6 +79,11 @@ export default function InvestorPage() {
 
         {data && (
           <>
+            {paidToast && (
+              <div className="mb-4 rounded-xl px-4 py-3 text-sm font-semibold flex items-center gap-2" style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.4)", color: "#065f46" }}>
+                <Icon name="CheckCircle" size={18} />Оплата прошла успешно. Средства поступили на баланс.
+              </div>
+            )}
             <div className="mb-6">
               <div className="text-emerald-950/50 text-sm">Кабинет инвестора</div>
               <h1 className="font-oswald text-3xl md:text-4xl font-bold text-emerald-950">{data.investor.fullName}</h1>
@@ -90,6 +110,7 @@ export default function InvestorPage() {
               <div className="flex-1 min-w-0 w-full">
                 {section === "invest" && <InvestorOverview items={data.investments} />}
                 {section === "request" && <InvestorRequest token={token} requests={data.requests} onSent={load} />}
+                {section === "topup" && <InvestorTopup token={token} items={data.investments} balance={data.balance} />}
                 {section === "payouts" && <InvestorPayouts items={data.investments} />}
                 {section === "cards" && <InvestorCards token={token} cards={data.cards} onChanged={load} />}
                 {section === "docs" && <InvestorDocs items={data.investments} preparing={preparing} />}
