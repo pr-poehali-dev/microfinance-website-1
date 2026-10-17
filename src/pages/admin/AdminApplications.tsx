@@ -5,6 +5,7 @@ import AddPaymentModal from "./AddPaymentModal";
 import AdminPayoutBanner from "./AdminPayoutBanner";
 import AdminPartnerIdentification from "./AdminPartnerIdentification";
 import AdminCreditDoctorPaid from "./AdminCreditDoctorPaid";
+import AdminRequestDoc from "./AdminRequestDoc";
 import { waitingStyle, WAITING_BADGE_STYLE } from "./waiting";
 import AdminAppTimeline from "./AdminAppTimeline";
 import AdminCardControl from "./AdminCardControl";
@@ -373,6 +374,8 @@ export default function AdminApplications({
                     onDone={onRefresh} onZoom={setLightbox}
                   />
                 )}
+
+                <AdminRequestDoc phone={app.phone} token={token} />
 
                 {(app.cdPaid || (app.isCreditDoctor && app.status === "rejected")) && (
                   <AdminCreditDoctorPaid appId={app.id} token={token} paid={!!app.cdPaid} paidAt={app.cdPaidAt}

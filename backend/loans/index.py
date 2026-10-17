@@ -306,6 +306,14 @@ def handler(event: dict, context) -> dict:
 
     user_id, phone, full_name, email = user
 
+    # --- ЗАПРОСЫ ДОКУМЕНТОВ ОТ АДМИНА: список (GET sub=doc_requests) ---
+    if event.get("httpMethod") == "GET" and (event.get("queryStringParameters") or {}).get("sub") == "doc_requests":
+        ph_q = phone.replace("'", "''")
+        cur.execute(f"SELECT id, message, created_at FROM {SCHEMA}.doc_requests WHERE phone = '{ph_q}' AND status = 'open' ORDER BY created_at DESC")
+        reqs = [{"id": r_[0], "message": r_[1], "date": msk(r_[2]).strftime("%d.%m.%Y в %H:%M")} for r_ in cur.fetchall()]
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"requests": reqs}, ensure_ascii=False)}
+
     # --- ДОКУМЕНТЫ КЛИЕНТА: список (GET sub=my_docs) ---
     if event.get("httpMethod") == "GET" and (event.get("queryStringParameters") or {}).get("sub") == "my_docs":
         cur.execute(
@@ -336,6 +344,7 @@ def handler(event: dict, context) -> dict:
                 f"INSERT INTO {SCHEMA}.client_documents (user_id, phone, full_name, title, comment, file_url) "
                 f"VALUES ({int(user_id)}, '{ph_d}', '{fn_d}', '{t_d}', '{c_d}', '{u.replace(chr(39), chr(39)*2)}')"
             )
+        cur.execute(f"UPDATE {SCHEMA}.doc_requests SET status = 'closed', closed_at = NOW() WHERE phone = '{ph_d}' AND status = 'open'")
         conn.commit()
         cur.close(); conn.close()
         import urllib.request as _urd

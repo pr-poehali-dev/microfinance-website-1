@@ -6,6 +6,8 @@ const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c
 
 interface Doc { id: number; title: string; comment: string; url: string; status: string; date: string; }
 
+interface Req { id: number; message: string; date: string; }
+
 const PRESETS = ["Паспорт", "Прописка", "Селфи с паспортом", "СНИЛС", "Справка о доходах", "Другое"];
 
 const toBase64 = (file: File): Promise<{ b64: string; ext: string }> =>
@@ -40,6 +42,7 @@ const isPdf = (u: string) => u.toLowerCase().endsWith(".pdf");
 
 export default function ClientDocsSection({ phone }: { phone: string }) {
   const [docs, setDocs] = useState<Doc[]>([]);
+  const [reqs, setReqs] = useState<Req[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [title, setTitle] = useState(PRESETS[0]);
   const [comment, setComment] = useState("");
@@ -57,6 +60,10 @@ export default function ClientDocsSection({ phone }: { phone: string }) {
     fetch(`${LOANS_URL}?sub=my_docs`, { headers: hdrs() })
       .then((r) => r.json())
       .then((d) => setDocs(d.docs || []))
+      .catch(() => {});
+    fetch(`${LOANS_URL}?sub=doc_requests`, { headers: hdrs() })
+      .then((r) => r.json())
+      .then((d) => setReqs(d.requests || []))
       .catch(() => {});
   }, []);
 
@@ -100,6 +107,19 @@ export default function ClientDocsSection({ phone }: { phone: string }) {
   return (
     <div className="glass rounded-2xl p-4 sm:p-6 mb-6">
       <h2 className="font-oswald text-2xl font-bold text-emerald-950 mb-1">Фото документов</h2>
+      {reqs.length > 0 && (
+        <div className="rounded-xl p-4 mb-4 space-y-2" style={{ background: "rgba(239,68,68,0.08)", border: "2px solid rgba(239,68,68,0.45)" }}>
+          <div className="flex items-center gap-2 text-red-700 font-bold text-sm">
+            <Icon name="AlertCircle" size={18} />Администратор просит прислать документы
+          </div>
+          {reqs.map((r) => (
+            <div key={r.id} className="text-emerald-950 text-sm rounded-lg px-3 py-2" style={{ background: "rgba(255,255,255,0.7)" }}>
+              {r.message}
+              <div className="text-emerald-950/40 text-xs mt-0.5">{r.date}</div>
+            </div>
+          ))}
+        </div>
+      )}
       <p className="text-emerald-950/50 text-sm mb-4">
         Если нам чего-то не хватило для рассмотрения заявки, пришлите фото или скан документа. Мы получим его сразу.
       </p>

@@ -2446,6 +2446,17 @@ def handler(event: dict, context) -> dict:
         )
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "debt": debt - amt})}
 
+    # --- ЗАПРОС ДОКУМЕНТА У КЛИЕНТА (POST, sub='doc_request') ---
+    if sub == "doc_request" and method == "POST":
+        ph_r = str(body.get("phone") or "").replace("'", "''")
+        msg_r = str(body.get("message") or "").strip()[:500]
+        if not ph_r or not msg_r:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите, какой документ нужен"}, ensure_ascii=False)}
+        cur.execute(f"INSERT INTO {SCHEMA}.doc_requests (phone, message) VALUES ('{ph_r}', '{msg_r.replace(chr(39), chr(39)*2)}')")
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     # --- ДОКУМЕНТЫ ОТ КЛИЕНТОВ: список (GET, sub='client_docs') ---
     if sub == "client_docs" and method == "GET":
         cur.execute(
