@@ -79,7 +79,7 @@ export default function TermLoanRequestForm({ kind, profile, phone, profileEdita
 
   if (done) {
     return (
-      <div className="rounded-2xl px-6 py-5 flex items-center gap-3" style={{ border: "1px solid rgba(74,222,128,0.4)", background: "rgba(74,222,128,0.06)" }}>
+      <div className="rounded-2xl px-4 sm:px-6 py-5 flex items-center gap-3" style={{ border: "1px solid rgba(74,222,128,0.4)", background: "rgba(74,222,128,0.06)" }}>
         <Icon name="CheckCircle" size={24} className="text-green-500 shrink-0" />
         <div>
           <div className="text-emerald-950 font-bold">Заявка отправлена на рассмотрение</div>

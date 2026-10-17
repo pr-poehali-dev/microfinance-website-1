@@ -26,7 +26,7 @@ export default function CookieBanner() {
       background: "rgba(255, 255, 255, 0.97)",
       borderTop: "1px solid rgba(16, 185, 129, 0.25)",
       backdropFilter: "blur(20px)",
-      padding: "16px 24px",
+      padding: "12px 16px calc(12px + env(safe-area-inset-bottom))",
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
@@ -34,7 +34,7 @@ export default function CookieBanner() {
       flexWrap: "wrap",
       boxShadow: "0 -4px 24px rgba(16,185,129,0.08)",
     }}>
-      <p style={{ color: "rgba(6,78,59,0.7)", fontSize: 14, margin: 0, maxWidth: 700, lineHeight: 1.5 }}>
+      <p style={{ color: "rgba(6,78,59,0.7)", fontSize: 13, margin: 0, maxWidth: 700, lineHeight: 1.5 }}>
         Мы используем файлы cookie для улучшения работы сайта и персонализации контента.
         Продолжая использовать сайт, вы соглашаетесь с нашей{" "}
         <a href="#" style={{ color: "#059669", textDecoration: "underline" }}>

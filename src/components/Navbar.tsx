@@ -23,7 +23,7 @@ export default function Navbar({ mobileOpen, setMobileOpen, scrollTo }: NavbarPr
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2 shrink-0">
           <img src="/logo-icon.png" alt="Русфинанс 24" className="w-9 h-9 rounded-xl" />
-          <span className="font-oswald text-xl font-bold tracking-wide text-emerald-950">
+          <span className="font-oswald text-lg sm:text-xl font-bold tracking-wide text-emerald-950">
             <span className="gradient-text">РУСФИНАНС24</span>
           </span>
         </div>

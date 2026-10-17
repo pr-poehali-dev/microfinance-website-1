@@ -25,7 +25,7 @@ export default function CardPayModal({ amount, dueDate, txId, full, early, onClo
         style={{ borderRadius: 20, width: "100%", maxWidth: 440, overflow: "hidden", border: "1px solid rgba(16,185,129,0.4)", background: "#ffffff", maxHeight: "92vh", overflowY: "auto" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 py-5 flex items-center justify-between" style={{ background: "linear-gradient(135deg,rgba(16,185,129,0.3),rgba(20,184,166,0.1))" }}>
+        <div className="px-4 sm:px-6 py-5 flex items-center justify-between" style={{ background: "linear-gradient(135deg,rgba(16,185,129,0.3),rgba(20,184,166,0.1))" }}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(16,185,129,0.3)" }}>
               <Icon name="CreditCard" size={20} className="text-emerald-700" />
@@ -40,7 +40,7 @@ export default function CardPayModal({ amount, dueDate, txId, full, early, onClo
           </button>
         </div>
 
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-4 sm:px-6 py-5 space-y-4">
           <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>
             <span className="text-emerald-950/50 text-sm">{full ? "Сумма полного погашения" : "Сумма к оплате"}</span>
             <span className="font-bold text-2xl gradient-text">{amount.toLocaleString("ru-RU")} ₽</span>

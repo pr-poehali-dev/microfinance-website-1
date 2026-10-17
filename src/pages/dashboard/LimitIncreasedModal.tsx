@@ -42,7 +42,7 @@ export default function LimitIncreasedModal({ increases, onClose }: Props) {
         style={{ borderRadius: 24, width: "100%", maxWidth: 400, overflow: "hidden", background: "#ffffff", border: "1px solid rgba(16,185,129,0.4)", boxShadow: "0 20px 60px rgba(16,185,129,0.25)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 pt-8 pb-6 text-center" style={{ background: "linear-gradient(135deg,rgba(16,185,129,0.28),rgba(20,184,166,0.1))" }}>
+        <div className="px-4 sm:px-6 pt-8 pb-6 text-center" style={{ background: "linear-gradient(135deg,rgba(16,185,129,0.28),rgba(20,184,166,0.1))" }}>
           <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)" }}>
             <Icon name="TrendingUp" size={32} className="text-white" />
           </div>
@@ -52,7 +52,7 @@ export default function LimitIncreasedModal({ increases, onClose }: Props) {
           </p>
           <div className="font-bold text-3xl mt-2" style={{ color: "#059669" }}>+ {fmt(totalAdded)}</div>
         </div>
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-4 sm:px-6 py-5 space-y-4">
           <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>
             <span className="text-emerald-950/60 text-sm">Новый лимит по карте</span>
             <span className="font-bold text-lg text-emerald-950">{fmt(newLimit)}</span>

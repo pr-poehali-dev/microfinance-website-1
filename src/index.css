@@ -39,9 +39,28 @@
   * {
     @apply border-border;
   }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
   body {
     @apply bg-background text-foreground font-golos;
     background: #ffffff;
+    overflow-x: hidden;
+    overflow-wrap: break-word;
+  }
+  img, video {
+    max-width: 100%;
+  }
+  @media (max-width: 640px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+    select,
+    textarea {
+      font-size: 16px !important;
+      max-width: 100%;
+    }
+    button, a[role="button"] {
+      min-height: 40px;
+    }
   }
 }
 

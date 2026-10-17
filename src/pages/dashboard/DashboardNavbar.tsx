@@ -17,10 +17,10 @@ export default function DashboardNavbar({ user, onLogout }: Props) {
   const navigate = useNavigate();
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass" style={{ borderBottom: "1px solid rgba(20,184,166,0.2)" }}>
-      <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between gap-2">
         <button onClick={() => navigate("/")} className="flex items-center gap-2">
           <img src="/logo-icon.png" alt="Русфинанс 24" className="w-9 h-9 rounded-xl" />
-          <span className="font-oswald text-xl font-bold tracking-wide text-emerald-950">
+          <span className="font-oswald text-lg sm:text-xl font-bold tracking-wide text-emerald-950">
             <span className="gradient-text">РУСФИНАНС24</span>
           </span>
         </button>

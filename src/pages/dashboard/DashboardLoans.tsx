@@ -99,7 +99,7 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                   <p className="text-emerald-950/50 text-sm mb-6">Оформите первый займ прямо сейчас</p>
                   <button
                     onClick={() => navigate("/")}
-                    className="btn-neon text-white font-semibold px-6 py-3 rounded-xl inline-flex items-center gap-2"
+                    className="btn-neon text-white font-semibold px-4 sm:px-6 py-3 rounded-xl inline-flex items-center gap-2"
                   >
                     <Icon name="Plus" size={16} />
                     Оформить займ
@@ -117,7 +117,7 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
             const partnerBlocked = application?.status === "partner_card" && application?.partnerCard?.status !== "approved";
             return (
               <div key={loan.id} className="glass rounded-2xl overflow-hidden">
-                <div className="px-6 py-4 flex items-center justify-between border-b border-emerald-900/15"
+                <div className="px-4 sm:px-6 py-4 flex items-center justify-between border-b border-emerald-900/15"
                   style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.2), rgba(20,184,166,0.08))" }}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 btn-neon rounded-xl flex items-center justify-center shrink-0">
@@ -136,8 +136,8 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                   )}
                 </div>
 
-                <div className="px-6 py-5">
-                  <div className="grid grid-cols-3 gap-4 mb-5">
+                <div className="px-4 sm:px-6 py-5">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-5">
                     <div className="rounded-xl px-4 py-3 text-center" style={{ background: "rgba(16,185,129,0.04)" }}>
                       <div className="text-emerald-950/40 text-xs mb-1">Сумма займа</div>
                       <div className="text-emerald-950 font-bold text-lg">{loan.amount.toLocaleString("ru-RU")} ₽</div>
@@ -274,7 +274,7 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                     {loan.status === "active" && (
                       <button
                         onClick={() => onPay(loan)}
-                        className="btn-neon text-white font-semibold px-6 py-3 rounded-xl flex items-center gap-2"
+                        className="btn-neon text-white font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2"
                       >
                         <Icon name="Banknote" size={16} />
                         Погасить займ
@@ -283,7 +283,7 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                     {loan.status === "active" && loan.earlyPayoff && (
                       <button
                         onClick={() => onPay(loan, true)}
-                        className="font-semibold px-6 py-3 rounded-xl flex items-center gap-2"
+                        className="font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2"
                         style={{ background: "rgba(16,185,129,0.15)", color: "#047857", border: "1px solid rgba(16,185,129,0.4)" }}
                       >
                         <Icon name="Zap" size={16} />
@@ -293,7 +293,7 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                     {loan.status === "overdue" && (
                       <button
                         onClick={() => onPay(loan)}
-                        className="text-white font-semibold px-6 py-3 rounded-xl flex items-center gap-2"
+                        className="text-white font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2"
                         style={{ background: "linear-gradient(135deg,#dc2626,#dc2626)" }}
                       >
                         <Icon name="AlertCircle" size={16} />

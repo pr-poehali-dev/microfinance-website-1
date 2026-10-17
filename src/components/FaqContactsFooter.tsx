@@ -51,7 +51,7 @@ export default function FaqContactsFooter() {
             {FAQ_ITEMS.map((item, i) => (
               <div key={i} className="glass card-hover rounded-2xl overflow-hidden">
                 <button
-                  className="w-full flex items-center justify-between p-6 text-left"
+                  className="w-full flex items-center justify-between p-4 sm:p-6 text-left"
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                 >
                   <span className="text-emerald-950 font-semibold pr-4">{item.q}</span>
@@ -63,7 +63,7 @@ export default function FaqContactsFooter() {
                   </div>
                 </button>
                 {openFaq === i && (
-                  <div className="px-6 pb-6 text-emerald-950/60 leading-relaxed border-t border-emerald-900/10 pt-4">
+                  <div className="px-4 sm:px-6 pb-6 text-emerald-950/60 leading-relaxed border-t border-emerald-900/10 pt-4">
                     {item.a}
                   </div>
                 )}
@@ -91,7 +91,7 @@ export default function FaqContactsFooter() {
               { icon: "Mail", title: "Email", value: "support@rusfinans24.ru", sub: "Ответим в течение часа", href: "mailto:support@rusfinans24.ru" },
               { icon: "Clock", title: "Режим работы", value: "Круглосуточно", sub: "Онлайн: 24/7", href: null },
             ].map((c) => (
-              <div key={c.title} className="glass card-hover rounded-2xl p-6 text-center">
+              <div key={c.title} className="glass card-hover rounded-2xl p-4 sm:p-6 text-center">
                 <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-emerald-600/10 flex items-center justify-center">
                   <Icon name={c.icon} size={24} className="text-emerald-600" />
                 </div>
@@ -121,7 +121,7 @@ export default function FaqContactsFooter() {
             />
           </div>
 
-          <div className="mt-5 flex items-center gap-3 glass rounded-2xl px-6 py-4 w-fit">
+          <div className="mt-5 flex items-center gap-3 glass rounded-2xl px-4 sm:px-6 py-4 w-fit">
             <Icon name="Navigation" size={18} className="text-emerald-600 shrink-0" />
             <span className="text-emerald-950/70 text-sm">
               <span className="text-emerald-950 font-semibold">Москва, Проспект Мира, д. 112</span>

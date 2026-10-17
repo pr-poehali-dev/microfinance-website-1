@@ -74,7 +74,7 @@ export default function InvestSection() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 items-start">
-          <div className="glass rounded-3xl p-6 md:p-8 space-y-4">
+          <div className="glass rounded-3xl p-4 sm:p-6 md:p-8 space-y-4">
             {TERMS.map((t) => (
               <div key={t.label} className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)" }}>
@@ -88,7 +88,7 @@ export default function InvestSection() {
             ))}
           </div>
 
-          <div className="glass rounded-3xl p-6 md:p-8">
+          <div className="glass rounded-3xl p-4 sm:p-6 md:p-8">
             {sent ? (
               <div className="text-center py-8">
                 <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)" }}>

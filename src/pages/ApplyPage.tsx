@@ -259,12 +259,12 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
           </div>
           <h2 className="font-oswald text-4xl font-bold text-emerald-950 mb-3">Заявка принята!</h2>
           <p className="text-emerald-950/50 mb-6">Мы рассматриваем заявки от 1 до 30 минут. Ожидайте звонка специалиста.</p>
-          <div className="glass rounded-2xl p-6 mb-6">
+          <div className="glass rounded-2xl p-4 sm:p-6 mb-6">
             <div className="font-oswald text-5xl font-bold gradient-text mb-2">{fmtTime(timerSec)}</div>
             <p className="text-emerald-950/40 text-sm">Примерное время до ответа</p>
           </div>
           <button onClick={() => navigate("/dashboard")}
-            className="btn-neon text-white font-bold px-8 py-4 rounded-2xl w-full flex items-center justify-center gap-2">
+            className="btn-neon text-white font-bold px-5 sm:px-8 py-4 rounded-2xl w-full flex items-center justify-center gap-2">
             <Icon name="LayoutDashboard" size={18} />
             Перейти в личный кабинет
           </button>
@@ -334,7 +334,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
 
             {/* ЛИЧНЫЕ ДАННЫЕ */}
             {activeSection === "personal" && (
-              <div className="glass rounded-2xl p-6 space-y-5">
+              <div className="glass rounded-2xl p-4 sm:p-6 space-y-5">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center shrink-0">
                     <Icon name="User" size={16} className="text-white" />
@@ -385,7 +385,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
                 </div>
                 <div className="flex justify-end">
                   <button type="button" onClick={() => setActiveSection("passport")}
-                    className="btn-neon text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                    className="btn-neon text-white font-bold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2">
                     Далее <Icon name="ArrowRight" size={16} />
                   </button>
                 </div>
@@ -394,7 +394,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
 
             {/* ПАСПОРТ */}
             {activeSection === "passport" && (
-              <div className="glass rounded-2xl p-6 space-y-5">
+              <div className="glass rounded-2xl p-4 sm:p-6 space-y-5">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center shrink-0">
                     <Icon name="BookOpen" size={16} className="text-white" />
@@ -444,11 +444,11 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
                 </div>
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setActiveSection("personal")}
-                    className="glass text-emerald-950/60 font-semibold px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
+                    className="glass text-emerald-950/60 font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
                     <Icon name="ArrowLeft" size={16} /> Назад
                   </button>
                   <button type="button" onClick={() => setActiveSection("work")}
-                    className="btn-neon text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                    className="btn-neon text-white font-bold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2">
                     Далее <Icon name="ArrowRight" size={16} />
                   </button>
                 </div>
@@ -457,7 +457,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
 
             {/* РАБОТА */}
             {activeSection === "work" && (
-              <div className="glass rounded-2xl p-6 space-y-5">
+              <div className="glass rounded-2xl p-4 sm:p-6 space-y-5">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center shrink-0">
                     <Icon name="Briefcase" size={16} className="text-white" />
@@ -488,11 +488,11 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
                 </div>
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setActiveSection("passport")}
-                    className="glass text-emerald-950/60 font-semibold px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
+                    className="glass text-emerald-950/60 font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
                     <Icon name="ArrowLeft" size={16} /> Назад
                   </button>
                   <button type="button" onClick={() => setActiveSection("contacts")}
-                    className="btn-neon text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                    className="btn-neon text-white font-bold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2">
                     Далее <Icon name="ArrowRight" size={16} />
                   </button>
                 </div>
@@ -501,7 +501,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
 
             {/* КОНТАКТЫ */}
             {activeSection === "contacts" && (
-              <div className="glass rounded-2xl p-6 space-y-5">
+              <div className="glass rounded-2xl p-4 sm:p-6 space-y-5">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center shrink-0">
                     <Icon name="Phone" size={16} className="text-white" />
@@ -516,11 +516,11 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
                 <PayoutField value={form.cardNumber} onChange={(v) => setF("cardNumber", v)} inputClassName={inputCls} inputStyle={inputStyle} labelClassName={labelCls} />
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setActiveSection("work")}
-                    className="glass text-emerald-950/60 font-semibold px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
+                    className="glass text-emerald-950/60 font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
                     <Icon name="ArrowLeft" size={16} /> Назад
                   </button>
                   <button type="button" onClick={() => setActiveSection(afterContacts)}
-                    className="btn-neon text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                    className="btn-neon text-white font-bold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2">
                     Далее <Icon name="ArrowRight" size={16} />
                   </button>
                 </div>
@@ -530,7 +530,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
             {/* ПАРАМЕТРЫ ЗАЙМА */}
             {/* ДАННЫЕ ОБ АВТО / ТОВАРЕ */}
             {activeSection === "item" && isTerm && (
-              <div className="glass rounded-2xl p-6 space-y-5">
+              <div className="glass rounded-2xl p-4 sm:p-6 space-y-5">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center shrink-0">
                     <Icon name={isCar ? "Car" : "ShoppingCart"} size={16} className="text-white" />
@@ -586,11 +586,11 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
                 )}
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setActiveSection("contacts")}
-                    className="glass text-emerald-950/60 font-semibold px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
+                    className="glass text-emerald-950/60 font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
                     <Icon name="ArrowLeft" size={16} /> Назад
                   </button>
                   <button type="button" onClick={() => setActiveSection("loan")}
-                    className="btn-neon text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                    className="btn-neon text-white font-bold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2">
                     Далее <Icon name="ArrowRight" size={16} />
                   </button>
                 </div>
@@ -598,7 +598,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
             )}
 
             {activeSection === "loan" && cardMode && (
-              <div className="glass rounded-2xl p-6 space-y-5">
+              <div className="glass rounded-2xl p-4 sm:p-6 space-y-5">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center shrink-0">
                     <Icon name="CreditCard" size={16} className="text-white" />
@@ -629,11 +629,11 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
                 </div>
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setActiveSection("contacts")}
-                    className="glass text-emerald-950/60 font-semibold px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
+                    className="glass text-emerald-950/60 font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
                     <Icon name="ArrowLeft" size={16} /> Назад
                   </button>
                   <button type="button" onClick={() => setActiveSection("docs")}
-                    className="btn-neon text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                    className="btn-neon text-white font-bold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2">
                     Далее <Icon name="ArrowRight" size={16} />
                   </button>
                 </div>
@@ -641,7 +641,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
             )}
 
             {activeSection === "loan" && isTerm && (
-              <div className="glass rounded-2xl p-6 space-y-5">
+              <div className="glass rounded-2xl p-4 sm:p-6 space-y-5">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center shrink-0">
                     <Icon name="Calculator" size={16} className="text-white" />
@@ -697,11 +697,11 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
                 <RateDisclaimer />
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setActiveSection("item")}
-                    className="glass text-emerald-950/60 font-semibold px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
+                    className="glass text-emerald-950/60 font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
                     <Icon name="ArrowLeft" size={16} /> Назад
                   </button>
                   <button type="button" onClick={() => setActiveSection("docs")}
-                    className="btn-neon text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                    className="btn-neon text-white font-bold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2">
                     Далее <Icon name="ArrowRight" size={16} />
                   </button>
                 </div>
@@ -709,7 +709,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
             )}
 
             {activeSection === "loan" && !cardMode && !isTerm && (
-              <div className="glass rounded-2xl p-6 space-y-5">
+              <div className="glass rounded-2xl p-4 sm:p-6 space-y-5">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center shrink-0">
                     <Icon name="Calculator" size={16} className="text-white" />
@@ -769,11 +769,11 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
                 <RateDisclaimer />
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setActiveSection("contacts")}
-                    className="glass text-emerald-950/60 font-semibold px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
+                    className="glass text-emerald-950/60 font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
                     <Icon name="ArrowLeft" size={16} /> Назад
                   </button>
                   <button type="button" onClick={() => setActiveSection("docs")}
-                    className="btn-neon text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                    className="btn-neon text-white font-bold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2">
                     Далее <Icon name="ArrowRight" size={16} />
                   </button>
                 </div>
@@ -782,7 +782,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
 
             {/* ДОКУМЕНТЫ */}
             {activeSection === "docs" && (
-              <div className="glass rounded-2xl p-6 space-y-5">
+              <div className="glass rounded-2xl p-4 sm:p-6 space-y-5">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center shrink-0">
                     <Icon name="FileImage" size={16} className="text-white" />
@@ -836,11 +836,11 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
 
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setActiveSection("loan")}
-                    className="glass text-emerald-950/60 font-semibold px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
+                    className="glass text-emerald-950/60 font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2 hover:text-emerald-950 transition-colors">
                     <Icon name="ArrowLeft" size={16} /> Назад
                   </button>
                   <button type="submit" disabled={sending}
-                    className="btn-neon text-white font-bold px-8 py-3 rounded-xl flex items-center gap-2 disabled:opacity-60">
+                    className="btn-neon text-white font-bold px-5 sm:px-8 py-3 rounded-xl flex items-center gap-2 disabled:opacity-60">
                     {sending
                       ? <><Icon name="Loader2" size={16} className="animate-spin" />{sendStep || "Отправляем..."}</>
                       : <><Icon name="Send" size={16} />Отправить заявку</>

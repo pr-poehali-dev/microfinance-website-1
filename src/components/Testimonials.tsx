@@ -92,7 +92,7 @@ function Testimonials() {
         {/* Сводная статистика */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-14 max-w-3xl mx-auto">
           {SUMMARY.map((s) => (
-            <div key={s.label} className="glass card-hover rounded-2xl p-6 text-center">
+            <div key={s.label} className="glass card-hover rounded-2xl p-4 sm:p-6 text-center">
               <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-emerald-600/10 flex items-center justify-center">
                 <Icon name={s.icon} size={22} className="text-emerald-600" />
               </div>
@@ -105,7 +105,7 @@ function Testimonials() {
         {/* Карточки отзывов */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {REVIEWS.map((r) => (
-            <div key={r.name} className="glass card-hover rounded-3xl p-6 flex flex-col">
+            <div key={r.name} className="glass card-hover rounded-3xl p-4 sm:p-6 flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <Stars count={r.rating} />
                 <Icon name="Quote" size={22} className="text-emerald-200" />

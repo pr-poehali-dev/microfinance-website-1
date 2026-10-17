@@ -70,7 +70,7 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
     return (
       <div className="glass rounded-2xl overflow-hidden mb-6"
         style={{ border: "1px solid rgba(74,222,128,0.4)", background: "rgba(74,222,128,0.04)" }}>
-        <div className="px-6 py-5 flex items-center gap-3">
+        <div className="px-4 sm:px-6 py-5 flex items-center gap-3">
           <Icon name="CheckCircle" size={24} className="text-green-400 shrink-0" />
           <div>
             <div className="text-emerald-950 font-bold">Заявка отправлена!</div>
@@ -85,7 +85,7 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
     return (
       <div className="glass rounded-2xl overflow-hidden mb-6"
         style={{ border: "1px solid rgba(16,185,129,0.35)", background: "rgba(16,185,129,0.04)" }}>
-        <div className="px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
+        <div className="px-4 sm:px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(16,185,129,0.2)" }}>
               <Icon name="RefreshCw" size={20} className="text-emerald-600" />
@@ -97,7 +97,7 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
           </div>
           <button
             onClick={() => setOpen(true)}
-            className="btn-neon text-white font-semibold px-6 py-3 rounded-xl flex items-center gap-2"
+            className="btn-neon text-white font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2"
           >
             <Icon name="Plus" size={16} />
             Подать заявку
@@ -110,7 +110,7 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
   return (
     <div className="glass rounded-2xl overflow-hidden mb-6"
       style={{ border: "1px solid rgba(16,185,129,0.4)", background: "rgba(16,185,129,0.04)" }}>
-      <div className="px-6 py-4 flex items-center justify-between gap-3"
+      <div className="px-4 sm:px-6 py-4 flex items-center justify-between gap-3"
         style={{ background: "linear-gradient(135deg,rgba(16,185,129,0.25),rgba(20,184,166,0.08))" }}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(16,185,129,0.2)" }}>
@@ -124,7 +124,7 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
       </div>
 
       {editingProfile && profile ? (
-        <div className="px-6 py-5">
+        <div className="px-4 sm:px-6 py-5">
           <ProfileEditForm
             profile={profile}
             phone={phone}
@@ -133,7 +133,7 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
           />
         </div>
       ) : (
-      <div className="px-6 py-5 space-y-5">
+      <div className="px-4 sm:px-6 py-5 space-y-5">
         {/* Проверка данных */}
         <div className="rounded-xl px-4 py-3 space-y-2" style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.08)" }}>
           <div className="text-emerald-950/40 text-xs uppercase tracking-wider mb-1">Проверьте свои данные</div>

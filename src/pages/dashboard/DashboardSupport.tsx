@@ -3,7 +3,7 @@ import Icon from "@/components/ui/icon";
 export default function DashboardSupport() {
   return (
     <>
-      <div className="mt-8 glass rounded-2xl p-6" style={{ border: "1px solid rgba(16,185,129,0.2)" }}>
+      <div className="mt-8 glass rounded-2xl p-4 sm:p-6" style={{ border: "1px solid rgba(16,185,129,0.2)" }}>
         <h3 className="font-oswald text-lg font-bold text-emerald-950 mb-4">Нужна помощь?</h3>
         <div className="grid sm:grid-cols-3 gap-3">
           <a href="tel:+79962019500"

@@ -17,7 +17,7 @@ const fmt = (n: number) => `${Math.round(n).toLocaleString("ru-RU")} ₽`;
 export default function TermLoanHistoryCard({ title, icon, number, amount, months, total, payments, contractUrl }: Props) {
   return (
     <div className="glass rounded-2xl overflow-hidden mb-6" style={{ border: "1px solid rgba(45,212,191,0.4)", background: "rgba(45,212,191,0.04)" }}>
-      <div className="px-6 py-4 flex items-center gap-3" style={{ background: "linear-gradient(135deg,rgba(16,185,129,0.25),rgba(45,212,191,0.08))" }}>
+      <div className="px-4 sm:px-6 py-4 flex items-center gap-3" style={{ background: "linear-gradient(135deg,rgba(16,185,129,0.25),rgba(45,212,191,0.08))" }}>
         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(45,212,191,0.2)" }}>
           <Icon name={icon} size={20} className="text-teal-600" />
         </div>
@@ -27,7 +27,7 @@ export default function TermLoanHistoryCard({ title, icon, number, amount, month
         </div>
         <span className="text-xs px-3 py-1 rounded-full font-semibold" style={{ background: "rgba(45,212,191,0.2)", color: "#0d9488" }}>Погашен ✔️</span>
       </div>
-      <div className="px-6 py-4 space-y-2">
+      <div className="px-4 sm:px-6 py-4 space-y-2">
         {payments.length === 0 ? (
           <div className="text-emerald-950/40 text-xs">Платежей в истории нет</div>
         ) : payments.map((p, i) => (

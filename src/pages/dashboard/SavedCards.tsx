@@ -93,9 +93,9 @@ export default function SavedCards() {
       )}
 
       {loading ? (
-        <div className="glass rounded-2xl p-6 text-center text-emerald-950/50 text-sm">Загружаем карты...</div>
+        <div className="glass rounded-2xl p-4 sm:p-6 text-center text-emerald-950/50 text-sm">Загружаем карты...</div>
       ) : cards.length === 0 ? (
-        <div className="glass rounded-2xl p-6 text-center text-emerald-950/50 text-sm">
+        <div className="glass rounded-2xl p-4 sm:p-6 text-center text-emerald-950/50 text-sm">
           Реквизитов пока нет. Номер СБП и банк, которые вы укажете при оформлении займа, появятся здесь автоматически.
         </div>
       ) : (

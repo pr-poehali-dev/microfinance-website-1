@@ -118,7 +118,7 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
             </div>
 
             {/* Одобрение 100% — крупный баннер */}
-            <div className="mb-6 inline-flex items-center gap-3 px-6 py-3 rounded-2xl"
+            <div className="mb-6 inline-flex items-center gap-3 px-4 sm:px-6 py-3 rounded-2xl"
               style={{
                 background: "linear-gradient(135deg, rgba(16,185,129,0.15), rgba(20,184,166,0.08))",
                 border: "1px solid rgba(16,185,129,0.4)",
@@ -134,7 +134,7 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
               </div>
             </div>
 
-            <h1 className="font-oswald text-5xl md:text-7xl font-bold leading-tight text-emerald-950 mb-6">
+            <h1 className="font-oswald text-4xl sm:text-5xl md:text-7xl font-bold leading-tight text-emerald-950 mb-6">
               ДЕНЬГИ<br />
               <span className="gradient-text">ЗА 15 МИНУТ</span>
             </h1>
@@ -146,13 +146,13 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
             <div className="flex flex-wrap gap-4">
               <button
                 onClick={() => navigate("/apply")}
-                className="btn-neon text-white font-bold px-8 py-4 rounded-2xl text-lg"
+                className="btn-neon text-white font-bold px-5 sm:px-8 py-4 rounded-2xl text-lg"
               >
                 Оформить займ
               </button>
               <button
                 onClick={() => navigate("/credit-doctor")}
-                className="text-white font-bold px-8 py-4 rounded-2xl text-lg flex items-center gap-2 transition-all hover:opacity-90"
+                className="text-white font-bold px-5 sm:px-8 py-4 rounded-2xl text-lg flex items-center gap-2 transition-all hover:opacity-90"
                 style={{ background: "linear-gradient(135deg,#be123c,#f43f5e)", boxShadow: "0 4px 20px rgba(244,63,94,0.3)" }}
               >
                 <Icon name="HeartPulse" size={20} />
@@ -160,7 +160,7 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
               </button>
               <button
                 onClick={() => scrollTo("#reviews")}
-                className="glass text-emerald-950 font-semibold px-8 py-4 rounded-2xl text-lg hover:bg-emerald-50 transition-all"
+                className="glass text-emerald-950 font-semibold px-5 sm:px-8 py-4 rounded-2xl text-lg hover:bg-emerald-50 transition-all"
               >
                 Отзывы клиентов
               </button>
@@ -207,7 +207,7 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {ADVANTAGES.map((a) => (
-              <div key={a.label} className="glass card-hover rounded-2xl p-6 text-center">
+              <div key={a.label} className="glass card-hover rounded-2xl p-4 sm:p-6 text-center">
                 <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-emerald-600/10 flex items-center justify-center">
                   <Icon name={a.icon} size={22} className="text-emerald-600" />
                 </div>
@@ -281,7 +281,7 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {SERVICES.map((s) => (
               <div key={s.title} className="glass card-hover rounded-3xl overflow-hidden">
-                <div className={`bg-gradient-to-br ${s.color} p-6`}>
+                <div className={`bg-gradient-to-br ${s.color} p-4 sm:p-6`}>
                   <div className="flex justify-between items-start">
                     <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                       <Icon name={s.icon} size={24} className="text-white" />
@@ -292,7 +292,7 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
                   </div>
                   <h3 className="font-oswald text-2xl font-bold text-white mt-4">{s.title}</h3>
                 </div>
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   <p className="text-emerald-950/60 text-sm mb-5 leading-relaxed">{s.desc}</p>
                   <div className="flex justify-between mb-5">
                     <div>

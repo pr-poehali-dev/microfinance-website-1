@@ -22,7 +22,7 @@ export default function DashboardSidebar({ active, onChange }: Props) {
     <aside className="md:w-60 shrink-0">
       <div className="md:sticky md:top-28">
         <div className="hidden md:block font-oswald text-lg font-bold text-emerald-950 mb-3 px-2">Личный кабинет</div>
-        <nav className="flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0">
+        <nav className="flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 -mx-3 px-3 sm:-mx-4 sm:px-4 md:mx-0 md:px-0 snap-x" style={{ scrollbarWidth: "none" }}>
           {ITEMS.map((it) => {
             const on = it.key === active;
             return (
@@ -30,7 +30,7 @@ export default function DashboardSidebar({ active, onChange }: Props) {
                 key={it.key}
                 type="button"
                 onClick={() => onChange(it.key)}
-                className={`flex items-center gap-3 whitespace-nowrap rounded-xl px-4 py-3 text-sm font-semibold transition-colors text-left ${on ? "btn-neon text-white" : "glass text-emerald-950/70 hover:text-emerald-950"}`}
+                className={`flex items-center gap-2 sm:gap-3 whitespace-nowrap shrink-0 snap-start rounded-xl px-3 sm:px-4 py-3 text-sm font-semibold transition-colors text-left ${on ? "btn-neon text-white" : "glass text-emerald-950/70 hover:text-emerald-950"}`}
               >
                 <Icon name={it.icon} size={18} />
                 {it.label}

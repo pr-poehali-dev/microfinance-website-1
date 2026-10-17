@@ -171,11 +171,11 @@ export default function ProfileEditForm({ profile, phone, onSaved, onCancel }: P
         </div>
       )}
       <div className="flex gap-3">
-        <button onClick={save} disabled={saving} className="btn-neon text-white font-semibold px-6 py-3 rounded-xl flex items-center gap-2 disabled:opacity-60">
+        <button onClick={save} disabled={saving} className="btn-neon text-white font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2 disabled:opacity-60">
           {saving ? <Icon name="Loader2" size={16} className="animate-spin" /> : <Icon name="Save" size={16} />}
           Сохранить анкету
         </button>
-        <button onClick={onCancel} className="glass text-emerald-950/60 font-semibold px-6 py-3 rounded-xl">Отмена</button>
+        <button onClick={onCancel} className="glass text-emerald-950/60 font-semibold px-4 sm:px-6 py-3 rounded-xl">Отмена</button>
       </div>
     </div>
   );

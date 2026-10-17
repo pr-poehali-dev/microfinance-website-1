@@ -548,12 +548,12 @@ export default function DashboardPage() {
         />
       )}
 
-      <div className="max-w-6xl mx-auto px-4 pt-28 pb-16">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 pt-20 sm:pt-28 pb-16">
 
         {/* ПРИВЕТСТВИЕ */}
         {user && (
-          <div className="glass rounded-2xl p-6 mb-6 flex items-center gap-4">
-            <div className="w-14 h-14 btn-neon rounded-2xl flex items-center justify-center shrink-0">
+          <div className="glass rounded-2xl p-4 sm:p-6 mb-6 flex items-center gap-3 sm:gap-4">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 btn-neon rounded-2xl flex items-center justify-center shrink-0">
               <Icon name="User" size={24} className="text-white" />
             </div>
             <div>
@@ -791,7 +791,7 @@ export default function DashboardPage() {
                       style={{ background: "rgba(20,184,166,0.08)", border: "1px solid rgba(20,184,166,0.25)" }}>
                       {!shopTimerDone ? (
                         <>
-                          <div className="font-oswald text-5xl font-bold mb-2"
+                          <div className="font-oswald text-4xl sm:text-5xl font-bold mb-2"
                             style={{ color: "#0d9488", textShadow: "0 0 24px rgba(20,184,166,0.5)" }}>
                             {`${Math.floor(shopTimer/60).toString().padStart(2,"0")}:${(shopTimer%60).toString().padStart(2,"0")}`}
                           </div>
@@ -894,7 +894,7 @@ export default function DashboardPage() {
                               const remaining = Math.max(0, totalDue - (shopLoan.paidTotal || 0));
                               setPayOther({ contractNumber: `Т-${String(shopLoan.id).padStart(12, "0")}`, amount: remaining, loanType: "shoploan", loanId: shopLoan.id });
                             }}
-                            className="w-full text-white font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2"
+                            className="w-full text-white font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center justify-center gap-2"
                             style={{ background: "linear-gradient(135deg,#14b8a6,#06b6d4)" }}
                           >
                             <Icon name="Banknote" size={16} />
@@ -904,7 +904,7 @@ export default function DashboardPage() {
                         {shopLoan.status === "approved" && shopLoan.earlyPayoff && (
                           <button
                             onClick={() => setPayOther({ contractNumber: `Т-${String(shopLoan.id).padStart(12, "0")}`, amount: shopLoan.earlyPayoff?.remaining ?? 0, loanType: "shoploan", loanId: shopLoan.id, early: true })}
-                            className="w-full font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2"
+                            className="w-full font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center justify-center gap-2"
                             style={{ background: "rgba(16,185,129,0.15)", color: "#047857", border: "1px solid rgba(16,185,129,0.4)" }}
                           >
                             <Icon name="Zap" size={16} />
@@ -997,7 +997,7 @@ export default function DashboardPage() {
                       style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
                       {!carTimerDone ? (
                         <>
-                          <div className="font-oswald text-5xl font-bold mb-2"
+                          <div className="font-oswald text-4xl sm:text-5xl font-bold mb-2"
                             style={{ color: "#dc2626", textShadow: "0 0 24px rgba(239,68,68,0.5)" }}>
                             {`${Math.floor(carTimer/60).toString().padStart(2,"0")}:${(carTimer%60).toString().padStart(2,"0")}`}
                           </div>
@@ -1065,7 +1065,7 @@ export default function DashboardPage() {
                               const remaining = Math.max(0, totalDue - (carLoan.paidTotal || 0));
                               setPayOther({ contractNumber: `А-${String(carLoan.id).padStart(12, "0")}`, amount: remaining, loanType: "carloan", loanId: carLoan.id });
                             }}
-                            className="w-full text-white font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2"
+                            className="w-full text-white font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center justify-center gap-2"
                             style={{ background: "linear-gradient(135deg,#ef4444,#ef4444)" }}
                           >
                             <Icon name="Banknote" size={16} />
@@ -1075,7 +1075,7 @@ export default function DashboardPage() {
                         {carLoan.status === "approved" && carLoan.earlyPayoff && (
                           <button
                             onClick={() => setPayOther({ contractNumber: `А-${String(carLoan.id).padStart(12, "0")}`, amount: carLoan.earlyPayoff?.remaining ?? 0, loanType: "carloan", loanId: carLoan.id, early: true })}
-                            className="w-full font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2"
+                            className="w-full font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center justify-center gap-2"
                             style={{ background: "rgba(16,185,129,0.15)", color: "#047857", border: "1px solid rgba(16,185,129,0.4)" }}
                           >
                             <Icon name="Zap" size={16} />
@@ -1163,7 +1163,7 @@ export default function DashboardPage() {
         )}
 
         {section === "docs" && !loading && !error && (
-          <div className="glass rounded-2xl p-6 mb-6">
+          <div className="glass rounded-2xl p-4 sm:p-6 mb-6">
             <h2 className="font-oswald text-2xl font-bold text-emerald-950 mb-4">Документы</h2>
             {(() => {
               const docs = [

@@ -32,7 +32,7 @@ export default function PromoCodeCard({ promo, onApplied }: Props) {
 
   return (
     <div className="glass rounded-2xl overflow-hidden mb-6" style={{ border: "1px solid rgba(16,185,129,0.35)" }}>
-      <div className="px-6 py-5">
+      <div className="px-4 sm:px-6 py-5">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(16,185,129,0.2)" }}>
             <Icon name="Ticket" size={20} className="text-emerald-600" />

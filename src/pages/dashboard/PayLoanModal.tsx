@@ -19,7 +19,7 @@ export default function PayLoanModal({ amount, contractNumber, loanType, loanId,
       onClick={onClose}>
       <div className="glass" style={{ borderRadius: 20, padding: 0, width: "100%", maxWidth: 440, overflow: "hidden", border: "1px solid rgba(16,185,129,0.4)", background: "#ffffff" }}
         onClick={(e) => e.stopPropagation()}>
-        <div className="px-6 py-5 flex items-center justify-between"
+        <div className="px-4 sm:px-6 py-5 flex items-center justify-between"
           style={{ background: "linear-gradient(135deg,rgba(16,185,129,0.3),rgba(20,184,166,0.1))" }}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(16,185,129,0.3)" }}>
@@ -35,7 +35,7 @@ export default function PayLoanModal({ amount, contractNumber, loanType, loanId,
           </button>
         </div>
 
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-4 sm:px-6 py-5 space-y-4">
           <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>
             <span className="text-emerald-950/50 text-sm">Сумма к оплате</span>
             <span className="font-bold text-2xl gradient-text">{amount.toLocaleString("ru-RU")} ₽</span>

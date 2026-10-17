@@ -166,7 +166,7 @@ export default function DashboardApplicationStatus({
           {loans.filter((l) => l.status === "review" && !l.signed && l.offer).map((loan) => (
             <div key={loan.id} className="glass rounded-2xl overflow-hidden"
               style={{ border: "1px solid rgba(14,165,233,0.4)", background: "rgba(14,165,233,0.04)" }}>
-              <div className="px-6 py-4 flex items-center gap-3" style={{ background: "linear-gradient(135deg,rgba(14,165,233,0.2),rgba(56,189,248,0.08))" }}>
+              <div className="px-4 sm:px-6 py-4 flex items-center gap-3" style={{ background: "linear-gradient(135deg,rgba(14,165,233,0.2),rgba(56,189,248,0.08))" }}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(14,165,233,0.25)" }}>
                   <Icon name="FileSignature" size={18} className="text-sky-400" />
                 </div>
@@ -177,7 +177,7 @@ export default function DashboardApplicationStatus({
                 <span className="text-xs px-3 py-1 rounded-full font-semibold animate-pulse"
                   style={{ background: "rgba(14,165,233,0.2)", color: "#38bdf8" }}>Ожидает подписи</span>
               </div>
-              <div className="px-6 py-5">
+              <div className="px-4 sm:px-6 py-5">
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   {[
                     { label: "Одобренная сумма", value: `${loan.offer!.amount.toLocaleString("ru-RU")} ₽`, big: true },
@@ -225,7 +225,7 @@ export default function DashboardApplicationStatus({
       {application?.videoCallRequested && application.status === "pending" && !(application.virtualCardOwn !== false && application.virtualCard && application.virtualCard.status !== "none") && (
         <div className="glass rounded-2xl overflow-hidden mb-6"
           style={{ border: "1px solid rgba(56,189,248,0.4)", background: "rgba(56,189,248,0.04)" }}>
-          <div className="px-6 py-5 flex items-center gap-4">
+          <div className="px-4 sm:px-6 py-5 flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
               style={{ background: "rgba(56,189,248,0.2)" }}>
               <Icon name="Video" size={22} className="text-sky-400" />
@@ -242,7 +242,7 @@ export default function DashboardApplicationStatus({
       {application && application.status === "pending" && !(application.virtualCardOwn !== false && application.virtualCard && application.virtualCard.status !== "none") && (
         <div className="glass rounded-2xl overflow-hidden mb-6"
           style={{ border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.04)" }}>
-          <div className="px-6 py-4 flex items-center gap-3"
+          <div className="px-4 sm:px-6 py-4 flex items-center gap-3"
             style={{ background: "linear-gradient(135deg,rgba(239,68,68,0.2),rgba(239,68,68,0.05))" }}>
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
               style={{ background: "rgba(239,68,68,0.2)" }}>
@@ -265,10 +265,10 @@ export default function DashboardApplicationStatus({
             <span className="text-xs px-3 py-1 rounded-full font-semibold"
               style={{ background: "rgba(239,68,68,0.2)", color: "#dc2626" }}>На рассмотрении</span>
           </div>
-          <div className="px-6 py-8 flex flex-col items-center text-center">
+          <div className="px-4 sm:px-6 py-8 flex flex-col items-center text-center">
             {!timerDone ? (
               <>
-                <div className="font-oswald text-6xl font-bold mb-3"
+                <div className="font-oswald text-5xl sm:text-6xl font-bold mb-3"
                   style={{ color: "#dc2626", textShadow: "0 0 30px rgba(239,68,68,0.4)" }}>
                   {fmtTimer(timerSec)}
                 </div>
@@ -292,7 +292,7 @@ export default function DashboardApplicationStatus({
       {application && application.status === "partner_card" && mainLoan(loans)?.status !== "paid" && (
         <div className="glass rounded-2xl overflow-hidden mb-6"
           style={{ border: "1px solid rgba(20,184,166,0.4)", background: "rgba(20,184,166,0.03)" }}>
-          <div className="px-6 py-4 flex items-center gap-3"
+          <div className="px-4 sm:px-6 py-4 flex items-center gap-3"
             style={{ background: "linear-gradient(135deg,rgba(16,185,129,0.3),rgba(20,184,166,0.1))" }}>
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
               style={{ background: "rgba(20,184,166,0.2)" }}>
@@ -313,12 +313,12 @@ export default function DashboardApplicationStatus({
             <span className="text-xs px-3 py-1 rounded-full font-semibold"
               style={{ background: "rgba(20,184,166,0.2)", color: "#0f766e" }}>Одобрено</span>
           </div>
-          <div className="px-6 py-6 space-y-5">
+          <div className="px-4 sm:px-6 py-6 space-y-5">
             {application.approvedAmount && (
               <div className="rounded-xl p-4"
                 style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>
                 <div className="text-emerald-700 text-xs font-semibold uppercase tracking-wider mb-3">Условия вашего займа</div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   <div className="rounded-lg p-3 text-center" style={{ background: "rgba(16,185,129,0.05)" }}>
                     <div className="text-emerald-950/40 text-xs mb-1">Сумма</div>
                     <div className="text-emerald-950 font-bold">{application.approvedAmount.toLocaleString("ru-RU")} ₽</div>
@@ -471,7 +471,7 @@ export default function DashboardApplicationStatus({
       {application && application.status === "approved" && mainLoan(loans)?.status !== "paid" && (
         <div className="glass rounded-2xl overflow-hidden mb-6"
           style={{ border: "1px solid rgba(74,222,128,0.4)", background: "rgba(74,222,128,0.03)" }}>
-          <div className="px-6 py-4 flex items-center gap-3"
+          <div className="px-4 sm:px-6 py-4 flex items-center gap-3"
             style={{ background: "linear-gradient(135deg,rgba(22,163,74,0.25),rgba(74,222,128,0.08))" }}>
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
               style={{ background: "rgba(74,222,128,0.2)" }}>
@@ -492,7 +492,7 @@ export default function DashboardApplicationStatus({
             <span className="text-xs px-3 py-1 rounded-full font-semibold"
               style={{ background: "rgba(74,222,128,0.2)", color: "#4ade80" }}>Одобрено</span>
           </div>
-          <div className="px-6 py-5 space-y-4">
+          <div className="px-4 sm:px-6 py-5 space-y-4">
             {/* Условия займа */}
             <div className="grid grid-cols-2 gap-3">
               {[
@@ -647,7 +647,7 @@ export default function DashboardApplicationStatus({
       {application && application.status === "rejected" && (
         <div className="glass rounded-2xl overflow-hidden mb-6"
           style={{ border: "1px solid rgba(239,68,68,0.4)", background: "rgba(239,68,68,0.03)" }}>
-          <div className="px-6 py-4 flex items-center gap-3"
+          <div className="px-4 sm:px-6 py-4 flex items-center gap-3"
             style={{ background: "linear-gradient(135deg,rgba(220,38,38,0.25),rgba(239,68,68,0.08))" }}>
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
               style={{ background: "rgba(239,68,68,0.2)" }}>
@@ -668,7 +668,7 @@ export default function DashboardApplicationStatus({
             <span className="text-xs px-3 py-1 rounded-full font-semibold"
               style={{ background: "rgba(239,68,68,0.2)", color: "#dc2626" }}>Отказ</span>
           </div>
-          <div className="px-6 py-5 space-y-3">
+          <div className="px-4 sm:px-6 py-5 space-y-3">
             {application.rejectReason && (
               <div className="rounded-xl px-4 py-3"
                 style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
@@ -691,7 +691,7 @@ export default function DashboardApplicationStatus({
                 <p className="text-emerald-950/40 text-sm">Вы можете подать повторную заявку или связаться с нами для уточнения деталей.</p>
                 <button
                   onClick={() => navigate("/")}
-                  className="btn-neon text-white font-semibold px-6 py-3 rounded-xl flex items-center gap-2 w-full justify-center"
+                  className="btn-neon text-white font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2 w-full justify-center"
                 >
                   <Icon name="RefreshCw" size={16} />
                   Подать новую заявку
@@ -712,7 +712,7 @@ export default function DashboardApplicationStatus({
           {application.virtualCard.status === "pending" && !cardActivated && (
             <div className="glass rounded-2xl overflow-hidden"
               style={{ border: "1px solid rgba(20,184,166,0.5)", background: "rgba(16,185,129,0.04)" }}>
-              <div className="px-6 py-4 flex items-center gap-3"
+              <div className="px-4 sm:px-6 py-4 flex items-center gap-3"
                 style={{ background: "linear-gradient(135deg,rgba(16,185,129,0.3),rgba(20,184,166,0.1))" }}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                   style={{ background: "rgba(20,184,166,0.25)" }}>
@@ -725,7 +725,7 @@ export default function DashboardApplicationStatus({
                 <span className="text-xs px-3 py-1 rounded-full font-semibold animate-pulse"
                   style={{ background: "rgba(20,184,166,0.2)", color: "#0f766e" }}>Одобрено</span>
               </div>
-              <div className="px-6 py-5 space-y-4">
+              <div className="px-4 sm:px-6 py-5 space-y-4">
                 {/* Карта-превью */}
                 <div className="rounded-2xl p-5 relative overflow-hidden"
                   style={{ background: "linear-gradient(135deg,#4c1d95,#10b981,#14b8a6)", boxShadow: "0 8px 32px rgba(16,185,129,0.4)" }}>
@@ -753,7 +753,7 @@ export default function DashboardApplicationStatus({
                   </div>
                 </div>
                 {/* Условия */}
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   {[
                     { label: "Сумма и лимит", value: `${application.virtualCard.limit.toLocaleString("ru-RU")} ₽`, color: "#059669" },
                     { label: "Ставка", value: `${application.virtualCard.rate}% / нед.`, color: "#022c22" },
@@ -794,7 +794,7 @@ export default function DashboardApplicationStatus({
           {(application.virtualCard.status === "active" || cardActivated) && (
             <div className="glass rounded-2xl overflow-hidden"
               style={{ border: "1px solid rgba(74,222,128,0.4)", background: "rgba(74,222,128,0.03)" }}>
-              <div className="px-6 py-4 flex items-center gap-3"
+              <div className="px-4 sm:px-6 py-4 flex items-center gap-3"
                 style={{ background: "linear-gradient(135deg,rgba(22,163,74,0.25),rgba(74,222,128,0.08))" }}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                   style={{ background: "rgba(74,222,128,0.2)" }}>
@@ -807,7 +807,7 @@ export default function DashboardApplicationStatus({
                 <span className="text-xs px-3 py-1 rounded-full font-semibold"
                   style={{ background: "rgba(74,222,128,0.2)", color: "#15803d" }}>Активирована</span>
               </div>
-              <div className="px-6 py-5 space-y-4">
+              <div className="px-4 sm:px-6 py-5 space-y-4">
                 {/* Карта с данными */}
                 <div className="rounded-2xl p-5 relative overflow-hidden select-none"
                   style={{ background: "linear-gradient(135deg,#14532d,#15803d,#16a34a)", boxShadow: "0 8px 32px rgba(22,163,74,0.35)" }}>
@@ -845,7 +845,7 @@ export default function DashboardApplicationStatus({
                   </div>
                 </div>
                 {/* Лимит, доступный остаток и ставка */}
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   {[
                     { label: "Лимит карты", value: `${application.virtualCard.limit.toLocaleString("ru-RU")} ₽`, color: "#065f46" },
                     { label: "Доступно", value: `${application.virtualCard.available.toLocaleString("ru-RU")} ₽`, color: "#4ade80" },

@@ -45,7 +45,7 @@ export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectR
     return (
       <div className="glass rounded-2xl overflow-hidden mb-6"
         style={{ border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.04)" }}>
-        <div className="px-6 py-5 flex items-center gap-4">
+        <div className="px-4 sm:px-6 py-5 flex items-center gap-4">
           <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(239,68,68,0.2)" }}>
             <Icon name="Clock" size={20} className="text-red-600" />
           </div>
@@ -61,7 +61,7 @@ export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectR
   return (
     <div className="glass rounded-2xl overflow-hidden mb-6"
       style={{ border: "1px solid rgba(16,185,129,0.35)", background: "rgba(16,185,129,0.04)" }}>
-      <div className="px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
+      <div className="px-4 sm:px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(16,185,129,0.2)" }}>
             <Icon name="CreditCard" size={20} className="text-emerald-600" />
@@ -79,14 +79,14 @@ export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectR
         <button
           onClick={() => (profile ? setOpen(!open) : submit())}
           disabled={sending}
-          className="btn-neon text-white font-semibold px-6 py-3 rounded-xl flex items-center gap-2 disabled:opacity-60"
+          className="btn-neon text-white font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2 disabled:opacity-60"
         >
           {sending ? <Icon name="Loader2" size={16} className="animate-spin" /> : <Icon name="Send" size={16} />}
           {sending ? "Отправляем..." : open ? "Свернуть" : "Подать заявку на карту"}
         </button>
       </div>
       {open && profile && (
-        <div className="px-6 pb-5 space-y-3">
+        <div className="px-4 sm:px-6 pb-5 space-y-3">
           <ProfileCheck profile={profile} phone={phone} editable={profileEditable} onSaved={() => onProfileSaved?.()} />
           <button onClick={submit} disabled={sending}
             className="w-full btn-neon text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 disabled:opacity-60">
@@ -95,7 +95,7 @@ export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectR
         </div>
       )}
       {error && (
-        <div className="px-6 pb-5">
+        <div className="px-4 sm:px-6 pb-5">
           <div className="rounded-xl px-4 py-3 text-sm font-medium" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#dc2626" }}>
             {error}
           </div>
