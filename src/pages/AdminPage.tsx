@@ -92,7 +92,7 @@ export default function AdminPage() {
   useEffect(() => { if (token) { loadApps(); loadUsers(); } }, []);
 
   const [loanNotices, setLoanNotices] = useState(0);
-  const [waiting, setWaiting] = useState({ apps: 0, car: 0, shop: 0, cardReq: 0 });
+  const [waiting, setWaiting] = useState({ apps: 0, car: 0, shop: 0, cardReq: 0, ident: 0 });
 
   const [countsReady, setCountsReady] = useState(false);
   const totalWaiting = waiting.apps + waiting.car + waiting.shop + waiting.cardReq + cardNotices + loanNotices;
@@ -108,7 +108,7 @@ export default function AdminPage() {
     if (!token) return;
     fetch(`${ADMIN_URL}?sub=card_notices_count`, { headers: hdrs() })
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d) { setCardNotices(d.count || 0); setLoanNotices(d.loanCount || 0); setWaiting({ apps: d.appsWaiting || 0, car: d.carWaiting || 0, shop: d.shopWaiting || 0, cardReq: d.cardRequestsWaiting || 0 }); setCountsReady(true); } })
+      .then(d => { if (d) { setCardNotices(d.count || 0); setLoanNotices(d.loanCount || 0); setWaiting({ apps: d.appsWaiting || 0, car: d.carWaiting || 0, shop: d.shopWaiting || 0, cardReq: d.cardRequestsWaiting || 0, ident: d.identWaiting || 0 }); setCountsReady(true); } })
       .catch(() => {});
   };
 
@@ -334,6 +334,11 @@ export default function AdminPage() {
             background: tab === "apps" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "apps" ? "white" : "rgba(2,44,34,0.5)" }}>
           Заявки
           <WaitBadge n={waiting.apps} />
+          {waiting.ident > 0 && (
+            <span title="Ждут идентификации карты партнёра" style={{ background: "#f59e0b", color: "#ffffff", borderRadius: 20, padding: "1px 8px", fontSize: 12, fontWeight: 700, animation: "admin-waiting-pulse 1.6s ease-in-out infinite" }}>
+              🪪 {waiting.ident}
+            </span>
+          )}
         </button>
         <button onClick={() => setTab("clients")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14,

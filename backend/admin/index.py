@@ -2465,6 +2465,9 @@ def handler(event: dict, context) -> dict:
             WHERE a.status IN ('approved','partner_card') AND l.signed = TRUE AND l.disbursed_at IS NULL
         """)
         apps_wait += cur.fetchone()[0]
+        cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.applications WHERE status = 'partner_card' AND partner_card_status = 'pending'")
+        ident_wait = cur.fetchone()[0]
+        apps_wait += ident_wait
         cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.car_loan_applications WHERE status = 'pending' OR (status = 'approved' AND contract_signed = TRUE AND disbursed_at IS NULL)")
         car_wait = cur.fetchone()[0]
         cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.shopping_loan_applications WHERE status = 'pending' OR (status = 'approved' AND contract_signed = TRUE AND disbursed_at IS NULL)")
@@ -2476,6 +2479,7 @@ def handler(event: dict, context) -> dict:
             "count": int(cnt), "loanCount": int(loan_cnt),
             "appsWaiting": int(apps_wait), "carWaiting": int(car_wait),
             "shopWaiting": int(shop_wait), "cardRequestsWaiting": int(card_req_wait),
+            "identWaiting": int(ident_wait),
         })}
 
     # --- ДОПСОГЛАШЕНИЕ: РАЗОСЛАТЬ (POST) / СТАТИСТИКА (GET), sub='addendum' ---
