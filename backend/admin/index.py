@@ -169,6 +169,38 @@ def check_admin_token(cur, token: str) -> bool:
     )
     return cur.fetchone() is not None
 
+MAX_FAILS = 5
+LOCK_MINUTES = 15
+
+
+def lock_left(cur, key):
+    """Сколько минут осталось до конца блокировки (0 — не заблокирован)."""
+    k = key.replace("'", "''")
+    cur.execute(f"SELECT CEIL(EXTRACT(EPOCH FROM (locked_until - NOW())) / 60) FROM {SCHEMA}.login_attempts WHERE key = '{k}' AND locked_until > NOW()")
+    r = cur.fetchone()
+    return int(r[0]) if r else 0
+
+
+def register_fail(cur, key):
+    k = key.replace("'", "''")
+    cur.execute(
+        f"INSERT INTO {SCHEMA}.login_attempts (key, fails, updated_at) VALUES ('{k}', 1, NOW()) "
+        f"ON CONFLICT (key) DO UPDATE SET fails = CASE WHEN {SCHEMA}.login_attempts.updated_at < NOW() - INTERVAL '{LOCK_MINUTES} minutes' THEN 1 ELSE {SCHEMA}.login_attempts.fails + 1 END, updated_at = NOW()"
+    )
+    cur.execute(
+        f"UPDATE {SCHEMA}.login_attempts SET locked_until = NOW() + INTERVAL '{LOCK_MINUTES} minutes', fails = 0 "
+        f"WHERE key = '{k}' AND fails >= {MAX_FAILS}"
+    )
+
+
+def clear_fails(cur, key):
+    k = key.replace("'", "''")
+    cur.execute(f"DELETE FROM {SCHEMA}.login_attempts WHERE key = '{k}'")
+
+
+def client_ip(event):
+    return str(((event.get("requestContext") or {}).get("identity") or {}).get("sourceIp") or "unknown")
+
 
 def handler(event: dict, context) -> dict:
     """Панель администратора: авторизация и управление займами клиентов."""
@@ -193,9 +225,17 @@ def handler(event: dict, context) -> dict:
     if sub == "" and method == "POST" and body.get("action") == "login":
         password = body.get("password", "")
         admin_password = os.environ.get("ADMIN_PASSWORD", "")
-        if not admin_password or password != admin_password:
+        lkey = f"admin:{client_ip(event)}"
+        left = lock_left(cur, lkey)
+        if left:
+            cur.close(); conn.close()
+            return {"statusCode": 429, "headers": CORS, "body": json.dumps({"error": f"Слишком много неверных попыток. Попробуйте через {left} мин."}, ensure_ascii=False)}
+        if not admin_password or not secrets.compare_digest(str(password), admin_password):
+            register_fail(cur, lkey)
+            conn.commit()
             cur.close(); conn.close()
             return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Неверный пароль"})}
+        clear_fails(cur, lkey)
 
         tok = secrets.token_hex(32)
         cur.execute(

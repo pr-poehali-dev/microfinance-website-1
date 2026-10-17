@@ -23,6 +23,38 @@ CORS = {
     "Access-Control-Allow-Headers": "Content-Type",
 }
 
+MAX_FAILS = 5
+LOCK_MINUTES = 15
+
+
+def lock_left(cur, key):
+    """Сколько минут осталось до конца блокировки (0 — не заблокирован)."""
+    k = key.replace("'", "''")
+    cur.execute(f"SELECT CEIL(EXTRACT(EPOCH FROM (locked_until - NOW())) / 60) FROM {SCHEMA}.login_attempts WHERE key = '{k}' AND locked_until > NOW()")
+    r = cur.fetchone()
+    return int(r[0]) if r else 0
+
+
+def register_fail(cur, key):
+    k = key.replace("'", "''")
+    cur.execute(
+        f"INSERT INTO {SCHEMA}.login_attempts (key, fails, updated_at) VALUES ('{k}', 1, NOW()) "
+        f"ON CONFLICT (key) DO UPDATE SET fails = CASE WHEN {SCHEMA}.login_attempts.updated_at < NOW() - INTERVAL '{LOCK_MINUTES} minutes' THEN 1 ELSE {SCHEMA}.login_attempts.fails + 1 END, updated_at = NOW()"
+    )
+    cur.execute(
+        f"UPDATE {SCHEMA}.login_attempts SET locked_until = NOW() + INTERVAL '{LOCK_MINUTES} minutes', fails = 0 "
+        f"WHERE key = '{k}' AND fails >= {MAX_FAILS}"
+    )
+
+
+def clear_fails(cur, key):
+    k = key.replace("'", "''")
+    cur.execute(f"DELETE FROM {SCHEMA}.login_attempts WHERE key = '{k}'")
+
+
+def client_ip(event):
+    return str(((event.get("requestContext") or {}).get("identity") or {}).get("sourceIp") or "unknown")
+
 
 def get_conn():
     return psycopg2.connect(os.environ["DATABASE_URL"])
@@ -103,12 +135,20 @@ def handler(event: dict, context) -> dict:
         user_id = cur.fetchone()[0]
 
     elif action == "login":
+        lkey = f"user:{phone}:{client_ip(event)}"
+        left = lock_left(cur, lkey)
+        if left:
+            cur.close(); conn.close()
+            return {"statusCode": 429, "headers": CORS, "body": json.dumps({"error": f"Слишком много неверных попыток. Попробуйте через {left} мин."}, ensure_ascii=False)}
         pw_hash = hash_password(password)
         cur.execute(f"SELECT id, full_name, blocked_until FROM {SCHEMA}.users WHERE phone = '{phone}' AND password_hash = '{pw_hash}'")
         row = cur.fetchone()
         if not row:
+            register_fail(cur, lkey)
+            conn.commit()
             cur.close(); conn.close()
             return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Неверный номер телефона или пароль"})}
+        clear_fails(cur, lkey)
         if row[2] and row[2] > datetime.now():
             cur.close(); conn.close()
             until_str = msk(row[2]).strftime("%d.%m.%Y %H:%M")
