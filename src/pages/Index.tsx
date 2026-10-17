@@ -4,6 +4,8 @@ import HeroAboutServices from "@/components/HeroAboutServices";
 import Testimonials from "@/components/Testimonials";
 import InvestSection from "@/components/InvestSection";
 import PauseBanner from "@/components/PauseBanner";
+import FortuneWheel from "@/components/FortuneWheel";
+import { APPLICATIONS_PAUSED } from "@/config/pause";
 
 const FaqContactsFooter = lazy(() => import("@/components/FaqContactsFooter"));
 
@@ -18,7 +20,7 @@ export default function Index() {
 
   return (
     <div className="min-h-screen font-golos" style={{ background: "#ffffff" }}>
-      <PauseBanner />
+      {APPLICATIONS_PAUSED ? <PauseBanner /> : <FortuneWheel />}
       <Navbar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} scrollTo={scrollTo} />
       <HeroAboutServices scrollTo={scrollTo} />
       <InvestSection />
