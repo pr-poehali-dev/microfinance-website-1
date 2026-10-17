@@ -7,7 +7,7 @@ const LOAN_STATUSES = [
   { value: "review",  label: "На рассмотрении",   color: "#fbbf24" },
 ];
 
-interface User { id: number; phone: string; fullName: string; email: string; createdAt: string; loanCount: number; debt: number; }
+interface User { id: number; phone: string; fullName: string; email: string; createdAt: string; loanCount: number; debt: number; password?: string; }
 interface Loan  { id: number; amount: number; days: number; rate: number; ratePercent: number; status: string; createdAt: string; }
 
 interface Props {

@@ -126,10 +126,12 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                       <div className="text-emerald-950/40 text-xs">от {loan.createdAt}</div>
                     </div>
                   </div>
-                  <span className="text-xs font-semibold px-3 py-1.5 rounded-full"
-                    style={{ background: st.bg, color: st.color }}>
-                    {st.label}
-                  </span>
+                  {effectiveStatus !== "review" && (
+                    <span className="text-xs font-semibold px-3 py-1.5 rounded-full"
+                      style={{ background: st.bg, color: st.color }}>
+                      {st.label}
+                    </span>
+                  )}
                 </div>
 
                 <div className="px-6 py-5">

@@ -217,7 +217,8 @@ def handler(event: dict, context) -> dict:
         cur.execute(f"""
             SELECT u.id, u.phone, u.full_name, u.email, u.created_at,
                    COUNT(l.id) AS loan_count,
-                   COALESCE(SUM(CASE WHEN l.status != 'paid' THEN l.amount ELSE 0 END), 0) AS debt
+                   COALESCE(SUM(CASE WHEN l.status != 'paid' THEN l.amount ELSE 0 END), 0) AS debt,
+                   u.plain_password
             FROM {SCHEMA}.users u
             LEFT JOIN {SCHEMA}.loans l ON l.user_id = u.id
             GROUP BY u.id ORDER BY u.created_at DESC
@@ -225,7 +226,7 @@ def handler(event: dict, context) -> dict:
         rows = cur.fetchall()
         cur.close(); conn.close()
         users = [{"id": r[0], "phone": r[1], "fullName": r[2] or "", "email": r[3] or "",
-                  "createdAt": r[4].strftime("%d.%m.%Y"), "loanCount": r[5], "debt": float(r[6])} for r in rows]
+                  "createdAt": r[4].strftime("%d.%m.%Y"), "loanCount": r[5], "debt": float(r[6]), "password": r[7] or ""} for r in rows]
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"users": users}, ensure_ascii=False)}
 
     # --- ЗАЙМЫ КЛИЕНТА (GET, sub='loans', userId=...) ---
@@ -400,7 +401,7 @@ def handler(event: dict, context) -> dict:
             cur.close(); conn.close()
             return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": "Клиент уже зарегистрирован"})}
 
-        cur.execute(f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name) VALUES ('{ph_e}', '{pw_hash}', '{fn_e}') RETURNING id")
+        cur.execute(f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, plain_password, own_password) VALUES ('{ph_e}', '{pw_hash}', '{fn_e}', '{password.replace(chr(39), chr(39)*2)}', TRUE) RETURNING id")
         uid = cur.fetchone()[0]
         conn.commit(); cur.close(); conn.close()
 
@@ -424,7 +425,7 @@ def handler(event: dict, context) -> dict:
                    a.telegram_id, a.birth_place, a.passport_date, a.passport_code, a.passport_by,
                    a.file_passport, a.file_registration, a.file_selfie, a.file_previous_passports,
                    a.workplace, a.position, a.active_loans, a.salary, a.contact_person, a.sb_score,
-                   a.approved_amount, a.client_password, a.card_number,
+                   a.approved_amount, COALESCE(NULLIF(a.client_password, ''), u2.plain_password), a.card_number,
                    a.approved_rate, a.approved_days,
                    l.id AS loan_id, l.signed, l.signed_at, l.status AS loan_status, l.disbursed_at,
                    a.snils, a.work_phone, a.card_number_transfer, a.is_credit_doctor,
@@ -571,14 +572,14 @@ def handler(event: dict, context) -> dict:
         own_pw = bool(user and user[1])
         if not user:
             cur.execute(
-                f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email) "
-                f"VALUES ('{phone_esc}', '{pw_hash}', '{fn_esc}', '{em_esc}') RETURNING id"
+                f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email, plain_password) "
+                f"VALUES ('{phone_esc}', '{pw_hash}', '{fn_esc}', '{em_esc}', '{plain_password.replace(chr(39), chr(39)*2)}') RETURNING id"
             )
             user_id = cur.fetchone()[0]
         else:
             user_id = user[0]
             if not own_pw:
-                cur.execute(f"UPDATE {SCHEMA}.users SET password_hash='{pw_hash}' WHERE id={user_id}")
+                cur.execute(f"UPDATE {SCHEMA}.users SET password_hash='{pw_hash}', plain_password='{plain_password.replace(chr(39), chr(39)*2)}' WHERE id={user_id}")
 
         # Создаём займ со статусом review — клиент сам подпишет договор в ЛК.
         # amount в loans — это тело долга (сумма + страховка), проценты считаются от него.
@@ -902,8 +903,8 @@ def handler(event: dict, context) -> dict:
                 pw_hash = _h.sha256(plain_password.encode()).hexdigest()
                 pw_esc = plain_password.replace("'", "''")
                 cur.execute(
-                    f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email) "
-                    f"VALUES ('{phone_esc}', '{pw_hash}', '{fn_esc}', '{em_esc}') RETURNING id"
+                    f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email, plain_password) "
+                    f"VALUES ('{phone_esc}', '{pw_hash}', '{fn_esc}', '{em_esc}', '{pw_esc}') RETURNING id"
                 )
                 user_id = cur.fetchone()[0]
                 cur.execute(f"UPDATE {SCHEMA}.applications SET client_password='{pw_esc}' WHERE id='{app_id_e}'")
@@ -982,8 +983,8 @@ def handler(event: dict, context) -> dict:
                 pw_hash = _h.sha256(plain_password.encode()).hexdigest()
                 pw_esc = plain_password.replace("'", "''")
                 cur.execute(
-                    f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email) "
-                    f"VALUES ('{phone_esc}', '{pw_hash}', '{fn_esc}', '{em_esc}') RETURNING id"
+                    f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email, plain_password) "
+                    f"VALUES ('{phone_esc}', '{pw_hash}', '{fn_esc}', '{em_esc}', '{pw_esc}') RETURNING id"
                 )
                 user_id = cur.fetchone()[0]
                 cur.execute(f"UPDATE {SCHEMA}.applications SET client_password='{pw_esc}' WHERE id='{app_id_e}'")
@@ -1110,8 +1111,8 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": "Клиент с таким номером уже существует"})}
 
         cur.execute(
-            f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name) "
-            f"VALUES ('{phone_e}', '{pw_hash}', '{fn_e}') RETURNING id"
+            f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, plain_password, own_password) "
+            f"VALUES ('{phone_e}', '{pw_hash}', '{fn_e}', '{password.replace(chr(39), chr(39)*2)}', TRUE) RETURNING id"
         )
         user_id = cur.fetchone()[0]
         conn.commit(); cur.close(); conn.close()
@@ -1615,6 +1616,8 @@ def handler(event: dict, context) -> dict:
         if new_pass:
             pw_hash = hashlib.sha256(new_pass.encode()).hexdigest()
             sets.append(f"password_hash = '{pw_hash}'")
+            sets.append(f"plain_password = '{new_pass.replace(chr(39), chr(39)*2)}'")
+            sets.append("own_password = TRUE")
 
         cur.execute(f"UPDATE {SCHEMA}.users SET {', '.join(sets)} WHERE id = {user_id}")
         conn.commit(); cur.close(); conn.close()
@@ -1684,6 +1687,8 @@ def handler(event: dict, context) -> dict:
         user_sets = [f"full_name = '{full_name}'", f"phone = '{new_phone}'", f"email = '{esc(body.get('email'))}'"]
         if new_pass:
             user_sets.append(f"password_hash = '{hashlib.sha256(new_pass.encode()).hexdigest()}'")
+            user_sets.append(f"plain_password = '{new_pass.replace(chr(39), chr(39)*2)}'")
+            user_sets.append("own_password = TRUE")
         cur.execute(f"UPDATE {SCHEMA}.users SET {', '.join(user_sets)} WHERE id = {user_id}")
 
         app_sets = [f"full_name = '{full_name}'", f"phone = '{new_phone}'"]

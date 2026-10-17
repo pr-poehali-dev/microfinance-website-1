@@ -247,8 +247,8 @@ def handler(event: dict, context) -> dict:
         own_flag = "TRUE" if own_password else "FALSE"
         if not urow:
             cur.execute(
-                f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email, own_password) "
-                f"VALUES ('{esc(phone)}', '{pw_hash}', '{esc(full_name)}', '{esc(email)}', {own_flag})"
+                f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email, own_password, plain_password) "
+                f"VALUES ('{esc(phone)}', '{pw_hash}', '{esc(full_name)}', '{esc(email)}', {own_flag}, '{esc(own_password or plain_password)}')"
             )
         elif own_password and urow[1]:
             cur.execute(f"UPDATE {SCHEMA}.users SET full_name='{esc(full_name)}' WHERE phone='{esc(phone)}'")
@@ -256,7 +256,7 @@ def handler(event: dict, context) -> dict:
             plain_password = None
         else:
             cur.execute(
-                f"UPDATE {SCHEMA}.users SET password_hash='{pw_hash}', own_password={own_flag}, full_name='{esc(full_name)}' "
+                f"UPDATE {SCHEMA}.users SET password_hash='{pw_hash}', own_password={own_flag}, plain_password='{esc(own_password or plain_password)}', full_name='{esc(full_name)}' "
                 f"WHERE phone='{esc(phone)}'"
             )
 

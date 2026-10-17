@@ -94,7 +94,7 @@ def ensure_client_password(cur, table: str, app_id: int, phone_e: str) -> None:
     if not pw:
         pw = secrets.token_hex(4)
         cur.execute(
-            f"UPDATE {SCHEMA}.users SET password_hash = '{hashlib.sha256(pw.encode()).hexdigest()}' WHERE phone = '{phone_e}'"
+            f"UPDATE {SCHEMA}.users SET password_hash = '{hashlib.sha256(pw.encode()).hexdigest()}', plain_password = '{pw}' WHERE phone = '{phone_e}'"
         )
     cur.execute(f"UPDATE {SCHEMA}.{table} SET client_password = '{pw}' WHERE id = {int(app_id)}")
 
@@ -116,7 +116,7 @@ def update_sb_fields(cur, table: str, app_id: int, b: dict) -> None:
 def reset_client_password(cur, phone_e: str) -> str:
     pw = secrets.token_hex(4)
     pw_hash = hashlib.sha256(pw.encode()).hexdigest()
-    cur.execute(f"UPDATE {SCHEMA}.users SET password_hash = '{pw_hash}' WHERE phone = '{phone_e}'")
+    cur.execute(f"UPDATE {SCHEMA}.users SET password_hash = '{pw_hash}', plain_password = '{pw}' WHERE phone = '{phone_e}'")
     for tbl in ("applications", "car_loan_applications", "shopping_loan_applications"):
         cur.execute(f"UPDATE {SCHEMA}.{tbl} SET client_password = '{pw}' WHERE phone = '{phone_e}'")
     return pw
@@ -231,8 +231,8 @@ def handler(event: dict, context) -> dict:
         u = cur.fetchone()
         if not u:
             cur.execute(
-                f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email, own_password) "
-                f"VALUES ('{ph_e2}', '{pw_hash}', '{fn_e2}', '{em_e2}', {own_flag}) RETURNING id"
+                f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email, own_password, plain_password) "
+                f"VALUES ('{ph_e2}', '{pw_hash}', '{fn_e2}', '{em_e2}', {own_flag}, '{(own_pw_in or plain_pw).replace(chr(39), chr(39)*2)}') RETURNING id"
             )
             user_id = cur.fetchone()[0]
             if not own_pw_in:
@@ -240,7 +240,7 @@ def handler(event: dict, context) -> dict:
         else:
             user_id = u[0]
             if own_pw_in and not u[1]:
-                cur.execute(f"UPDATE {SCHEMA}.users SET password_hash = '{pw_hash}', own_password = TRUE WHERE id = {user_id}")
+                cur.execute(f"UPDATE {SCHEMA}.users SET password_hash = '{pw_hash}', own_password = TRUE, plain_password = '{(own_pw_in or plain_pw).replace(chr(39), chr(39)*2)}' WHERE id = {user_id}")
             elif not own_pw_in and not u[1]:
                 _kp = known_client_password(cur, ph_e2)
                 if _kp:

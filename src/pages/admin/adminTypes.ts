@@ -60,7 +60,7 @@ export interface CardRequestItem {
   birthDate?: string;
   debt?: number;
 }
-export interface User { id: number; phone: string; fullName: string; email: string; createdAt: string; loanCount: number; debt: number; }
+export interface User { id: number; phone: string; fullName: string; email: string; createdAt: string; loanCount: number; debt: number; password?: string; }
 export interface Loan { id: number; amount: number; days: number; ratePercent: number; status: string; createdAt: string; totalDue?: number; isOverdue?: boolean; overdueDays?: number; penaltyAmount?: number; penaltyWaived?: number; }
 
 export const GLASS = { background: "rgba(255,255,255,0.9)", border: "1px solid rgba(16,185,129,0.15)", borderRadius: 16, boxShadow: "0 4px 20px rgba(16,185,129,0.06)" };

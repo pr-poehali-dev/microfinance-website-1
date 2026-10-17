@@ -230,6 +230,9 @@ export default function AdminClients({
                   <span style={{ color: "rgba(2,44,34,0.3)", fontSize: 12 }}>{u.loanCount} займ.</span>
                 </div>
                 <div style={{ color: "rgba(2,44,34,0.45)", fontSize: 12 }}>{u.fullName || "—"}</div>
+                <div style={{ marginTop: 4, fontSize: 12, color: "rgba(2,44,34,0.5)" }}>
+                  🔑 Пароль: {u.password ? <b style={{ color: "#047857", letterSpacing: 1, userSelect: "all" }}>{u.password}</b> : <span style={{ color: "rgba(2,44,34,0.3)" }}>неизвестен</span>}
+                </div>
                 {u.debt > 0 && <div style={{ color: "#f87171", fontSize: 12, marginTop: 4 }}>Долг: {u.debt.toLocaleString("ru-RU")} ₽</div>}
               </button>
               <button

@@ -97,8 +97,8 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": "Повторная регистрация невозможна. Войдите в личный кабинет."})}
 
         cur.execute(
-            f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email) "
-            f"VALUES ('{phone}', '{pw_hash}', '{full_name}', '{email}') RETURNING id"
+            f"INSERT INTO {SCHEMA}.users (phone, password_hash, full_name, email, plain_password, own_password) "
+            f"VALUES ('{phone}', '{pw_hash}', '{full_name}', '{email}', '{password.replace(chr(39), chr(39)*2)}', TRUE) RETURNING id"
         )
         user_id = cur.fetchone()[0]
 
