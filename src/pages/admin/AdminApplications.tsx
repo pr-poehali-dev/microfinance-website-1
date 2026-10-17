@@ -75,6 +75,7 @@ export default function AdminApplications({
   const [cdForm, setCdForm] = useState<Record<number, { amount: string; days: string; rate: string; partnerCardUrl: string }>>({});
   const [cdOpen, setCdOpen] = useState<number | null>(null);
   const [paForm, setPaForm] = useState<Record<number, { amount: string; days: string; rate: string; partnerCardUrl: string }>>({});
+  const [onlyIdent, setOnlyIdent] = useState(false);
   const [paOpen, setPaOpen] = useState<number | null>(null);
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "month" | "custom">("all");
   const [dateFrom, setDateFrom] = useState("");
@@ -113,7 +114,14 @@ export default function AdminApplications({
     setTimeout(() => setSbSaved(p => ({ ...p, [app.id]: false })), 2000);
   }
 
+  const identCount = apps.filter(a => a.status === "partner_card" && a.partnerCardStatus === "pending").length;
+
   const filtered = apps.filter(a => {
+    if (onlyIdent) {
+      if (!(a.status === "partner_card" && a.partnerCardStatus === "pending")) return false;
+      const qi = search.toLowerCase();
+      return !qi || a.phone.includes(qi) || (a.fullName || "").toLowerCase().includes(qi) || (a.email || "").toLowerCase().includes(qi);
+    }
     if (onlyUnsigned && appFilter === "approved" && (a.loanSigned || !a.loanId || !!a.loanDisbursedAt)) return false;
     if (appFilter === "paid_loans") {
       if (a.loanStatus !== "paid") return false;
@@ -159,13 +167,19 @@ export default function AdminApplications({
           ["paid_loans","Погашенные","BadgeCheck","#14b8a6"],
           ["rejected","Отклонённые","XCircle","#ef4444"],
         ] as const).map(([f, label, icon, color]) => (
-          <button key={f} onClick={() => setAppFilter(f)}
+          <button key={f} onClick={() => { setOnlyIdent(false); setAppFilter(f); }}
             style={{ padding: "8px 18px", borderRadius: 12, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 8,
-              background: appFilter === f ? color : "rgba(2,44,34,0.07)", color: appFilter === f ? "white" : "rgba(2,44,34,0.5)",
-              boxShadow: appFilter === f && f === "creditdoctor" ? "0 0 14px rgba(16,185,129,0.4)" : "none" }}>
+              background: !onlyIdent && appFilter === f ? color : "rgba(2,44,34,0.07)", color: !onlyIdent && appFilter === f ? "white" : "rgba(2,44,34,0.5)",
+              boxShadow: !onlyIdent && appFilter === f && f === "creditdoctor" ? "0 0 14px rgba(16,185,129,0.4)" : "none" }}>
             <Icon name={icon} size={14} />{label}
           </button>
         ))}
+        <button onClick={() => setOnlyIdent(v => !v)}
+          style={{ padding: "8px 18px", borderRadius: 12, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 8,
+            background: onlyIdent ? "#dc2626" : identCount > 0 ? "rgba(239,68,68,0.12)" : "rgba(2,44,34,0.07)",
+            color: onlyIdent ? "white" : identCount > 0 ? "#b91c1c" : "rgba(2,44,34,0.5)" }}>
+          <Icon name="CreditCard" size={14} />Ждут идентификации{identCount > 0 ? ` (${identCount})` : ""}
+        </button>
         {appFilter === "approved" && (
           <button onClick={() => setOnlyUnsigned(v => !v)}
             style={{ padding: "8px 14px", borderRadius: 12, border: `1px solid ${onlyUnsigned ? "rgba(245,158,11,0.5)" : "transparent"}`, cursor: "pointer", fontWeight: 600, fontSize: 14,
