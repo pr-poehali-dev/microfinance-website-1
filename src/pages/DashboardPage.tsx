@@ -10,6 +10,7 @@ import DashboardNavbar from "./dashboard/DashboardNavbar";
 import DashboardApplicationStatus from "./dashboard/DashboardApplicationStatus";
 import DashboardLoans from "./dashboard/DashboardLoans";
 import DashboardSupport from "./dashboard/DashboardSupport";
+import SupportChat from "./dashboard/SupportChat";
 import PaymentHistory from "./dashboard/PaymentHistory";
 import ClientProfileCard from "./dashboard/ClientProfileCard";
 import RepeatLoanForm from "./dashboard/RepeatLoanForm";
@@ -567,6 +568,7 @@ export default function DashboardPage() {
         )}
 
         <div className="flex flex-col md:flex-row gap-6 items-start">
+        <SupportChat />
         <DashboardSidebar active={section} onChange={setSection} />
         <div className="flex-1 min-w-0 w-full">
 

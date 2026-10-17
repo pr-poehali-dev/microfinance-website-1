@@ -13,6 +13,7 @@ import AdminCards from "./admin/AdminCards";
 import AdminYooKassa from "./admin/AdminYooKassa";
 import AdminClientDocs from "./admin/AdminClientDocs";
 import AdminPauseSwitch from "./admin/AdminPauseSwitch";
+import AdminSupport from "./admin/AdminSupport";
 import AdminInvestments from "./admin/AdminInvestments";
 import AdminPromoCodes from "./admin/AdminPromoCodes";
 import AdminWheelPrizes from "./admin/AdminWheelPrizes";
@@ -29,7 +30,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
 
   const [clientDocsNew, setClientDocsNew] = useState(0);
-  const [tab, setTab]   = useState<"apps" | "clients" | "carloan" | "shoploan" | "disbursed" | "cardrequests" | "cards" | "promo" | "wheel" | "yookassa" | "clientdocs" | "invest">("apps");
+  const [tab, setTab]   = useState<"apps" | "clients" | "carloan" | "shoploan" | "disbursed" | "cardrequests" | "cards" | "promo" | "wheel" | "yookassa" | "clientdocs" | "invest" | "support">("apps");
   const [apps, setApps] = useState<App[]>([]);
   const [appFilter, setAppFilter] = useState<"pending"|"approved"|"rejected"|"postponed"|"partner_card"|"creditdoctor"|"paid_loans">("pending");
   const [appsLoading, setAppsLoading] = useState(false);
@@ -96,6 +97,17 @@ export default function AdminPage() {
   useEffect(() => { if (token) { loadApps(); loadUsers(); } }, []);
 
   const [loanNotices, setLoanNotices] = useState(0);
+  const [supportNew, setSupportNew] = useState(0);
+  const loadSupportUnread = () => {
+    if (!token) return;
+    fetch(`https://functions.poehali.dev/20eb9a44-796b-4332-85d3-f6bbaff4a373?role=admin&sub=unread`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(d => setSupportNew(d.unread || 0)).catch(() => {});
+  };
+  useEffect(() => {
+    loadSupportUnread();
+    const i = setInterval(loadSupportUnread, 20000);
+    return () => clearInterval(i);
+  }, [token]);
   const [waiting, setWaiting] = useState({ apps: 0, car: 0, shop: 0, cardReq: 0, ident: 0 });
 
   const [countsReady, setCountsReady] = useState(false);
@@ -414,6 +426,14 @@ export default function AdminPage() {
             <span style={{ background: "#ef4444", color: "white", borderRadius: 20, padding: "1px 8px", fontSize: 12, fontWeight: 700 }}>{investNew}</span>
           )}
         </button>
+        <button onClick={() => setTab("support")}
+          style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
+            background: tab === "support" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "support" ? "white" : "rgba(2,44,34,0.5)" }}>
+          💬 Чат поддержки
+          {supportNew > 0 && (
+            <span style={{ background: "#ef4444", color: "white", borderRadius: 20, padding: "1px 8px", fontSize: 12, fontWeight: 700 }}>{supportNew}</span>
+          )}
+        </button>
         <button onClick={() => setTab("promo")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
             background: tab === "promo" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "promo" ? "white" : "rgba(2,44,34,0.5)" }}>
@@ -438,6 +458,7 @@ export default function AdminPage() {
 
       <div className="admin-content" style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 16px" }}>
         <AdminPauseSwitch token={token} />
+        {tab === "support" && <AdminSupport token={token} onChanged={loadSupportUnread} />}
         {tab === "apps" && <AdminContractsRepair token={token} />}
         {tab === "apps" && (
           <AdminApplications
