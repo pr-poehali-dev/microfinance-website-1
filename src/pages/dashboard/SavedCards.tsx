@@ -75,7 +75,7 @@ export default function SavedCards() {
       {adding && (
         <div className="glass rounded-2xl p-4 mb-3 space-y-3">
           <PayoutField
-            sbpOnly value={value} onChange={setValue}
+            sbpOnly lockPhone value={value} onChange={setValue}
             inputClassName="w-full rounded-xl px-4 py-3 text-emerald-950 bg-white border border-emerald-900/20 outline-none focus:border-emerald-500"
           />
           {error && <div className="text-sm text-red-600">{error}</div>}

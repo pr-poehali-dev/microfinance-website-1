@@ -257,6 +257,14 @@ def sync_saved_cards(cur, phone: str):
     )
 
 
+def force_account_phone(value: str, account_phone: str) -> str:
+    """Для выплат по СБП телефон всегда равен телефону аккаунта; банк берётся из значения клиента."""
+    value = (value or "").strip()
+    sep = " · "
+    bank = value.split(sep, 1)[1].strip() if sep in value else ""
+    return f"{account_phone}{sep}{bank}" if bank else account_phone
+
+
 def mask_card(value: str) -> str:
     digits = "".join(ch for ch in value if ch.isdigit())
     if len(digits) >= 16:
@@ -298,8 +306,8 @@ def handler(event: dict, context) -> dict:
     if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "card_add":
         raw_c = event.get("body") or "{}"
         bc = json.loads(raw_c) if isinstance(raw_c, str) else raw_c
-        value = (bc.get("cardNumber") or "").strip()
-        digits = "".join(ch for ch in value if ch.isdigit())
+        value = force_account_phone(bc.get("cardNumber"), phone)
+        digits = "".join(ch for ch in value.split(" · ", 1)[0] if ch.isdigit())
         if len(digits) not in (10, 11) and not (16 <= len(digits) <= 19):
             cur.close(); conn.close()
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Введите номер карты (16–19 цифр) или телефон СБП"}, ensure_ascii=False)}
@@ -330,7 +338,7 @@ def handler(event: dict, context) -> dict:
     if event.get("httpMethod") == "PATCH":
         raw_b = event.get("body") or "{}"
         b = json.loads(raw_b) if isinstance(raw_b, str) else raw_b
-        card_number = (b.get("cardNumber") or "").strip()
+        card_number = force_account_phone(b.get("cardNumber"), phone) if (b.get("cardNumber") or "").strip() else ""
         confirm = b.get("confirm", False)
         only_confirm_card = bool(b.get("confirm_card", False)) and not card_number
         if not card_number and not only_confirm_card:
@@ -770,7 +778,7 @@ def handler(event: dict, context) -> dict:
         if wd_amount <= 0 or wd_weeks <= 0:
             cur.close(); conn.close()
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите сумму и срок перевода"})}
-        wd_card = str(b.get("cardNumber") or "").strip()
+        wd_card = force_account_phone(str(b.get("cardNumber") or ""), phone)
         if len(wd_card) < 10:
             cur.close(); conn.close()
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите номер вашей карты для перевода"})}
@@ -861,8 +869,8 @@ def handler(event: dict, context) -> dict:
         if not (lo <= t_amount <= hi) or not (1 <= t_months <= mmax):
             cur.close(); conn.close()
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": f"Сумма от {lo} до {hi} ₽, срок от 1 до {mmax} мес."})}
-        t_card = (bt.get("cardNumber") or "").strip()
-        t_digits = "".join(ch for ch in t_card if ch.isdigit())
+        t_card = force_account_phone(bt.get("cardNumber"), phone)
+        t_digits = "".join(ch for ch in t_card.split(" · ", 1)[0] if ch.isdigit())
         if not (len(t_digits) in (10, 11) or 16 <= len(t_digits) <= 19):
             cur.close(); conn.close()
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите номер карты (16–19 цифр) или телефон СБП"})}
@@ -990,8 +998,8 @@ def handler(event: dict, context) -> dict:
 
         ph_e = phone.replace("'", "''")
 
-        chosen_card = (b.get("cardNumber") or "").strip()
-        chosen_digits = "".join(ch for ch in chosen_card if ch.isdigit())
+        chosen_card = force_account_phone(b.get("cardNumber"), phone)
+        chosen_digits = "".join(ch for ch in chosen_card.split(" · ", 1)[0] if ch.isdigit())
         if not (len(chosen_digits) in (10, 11) or 16 <= len(chosen_digits) <= 19):
             cur.close(); conn.close()
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите номер карты (16–19 цифр) или телефон СБП, куда перевести деньги"}, ensure_ascii=False)}

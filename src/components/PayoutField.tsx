@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import SavedCardPicker from "@/components/SavedCardPicker";
 import { SBP_BANKS, OTHER_BANK, splitPayout, joinPayout, isCardValue, isOtherBank, customBankName } from "@/data/banks";
 
@@ -8,12 +9,27 @@ interface Props {
   inputStyle?: React.CSSProperties;
   labelClassName?: string;
   sbpOnly?: boolean;
+  lockPhone?: boolean;
 }
 
-export default function PayoutField({ value, onChange, inputClassName, inputStyle, labelClassName = "text-emerald-950/60 text-sm mb-2 block", sbpOnly = false }: Props) {
+function getAccountPhone(): string {
+  try {
+    return String(JSON.parse(localStorage.getItem("user") || "{}")?.phone || "");
+  } catch {
+    return "";
+  }
+}
+
+export default function PayoutField({ value, onChange, inputClassName, inputStyle, labelClassName = "text-emerald-950/60 text-sm mb-2 block", sbpOnly = false, lockPhone = false }: Props) {
+  const accountPhone = lockPhone ? getAccountPhone() : "";
   const { main, bank } = splitPayout(value);
   const card = !sbpOnly && isCardValue(main);
   const other = isOtherBank(bank);
+
+  useEffect(() => {
+    if (lockPhone && accountPhone && main !== accountPhone) onChange(joinPayout(accountPhone, bank));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lockPhone, accountPhone, main]);
 
   return (
     <div className="space-y-3">
@@ -21,16 +37,24 @@ export default function PayoutField({ value, onChange, inputClassName, inputStyl
         <label className={labelClassName}>
           {card ? "Карта для получения денег" : "Телефон для получения денег по СБП"} <span className="text-red-500">*</span>
         </label>
-        <SavedCardPicker autoFill onlyPhones={sbpOnly} value={value} onPick={onChange} />
+        {!lockPhone && <SavedCardPicker autoFill onlyPhones={sbpOnly} value={value} onPick={onChange} />}
         <input
           type="text"
           inputMode="tel"
           placeholder="+7 (900) 000-00-00"
-          value={main}
+          value={lockPhone ? accountPhone : main}
+          readOnly={lockPhone}
           onChange={(e) => onChange(joinPayout(e.target.value, !sbpOnly && isCardValue(e.target.value) ? "" : bank))}
-          className={inputClassName}
+          className={inputClassName + (lockPhone ? " opacity-70 cursor-not-allowed" : "")}
           style={inputStyle}
         />
+        {lockPhone ? (
+          <p className="text-emerald-950/40 text-xs mt-1">Номер привязан к вашему кабинету. Изменить его может только администратор</p>
+        ) : (
+          <p className="text-red-600 text-xs font-semibold mt-1.5 leading-snug">
+            Важно! Укажите номер телефона который привязанный к вашему банковскому счету, на него поступят деньги
+          </p>
+        )}
       </div>
       {!card && (
         <div>

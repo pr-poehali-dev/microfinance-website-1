@@ -363,7 +363,7 @@ export default function DashboardApplicationStatus({
                   Укажите реквизиты для перевода займа
                 </div>
                 <div style={{ pointerEvents: cardSaved ? "none" : "auto", opacity: cardSaved ? 0.7 : 1 }}>
-                  <PayoutField sbpOnly value={cardInput} onChange={(v) => { setCardInput(v); setCardSaved(false); setCardError(""); }}
+                  <PayoutField sbpOnly lockPhone value={cardInput} onChange={(v) => { setCardInput(v); setCardSaved(false); setCardError(""); }}
                     inputClassName="w-full px-4 py-3 rounded-xl text-emerald-950 text-sm outline-none"
                     inputStyle={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)" }} />
                 </div>
@@ -522,7 +522,7 @@ export default function DashboardApplicationStatus({
                 Укажите реквизиты для перевода
               </div>
               <div style={{ pointerEvents: cardSaved ? "none" : "auto", opacity: cardSaved ? 0.7 : 1 }}>
-                <PayoutField sbpOnly value={cardInput} onChange={(v) => { setCardInput(v); setCardSaved(false); setCardError(""); }}
+                <PayoutField sbpOnly lockPhone value={cardInput} onChange={(v) => { setCardInput(v); setCardSaved(false); setCardError(""); }}
                   inputClassName="w-full px-4 py-3 rounded-xl text-emerald-950 text-sm outline-none"
                   inputStyle={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)" }} />
               </div>

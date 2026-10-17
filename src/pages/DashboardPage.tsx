@@ -272,6 +272,7 @@ export default function DashboardPage() {
           return;
         }
         setUser(data.user);
+        if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
         setLoans(data.loans || []);
         setRateNews(data.rateNews || []);
         setAddendumPending(!!data.addendumPending);

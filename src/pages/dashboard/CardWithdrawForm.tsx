@@ -144,7 +144,7 @@ export default function CardWithdrawForm({ available, defaultCard, onSuccess }: 
       </div>
 
       <PayoutField
-        sbpOnly value={cardNumber} onChange={setCardNumber}
+        sbpOnly lockPhone value={cardNumber} onChange={setCardNumber}
         inputClassName="w-full rounded-xl px-4 py-2.5 text-emerald-950 text-sm outline-none"
         inputStyle={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.25)" }}
       />

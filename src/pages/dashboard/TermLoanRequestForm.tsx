@@ -122,7 +122,7 @@ export default function TermLoanRequestForm({ kind, profile, phone, profileEdita
         extraLabel="Платёж в месяц" extraValue={monthly}
       />
 
-      <PayoutField sbpOnly value={cardNumber} onChange={setCardNumber} inputClassName={INPUT} inputStyle={INPUT_STYLE} />
+      <PayoutField sbpOnly lockPhone value={cardNumber} onChange={setCardNumber} inputClassName={INPUT} inputStyle={INPUT_STYLE} />
 
       {error && (
         <div className="rounded-xl px-4 py-3 text-sm font-medium" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#dc2626" }}>{error}</div>

@@ -161,7 +161,7 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
         />
 
         {/* Карта для получения денег */}
-        <PayoutField sbpOnly
+        <PayoutField sbpOnly lockPhone
           value={cardNumber} onChange={setCardNumber}
           inputClassName="w-full rounded-xl px-4 py-2.5 text-emerald-950 text-sm outline-none"
           inputStyle={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.25)" }}
