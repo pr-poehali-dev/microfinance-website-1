@@ -75,7 +75,7 @@ def handler(event: dict, context) -> dict:
             return resp(200, {"threads": out})
 
         if sub == "thread":
-            uid = int(qs.get("userId", "0"))
+            uid = int(qs.get("userId") or 0) if str(qs.get("userId") or "0").isdigit() else 0
             cur.execute(f"UPDATE {SCHEMA}.support_messages SET read_by_admin = TRUE WHERE user_id = {uid} AND sender = 'client' AND read_by_admin = FALSE")
             conn.commit()
             cur.execute(f"SELECT id, sender, text, created_at FROM {SCHEMA}.support_messages WHERE user_id = {uid} ORDER BY id")
