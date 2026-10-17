@@ -5,6 +5,7 @@ import AddPaymentModal from "./AddPaymentModal";
 import { waitingStyle, WAITING_BADGE_STYLE } from "./waiting";
 import AdminAppTimeline from "./AdminAppTimeline";
 import AdminCardControl from "./AdminCardControl";
+import FsspCheckButton from "./FsspCheckButton";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
 
@@ -231,6 +232,7 @@ export default function AdminApplications({
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
                   <span style={{ color: "#022c22", fontWeight: 700, fontSize: 18 }}>{app.fullName || app.phone}</span>
+                  <FsspCheckButton fullName={app.fullName} birthDate={app.birthDate} />
                   {waitNew && <span style={WAITING_BADGE_STYLE}>🔴 Новая заявка — клиент ждёт решения</span>}
                   {waitSigned && <span style={WAITING_BADGE_STYLE}>🔴 Договор подписан — клиент ждёт деньги</span>}
                   {!!app.profileUpdatedAt && (

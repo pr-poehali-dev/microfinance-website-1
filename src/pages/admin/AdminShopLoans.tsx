@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 import AddPaymentModal from "./AddPaymentModal";
 import { waitingStyle, WAITING_BADGE_STYLE } from "./waiting";
+import FsspCheckButton from "./FsspCheckButton";
 
 const SHOP_URL = "https://functions.poehali.dev/f0312370-20d7-488e-b072-dc4c0b2af2aa";
 
@@ -214,6 +215,7 @@ export default function AdminShopLoans({ token }: Props) {
                     {/* Шапка */}
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
                       <span style={{ color: "#022c22", fontWeight: 700, fontSize: 16 }}>{app.full_name}</span>
+                      <FsspCheckButton fullName={app.full_name} birthDate={app.birth_date} />
                       <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: st.bg, color: st.color, border: `1px solid ${st.border}` }}>
                         {st.label}
                       </span>

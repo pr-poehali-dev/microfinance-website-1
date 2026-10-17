@@ -2119,10 +2119,11 @@ def handler(event: dict, context) -> dict:
                      COALESCE((SELECT SUM(ROUND(t.amount * (1 + t.rate / 100 * t.weeks))) FROM {SCHEMA}.card_transactions t
                                WHERE t.application_id = a.id AND t.status != 'cancelled'), 0)
                      - COALESCE((SELECT SUM(rp.amount) FROM {SCHEMA}.card_repayments rp WHERE rp.application_id = a.id), 0)
-                   ) AS debt
+                   ) AS debt,
+                   a.birth_date
             FROM {SCHEMA}.card_requests cr
             LEFT JOIN LATERAL (
-                SELECT id, virtual_card_status, virtual_card_limit, amount FROM {SCHEMA}.applications
+                SELECT id, virtual_card_status, virtual_card_limit, amount, birth_date FROM {SCHEMA}.applications
                 WHERE phone = cr.phone ORDER BY created_at DESC LIMIT 1
             ) a ON true
             {where_r} ORDER BY cr.created_at DESC
@@ -2137,6 +2138,7 @@ def handler(event: dict, context) -> dict:
             "userId": r[10],
             "requestedLimit": float(r[11]) if r[11] else None,
             "debt": float(r[12] or 0),
+            "birthDate": str(r[13]) if r[13] else "",
         } for r in cur.fetchall()]
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"requests": items}, ensure_ascii=False)}

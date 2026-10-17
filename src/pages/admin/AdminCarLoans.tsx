@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 import AddPaymentModal from "./AddPaymentModal";
 import { waitingStyle, WAITING_BADGE_STYLE } from "./waiting";
+import FsspCheckButton from "./FsspCheckButton";
 
 const CAR_URL = "https://functions.poehali.dev/651adde1-4432-4e5a-8086-3cda9898b7ac";
 
@@ -214,6 +215,7 @@ export default function AdminCarLoans({ token }: Props) {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
                       <span style={{ color: "#022c22", fontWeight: 700, fontSize: 16 }}>{app.full_name}</span>
+                      <FsspCheckButton fullName={app.full_name} birthDate={app.birth_date} />
                       <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: st.bg, color: st.color }}>{st.label}</span>
                       {waitNew && <span style={WAITING_BADGE_STYLE}>🔴 Новая заявка — клиент ждёт решения</span>}
                       {waitSigned && <span style={WAITING_BADGE_STYLE}>🔴 Договор подписан — клиент ждёт деньги</span>}

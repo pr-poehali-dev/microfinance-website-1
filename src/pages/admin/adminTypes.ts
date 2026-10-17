@@ -57,6 +57,7 @@ export interface CardRequestItem {
   cardLimit: number | null;
   userId?: number | null;
   requestedLimit?: number | null;
+  birthDate?: string;
   debt?: number;
 }
 export interface User { id: number; phone: string; fullName: string; email: string; createdAt: string; loanCount: number; debt: number; }

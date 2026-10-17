@@ -4,6 +4,7 @@ import { waitingStyle, WAITING_BADGE_STYLE } from "./waiting";
 import { CardRequestItem, GLASS } from "./adminTypes";
 import AdminCardRequestProfile from "./AdminCardRequestProfile";
 import CardManualRepay from "./CardManualRepay";
+import FsspCheckButton from "./FsspCheckButton";
 
 const ADMIN_URL = "https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6";
 
@@ -92,6 +93,7 @@ export default function AdminCardRequests({ token }: Props) {
               <div>
                 <div style={{ color: "#022c22", fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{req.fullName || req.phone}{req.status === "pending" && <span style={{ ...WAITING_BADGE_STYLE, marginLeft: 10 }}>🔴 Клиент ждёт решения</span>}</div>
                 <div style={{ color: "rgba(2,44,34,0.4)", fontSize: 13 }}>{req.phone} · подана {req.createdAt}</div>
+                <div style={{ marginTop: 8 }}><FsspCheckButton fullName={req.fullName} birthDate={req.birthDate} /></div>
                 {!!req.requestedLimit && (
                   <div style={{ marginTop: 4, fontSize: 13, color: "#047857", fontWeight: 600 }}>
                     Желаемый лимит: {req.requestedLimit.toLocaleString("ru-RU")} ₽
