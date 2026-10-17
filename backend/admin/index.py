@@ -219,6 +219,9 @@ def notify_email(to: str, kind: str, name: str, **kw) -> None:
                            "Вы можете подать новую заявку позже."], ""),
         "shop_disbursed": (f"Займ на покупки{n} выдан — РУСФИНАНС 24", "Деньги отправлены!", green,
                            [f"Мы перевели вам <b>{amt}</b> по займу на покупки." if amt else "Займ на покупки выдан.", "Условия и график платежей — в личном кабинете."], "Открыть личный кабинет"),
+        "rejected": ("По вашей заявке принято решение — РУСФИНАНС 24", "По заявке принято решение", red,
+                     ["К сожалению, по вашей заявке на займ принято отрицательное решение.",
+                      "Вы можете подать новую заявку позже. Статус заявки доступен в личном кабинете."], "Открыть личный кабинет"),
         "support_reply": ("Ответ службы поддержки — РУСФИНАНС 24", "Ответ службы поддержки", blue,
                           ["Мы ответили на ваше сообщение в чате поддержки. Откройте личный кабинет, чтобы прочитать ответ."], "Открыть личный кабинет"),
     }
@@ -2632,6 +2635,44 @@ def handler(event: dict, context) -> dict:
                  "status": r[6], "date": msk(r[7]).strftime("%d.%m.%Y в %H:%M")} for r in cur.fetchall()]
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"docs": docs}, ensure_ascii=False)}
+
+    # --- РАССЫЛКА ОБ ОТКАЗЕ: статус / пробное письмо / отправка пачки (sub='bulk_reject_status' | 'bulk_reject_test' | 'bulk_reject_send') ---
+    if sub in ("bulk_reject_status", "bulk_reject_test", "bulk_reject_send"):
+        pending_sql = f"""
+            SELECT DISTINCT ON (lower(a.email)) a.email, COALESCE(NULLIF(a.full_name, ''), 'клиент')
+            FROM {SCHEMA}.applications a
+            WHERE a.status = 'rejected' AND a.reject_reason IS NULL AND a.email LIKE '%@%'
+              AND date_trunc('second', a.reviewed_at) = TIMESTAMP '2026-10-17 16:02:20'
+              AND NOT EXISTS (
+                  SELECT 1 FROM {SCHEMA}.email_log l
+                  WHERE lower(l.to_email) = lower(a.email) AND l.kind = 'rejected' AND l.status = 'sent'
+              )
+            ORDER BY lower(a.email)
+        """
+        if sub == "bulk_reject_status":
+            cur.execute(f"SELECT COUNT(*) FROM ({pending_sql}) x")
+            left = cur.fetchone()[0]
+            cur.close(); conn.close()
+            return {"statusCode": 200, "headers": CORS, "body": json.dumps({"left": left})}
+        if sub == "bulk_reject_test":
+            me = os.environ.get("SMTP_USER", "")
+            cur.close(); conn.close()
+            notify_email(me, "rejected", "Тест")
+            return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "to": me})}
+        cur.execute(f"{pending_sql} LIMIT 8")
+        batch = cur.fetchall()
+        cur.close(); conn.close()
+        sent, failed, last_err = 0, 0, ""
+        for em, nm in batch:
+            notify_email(em, "rejected", nm)
+        c4 = get_conn(); k4 = c4.cursor()
+        em_list = ", ".join("'" + str(e).lower().replace("'", "''") + "'" for e, _ in batch) or "''"
+        k4.execute(f"SELECT status, COUNT(*), MAX(error) FROM {SCHEMA}.email_log WHERE kind = 'rejected' AND lower(to_email) IN ({em_list}) AND created_at > NOW() - INTERVAL '2 minutes' GROUP BY status")
+        for st, n, er in k4.fetchall():
+            if st == "sent": sent = n
+            else: failed = n; last_err = er or ""
+        k4.close(); c4.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"processed": len(batch), "sent": sent, "failed": failed, "error": last_err}, ensure_ascii=False)}
 
     # --- ЖУРНАЛ ПИСЕМ (GET, sub='email_log') ---
     if sub == "email_log" and method == "GET":

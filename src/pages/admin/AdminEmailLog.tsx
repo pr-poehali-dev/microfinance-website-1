@@ -8,6 +8,40 @@ export default function AdminEmailLog({ token }: { token: string }) {
   const [items, setItems] = useState<Item[] | null>(null);
   const [failed, setFailed] = useState(0);
   const [err, setErr] = useState("");
+  const [left, setLeft] = useState<number | null>(null);
+  const [running, setRunning] = useState(false);
+  const [info, setInfo] = useState("");
+  const H = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+
+  async function loadLeft() {
+    const r = await fetch(`${ADMIN_URL}?sub=bulk_reject_status`, { headers: H });
+    if (r.ok) setLeft((await r.json()).left);
+  }
+
+  async function sendTest() {
+    setInfo("Отправляю пробное письмо...");
+    const r = await fetch(`${ADMIN_URL}?sub=bulk_reject_test`, { method: "POST", headers: H, body: "{}" });
+    const d = await r.json().catch(() => ({}));
+    setInfo(r.ok ? `Пробное письмо отправлено на ${d.to}. Проверьте ящик и журнал ниже.` : "Не удалось отправить пробное письмо");
+    load();
+  }
+
+  async function sendAll() {
+    if (!window.confirm(`Отправить письмо об отказе ${left} клиентам? Отменить отправку будет нельзя.`)) return;
+    setRunning(true); setInfo("");
+    let total = 0;
+    for (let i = 0; i < 80; i++) {
+      const r = await fetch(`${ADMIN_URL}?sub=bulk_reject_send`, { method: "POST", headers: H, body: "{}" });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) { setInfo(`Остановлено: ${d.error || "ошибка сервера"}`); break; }
+      total += d.sent || 0;
+      setInfo(`Отправлено: ${total}`);
+      if (!d.processed) { setInfo(`Готово. Отправлено писем: ${total}`); break; }
+      if (!d.sent) { setInfo(`Остановлено: письма не уходят. ${d.error || ""}`); break; }
+      await loadLeft();
+    }
+    setRunning(false); loadLeft(); load();
+  }
 
   async function load() {
     setErr("");
@@ -17,7 +51,7 @@ export default function AdminEmailLog({ token }: { token: string }) {
     setItems(d.items || []); setFailed(d.failedToday || 0);
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); loadLeft(); }, []);
 
   return (
     <div>
@@ -28,6 +62,19 @@ export default function AdminEmailLog({ token }: { token: string }) {
         </div>
         <button onClick={load} style={{ border: "none", borderRadius: 10, padding: "8px 14px", fontWeight: 700, fontSize: 13, cursor: "pointer", color: "#fff", background: "linear-gradient(135deg,#10b981,#14b8a6)" }}>Обновить</button>
       </div>
+
+      {left !== null && left > 0 && (
+        <div style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.45)", borderRadius: 12, padding: 14, marginBottom: 14 }}>
+          <div style={{ fontWeight: 700, color: "#78350f", fontSize: 14 }}>Рассылка об отказе: осталось отправить {left} {left === 1 ? "письмо" : "писем"}</div>
+          <div style={{ fontSize: 12, color: "rgba(2,44,34,0.65)", margin: "4px 0 10px" }}>Клиентам, которым отказали при массовом закрытии заявок. На один адрес уходит одно письмо. Сначала отправьте пробное себе.</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button onClick={sendTest} disabled={running} style={{ border: "1px solid rgba(16,185,129,0.5)", background: "#fff", color: "#047857", borderRadius: 10, padding: "8px 14px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Отправить пробное себе</button>
+            <button onClick={sendAll} disabled={running} style={{ border: "none", borderRadius: 10, padding: "8px 14px", fontWeight: 700, fontSize: 13, cursor: "pointer", color: "#fff", background: "linear-gradient(135deg,#dc2626,#f97316)", opacity: running ? 0.6 : 1 }}>{running ? "Отправляю..." : `Отправить ${left} клиентам`}</button>
+          </div>
+          {info && <div style={{ fontSize: 13, color: "#064e3b", marginTop: 8, fontWeight: 600 }}>{info}</div>}
+        </div>
+      )}
+      {left === 0 && info && <div style={{ color: "#047857", fontWeight: 600, fontSize: 14, marginBottom: 12 }}>{info}</div>}
 
       {failed > 0 && (
         <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.4)", color: "#b91c1c", borderRadius: 10, padding: "10px 14px", marginBottom: 12, fontSize: 14, fontWeight: 600 }}>
