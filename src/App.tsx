@@ -29,13 +29,14 @@ function MaintenanceBanner() {
   if (pathname === "/admin") return null;
   return (
     <div style={{
-      background: "#059669",
-      color: "white",
+      background: "#f3f4f6",
+      color: "#4b5563",
+      borderTop: "1px solid #e5e7eb",
       textAlign: "center",
-      padding: "12px 16px",
-      fontSize: 15,
-      fontWeight: 600,
-      lineHeight: 1.5,
+      padding: "16px 20px",
+      fontSize: 13,
+      fontWeight: 400,
+      lineHeight: 1.6,
       zIndex: 9999,
       position: "relative",
     }}>
