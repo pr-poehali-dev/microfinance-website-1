@@ -26,6 +26,30 @@ CORS = {
 }
 
 
+DUPLICATE_MSG = "Вы уже есть в системе. Повторная регистрация невозможна: у каждого клиента только один личный кабинет. Войдите в личный кабинет по номеру телефона, указанному при первой заявке."
+
+
+def passport_taken(cur, series, number, phone) -> bool:
+    """True, если такой паспорт уже есть в заявках с другим номером телефона."""
+    import re
+    s = re.sub(r"\D", "", str(series or ""))
+    n = re.sub(r"\D", "", str(number or ""))
+    ph = re.sub(r"\D", "", str(phone or ""))[-10:]
+    if not s or not n:
+        return False
+    parts = []
+    for tbl, cs, cn in (("applications", "passport_series", "passport_number"),
+                        ("car_loan_applications", "passport_serial", "passport_num"),
+                        ("shopping_loan_applications", "passport_series", "passport_number")):
+        parts.append(
+            f"SELECT 1 FROM {SCHEMA}.{tbl} WHERE regexp_replace(COALESCE({cs}, ''), '\\D', '', 'g') = '{s}' "
+            f"AND regexp_replace(COALESCE({cn}, ''), '\\D', '', 'g') = '{n}' "
+            f"AND right(regexp_replace(COALESCE(phone, ''), '\\D', '', 'g'), 10) <> '{ph}'"
+        )
+    cur.execute(" UNION ALL ".join(parts) + " LIMIT 1")
+    return cur.fetchone() is not None
+
+
 def get_conn():
     return psycopg2.connect(os.environ["DATABASE_URL"])
 
@@ -169,6 +193,9 @@ def handler(event: dict, context) -> dict:
         address        = s(b.get("address"))
         living_address = s(b.get("livingAddress"))
         work_address   = s(b.get("workAddress"))
+        if passport_taken(cur, b.get("passportSeries"), b.get("passportNumber"), b.get("phone")):
+            cur.close(); conn.close()
+            return {"statusCode": 409, "headers": CORS, "body": json.dumps({"error": DUPLICATE_MSG}, ensure_ascii=False)}
         passport_series = s(b.get("passportSeries"))
         passport_number = s(b.get("passportNumber"))
         passport_date  = s(b.get("passportDate"))
