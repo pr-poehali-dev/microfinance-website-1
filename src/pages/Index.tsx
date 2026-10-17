@@ -3,7 +3,6 @@ import Navbar from "@/components/Navbar";
 import HeroAboutServices from "@/components/HeroAboutServices";
 import Testimonials from "@/components/Testimonials";
 import InvestSection from "@/components/InvestSection";
-import FortuneWheel from "@/components/FortuneWheel";
 import PauseBanner from "@/components/PauseBanner";
 
 const FaqContactsFooter = lazy(() => import("@/components/FaqContactsFooter"));
@@ -19,7 +18,6 @@ export default function Index() {
 
   return (
     <div className="min-h-screen font-golos" style={{ background: "#ffffff" }}>
-      <FortuneWheel />
       <PauseBanner />
       <Navbar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} scrollTo={scrollTo} />
       <HeroAboutServices scrollTo={scrollTo} />
