@@ -18,6 +18,16 @@ export const SBP_BANKS = [
   "Другой банк",
 ];
 
+export const OTHER_BANK = "Другой банк";
+
+export function isOtherBank(bank: string): boolean {
+  return bank === OTHER_BANK || (!!bank && !SBP_BANKS.includes(bank));
+}
+
+export function customBankName(bank: string): string {
+  return bank === OTHER_BANK ? "" : bank;
+}
+
 const SEP = " · ";
 
 export function splitPayout(value: string): { main: string; bank: string } {
@@ -41,5 +51,6 @@ export function validatePayout(value: string): string {
   const cardOk = digits.length >= 16 && digits.length <= 19;
   if (!phoneOk && !cardOk) return "Укажите телефон для перевода по СБП";
   if (phoneOk && !bank) return "Выберите банк, на который перевести деньги по СБП";
+  if (phoneOk && bank === OTHER_BANK) return "Впишите название вашего банка";
   return "";
 }
