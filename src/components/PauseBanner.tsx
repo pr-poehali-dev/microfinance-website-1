@@ -1,6 +1,8 @@
 import Icon from "@/components/ui/icon";
 
-export default function PauseBanner() {
+const DEFAULT_MESSAGE = "Обрабатываются уже поданные заявки. В течение 1 дня все заявки будут рассмотрены. Приносим свои извинения.";
+
+export default function PauseBanner({ message }: { message?: string }) {
   return (
     <div
       role="alert"
@@ -14,7 +16,7 @@ export default function PauseBanner() {
             На данный момент новые заявки на займы не принимаются!
           </div>
           <div className="text-sm sm:text-base font-semibold mt-1 text-white/95">
-            Обрабатываются уже поданные заявки. В течение 1 дня все заявки будут рассмотрены. Приносим свои извинения.
+            {message?.trim() || DEFAULT_MESSAGE}
           </div>
         </div>
       </div>

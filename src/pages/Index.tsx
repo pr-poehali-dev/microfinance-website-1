@@ -11,7 +11,7 @@ const FaqContactsFooter = lazy(() => import("@/components/FaqContactsFooter"));
 
 export default function Index() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const paused = usePaused();
+  const { paused, message } = usePaused();
 
   const scrollTo = (href: string) => {
     setMobileOpen(false);
@@ -21,7 +21,7 @@ export default function Index() {
 
   return (
     <div className="min-h-screen font-golos" style={{ background: "#ffffff" }}>
-      {paused === true && <PauseBanner />}
+      {paused === true && <PauseBanner message={message} />}
       {paused === false && <FortuneWheel />}
       <Navbar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} scrollTo={scrollTo} />
       <HeroAboutServices scrollTo={scrollTo} />

@@ -135,6 +135,14 @@ def applications_paused() -> bool:
     k.close(); c.close()
     return bool(r) and r[0] == "true"
 
+def pause_message() -> str:
+    c = psycopg2.connect(os.environ["DATABASE_URL"])
+    k = c.cursor()
+    k.execute(f"SELECT value FROM {SCHEMA}.site_settings WHERE key = 'pause_message'")
+    r = k.fetchone()
+    k.close(); c.close()
+    return "Новые заявки временно не принимаются. " + ((r[0] if r and r[0].strip() else "") or "Приносим извинения.")
+
 PAUSED_MSG = "Новые заявки временно не принимаются. Уже поданные заявки обрабатываются, в течение 1 дня все будут рассмотрены. Приносим извинения."
 
 def handler(event: dict, context) -> dict:
@@ -202,7 +210,7 @@ def handler(event: dict, context) -> dict:
                 "body": json.dumps({"error": "Заполните все поля"}, ensure_ascii=False)}
 
     if applications_paused():
-        return {"statusCode": 503, "headers": cors_headers, "body": json.dumps({"error": PAUSED_MSG}, ensure_ascii=False)}
+        return {"statusCode": 503, "headers": cors_headers, "body": json.dumps({"error": pause_message()}, ensure_ascii=False)}
 
     try:
         amount = float(amount_raw)

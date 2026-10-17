@@ -207,10 +207,10 @@ def handler(event: dict, context) -> dict:
 
     # --- ПАУЗА ПРИЁМА ЗАЯВОК: публичный статус (GET, sub='pause_status') ---
     if sub == "pause_status" and method == "GET":
-        cur.execute(f"SELECT value FROM {SCHEMA}.site_settings WHERE key = 'applications_paused'")
-        pr = cur.fetchone()
+        cur.execute(f"SELECT key, value FROM {SCHEMA}.site_settings WHERE key IN ('applications_paused', 'pause_message')")
+        st = dict(cur.fetchall())
         cur.close(); conn.close()
-        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"paused": bool(pr) and pr[0] == "true"})}
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"paused": st.get("applications_paused") == "true", "message": st.get("pause_message") or ""}, ensure_ascii=False)}
 
     # --- ПРОВЕРКА ТОКЕНА ---
     token_valid = check_admin_token(cur, token)
@@ -222,6 +222,12 @@ def handler(event: dict, context) -> dict:
     # --- ПАУЗА ПРИЁМА ЗАЯВОК: переключить (POST, sub='pause_set') ---
     if sub == "pause_set" and method == "POST":
         val = "true" if body.get("paused") else "false"
+        if "message" in body:
+            msg_v = str(body.get("message") or "").strip()[:500].replace("'", "''")
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.site_settings (key, value, updated_at) VALUES ('pause_message', '{msg_v}', NOW()) "
+                f"ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"
+            )
         cur.execute(
             f"INSERT INTO {SCHEMA}.site_settings (key, value, updated_at) VALUES ('applications_paused', '{val}', NOW()) "
             f"ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"
