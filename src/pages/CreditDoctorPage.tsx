@@ -102,9 +102,14 @@ export default function CreditDoctorPage() {
             Программа для клиентов с <span className="text-emerald-950 font-semibold">плохой кредитной историей</span>.
             Восстановите свой кредитный рейтинг поэтапно и получите доступ к большим суммам.
           </p>
-          <p className="text-emerald-950/50 text-base mb-10">
+          <p className="text-emerald-950/50 text-base mb-4">
             Сумма займа от <span className="text-emerald-600 font-bold">500 ₽</span> до <span className="text-emerald-600 font-bold">50 000 ₽</span>
           </p>
+          <div className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl mb-10 text-sm sm:text-base"
+            style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.4)" }}>
+            <Icon name="Info" size={18} className="text-amber-600 shrink-0" />
+            <span className="text-emerald-950/80">Услуга платная: стоимость программы <b className="text-emerald-950">1 799 ₽</b></span>
+          </div>
 
           <button
             onClick={() => navigate("/apply", { state: { isCreditDoctor: true } })}
