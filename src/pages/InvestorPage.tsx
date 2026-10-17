@@ -8,6 +8,7 @@ import InvestorPayouts from "./investor/InvestorPayouts";
 import InvestorCards from "./investor/InvestorCards";
 import InvestorDocs from "./investor/InvestorDocs";
 import InvestorTopup from "./investor/InvestorTopup";
+import SupportChat from "./dashboard/SupportChat";
 import { INVEST_URL, CONTRACT_URL, YK_URL, InvestorMe, authHeaders, fmt } from "./investor/investorTypes";
 
 export default function InvestorPage() {
@@ -62,6 +63,7 @@ export default function InvestorPage() {
 
   return (
     <div className="min-h-screen font-golos" style={{ background: "#ffffff" }}>
+      {data && <SupportChat kind="investor" tokenKey="investor_token" />}
       <nav className="sticky top-0 z-50 glass" style={{ borderBottom: "1px solid rgba(16,185,129,0.15)" }}>
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <button onClick={() => navigate("/")} className="flex items-center gap-2">

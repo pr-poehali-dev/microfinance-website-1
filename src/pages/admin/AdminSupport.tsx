@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 const SUPPORT_URL = "https://functions.poehali.dev/20eb9a44-796b-4332-85d3-f6bbaff4a373";
 
-interface Thread { userId: number; name: string; phone: string; lastText: string; lastAt: string; lastSender: string; unread: number }
+interface Thread { kind: string; userId: number; name: string; phone: string; lastText: string; lastAt: string; lastSender: string; unread: number }
 interface Msg { id: number; sender: string; text: string; createdAt: string }
 
 function fmt(iso: string) {
@@ -23,22 +23,22 @@ export default function AdminSupport({ token, onChanged }: { token: string; onCh
     if (r.ok) setThreads((await r.json()).threads || []);
   }
 
-  async function loadThread(uid: number) {
-    const r = await fetch(`${SUPPORT_URL}?role=admin&sub=thread&userId=${uid}`, { headers: hdr });
+  async function loadThread(uid: number, kd: string = sel?.kind || "user") {
+    const r = await fetch(`${SUPPORT_URL}?role=admin&sub=thread&kind=${kd}&userId=${uid}`, { headers: hdr });
     if (r.ok) { setMsgs((await r.json()).messages || []); onChanged?.(); }
   }
 
   useEffect(() => {
     loadThreads();
-    const i = setInterval(() => { if (document.hidden) return; loadThreads(); if (sel) loadThread(sel.userId); }, 15000);
+    const i = setInterval(() => { if (document.hidden) return; loadThreads(); if (sel) loadThread(sel.userId, sel.kind); }, 15000);
     return () => clearInterval(i);
-  }, [sel?.userId]);
+  }, [sel?.userId, sel?.kind]);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
 
   async function open(t: Thread) {
     setSel(t); setMsgs([]);
-    await loadThread(t.userId);
+    await loadThread(t.userId, t.kind);
     loadThreads();
   }
 
@@ -46,9 +46,9 @@ export default function AdminSupport({ token, onChanged }: { token: string; onCh
     const t = text.trim();
     if (!t || !sel || busy) return;
     setBusy(true);
-    const r = await fetch(`${SUPPORT_URL}?role=admin&sub=reply`, { method: "POST", headers: hdr, body: JSON.stringify({ userId: sel.userId, text: t }) });
+    const r = await fetch(`${SUPPORT_URL}?role=admin&sub=reply`, { method: "POST", headers: hdr, body: JSON.stringify({ userId: sel.userId, kind: sel.kind, text: t }) });
     setBusy(false);
-    if (r.ok) { setText(""); loadThread(sel.userId); loadThreads(); }
+    if (r.ok) { setText(""); loadThread(sel.userId, sel.kind); loadThreads(); }
   }
 
   const card = { background: "rgba(255,255,255,0.95)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 14 };
@@ -58,10 +58,10 @@ export default function AdminSupport({ token, onChanged }: { token: string; onCh
       <div style={{ ...card, flex: "1 1 280px", maxWidth: 380, maxHeight: 560, overflowY: "auto" }}>
         {threads.length === 0 && <div style={{ padding: 20, color: "rgba(2,44,34,0.5)", fontSize: 14 }}>Обращений пока нет</div>}
         {threads.map((t) => (
-          <div key={t.userId} onClick={() => open(t)}
-            style={{ padding: "12px 14px", cursor: "pointer", borderBottom: "1px solid rgba(16,185,129,0.15)", background: sel?.userId === t.userId ? "rgba(16,185,129,0.12)" : "transparent" }}>
+          <div key={`${t.kind}-${t.userId}`} onClick={() => open(t)}
+            style={{ padding: "12px 14px", cursor: "pointer", borderBottom: "1px solid rgba(16,185,129,0.15)", background: sel?.userId === t.userId && sel?.kind === t.kind ? "rgba(16,185,129,0.12)" : "transparent" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ flex: 1, fontWeight: 700, fontSize: 14, color: "#022c22" }}>{t.name || t.phone}</div>
+              <div style={{ flex: 1, fontWeight: 700, fontSize: 14, color: "#022c22" }}>{t.name || t.phone}{t.kind === "investor" && <span style={{ marginLeft: 6, background: "#f59e0b", color: "#fff", borderRadius: 6, padding: "1px 6px", fontSize: 10, fontWeight: 700 }}>ИНВЕСТОР</span>}</div>
               {t.unread > 0 && <span style={{ background: "#ef4444", color: "#fff", borderRadius: 20, padding: "1px 8px", fontSize: 12, fontWeight: 700 }}>{t.unread}</span>}
             </div>
             <div style={{ fontSize: 12, color: "rgba(2,44,34,0.5)" }}>{t.phone} · {fmt(t.lastAt)}</div>
@@ -78,7 +78,7 @@ export default function AdminSupport({ token, onChanged }: { token: string; onCh
         ) : (
           <>
             <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(16,185,129,0.2)", fontWeight: 700, color: "#022c22" }}>
-              {sel.name || "Клиент"} <span style={{ fontWeight: 400, color: "rgba(2,44,34,0.5)", fontSize: 13 }}>{sel.phone}</span>
+              {sel.name || (sel.kind === "investor" ? "Инвестор" : "Клиент")} <span style={{ fontWeight: 400, color: "rgba(2,44,34,0.5)", fontSize: 13 }}>{sel.phone}</span>
             </div>
             <div style={{ flex: 1, overflowY: "auto", padding: 14, display: "flex", flexDirection: "column", gap: 8 }}>
               {msgs.map((m) => (

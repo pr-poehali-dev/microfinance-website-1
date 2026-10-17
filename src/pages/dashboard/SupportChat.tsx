@@ -10,7 +10,7 @@ function fmt(iso: string) {
   return d.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
-export default function SupportChat() {
+export default function SupportChat({ kind = "user", tokenKey = "token" }: { kind?: "user" | "investor"; tokenKey?: string }) {
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [unread, setUnread] = useState(0);
@@ -18,11 +18,12 @@ export default function SupportChat() {
   const [sending, setSending] = useState(false);
   const [err, setErr] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
-  const token = () => localStorage.getItem("token") || "";
+  const token = () => localStorage.getItem(tokenKey) || "";
+  const kq = kind === "investor" ? "kind=investor&" : "";
   const hdr = () => ({ "Content-Type": "application/json", Authorization: `Bearer ${token()}` });
 
   async function load(markRead: boolean) {
-    const r = await fetch(`${SUPPORT_URL}?${markRead ? "markRead=1" : ""}`, { headers: hdr() });
+    const r = await fetch(`${SUPPORT_URL}?${kq}${markRead ? "markRead=1" : ""}`, { headers: hdr() });
     if (!r.ok) return;
     const d = await r.json();
     setMsgs(d.messages || []);
@@ -30,7 +31,7 @@ export default function SupportChat() {
   }
 
   async function loadUnread() {
-    const r = await fetch(`${SUPPORT_URL}?sub=unread`, { headers: hdr() });
+    const r = await fetch(`${SUPPORT_URL}?${kq}sub=unread`, { headers: hdr() });
     if (r.ok) setUnread((await r.json()).unread || 0);
   }
 
@@ -51,7 +52,7 @@ export default function SupportChat() {
     const t = text.trim();
     if (!t || sending) return;
     setSending(true); setErr("");
-    const r = await fetch(SUPPORT_URL, { method: "POST", headers: hdr(), body: JSON.stringify({ text: t }) });
+    const r = await fetch(`${SUPPORT_URL}?${kq}`, { method: "POST", headers: hdr(), body: JSON.stringify({ text: t }) });
     setSending(false);
     if (!r.ok) { setErr("Не удалось отправить, попробуйте ещё раз"); return; }
     setText("");
