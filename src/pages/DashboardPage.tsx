@@ -344,16 +344,24 @@ export default function DashboardPage() {
         .catch(() => {});
     }
 
-    // Автообновление каждые 60 секунд — чтобы статус одобрения появлялся без перезагрузки
+    // Автообновление каждые 2 минуты, только пока вкладка открыта — чтобы статус одобрения появлялся без перезагрузки
     const interval = setInterval(() => {
+      if (document.hidden) return;
       const t = localStorage.getItem("token");
       if (t) loadData(t, false);
-    }, 60000);
+    }, 120000);
     const fast = setInterval(() => {
+      if (document.hidden) return;
       const t = localStorage.getItem("token");
       if (t && contractsPendingRef.current) loadData(t, false);
-    }, 4000);
-    return () => { clearInterval(interval); clearInterval(fast); };
+    }, 6000);
+    const onVisible = () => {
+      if (document.hidden) return;
+      const t = localStorage.getItem("token");
+      if (t) loadData(t, false);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { clearInterval(interval); clearInterval(fast); document.removeEventListener("visibilitychange", onVisible); };
   }, [navigate]);
 
   // Таймер для авто-займа (pending)

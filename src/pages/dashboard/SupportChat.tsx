@@ -37,11 +37,11 @@ export default function SupportChat() {
   useEffect(() => {
     if (open) {
       load(true);
-      const i = setInterval(() => load(true), 8000);
+      const i = setInterval(() => { if (!document.hidden) load(true); }, 10000);
       return () => clearInterval(i);
     }
     loadUnread();
-    const i = setInterval(loadUnread, 30000);
+    const i = setInterval(() => { if (!document.hidden) loadUnread(); }, 90000);
     return () => clearInterval(i);
   }, [open]);
 

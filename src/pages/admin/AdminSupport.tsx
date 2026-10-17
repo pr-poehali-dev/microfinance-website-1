@@ -30,7 +30,7 @@ export default function AdminSupport({ token, onChanged }: { token: string; onCh
 
   useEffect(() => {
     loadThreads();
-    const i = setInterval(() => { loadThreads(); if (sel) loadThread(sel.userId); }, 10000);
+    const i = setInterval(() => { if (document.hidden) return; loadThreads(); if (sel) loadThread(sel.userId); }, 15000);
     return () => clearInterval(i);
   }, [sel?.userId]);
 

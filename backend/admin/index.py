@@ -2530,34 +2530,26 @@ def handler(event: dict, context) -> dict:
 
     # --- ЧИСЛО НОВЫХ СООБЩЕНИЙ ОБ ОПЛАТЕ ПО КАРТАМ (GET, sub='card_notices_count') ---
     if sub == "card_notices_count" and method == "GET":
-        cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.card_payment_notices WHERE status = 'new'")
-        cnt = cur.fetchone()[0]
-        cur.execute(f"SELECT COUNT(DISTINCT (loan_type, loan_id)) FROM {SCHEMA}.loan_payment_notices WHERE status = 'new'")
-        loan_cnt = cur.fetchone()[0]
-        cur.execute(
-            f"SELECT COUNT(*) FROM {SCHEMA}.applications WHERE status = 'pending' AND COALESCE(is_card_request, FALSE) = FALSE "
-            f"AND (COALESCE(is_credit_doctor, FALSE) = FALSE OR COALESCE(cd_paid, FALSE) = TRUE)"
-        )
-        apps_wait = cur.fetchone()[0]
         cur.execute(f"""
-            SELECT COUNT(*) FROM {SCHEMA}.applications a
-            JOIN LATERAL (
-                SELECT lo.signed, lo.disbursed_at FROM {SCHEMA}.loans lo
-                JOIN {SCHEMA}.users u ON u.id = lo.user_id
-                WHERE u.phone = a.phone ORDER BY lo.created_at DESC LIMIT 1
-            ) l ON true
-            WHERE a.status IN ('approved','partner_card') AND l.signed = TRUE AND l.disbursed_at IS NULL
+            SELECT
+              (SELECT COUNT(*) FROM {SCHEMA}.card_payment_notices WHERE status = 'new'),
+              (SELECT COUNT(DISTINCT (loan_type, loan_id)) FROM {SCHEMA}.loan_payment_notices WHERE status = 'new'),
+              (SELECT COUNT(*) FROM {SCHEMA}.applications WHERE status = 'pending' AND COALESCE(is_card_request, FALSE) = FALSE
+                 AND (COALESCE(is_credit_doctor, FALSE) = FALSE OR COALESCE(cd_paid, FALSE) = TRUE)),
+              (SELECT COUNT(*) FROM {SCHEMA}.applications a
+                 JOIN LATERAL (
+                   SELECT lo.signed, lo.disbursed_at FROM {SCHEMA}.loans lo
+                   JOIN {SCHEMA}.users u ON u.id = lo.user_id
+                   WHERE u.phone = a.phone ORDER BY lo.created_at DESC LIMIT 1
+                 ) l ON true
+                 WHERE a.status IN ('approved','partner_card') AND l.signed = TRUE AND l.disbursed_at IS NULL),
+              (SELECT COUNT(*) FROM {SCHEMA}.applications WHERE status = 'partner_card' AND partner_card_status = 'pending'),
+              (SELECT COUNT(*) FROM {SCHEMA}.car_loan_applications WHERE status = 'pending' OR (status = 'approved' AND contract_signed = TRUE AND disbursed_at IS NULL)),
+              (SELECT COUNT(*) FROM {SCHEMA}.shopping_loan_applications WHERE status = 'pending' OR (status = 'approved' AND contract_signed = TRUE AND disbursed_at IS NULL)),
+              (SELECT COUNT(*) FROM {SCHEMA}.card_requests WHERE status = 'pending')
         """)
-        apps_wait += cur.fetchone()[0]
-        cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.applications WHERE status = 'partner_card' AND partner_card_status = 'pending'")
-        ident_wait = cur.fetchone()[0]
-        apps_wait += ident_wait
-        cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.car_loan_applications WHERE status = 'pending' OR (status = 'approved' AND contract_signed = TRUE AND disbursed_at IS NULL)")
-        car_wait = cur.fetchone()[0]
-        cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.shopping_loan_applications WHERE status = 'pending' OR (status = 'approved' AND contract_signed = TRUE AND disbursed_at IS NULL)")
-        shop_wait = cur.fetchone()[0]
-        cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.card_requests WHERE status = 'pending'")
-        card_req_wait = cur.fetchone()[0]
+        cnt, loan_cnt, apps_pending, apps_signed, ident_wait, car_wait, shop_wait, card_req_wait = cur.fetchone()
+        apps_wait = apps_pending + apps_signed + ident_wait
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({
             "count": int(cnt), "loanCount": int(loan_cnt),

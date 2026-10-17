@@ -105,7 +105,7 @@ export default function AdminPage() {
   };
   useEffect(() => {
     loadSupportUnread();
-    const i = setInterval(loadSupportUnread, 20000);
+    const i = setInterval(loadSupportUnread, 60000);
     return () => clearInterval(i);
   }, [token]);
   const [waiting, setWaiting] = useState({ apps: 0, car: 0, shop: 0, cardReq: 0, ident: 0 });
@@ -141,7 +141,7 @@ export default function AdminPage() {
     if (!token) return;
     loadCardNotices();
     loadInvestNew();
-    const t = setInterval(() => { loadCardNotices(); loadInvestNew(); }, 30000);
+    const t = setInterval(() => { loadCardNotices(); loadInvestNew(); }, 45000);
     return () => clearInterval(t);
   }, [token]);
 
