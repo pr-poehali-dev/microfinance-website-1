@@ -1207,6 +1207,25 @@ def handler(event: dict, context) -> dict:
     if body.get("ensure"):
         return ensure_client_contracts(cur, conn, t)
 
+    if body.get("certificates"):
+        cur.execute(
+            f"SELECT u.id, u.phone FROM {SCHEMA}.sessions s JOIN {SCHEMA}.users u ON u.id = s.user_id "
+            f"WHERE s.token = '{t}' AND s.expires_at > NOW()"
+        )
+        u = cur.fetchone()
+        if not u:
+            cur.close(); conn.close()
+            return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
+        import certs
+        deps = {
+            "SCHEMA": SCHEMA, "MKK": MKK, "CSS": CONTRACT_CSS, "msk": msk, "s3_client": s3_client,
+            "store_contract_file": store_contract_file, "SEAL_IMG": SEAL_IMG, "SIGN_IMG": SIGN_IMG,
+            "digital_sign_block": digital_sign_block,
+        }
+        items = certs.ensure_certificates(cur, conn, u[0], u[1], deps)
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"items": items}, ensure_ascii=False)}
+
     if body.get("investorEnsure"):
         cur.execute(
             f"SELECT s.investor_id FROM {SCHEMA}.investor_sessions s WHERE s.token = '{t}' AND s.expires_at > NOW()"

@@ -3,6 +3,7 @@ import SignCodeDialog from "@/components/SignCodeDialog";
 import AddendumDialog from "./dashboard/AddendumDialog";
 import DashboardSidebar, { DashboardSection } from "./dashboard/DashboardSidebar";
 import ClientDocsSection from "./dashboard/ClientDocsSection";
+import DebtCertificatesSection from "./dashboard/DebtCertificatesSection";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
@@ -1191,6 +1192,8 @@ export default function DashboardPage() {
         )}
 
         {section === "photos" && !loading && !error && user && <ClientDocsSection phone={user.phone} />}
+
+        {section === "certs" && !loading && !error && <DebtCertificatesSection />}
 
         {section === "docs" && !loading && !error && (
           <div className="glass rounded-2xl p-4 sm:p-6 mb-6">

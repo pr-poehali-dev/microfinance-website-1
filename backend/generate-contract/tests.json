@@ -1,17 +1,7 @@
 {
   "tests": [
-    {
-      "name": "OPTIONS preflight",
-      "method": "OPTIONS",
-      "path": "/",
-      "expectedStatus": 200
-    },
-    {
-      "name": "No token returns 401",
-      "method": "POST",
-      "path": "/",
-      "body": {"appId": 1},
-      "expectedStatus": 401
-    }
+    {"name": "OPTIONS preflight", "method": "OPTIONS", "path": "/", "expectedStatus": 200},
+    {"name": "No token returns 401", "method": "POST", "path": "/", "body": {"appId": 1}, "expectedStatus": 401},
+    {"name": "Certificates without token returns 401", "method": "POST", "path": "/", "body": {"certificates": true}, "expectedStatus": 401}
   ]
 }

@@ -1,0 +1,2 @@
+ALTER TABLE t_p30184577_microfinance_website.debt_certificates ADD COLUMN IF NOT EXISTS title TEXT NOT NULL DEFAULT '';
+ALTER TABLE t_p30184577_microfinance_website.debt_certificates ADD COLUMN IF NOT EXISTS amount NUMERIC(12,2) NOT NULL DEFAULT 0;
