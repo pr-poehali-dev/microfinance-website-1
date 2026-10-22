@@ -123,7 +123,7 @@ export default function FortuneWheel() {
       />
 
       <div
-        className="fixed top-1/2 left-1/2 z-50 w-[390px] max-w-[94vw] max-h-[96vh] overflow-y-auto rounded-3xl p-5 transition-all duration-500"
+        className="fixed top-1/2 left-1/2 z-50 w-[300px] sm:w-[390px] max-w-[92vw] max-h-[92vh] overflow-y-auto rounded-3xl p-3 sm:p-5 transition-all duration-500"
         style={{
           transform: `translate(-50%,-50%) scale(${open ? 1 : 0.6})`,
           opacity: open ? 1 : 0,
@@ -133,16 +133,16 @@ export default function FortuneWheel() {
           boxShadow: "0 10px 60px rgba(245,158,11,0.45), 0 0 0 4px rgba(16,185,129,0.15)",
         }}
       >
-        <button onClick={() => setOpen(false)} className="absolute top-3 right-3 text-emerald-950/40 hover:text-emerald-950" aria-label="Закрыть">
+        <button onClick={() => setOpen(false)} className="absolute top-2 right-2 z-20 h-9 w-9 rounded-full flex items-center justify-center text-emerald-950 bg-white/90 hover:bg-white" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.25)" }} aria-label="Закрыть">
           <Icon name="X" size={20} />
         </button>
 
-        <div className="text-center mb-3">
-          <div className="font-oswald text-3xl font-bold" style={{ background: "linear-gradient(90deg,#ef4444,#f59e0b,#10b981)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Колесо фортуны</div>
-          <div className="text-emerald-950/50 text-sm">Крутите и получите приз к займу</div>
+        <div className="text-center mb-2 sm:mb-3 pr-8 sm:pr-0">
+          <div className="font-oswald text-xl sm:text-3xl font-bold" style={{ background: "linear-gradient(90deg,#ef4444,#f59e0b,#10b981)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Колесо фортуны</div>
+          <div className="text-emerald-950/50 text-xs sm:text-sm">Крутите и получите приз к займу</div>
         </div>
 
-        <div className="relative mx-auto" style={{ width: SIZE, height: SIZE, maxWidth: "100%" }}>
+        <div className="relative mx-auto w-[220px] h-[220px] sm:w-[340px] sm:h-[340px] mt-3 sm:mt-0">
           <div className="absolute left-1/2 -top-3 z-10 -translate-x-1/2"
             style={{ width: 0, height: 0, borderLeft: "14px solid transparent", borderRight: "14px solid transparent", borderTop: "28px solid #dc2626", filter: "drop-shadow(0 3px 3px rgba(0,0,0,0.35))" }} />
           <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="w-full h-full"
@@ -197,7 +197,7 @@ export default function FortuneWheel() {
         </div>
 
         {prize ? (
-          <div className="mt-4 text-center rounded-2xl p-4" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>
+          <div className="mt-3 sm:mt-4 text-center rounded-2xl p-3 sm:p-4" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>
             <div className="font-oswald text-2xl font-bold" style={{ color: "#ea580c" }}>Поздравляем! 🎉</div>
             <div className="text-emerald-950/70 text-sm mt-1">Ваш приз:</div>
             <div className="font-oswald text-2xl font-bold text-emerald-700 my-1">{prize}</div>
@@ -206,7 +206,7 @@ export default function FortuneWheel() {
         ) : (
           <>
             <button onClick={spin} disabled={spinning}
-              className="text-white font-bold w-full py-3.5 rounded-2xl mt-4 disabled:opacity-60 text-lg"
+              className="text-white font-bold w-full py-2.5 sm:py-3.5 rounded-2xl mt-3 sm:mt-4 disabled:opacity-60 text-base sm:text-lg"
               style={{ background: "linear-gradient(135deg,#f59e0b,#ef4444)", boxShadow: "0 0 30px rgba(245,158,11,0.55)" }}>
               {spinning ? "Крутится..." : "Крутить колесо"}
             </button>
