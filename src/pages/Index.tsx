@@ -2,7 +2,6 @@ import { useState, lazy, Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import HeroAboutServices from "@/components/HeroAboutServices";
 import Testimonials from "@/components/Testimonials";
-import InvestSection from "@/components/InvestSection";
 import PauseBanner from "@/components/PauseBanner";
 import FortuneWheel from "@/components/FortuneWheel";
 import usePaused from "@/hooks/usePaused";
@@ -25,7 +24,6 @@ export default function Index() {
       {paused === false && <FortuneWheel />}
       <Navbar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} scrollTo={scrollTo} />
       <HeroAboutServices scrollTo={scrollTo} />
-      <InvestSection />
       <Testimonials />
       <Suspense fallback={null}>
         <FaqContactsFooter />

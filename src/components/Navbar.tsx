@@ -4,7 +4,6 @@ import Icon from "@/components/ui/icon";
 const NAV_LINKS = [
   { label: "Главная", href: "#home" },
   { label: "Услуги", href: "#services" },
-  { label: "Инвестиции", href: "#invest" },
   { label: "Отзывы", href: "#reviews" },
   { label: "Контакты", href: "#contacts" },
   { label: "FAQ", href: "#faq" },
@@ -55,14 +54,6 @@ export default function Navbar({ mobileOpen, setMobileOpen, scrollTo }: NavbarPr
             <Icon name="User" size={15} />
             {localStorage.getItem("token") ? "Кабинет" : "Войти для заёмщиков"}
           </button>
-          <button
-            onClick={() => navigate(localStorage.getItem("investor_token") ? "/investor" : "/investor/login")}
-            className="flex items-center gap-2 whitespace-nowrap text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-opacity hover:opacity-90"
-            style={{ background: "#064e3b", boxShadow: "0 4px 14px rgba(6,78,59,0.25)" }}
-          >
-            <Icon name="Briefcase" size={15} />
-            Войти для инвесторов
-          </button>
         </div>
 
         <button
@@ -97,14 +88,6 @@ export default function Navbar({ mobileOpen, setMobileOpen, scrollTo }: NavbarPr
           >
             <Icon name="User" size={16} />
             {localStorage.getItem("token") ? "Личный кабинет" : "Войти для заёмщиков"}
-          </button>
-          <button
-            onClick={() => { setMobileOpen(false); navigate(localStorage.getItem("investor_token") ? "/investor" : "/investor/login"); }}
-            className="text-white font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2"
-            style={{ background: "#064e3b" }}
-          >
-            <Icon name="Briefcase" size={16} />
-            Войти для инвесторов
           </button>
         </div>
       )}
