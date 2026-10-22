@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import CookieBanner from "./components/CookieBanner";
 import InstallAppButton from "./components/InstallAppButton";
@@ -12,8 +12,6 @@ import ChatWidget from "./components/ChatWidget";
 const Index = lazy(() => import("./pages/Index"));
 const CardPage = lazy(() => import("./pages/CardPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
-const InvestorLoginPage = lazy(() => import("./pages/InvestorLoginPage"));
-const InvestorPage = lazy(() => import("./pages/InvestorPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const CreditDoctorPage = lazy(() => import("./pages/CreditDoctorPage"));
@@ -59,8 +57,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/card" element={<CardPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/investor/login" element={<InvestorLoginPage />} />
-            <Route path="/investor" element={<InvestorPage />} />
+            <Route path="/investor/login" element={<Navigate to="/" replace />} />
+            <Route path="/investor" element={<Navigate to="/" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/credit-doctor" element={<CreditDoctorPage />} />
