@@ -57,10 +57,12 @@ def started_units(start_dt, unit_days):
     return diff // unit_days + 1
 
 
-def calc_penalty(amount, days, rate, disbursed_at, created_at, paid_total, db_status, wheel_rub=0):
+def calc_penalty(amount, days, rate, disbursed_at, created_at, paid_total, db_status, wheel_rub=0, hol=None):
     """Считает пеню за просрочку. Возвращает (effective_status, base_total, total_due, is_overdue, overdue_days, penalty_amount).
     amount — тело долга (сумма + страховка). Пеня 2,99%/день от amount начисляется за каждый
     полный календарный день с даты истечения срока, если долг не погашен полностью.
+    hol — дата окончания кредитных каникул: до неё просрочки нет, проценты продолжают начисляться,
+    пеня считается только со дня после окончания каникул.
     Применяется только к уже выданным займам (active/overdue) — не трогает review/paid/rejected."""
     base_interest = round(float(amount) * float(rate) * int(days))
     base_interest -= min(int(wheel_rub or 0), base_interest)
@@ -69,12 +71,50 @@ def calc_penalty(amount, days, rate, disbursed_at, created_at, paid_total, db_st
         return db_status, base_total, base_total, False, 0, 0.0
     due_date = (disbursed_at + timedelta(days=int(days))).date()
     today = datetime.now().date()
+    if hol and hol > due_date:
+        extra_days = max(0, (min(today, hol) - due_date).days)
+        base_total += round(float(amount) * float(rate) * extra_days)
+        due_date = hol
     if today <= due_date or float(paid_total) >= base_total:
         return "active", base_total, base_total, False, 0, 0.0
     overdue_days = (today - due_date).days
     penalty = round(float(amount) * OVERDUE_DAILY_PENALTY_RATE * overdue_days)
     total_due = base_total + penalty
     return "overdue", base_total, total_due, True, overdue_days, penalty
+
+
+def load_holidays(cur, phone):
+    """Заявки клиента на кредитные каникулы (последние 30)."""
+    ph = phone.replace("'", "''")
+    cur.execute(
+        f"SELECT id, items, approved_items, status, admin_comment, until_date, created_at, decided_at, client_comment "
+        f"FROM {SCHEMA}.credit_holidays WHERE phone = '{ph}' ORDER BY id DESC LIMIT 30"
+    )
+    out = []
+    for r in cur.fetchall():
+        out.append({
+            "id": r[0], "items": r[1] or [], "approvedItems": r[2] or [], "status": r[3],
+            "adminComment": r[4] or "", "untilDate": r[5].strftime("%d.%m.%Y") if r[5] else None,
+            "untilIso": r[5].isoformat() if r[5] else None,
+            "createdAt": msk(r[6]).strftime("%d.%m.%Y в %H:%M"),
+            "clientComment": r[8] or "",
+        })
+    return out
+
+
+def holiday_map(holidays):
+    """loan_id -> дата окончания каникул (по одобренным заявкам, самая поздняя)."""
+    res = {}
+    for h in holidays:
+        if h["status"] != "approved" or not h["untilIso"]:
+            continue
+        until = datetime.strptime(h["untilIso"], "%Y-%m-%d").date()
+        for it in h["approvedItems"]:
+            if it.get("kind") == "loan":
+                lid = int(it.get("id"))
+                if lid not in res or res[lid] < until:
+                    res[lid] = until
+    return res
 
 
 CARD_MIN_PAYMENT_PERCENT = 30
@@ -329,6 +369,69 @@ def handler(event: dict, context) -> dict:
         reqs = [{"id": r_[0], "message": r_[1], "date": msk(r_[2]).strftime("%d.%m.%Y в %H:%M")} for r_ in cur.fetchall()]
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"requests": reqs}, ensure_ascii=False)}
+
+    # --- КРЕДИТНЫЕ КАНИКУЛЫ: заявка клиента (POST sub=holiday_request) ---
+    if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "holiday_request":
+        raw_h = event.get("body") or "{}"
+        bh = json.loads(raw_h) if isinstance(raw_h, str) else raw_h
+        items_in = bh.get("items") or []
+        comment_h = str(bh.get("comment") or "").strip()[:1000]
+        clean = []
+        for it in items_in[:20]:
+            kind = str(it.get("kind") or "")
+            if kind not in ("loan", "carloan", "shoploan"):
+                continue
+            try:
+                iid = int(it.get("id"))
+            except (TypeError, ValueError):
+                continue
+            if kind == "loan":
+                cur.execute(f"SELECT 1 FROM {SCHEMA}.loans WHERE id = {iid} AND user_id = {int(user_id)} AND status IN ('active','overdue')")
+            else:
+                tbl = "car_loan_applications" if kind == "carloan" else "shopping_loan_applications"
+                cur.execute(f"SELECT 1 FROM {SCHEMA}.{tbl} WHERE id = {iid} AND phone = '{phone.replace(chr(39), chr(39)*2)}' AND status = 'approved'")
+            if not cur.fetchone():
+                continue
+            pays = []
+            for pm in (it.get("payments") or [])[:60]:
+                try:
+                    pays.append({"idx": int(pm.get("idx")), "label": str(pm.get("label") or "")[:80],
+                                 "dueDate": str(pm.get("dueDate") or "")[:20], "amount": float(pm.get("amount") or 0)})
+                except (TypeError, ValueError):
+                    continue
+            if not pays:
+                continue
+            clean.append({"kind": kind, "id": iid, "label": str(it.get("label") or "")[:80], "payments": pays})
+        if not clean:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Выберите займ и платежи для каникул"}, ensure_ascii=False)}
+        ph_h = phone.replace("'", "''")
+        cur.execute(f"SELECT 1 FROM {SCHEMA}.credit_holidays WHERE phone = '{ph_h}' AND status = 'pending'")
+        if cur.fetchone():
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Ваша предыдущая заявка ещё на рассмотрении"}, ensure_ascii=False)}
+        items_json = json.dumps(clean, ensure_ascii=False).replace("'", "''")
+        fn_h = (full_name or "").replace("'", "''")
+        c_h = comment_h.replace("'", "''")
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.credit_holidays (user_id, phone, full_name, items, client_comment) "
+            f"VALUES ({int(user_id)}, '{ph_h}', '{fn_h}', '{items_json}'::jsonb, '{c_h}')"
+        )
+        conn.commit()
+        cur.close(); conn.close()
+        import urllib.request as _urh
+        tg_token_h = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+        if tg_token_h:
+            try:
+                _urh.urlopen(_urh.Request(
+                    f"https://api.telegram.org/bot{tg_token_h}/sendMessage",
+                    data=json.dumps({"chat_id": "8540431915", "parse_mode": "HTML", "text": (
+                        f"🏖 <b>Заявка на кредитные каникулы</b>\n\n👤 <b>ФИО:</b> {full_name or phone}\n📞 <b>Телефон:</b> {phone}\n"
+                        f"📄 <b>Займов:</b> {len(clean)}\n\nОткройте админку, раздел «Каникулы».")}).encode(),
+                    headers={"Content-Type": "application/json"}), timeout=5)
+            except Exception:
+                pass
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     # --- ДОКУМЕНТЫ КЛИЕНТА: список (GET sub=my_docs) ---
     if event.get("httpMethod") == "GET" and (event.get("queryStringParameters") or {}).get("sub") == "my_docs":
@@ -1605,6 +1708,8 @@ def handler(event: dict, context) -> dict:
         f"WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' AND seen = FALSE ORDER BY created_at ASC"
     )
     rate_news = [{"type": t_, "oldRate": float(o_), "newRate": float(n_), "unit": u_} for t_, o_, n_, u_ in cur.fetchall()]
+    holidays = load_holidays(cur, phone)
+    hol_map = holiday_map(holidays)
     cur.close(); conn.close()
 
     is_cd = bool(application and application.get("isCreditDoctor"))
@@ -1627,7 +1732,7 @@ def handler(event: dict, context) -> dict:
             penalty = 0.0
         else:
             status, base_total, total, is_overdue, overdue_days, penalty = calc_penalty(
-                amount, days, rate, disbursed_at, created_at, paid_total, db_status, loan_wheel_db
+                amount, days, rate, disbursed_at, created_at, paid_total, db_status, loan_wheel_db, hol_map.get(loan_id)
             )
             interest = round(base_total - float(amount))
             if loan_wheel_db:
@@ -1653,11 +1758,17 @@ def handler(event: dict, context) -> dict:
                     })
                     remaining_p -= monthly_principal
             else:
+                hol_until = hol_map.get(loan_id)
+                due_dt = (start + timedelta(days=days)).date() if hasattr(start, "date") else None
+                on_holiday = bool(hol_until and due_dt and hol_until > due_dt and datetime.now().date() <= hol_until and status != "paid")
                 schedule = [{
                     "dueDate": (start + timedelta(days=days)).strftime("%d.%m.%Y"),
                     "amount": total,
                     "label": "Погашение полной суммы" if not penalty else f"Погашение с пеней за просрочку ({overdue_days} дн.)",
                 }]
+                if on_holiday:
+                    schedule[0]["holidayUntil"] = hol_until.strftime("%d.%m.%Y")
+                    schedule[0]["label"] = f"Кредитные каникулы до {hol_until.strftime('%d.%m.%Y')}"
 
         loan_data = {
             "id": loan_id,
@@ -1730,5 +1841,6 @@ def handler(event: dict, context) -> dict:
             "promo": user_promo,
             "profileEditable": profile_editable,
             "addendumPending": addendum_pending,
+            "holidays": holidays,
         }, ensure_ascii=False)
     }

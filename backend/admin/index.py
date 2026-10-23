@@ -69,7 +69,20 @@ def principal_part(principal, gross, repaid):
     return min(principal, float(repaid) * principal / gross)
 
 
-def calc_loan_penalty(amount, days, rate, disbursed_at, created_at, paid_total, db_status, penalty_waived=0, wheel_rub=0):
+def load_hol_map(cur):
+    """loan_id -> дата окончания одобренных кредитных каникул (самая поздняя)."""
+    cur.execute(f"SELECT approved_items, until_date FROM {SCHEMA}.credit_holidays WHERE status = 'approved' AND until_date IS NOT NULL")
+    res = {}
+    for items, until in cur.fetchall():
+        for it in (items or []):
+            if it.get("kind") == "loan":
+                lid = int(it.get("id"))
+                if lid not in res or res[lid] < until:
+                    res[lid] = until
+    return res
+
+
+def calc_loan_penalty(amount, days, rate, disbursed_at, created_at, paid_total, db_status, penalty_waived=0, wheel_rub=0, hol=None):
     """Пеня за просрочку обычного займа (loans): 2,99%/день от amount за каждый день сверх срока.
     penalty_waived — сумма пени, прощённая администратором (уменьшает начисленную пеню, не ниже нуля).
     Возвращает (effective_status, total_due, is_overdue, overdue_days, penalty_amount)."""
@@ -80,6 +93,9 @@ def calc_loan_penalty(amount, days, rate, disbursed_at, created_at, paid_total, 
         return db_status, base_total, False, 0, 0.0
     due_date = (disbursed_at + timedelta(days=int(days))).date()
     today = datetime.now().date()
+    if hol and hol > due_date:
+        base_total += round(float(amount) * float(rate) * max(0, (min(today, hol) - due_date).days))
+        due_date = hol
     if today <= due_date or float(paid_total) >= base_total:
         return "active", base_total, False, 0, 0.0
     overdue_days = (today - due_date).days
@@ -426,13 +442,14 @@ def handler(event: dict, context) -> dict:
             cur.execute(f"SELECT loan_id, COALESCE(SUM(amount),0) FROM {SCHEMA}.payments WHERE loan_type='loan' AND loan_id IN ({','.join(loan_ids)}) GROUP BY loan_id")
             for lid, s in cur.fetchall():
                 paid_map[lid] = float(s)
+        hol_map = load_hol_map(cur)
         cur.close(); conn.close()
         loans = []
         for r in rows:
             lid, amount, days, rate, status, created_at, disbursed_at, penalty_waived, wheel_rub = r
             paid_total = paid_map.get(lid, 0.0)
             eff_status, total_due, is_overdue, overdue_days, penalty = calc_loan_penalty(
-                amount, days, rate, disbursed_at, created_at, paid_total, status, penalty_waived, wheel_rub
+                amount, days, rate, disbursed_at, created_at, paid_total, status, penalty_waived, wheel_rub, hol_map.get(lid)
             )
             loans.append({
                 "id": lid, "amount": float(amount), "days": days, "rate": float(rate),
@@ -527,10 +544,10 @@ def handler(event: dict, context) -> dict:
 
         cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.payments WHERE loan_type='loan' AND loan_id={loan_id}")
         paid_total = float(cur.fetchone()[0])
+        hol_w = load_hol_map(cur).get(loan_id)
 
-        # Текущая пеня без учёта уже списанного — чтобы понять, сколько ещё можно списать
         _, _, is_overdue, overdue_days, current_penalty = calc_loan_penalty(
-            amount, days, rate, disbursed_at, created_at, paid_total, status, penalty_waived, wheel_rub
+            amount, days, rate, disbursed_at, created_at, paid_total, status, penalty_waived, wheel_rub, hol_w
         )
         if not is_overdue or current_penalty <= 0:
             cur.close(); conn.close()
@@ -551,7 +568,7 @@ def handler(event: dict, context) -> dict:
 
         # Пересчитываем итоговые цифры после списания
         eff_status, total_due, is_overdue2, overdue_days2, penalty_after = calc_loan_penalty(
-            amount, days, rate, disbursed_at, created_at, paid_total, status, new_waived, wheel_rub
+            amount, days, rate, disbursed_at, created_at, paid_total, status, new_waived, wheel_rub, hol_w
         )
         cur.close(); conn.close()
 
@@ -1047,6 +1064,85 @@ def handler(event: dict, context) -> dict:
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     # --- ОТЛОЖИТЬ ЗАЯВКУ (POST, sub='postpone', appId=...) ---
+    # --- КРЕДИТНЫЕ КАНИКУЛЫ: список (GET sub=holidays) ---
+    if sub == "holidays" and method == "GET":
+        if not check_admin_token(cur, token):
+            cur.close(); conn.close()
+            return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
+        st_f = qs.get("status", "pending").replace("'", "''")
+        where = "" if st_f == "all" else f"WHERE status = '{st_f}'"
+        cur.execute(
+            f"SELECT id, phone, full_name, items, approved_items, client_comment, status, admin_comment, until_date, created_at, decided_at "
+            f"FROM {SCHEMA}.credit_holidays {where} ORDER BY id DESC LIMIT 200"
+        )
+        rows_h = cur.fetchall()
+        cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.credit_holidays WHERE status = 'pending'")
+        pending_cnt = cur.fetchone()[0]
+        cur.close(); conn.close()
+        items_h = [{
+            "id": r[0], "phone": r[1], "fullName": r[2] or "", "items": r[3] or [], "approvedItems": r[4] or [],
+            "clientComment": r[5] or "", "status": r[6], "adminComment": r[7] or "",
+            "untilDate": r[8].isoformat() if r[8] else None,
+            "createdAt": msk(r[9]).strftime("%d.%m.%Y в %H:%M"),
+            "decidedAt": msk(r[10]).strftime("%d.%m.%Y в %H:%M") if r[10] else None,
+        } for r in rows_h]
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"holidays": items_h, "pending": pending_cnt}, ensure_ascii=False)}
+
+    # --- КРЕДИТНЫЕ КАНИКУЛЫ: решение (POST sub=holiday_decide) ---
+    if sub == "holiday_decide" and method == "POST":
+        if not check_admin_token(cur, token):
+            cur.close(); conn.close()
+            return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
+        hid = int(body.get("id") or 0)
+        decision = str(body.get("decision") or "")
+        comment = str(body.get("comment") or "").strip()[:1000]
+        cur.execute(f"SELECT phone, items, status FROM {SCHEMA}.credit_holidays WHERE id = {hid}")
+        hr = cur.fetchone()
+        if not hr or hr[2] != "pending":
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена или уже обработана"}, ensure_ascii=False)}
+        c_e = comment.replace("'", "''")
+        if decision == "reject":
+            if not comment:
+                cur.close(); conn.close()
+                return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Напишите причину отказа"}, ensure_ascii=False)}
+            cur.execute(f"UPDATE {SCHEMA}.credit_holidays SET status = 'rejected', admin_comment = '{c_e}', decided_at = NOW() WHERE id = {hid}")
+            conn.commit(); cur.close(); conn.close()
+            return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+        if decision != "approve":
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Неизвестное решение"})}
+        until = str(body.get("untilDate") or "")
+        try:
+            until_d = datetime.strptime(until, "%Y-%m-%d").date()
+        except ValueError:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите дату окончания каникул"}, ensure_ascii=False)}
+        if until_d <= datetime.now().date():
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Дата окончания должна быть в будущем"}, ensure_ascii=False)}
+        approved = body.get("items")
+        if not isinstance(approved, list) or not approved:
+            approved = hr[1]
+        clean = []
+        for it in approved:
+            pays = [pm for pm in (it.get("payments") or []) if isinstance(pm, dict)]
+            if pays:
+                clean.append({"kind": it.get("kind"), "id": int(it.get("id")), "label": it.get("label") or "", "payments": pays})
+        if not clean:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Выберите хотя бы один платёж"}, ensure_ascii=False)}
+        aj = json.dumps(clean, ensure_ascii=False).replace("'", "''")
+        cur.execute(
+            f"UPDATE {SCHEMA}.credit_holidays SET status = 'approved', approved_items = '{aj}'::jsonb, until_date = '{until_d.isoformat()}', "
+            f"admin_comment = '{c_e}', decided_at = NOW() WHERE id = {hid}"
+        )
+        for it in clean:
+            if it["kind"] == "loan":
+                cur.execute(f"UPDATE {SCHEMA}.loans SET status = 'active' WHERE id = {int(it['id'])} AND status = 'overdue'")
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     if sub == "postpone" and method == "POST":
         app_id = qs.get("appId", "")
         app_id_e = str(app_id).replace("'", "''")
@@ -1483,6 +1579,7 @@ def handler(event: dict, context) -> dict:
         cur.execute(f"SELECT DISTINCT ON (loan_type, loan_id) loan_type, loan_id, amount, created_at FROM {SCHEMA}.loan_payment_notices WHERE status = 'new' ORDER BY loan_type, loan_id, id DESC")
         notice_map = {(n[0], n[1]): {"amount": float(n[2]), "createdAt": msk(n[3]).strftime("%d.%m.%Y в %H:%M")} for n in cur.fetchall()}
 
+        hol_map = load_hol_map(cur)
         cur.close(); conn.close()
 
         all_items = []
@@ -1490,7 +1587,7 @@ def handler(event: dict, context) -> dict:
             loan_id, full_name, phone, email, amount, days, rate, disbursed_at, created_at, status, tg_id, penalty_waived, wheel_rub = r
             paid_total = paid_map.get(("loan", loan_id), 0.0)
             eff_status, total_due, is_overdue, overdue_days, penalty = calc_loan_penalty(
-                amount, days, rate, disbursed_at, created_at, paid_total, status, penalty_waived, wheel_rub
+                amount, days, rate, disbursed_at, created_at, paid_total, status, penalty_waived, wheel_rub, hol_map.get(loan_id)
             )
             next_due = (disbursed_at + timedelta(days=int(days))) if disbursed_at and paid_total < total_due and status != "paid" else None
             all_items.append({
@@ -1621,7 +1718,7 @@ def handler(event: dict, context) -> dict:
             paid_total = sum(p["amount"] for p in payments)
 
             eff_status, total_due, is_overdue, overdue_days, penalty = calc_loan_penalty(
-                amount, days, rate, disbursed_at, created_at, paid_total, status, penalty_waived
+                amount, days, rate, disbursed_at, created_at, paid_total, status, penalty_waived, 0, load_hol_map(cur).get(loan_id)
             )
             start = disbursed_at or created_at
             schedule = [{"dueDate": (start + timedelta(days=days)).strftime("%d.%m.%Y"), "amount": total_due, "label": "Погашение полной суммы" if not penalty else f"Погашение с пеней за просрочку ({overdue_days} дн.)"}] if start else []

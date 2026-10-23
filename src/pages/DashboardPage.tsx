@@ -4,6 +4,8 @@ import AddendumDialog from "./dashboard/AddendumDialog";
 import DashboardSidebar, { DashboardSection } from "./dashboard/DashboardSidebar";
 import ClientDocsSection from "./dashboard/ClientDocsSection";
 import DebtCertificatesSection from "./dashboard/DebtCertificatesSection";
+import CreditHolidaysSection, { HolidaySource } from "./dashboard/CreditHolidaysSection";
+import { HolidayRequest, holidayRowsFor, activeHoliday } from "./dashboard/creditHolidays";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
@@ -170,6 +172,7 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [loans, setLoans] = useState<Loan[]>([]);
+  const [holidays, setHolidays] = useState<HolidayRequest[]>([]);
   const [application, setApplication] = useState<Application | null>(null);
   const [cardRequest, setCardRequest] = useState<CardRequest | null>(null);
   const [isRepeatClient, setIsRepeatClient] = useState(false);
@@ -277,6 +280,7 @@ export default function DashboardPage() {
         setUser(data.user);
         if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
         setLoans(data.loans || []);
+        setHolidays(data.holidays || []);
         setRateNews(data.rateNews || []);
         setAddendumPending(!!data.addendumPending);
         setLoanNotices(data.loanNotices || []);
@@ -701,7 +705,7 @@ export default function DashboardPage() {
             dues.push({
               key: `loan${l.id}`,
               title: `Займ ${fmtAppId(l.id)}`,
-              subtitle: l.status === "overdue" ? `Просрочка ${l.overdueDays ?? 0} дн.` : due ? `Погашение до ${due}` : "Погашение займа",
+              subtitle: l.status === "overdue" ? `Просрочка ${l.overdueDays ?? 0} дн.` : activeHoliday(holidays, "loan", l.id) ? `Кредитные каникулы до ${activeHoliday(holidays, "loan", l.id)}` : due ? `Погашение до ${due}` : "Погашение займа",
               amount: left,
               onPay: () => handlePay(l),
             });
@@ -736,6 +740,7 @@ export default function DashboardPage() {
               onSign={handleSign}
               onPay={handlePay}
               hideNewLoan={section === "apps"}
+              holidays={holidays}
             />
           </>
         )}
@@ -853,6 +858,7 @@ export default function DashboardPage() {
 
                     {shopLoan.contract_signed && (
                       <PaymentHistory
+                        holiday={holidayRowsFor(holidays, "shoploan", shopLoan.id)}
                         schedule={shopLoan.schedule || []}
                         payments={shopLoan.payments || []}
                         paidTotal={shopLoan.paidTotal || 0}
@@ -1056,6 +1062,7 @@ export default function DashboardPage() {
                     {carLoan.disbursed_at ? (
                       <div className="space-y-3">
                         <PaymentHistory
+                          holiday={holidayRowsFor(holidays, "carloan", carLoan.id)}
                           schedule={carLoan.schedule || []}
                           payments={carLoan.payments || []}
                           paidTotal={carLoan.paidTotal || 0}
@@ -1222,6 +1229,29 @@ export default function DashboardPage() {
             })()}
           </div>
         )}
+
+        {section === "holidays" && !loading && !error && (() => {
+          const sources: HolidaySource[] = [];
+          loans.filter((l) => l.status === "active" || l.status === "overdue").forEach((l) => {
+            if (!(l.remaining ?? l.total)) return;
+            const sch = l.schedule || [];
+            if (!sch.length) return;
+            sources.push({
+              kind: "loan", id: l.id, label: `Займ ${fmtAppId(l.id)}`,
+              payments: sch.map((x, i) => ({ idx: i, label: x.month ? `${x.month}-й платёж` : "Погашение займа", dueDate: x.dueDate || "", amount: x.amount })),
+            });
+          });
+          const addT = (t: { id: number; status: string; disbursed_at?: string | null; schedule?: ScheduleItem[] } | null, kind: "carloan" | "shoploan", title: string, pref: string) => {
+            if (!t || t.status !== "approved" || !t.disbursed_at || !(t.schedule || []).length) return;
+            sources.push({
+              kind, id: t.id, label: `${title} ${pref}-${String(t.id).padStart(12, "0")}`,
+              payments: (t.schedule || []).map((x, i) => ({ idx: i, label: x.month ? `${x.month}-й платёж` : "Платёж", dueDate: x.dueDate || "", amount: x.amount })),
+            });
+          };
+          addT(carLoan, "carloan", "Займ под залог авто", "А");
+          addT(shopLoan, "shoploan", "Займ на покупки", "Т");
+          return <CreditHolidaysSection sources={sources} holidays={holidays} onSent={() => { const t = localStorage.getItem("token"); if (t) loadData(t, false); }} />;
+        })()}
 
         {section === "profile" && <DashboardSupport />}
         </div>

@@ -23,9 +23,10 @@ interface Props {
   totalDue: number;
   closed?: boolean;
   onPay?: (amount: number) => void;
+  holiday?: Record<number, string>;
 }
 
-export default function PaymentHistory({ schedule, payments, paidTotal, totalDue, closed = false, onPay }: Props) {
+export default function PaymentHistory({ schedule, payments, paidTotal, totalDue, closed = false, onPay, holiday = {} }: Props) {
   const [open, setOpen] = useState(false);
 
   if (schedule.length === 0 && payments.length === 0) return null;
@@ -63,6 +64,11 @@ export default function PaymentHistory({ schedule, payments, paidTotal, totalDue
         <Icon name={open ? "ChevronUp" : "ChevronDown"} size={18} className="text-emerald-950/40 shrink-0" />
       </button>
 
+      {nextIdx >= 0 && holiday[nextIdx] && (
+        <div className="mx-5 mb-3 rounded-lg px-4 py-2.5 flex items-center gap-2 text-sm font-semibold" style={{ background: "rgba(250,204,21,0.25)", border: "1px solid rgba(234,179,8,0.6)", color: "#854d0e" }}>
+          <Icon name="Umbrella" size={16} />Кредитные каникулы до {holiday[nextIdx]}. Просрочки нет, оплатить можно в любой момент
+        </div>
+      )}
       {onPay && nextRow && nextDue > 0 && (
         <div className="px-5 pb-4">
           <button
@@ -97,13 +103,17 @@ export default function PaymentHistory({ schedule, payments, paidTotal, totalDue
             <div>
               <div className="text-emerald-950/40 text-xs uppercase tracking-wider mb-2">Плановый график</div>
               <div className="space-y-2">
-                {schedule.map((s, i) => (
-                  <div key={i} className="flex items-center justify-between rounded-lg px-4 py-2.5" style={{ background: "rgba(16,185,129,0.03)" }}>
+                {schedule.map((s, i) => {
+                  const holUntil = !(closed || paidTotal >= targets[i] - 0.5) ? holiday[i] : undefined;
+                  return (
+                  <div key={i} className="flex items-center justify-between gap-2 rounded-lg px-4 py-2.5"
+                    style={holUntil ? { background: "rgba(250,204,21,0.22)", border: "1px solid rgba(234,179,8,0.6)" } : { background: "rgba(16,185,129,0.03)" }}>
                     <div className="flex items-center gap-2">
-                      <Icon name="Clock" size={13} className="text-emerald-950/30" />
+                      <Icon name={holUntil ? "Umbrella" : "Clock"} size={13} className={holUntil ? "text-yellow-700" : "text-emerald-950/30"} />
                       <span className="text-emerald-950/70 text-xs">
                         {s.month ? `${s.month}-й платёж` : s.label || "Платёж"}
                         {s.dueDate ? ` · ${s.dueDate}` : ""}
+                        {holUntil && <span className="block font-semibold text-yellow-800">Кредитные каникулы до {holUntil}</span>}
                       </span>
                     </div>
                     <span className="flex items-center gap-2">
@@ -112,14 +122,15 @@ export default function PaymentHistory({ schedule, payments, paidTotal, totalDue
                         <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg" style={{ background: "rgba(16,185,129,0.15)", color: "#047857" }}>
                           <Icon name="CheckCircle" size={12} />Оплачено
                         </span>
-                      ) : onPay && i === nextIdx ? (
-                        <button onClick={() => onPay(nextDue)} className="btn-neon text-white text-xs font-semibold px-3 py-1.5 rounded-lg">
-                          Оплатить {nextDue.toLocaleString("ru-RU")} ₽
+                      ) : onPay && (i === nextIdx || holUntil) ? (
+                        <button onClick={() => onPay(i === nextIdx ? nextDue : Math.max(1, Math.round(Math.min(targets[i] - paidTotal, remaining))))} className="btn-neon text-white text-xs font-semibold px-3 py-1.5 rounded-lg">
+                          Оплатить {(i === nextIdx ? nextDue : Math.max(1, Math.round(Math.min(targets[i] - paidTotal, remaining)))).toLocaleString("ru-RU")} ₽
                         </button>
                       ) : null}
                     </span>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

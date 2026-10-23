@@ -1,11 +1,12 @@
 import Icon from "@/components/ui/icon";
 
-export type DashboardSection = "apps" | "history" | "repay" | "new" | "cards" | "docs" | "certs" | "photos" | "profile";
+export type DashboardSection = "apps" | "history" | "repay" | "holidays" | "new" | "cards" | "docs" | "certs" | "photos" | "profile";
 
 const ITEMS: { key: DashboardSection; label: string; icon: string }[] = [
   { key: "apps", label: "Мои заявки", icon: "ClipboardList" },
   { key: "history", label: "История займов", icon: "History" },
   { key: "repay", label: "История выплат", icon: "Wallet" },
+  { key: "holidays", label: "Кредитные каникулы", icon: "Umbrella" },
   { key: "new", label: "Новая заявка", icon: "FilePlus" },
   { key: "cards", label: "Мои карты", icon: "CreditCard" },
   { key: "docs", label: "Документы", icon: "FileText" },

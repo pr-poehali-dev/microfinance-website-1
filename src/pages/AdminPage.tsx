@@ -19,6 +19,7 @@ import AdminEmailLog from "./admin/AdminEmailLog";
 import AdminInvestments from "./admin/AdminInvestments";
 import AdminPromoCodes from "./admin/AdminPromoCodes";
 import AdminWheelPrizes from "./admin/AdminWheelPrizes";
+import AdminHolidays from "./admin/AdminHolidays";
 import AdminContractsRepair from "./admin/AdminContractsRepair";
 import { App, User, Loan, PURPLE } from "./admin/adminTypes";
 
@@ -32,7 +33,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
 
   const [clientDocsNew, setClientDocsNew] = useState(0);
-  const [tab, setTab]   = useState<"apps" | "clients" | "carloan" | "shoploan" | "disbursed" | "cardrequests" | "cards" | "promo" | "wheel" | "yookassa" | "clientdocs" | "invest" | "support" | "duplicates" | "emails">("apps");
+  const [holidaysNew, setHolidaysNew] = useState(0);
+  const [tab, setTab]   = useState<"apps" | "clients" | "carloan" | "shoploan" | "disbursed" | "cardrequests" | "cards" | "promo" | "wheel" | "yookassa" | "holidays" | "clientdocs" | "invest" | "support" | "duplicates" | "emails">("apps");
   const [apps, setApps] = useState<App[]>([]);
   const [appFilter, setAppFilter] = useState<"pending"|"approved"|"rejected"|"postponed"|"partner_card"|"creditdoctor"|"paid_loans">("pending");
   const [appsLoading, setAppsLoading] = useState(false);
@@ -124,6 +126,10 @@ export default function AdminPage() {
 
   const loadClientDocsCount = () => {
     if (!token) return;
+    fetch(`${ADMIN_URL}?sub=holidays&status=pending`, { headers: hdrs() })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setHolidaysNew(d.pending || 0); })
+      .catch(() => {});
     fetch(`${ADMIN_URL}?sub=client_docs_count`, { headers: hdrs() })
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setClientDocsNew(d.count || 0); })
@@ -412,6 +418,14 @@ export default function AdminPage() {
             background: tab === "yookassa" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "yookassa" ? "white" : "rgba(2,44,34,0.5)" }}>
           💰 Платежи ЮKassa
         </button>
+        <button onClick={() => setTab("holidays")}
+          style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
+            background: tab === "holidays" ? "linear-gradient(135deg,#f59e0b,#eab308)" : "rgba(16,185,129,0.07)", color: tab === "holidays" ? "white" : "rgba(2,44,34,0.5)" }}>
+          🏖 Каникулы
+          {holidaysNew > 0 && (
+            <span style={{ background: "#ef4444", color: "white", borderRadius: 20, padding: "1px 8px", fontSize: 12, fontWeight: 700 }}>{holidaysNew}</span>
+          )}
+        </button>
         <button onClick={() => setTab("clientdocs")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
             background: tab === "clientdocs" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "clientdocs" ? "white" : "rgba(2,44,34,0.5)" }}>
@@ -511,6 +525,7 @@ export default function AdminPage() {
           <AdminCards token={token} onChanged={loadCardNotices} />
         )}
         {tab === "yookassa" && <AdminYooKassa token={token} />}
+        {tab === "holidays" && <AdminHolidays token={token} onChanged={loadClientDocsCount} />}
         {tab === "clientdocs" && <AdminClientDocs token={token} onChange={loadClientDocsCount} />}
         {tab === "wheel" && (
           <AdminWheelPrizes token={token} />

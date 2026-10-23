@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import PaymentHistory, { ScheduleItem, PaymentItem } from "./PaymentHistory";
+import { HolidayRequest, holidayRowsFor } from "./creditHolidays";
 
 interface LoanOffer {
   amount: number;
@@ -72,9 +73,10 @@ interface Props {
   onSign: (loan: Loan) => void;
   onPay: (loan: Loan, early?: boolean) => void;
   hideNewLoan?: boolean;
+  holidays?: HolidayRequest[];
 }
 
-export default function DashboardLoans({ loans, application, isRepeatClient, signingId, signMsg, onSign, onPay, hideNewLoan }: Props) {
+export default function DashboardLoans({ loans, application, isRepeatClient, signingId, signMsg, onSign, onPay, hideNewLoan, holidays = [] }: Props) {
   const navigate = useNavigate();
 
   return (
@@ -249,6 +251,7 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                     paidTotal={loan.paidTotal || 0}
                     totalDue={loan.total}
                     closed={loan.status === "paid"}
+                    holiday={holidayRowsFor(holidays, "loan", loan.id)}
                   />
 
                   <div className="flex items-center justify-between rounded-xl px-5 py-4"

@@ -173,6 +173,18 @@ def credit_payment(cur, row):
             if l:
                 interest = round(float(l[0]) * float(l[2]) * int(l[1]))
                 interest -= min(int(l[3] or 0), interest)
+                cur.execute(f"SELECT approved_items, until_date FROM {SCHEMA}.credit_holidays WHERE status = 'approved' AND until_date IS NOT NULL")
+                hol_until = None
+                for h_items, h_until in cur.fetchall():
+                    if any(i_.get("kind") == "loan" and int(i_.get("id")) == int(loan_id) for i_ in (h_items or [])):
+                        hol_until = h_until if not hol_until or h_until > hol_until else hol_until
+                if hol_until:
+                    cur.execute(f"SELECT disbursed_at FROM {SCHEMA}.loans WHERE id = {int(loan_id)}")
+                    d_at = cur.fetchone()[0]
+                    if d_at:
+                        due_d = (d_at + timedelta(days=int(l[1]))).date()
+                        if hol_until > due_d:
+                            interest += round(float(l[0]) * float(l[2]) * max(0, (min(datetime.utcnow().date(), hol_until) - due_d).days))
                 total_due = float(l[0]) + interest
                 cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.payments WHERE loan_type='loan' AND loan_id={int(loan_id)}")
                 if float(cur.fetchone()[0]) >= total_due and l[4] != "paid":
