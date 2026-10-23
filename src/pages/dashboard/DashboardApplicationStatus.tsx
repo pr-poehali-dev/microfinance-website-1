@@ -4,6 +4,7 @@ import Icon from "@/components/ui/icon";
 import PartnerCardLinks from "./PartnerCardLinks";
 import CardWithdrawForm from "./CardWithdrawForm";
 import CardTransactionsList, { CardTransaction } from "./CardTransactionsList";
+import { HolidayRequest, holidayRowsFor } from "./creditHolidays";
 import CardPaymentSchedule, { CardPaymentRow } from "./CardPaymentSchedule";
 import CardRepaymentHistory, { CardRepayment } from "./CardRepaymentHistory";
 import CardRequestBlock from "./CardRequestBlock";
@@ -61,6 +62,8 @@ interface VirtualCard {
   minPaymentPercent?: number;
   minPayment?: number;
   paymentSchedule?: CardPaymentRow[];
+  appId?: number;
+  holidayUntil?: string | null;
   repaid?: number;
   repayments?: CardRepayment[];
   pendingNotices?: string[];
@@ -140,13 +143,14 @@ interface Props {
   setCardInput: (v: string) => void;
   setCardSaved: (v: boolean) => void;
   setCardError: (v: string) => void;
+  holidays?: HolidayRequest[];
 }
 
 export default function DashboardApplicationStatus({
   phone, profileEditable, part, application, cardRequest, loans, isRepeatClient, timerSec, timerDone, fmtTimer, fmtAppId,
   signingId, signMsg, cardInput, cardSaving, cardSaved, cardError,
   confirming, confirmDone, cardActivating, cardActivated, cvvVisible, setCvvVisible,
-  onSign, onSaveCard, onConfirm, onActivateCard, onRefresh, setCardInput, setCardSaved, setCardError,
+  onSign, onSaveCard, onConfirm, onActivateCard, onRefresh, setCardInput, setCardSaved, setCardError, holidays = [],
 }: Props) {
   const navigate = useNavigate();
   const [limitModalClosed, setLimitModalClosed] = useState(false);
@@ -942,6 +946,7 @@ export default function DashboardApplicationStatus({
                   minPaymentPercent={application.virtualCard.minPaymentPercent ?? 30}
                   minPayment={application.virtualCard.minPayment ?? 0}
                   schedule={application.virtualCard.paymentSchedule ?? []}
+                  holiday={holidayRowsFor(holidays, "card", application.virtualCard.appId ?? 0)}
                   cardLast4={application.virtualCard.number.replace(/\D/g, "").slice(-4)}
                   fullName={application.virtualCard.holder}
                   pendingNotices={application.virtualCard.pendingNotices ?? []}

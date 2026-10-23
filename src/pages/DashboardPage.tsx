@@ -110,6 +110,8 @@ interface VirtualCard {
   debt?: number;
   minPayment?: number;
   paymentSchedule?: { week: number; dueDate: string; amount: number; isNext?: boolean }[];
+  appId?: number;
+  holidayUntil?: string | null;
   contractUrl?: string;
   number: string;
   expiry: string;
@@ -650,6 +652,7 @@ export default function DashboardPage() {
           <>
             <DashboardApplicationStatus
               phone={user?.phone}
+              holidays={holidays}
               profileEditable={profileEditable}
               part={section}
               application={application}
@@ -725,7 +728,7 @@ export default function DashboardPage() {
               dues.push({
                 key: "card",
                 title: "Карта РУСФИНАНС 24",
-                subtitle: `Минимальный платёж · до ${next.dueDate}`,
+                subtitle: vc.holidayUntil ? `Кредитные каникулы до ${vc.holidayUntil}` : `Минимальный платёж · до ${next.dueDate}`,
                 amount: amt,
                 onPay: () => setPayCard({ amount: amt, dueDate: next.dueDate }),
               });
@@ -1255,6 +1258,13 @@ export default function DashboardPage() {
               payments: (t.schedule || []).map((x, i) => ({ idx: i, label: x.month ? `${x.month}-й платёж` : "Платёж", dueDate: x.dueDate || "", amount: x.amount })),
             });
           };
+          const vcH = application?.virtualCard;
+          if (vcH && vcH.status === "active" && (vcH.debt ?? 0) > 0 && vcH.appId && (vcH.paymentSchedule ?? []).length) {
+            sources.push({
+              kind: "card", id: vcH.appId, label: "Карта РУСФИНАНС 24",
+              payments: (vcH.paymentSchedule ?? []).map((x, i) => ({ idx: i, label: `${x.week}-я неделя`, dueDate: x.dueDate, amount: x.amount })),
+            });
+          }
           addT(carLoan, "carloan", "Займ под залог авто", "А");
           addT(shopLoan, "shoploan", "Займ на покупки", "Т");
           return <CreditHolidaysSection sources={sources} holidays={holidays} onSent={() => { const t = localStorage.getItem("token"); if (t) loadData(t, false); }} />;

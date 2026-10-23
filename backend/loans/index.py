@@ -30,7 +30,7 @@ def principal_part(principal, gross, repaid):
     return min(principal, float(repaid) * principal / gross)
 
 
-def card_penalty(tx_rows, gross, repaid):
+def card_penalty(tx_rows, gross, repaid, hol=None):
     """Штраф по карте: 2,99% в день от непогашенного основного долга по каждому переводу после окончания его срока."""
     if gross <= 0:
         return 0.0, 0
@@ -42,6 +42,8 @@ def card_penalty(tx_rows, gross, repaid):
     max_days = 0
     for amount, weeks, created in tx_rows:
         due = (created + timedelta(hours=3, weeks=int(weeks))).date()
+        if hol and hol > due:
+            due = hol
         d = (today - due).days
         if d > 0:
             total += float(amount) * ratio * OVERDUE_DAILY_PENALTY_RATE * d
@@ -103,15 +105,15 @@ def load_holidays(cur, phone):
     return out
 
 
-def holiday_map(holidays):
-    """loan_id -> дата окончания каникул (по одобренным заявкам, самая поздняя)."""
+def holiday_map(holidays, kind="loan"):
+    """id -> дата окончания каникул (по одобренным заявкам, самая поздняя)."""
     res = {}
     for h in holidays:
         if h["status"] != "approved" or not h["untilIso"]:
             continue
         until = datetime.strptime(h["untilIso"], "%Y-%m-%d").date()
         for it in h["approvedItems"]:
-            if it.get("kind") == "loan":
+            if it.get("kind") == kind:
                 lid = int(it.get("id"))
                 if lid not in res or res[lid] < until:
                     res[lid] = until
@@ -380,7 +382,7 @@ def handler(event: dict, context) -> dict:
         clean = []
         for it in items_in[:20]:
             kind = str(it.get("kind") or "")
-            if kind not in ("loan", "carloan", "shoploan"):
+            if kind not in ("loan", "carloan", "shoploan", "card"):
                 continue
             try:
                 iid = int(it.get("id"))
@@ -388,6 +390,8 @@ def handler(event: dict, context) -> dict:
                 continue
             if kind == "loan":
                 cur.execute(f"SELECT 1 FROM {SCHEMA}.loans WHERE id = {iid} AND user_id = {int(user_id)} AND status IN ('active','overdue')")
+            elif kind == "card":
+                cur.execute(f"SELECT 1 FROM {SCHEMA}.applications WHERE id = {iid} AND phone = '{phone.replace(chr(39), chr(39)*2)}' AND virtual_card_status = 'active'")
             else:
                 tbl = "car_loan_applications" if kind == "carloan" else "shopping_loan_applications"
                 cur.execute(f"SELECT 1 FROM {SCHEMA}.{tbl} WHERE id = {iid} AND phone = '{phone.replace(chr(39), chr(39)*2)}' AND status = 'approved'")
@@ -1454,6 +1458,8 @@ def handler(event: dict, context) -> dict:
             merged[36], merged[39] = card_src[8], card_src[9]
             app_row = tuple(merged)
             card_app_id = card_src[0]
+    holidays = load_holidays(cur, phone)
+    card_hol = holiday_map(holidays, "card").get(card_app_id) if card_app_id else None
     card_contract_url = ""
     if card_app_id:
         cur.execute(f"SELECT card_contract_url FROM {SCHEMA}.applications WHERE id = {int(card_app_id)}")
@@ -1568,7 +1574,7 @@ def handler(event: dict, context) -> dict:
                 key_ = f"{n_tx or 0}|{n_due}"
                 (vc_notices if n_status == "new" else vc_paid).append(key_)
             vc_gross = vc_debt
-            vc_penalty, vc_overdue_days = card_penalty(vc_pen_rows, vc_gross, vc_repaid)
+            vc_penalty, vc_overdue_days = card_penalty(vc_pen_rows, vc_gross, vc_repaid, card_hol)
             vc_debt = max(0.0, vc_debt + vc_penalty - vc_repaid)
             vc_early_debt = max(0.0, vc_early_gross - vc_repaid) if vc_overdue_days == 0 else None
             vc_used = max(0.0, vc_used - principal_part(vc_used, vc_gross, vc_repaid))
@@ -1639,6 +1645,8 @@ def handler(event: dict, context) -> dict:
                 "minPaymentPercent": CARD_MIN_PAYMENT_PERCENT,
                 "minPayment": round(vc_debt * CARD_MIN_PAYMENT_PERCENT / 100),
                 "paymentSchedule": card_payment_schedule(app_row[39], vc_debt),
+                "appId": card_app_id,
+                "holidayUntil": card_hol.strftime("%d.%m.%Y") if card_hol and card_hol >= (datetime.utcnow() + timedelta(hours=3)).date() else None,
             } if app_row[11] else None,
             "isCreditDoctor": bool(app_row[18]) if app_row[18] is not None else False,
             "reapplyDaysLeft": reapply_days_left,
@@ -1717,7 +1725,6 @@ def handler(event: dict, context) -> dict:
         f"WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' AND seen = FALSE ORDER BY created_at ASC"
     )
     rate_news = [{"type": t_, "oldRate": float(o_), "newRate": float(n_), "unit": u_} for t_, o_, n_, u_ in cur.fetchall()]
-    holidays = load_holidays(cur, phone)
     hol_map = holiday_map(holidays)
     cur.close(); conn.close()
 

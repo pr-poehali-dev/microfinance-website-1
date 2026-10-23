@@ -43,7 +43,7 @@ TELEGRAM_CHAT_ID = "8540431915"
 OVERDUE_DAILY_PENALTY_RATE = 0.0299  # 2,99% от суммы основного долга (loans.amount, с учётом страховки) за каждый день просрочки
 
 
-def card_penalty(tx_rows, gross, repaid):
+def card_penalty(tx_rows, gross, repaid, hol=None):
     """Штраф по карте: 2,99% в день от непогашенного основного долга по каждому переводу после окончания его срока."""
     if gross <= 0:
         return 0.0, 0
@@ -55,6 +55,8 @@ def card_penalty(tx_rows, gross, repaid):
     max_days = 0
     for amount, weeks, created in tx_rows:
         due = (created + timedelta(hours=3, weeks=int(weeks))).date()
+        if hol and hol > due:
+            due = hol
         d = (today - due).days
         if d > 0:
             total += float(amount) * ratio * OVERDUE_DAILY_PENALTY_RATE * d
@@ -69,13 +71,13 @@ def principal_part(principal, gross, repaid):
     return min(principal, float(repaid) * principal / gross)
 
 
-def load_hol_map(cur):
-    """loan_id -> дата окончания одобренных кредитных каникул (самая поздняя)."""
+def load_hol_map(cur, kind="loan"):
+    """id -> дата окончания одобренных кредитных каникул (самая поздняя)."""
     cur.execute(f"SELECT approved_items, until_date FROM {SCHEMA}.credit_holidays WHERE status = 'approved' AND until_date IS NOT NULL")
     res = {}
     for items, until in cur.fetchall():
         for it in (items or []):
-            if it.get("kind") == "loan":
+            if it.get("kind") == kind:
                 lid = int(it.get("id"))
                 if lid not in res or res[lid] < until:
                     res[lid] = until
@@ -2609,6 +2611,7 @@ def handler(event: dict, context) -> dict:
                     "title": "Ежемесячное обслуживание" if _kd == "monthly" else (("Списание: " + _nt) if _nt else "Списание") if _kd == "manual" else f"Комиссия за перевод №{_pn}",
                     "createdAt": msk(_ca).strftime("%d.%m.%Y в %H:%M"),
                 })
+        card_hol_map = load_hol_map(cur, "card")
         cur.close(); conn.close()
 
         cards = []
@@ -2635,7 +2638,7 @@ def handler(event: dict, context) -> dict:
                 })
             repaid = sum(float(x[2]) for x in reps.get(app_id, []))
             pen_rows = [(float(t[2]), t[3], t[6]) for t in txs.get(app_id, []) if t[5] != "cancelled"]
-            card_pen, card_over_days = card_penalty(pen_rows, gross, repaid)
+            card_pen, card_over_days = card_penalty(pen_rows, gross, repaid, card_hol_map.get(app_id))
             debt = max(0.0, gross + card_pen - repaid)
             used = max(0.0, principal - principal_part(principal, gross, repaid))
             cards.append({

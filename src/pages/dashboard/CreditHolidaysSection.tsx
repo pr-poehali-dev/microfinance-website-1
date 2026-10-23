@@ -5,7 +5,7 @@ import { HolidayItem, HolidayRequest } from "./creditHolidays";
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
 
 export interface HolidaySource {
-  kind: "loan" | "carloan" | "shoploan";
+  kind: "loan" | "carloan" | "shoploan" | "card";
   id: number;
   label: string;
   payments: { idx: number; label: string; dueDate: string; amount: number }[];

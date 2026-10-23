@@ -6,7 +6,7 @@ export interface HolidayPayment {
 }
 
 export interface HolidayItem {
-  kind: "loan" | "carloan" | "shoploan";
+  kind: "loan" | "carloan" | "shoploan" | "card";
   id: number;
   label: string;
   payments: HolidayPayment[];

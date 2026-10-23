@@ -22,12 +22,13 @@ interface Props {
   highlightPaid?: boolean;
   closed?: boolean;
   onReported?: () => void;
+  holiday?: Record<number, string>;
 }
 
 const FULL_KEY = "Полное погашение";
 const fmt = (n: number) => `${n.toLocaleString("ru-RU")} ₽`;
 
-export default function CardPaymentSchedule({ debt, earlyDebt, minPaymentPercent, minPayment, schedule, cardLast4, fullName, pendingNotices = [], paidNotices = [], highlightPaid = false, closed = false, onReported }: Props) {
+export default function CardPaymentSchedule({ debt, earlyDebt, minPaymentPercent, minPayment, schedule, cardLast4, fullName, pendingNotices = [], paidNotices = [], highlightPaid = false, closed = false, onReported, holiday = {} }: Props) {
   const [payRow, setPayRow] = useState<CardPaymentRow | null>(null);
   const [payFull, setPayFull] = useState(false);
   const [payEarly, setPayEarly] = useState(false);
@@ -85,17 +86,19 @@ export default function CardPaymentSchedule({ debt, earlyDebt, minPaymentPercent
           <div className="space-y-1.5">
             {schedule.map((s) => {
               const paidRow = highlightPaid && paidNotices.includes(`0|${s.dueDate}`);
+              const holUntil = !paidNotices.includes(`0|${s.dueDate}`) ? holiday[s.week - 1] : undefined;
               return (
               <div
                 key={s.week}
                 className="flex items-center justify-between rounded-lg px-3 py-2"
                 style={{
-                  background: paidRow ? "rgba(14,165,233,0.16)" : s.isNext ? "rgba(16,185,129,0.14)" : "rgba(16,185,129,0.03)",
-                  border: paidRow ? "1px solid rgba(14,165,233,0.55)" : s.isNext ? "1px solid rgba(16,185,129,0.4)" : "1px solid transparent",
+                  background: paidRow ? "rgba(14,165,233,0.16)" : holUntil ? "rgba(250,204,21,0.22)" : s.isNext ? "rgba(16,185,129,0.14)" : "rgba(16,185,129,0.03)",
+                  border: paidRow ? "1px solid rgba(14,165,233,0.55)" : holUntil ? "1px solid rgba(234,179,8,0.6)" : s.isNext ? "1px solid rgba(16,185,129,0.4)" : "1px solid transparent",
                 }}
               >
                 <span className="text-emerald-950/70 text-xs">
                   {s.week}-я неделя · {s.dueDate}
+                  {holUntil && <span className="block font-semibold text-yellow-800">Кредитные каникулы до {holUntil}</span>}
                   {s.isNext && !paidRow && <span className="ml-2 text-emerald-600 font-semibold">ближайший</span>}
                   {paidRow && <span className="ml-2 font-bold" style={{ color: "#0369a1" }}>✓ Оплачен</span>}
                 </span>
