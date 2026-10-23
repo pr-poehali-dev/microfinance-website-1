@@ -4,6 +4,7 @@ import AddendumDialog from "./dashboard/AddendumDialog";
 import DashboardSidebar, { DashboardSection } from "./dashboard/DashboardSidebar";
 import ClientDocsSection from "./dashboard/ClientDocsSection";
 import DebtCertificatesSection from "./dashboard/DebtCertificatesSection";
+import HolidayDecisionModal from "./dashboard/HolidayDecisionModal";
 import CreditHolidaysSection, { HolidaySource } from "./dashboard/CreditHolidaysSection";
 import { HolidayRequest, holidayRowsFor, activeHoliday } from "./dashboard/creditHolidays";
 import { useState, useEffect, useRef } from "react";
@@ -551,6 +552,12 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen font-golos" style={{ background: "#ffffff" }}>
       <DashboardNavbar user={user} onLogout={handleLogout} />
+      {holidays.some((h) => !h.seen && h.status !== "pending") && rateNews.length === 0 && !showCardCongrats && (
+        <HolidayDecisionModal
+          items={holidays.filter((h) => !h.seen && h.status !== "pending")}
+          onClose={() => setHolidays((prev) => prev.map((h) => ({ ...h, seen: true })))}
+        />
+      )}
       {rateNews.length > 0 && !showCardCongrats && (
         <RateReducedModal news={rateNews} onClose={() => setRateNews([])} />
       )}

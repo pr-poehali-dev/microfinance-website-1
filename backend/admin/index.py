@@ -243,6 +243,14 @@ def notify_email(to: str, kind: str, name: str, **kw) -> None:
                      (f"Сумма к оплате: <b>{int(float(kw['debt'])):,} ₽</b>.".replace(",", " ") if kw.get("debt") else ""),
                      "За каждый день просрочки начисляется пеня, поэтому рекомендуем оплатить как можно скорее. Оплатить можно в личном кабинете.",
                      "Если вы уже оплатили, проигнорируйте это письмо."], "Оплатить в личном кабинете"),
+        "holiday_approved": ("Кредитные каникулы одобрены — РУСФИНАНС 24", "Кредитные каникулы одобрены", green,
+                             [f"Ваша заявка на кредитные каникулы одобрена. Каникулы действуют до <b>{kw.get('until', '')}</b>.",
+                              "В это время просрочки нет, проценты продолжают начисляться. Оплатить можно в любой момент в личном кабинете, в том числе досрочно.",
+                              (f"Комментарий: {kw['reason']}" if kw.get("reason") else "")], "Открыть личный кабинет"),
+        "holiday_rejected": ("По заявке на кредитные каникулы принято решение — РУСФИНАНС 24", "Кредитные каникулы не одобрены", red,
+                             ["К сожалению, ваша заявка на кредитные каникулы не одобрена.",
+                              f"Причина: {kw.get('reason', '')}",
+                              "Платежи остаются по прежнему графику. Подробности — в личном кабинете."], "Открыть личный кабинет"),
         "support_reply": ("Ответ службы поддержки — РУСФИНАНС 24", "Ответ службы поддержки", blue,
                           ["Мы ответили на ваше сообщение в чате поддержки. Откройте личный кабинет, чтобы прочитать ответ."], "Открыть личный кабинет"),
     }
@@ -1106,8 +1114,13 @@ def handler(event: dict, context) -> dict:
             if not comment:
                 cur.close(); conn.close()
                 return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Напишите причину отказа"}, ensure_ascii=False)}
-            cur.execute(f"UPDATE {SCHEMA}.credit_holidays SET status = 'rejected', admin_comment = '{c_e}', decided_at = NOW() WHERE id = {hid}")
+            cur.execute(f"UPDATE {SCHEMA}.credit_holidays SET status = 'rejected', admin_comment = '{c_e}', decided_at = NOW(), seen = FALSE WHERE id = {hid}")
+            ph_n = hr[0].replace("'", "''")
+            cur.execute(f"SELECT full_name, email FROM {SCHEMA}.users WHERE phone = '{ph_n}'")
+            un = cur.fetchone()
             conn.commit(); cur.close(); conn.close()
+            if un:
+                notify_email(un[1], "holiday_rejected", un[0], reason=comment)
             return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
         if decision != "approve":
             cur.close(); conn.close()
@@ -1135,12 +1148,17 @@ def handler(event: dict, context) -> dict:
         aj = json.dumps(clean, ensure_ascii=False).replace("'", "''")
         cur.execute(
             f"UPDATE {SCHEMA}.credit_holidays SET status = 'approved', approved_items = '{aj}'::jsonb, until_date = '{until_d.isoformat()}', "
-            f"admin_comment = '{c_e}', decided_at = NOW() WHERE id = {hid}"
+            f"admin_comment = '{c_e}', decided_at = NOW(), seen = FALSE WHERE id = {hid}"
         )
+        ph_n = hr[0].replace("'", "''")
+        cur.execute(f"SELECT full_name, email FROM {SCHEMA}.users WHERE phone = '{ph_n}'")
+        un = cur.fetchone()
         for it in clean:
             if it["kind"] == "loan":
                 cur.execute(f"UPDATE {SCHEMA}.loans SET status = 'active' WHERE id = {int(it['id'])} AND status = 'overdue'")
         conn.commit(); cur.close(); conn.close()
+        if un:
+            notify_email(un[1], "holiday_approved", un[0], until=until_d.strftime("%d.%m.%Y"), reason=comment)
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
     if sub == "postpone" and method == "POST":

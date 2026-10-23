@@ -1,0 +1,1 @@
+ALTER TABLE t_p30184577_microfinance_website.credit_holidays ADD COLUMN IF NOT EXISTS seen BOOLEAN NOT NULL DEFAULT TRUE;

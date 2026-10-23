@@ -22,6 +22,7 @@ export interface HolidayRequest {
   untilIso: string | null;
   createdAt: string;
   clientComment: string;
+  seen?: boolean;
 }
 
 const todayIso = () => new Date().toISOString().slice(0, 10);

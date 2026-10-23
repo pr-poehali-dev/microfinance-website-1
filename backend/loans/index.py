@@ -87,7 +87,7 @@ def load_holidays(cur, phone):
     """Заявки клиента на кредитные каникулы (последние 30)."""
     ph = phone.replace("'", "''")
     cur.execute(
-        f"SELECT id, items, approved_items, status, admin_comment, until_date, created_at, decided_at, client_comment "
+        f"SELECT id, items, approved_items, status, admin_comment, until_date, created_at, decided_at, client_comment, seen "
         f"FROM {SCHEMA}.credit_holidays WHERE phone = '{ph}' ORDER BY id DESC LIMIT 30"
     )
     out = []
@@ -98,6 +98,7 @@ def load_holidays(cur, phone):
             "untilIso": r[5].isoformat() if r[5] else None,
             "createdAt": msk(r[6]).strftime("%d.%m.%Y в %H:%M"),
             "clientComment": r[8] or "",
+            "seen": bool(r[9]),
         })
     return out
 
@@ -874,6 +875,14 @@ def handler(event: dict, context) -> dict:
                 f"WHERE application_id IN ({','.join(ids_)}) AND seen = FALSE"
             )
             conn.commit()
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    # --- КЛИЕНТ ЗАКРЫЛ УВЕДОМЛЕНИЕ О КАНИКУЛАХ (POST, ?sub=holiday_seen) ---
+    if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "holiday_seen":
+        ph_e = phone.replace("'", "''")
+        cur.execute(f"UPDATE {SCHEMA}.credit_holidays SET seen = TRUE WHERE phone = '{ph_e}' AND seen = FALSE")
+        conn.commit()
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
