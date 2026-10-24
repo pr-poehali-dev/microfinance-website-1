@@ -590,6 +590,10 @@ export default function DashboardApplicationStatus({
             {/* Партнёрские ссылки на оформление карты — показываем ДО подписания договора */}
             {!(mainLoan(loans)?.signed || confirmDone) && application.partnerCardUrl && <PartnerCardLinks customUrl={application.partnerCardUrl} />}
 
+            {!(mainLoan(loans)?.signed || confirmDone) && application.partnerCardUrl && (
+              <PartnerCardIdentification info={application.partnerCard} phone={phone ?? ""} onSent={onRefresh} />
+            )}
+
             {/* Скачать договор PDF */}
             {application.contractUrl ? (
               <a
@@ -650,13 +654,19 @@ export default function DashboardApplicationStatus({
                 );
               }
 
+              const needPartner = !!application.partnerCardUrl && application.partnerCard?.status !== "approved";
               return (
-                <button onClick={onConfirm} disabled={confirming}
-                  className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-60"
-                  style={{ background: "linear-gradient(135deg,#10b981,#14b8a6)", boxShadow: "0 4px 20px rgba(16,185,129,0.35)" }}>
-                  {confirming ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="PenLine" size={18} />}
-                  {confirming ? "Подписываем..." : application.isCreditDoctor ? "Подписать кредитный договор" : "Подписать договор"}
-                </button>
+                <div className="space-y-2">
+                  <button onClick={onConfirm} disabled={confirming || needPartner}
+                    className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+                    style={{ background: needPartner ? "#9ca3af" : "linear-gradient(135deg,#10b981,#14b8a6)", boxShadow: needPartner ? "none" : "0 4px 20px rgba(16,185,129,0.35)" }}>
+                    {confirming ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name={needPartner ? "Lock" : "PenLine"} size={18} />}
+                    {confirming ? "Подписываем..." : application.isCreditDoctor ? "Подписать кредитный договор" : "Подписать договор"}
+                  </button>
+                  {needPartner && (
+                    <p className="text-emerald-950/50 text-xs text-center">Станет доступно после оформления карты партнёра, ввода её номера и одобрения идентификации</p>
+                  )}
+                </div>
               );
             })()}
           </div>

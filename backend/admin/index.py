@@ -1211,7 +1211,7 @@ def handler(event: dict, context) -> dict:
         if decision not in ("approve", "reject"):
             cur.close(); conn.close()
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Неверное решение"}, ensure_ascii=False)}
-        cur.execute(f"SELECT full_name, telegram_id FROM {SCHEMA}.applications WHERE id='{app_id_e}' AND status='partner_card' AND partner_card_status='pending'")
+        cur.execute(f"SELECT full_name, telegram_id FROM {SCHEMA}.applications WHERE id='{app_id_e}' AND (status='partner_card' OR (status='approved' AND COALESCE(partner_card_url,'')<>'')) AND partner_card_status='pending'")
         pc_app = cur.fetchone()
         if not pc_app:
             cur.close(); conn.close()
@@ -2981,7 +2981,7 @@ def handler(event: dict, context) -> dict:
                    WHERE u.phone = a.phone ORDER BY lo.created_at DESC LIMIT 1
                  ) l ON true
                  WHERE a.status IN ('approved','partner_card') AND l.signed = TRUE AND l.disbursed_at IS NULL),
-              (SELECT COUNT(*) FROM {SCHEMA}.applications WHERE status = 'partner_card' AND partner_card_status = 'pending'),
+              (SELECT COUNT(*) FROM {SCHEMA}.applications WHERE (status = 'partner_card' OR (status = 'approved' AND COALESCE(partner_card_url, '') <> '')) AND partner_card_status = 'pending'),
               (SELECT COUNT(*) FROM {SCHEMA}.car_loan_applications WHERE status = 'pending' OR (status = 'approved' AND contract_signed = TRUE AND disbursed_at IS NULL)),
               (SELECT COUNT(*) FROM {SCHEMA}.shopping_loan_applications WHERE status = 'pending' OR (status = 'approved' AND contract_signed = TRUE AND disbursed_at IS NULL)),
               (SELECT COUNT(*) FROM {SCHEMA}.card_requests WHERE status = 'pending')

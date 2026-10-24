@@ -312,11 +312,12 @@ def force_account_phone(value: str, account_phone: str) -> str:
 def partner_card_blocked(cur, phone: str) -> bool:
     """True, если у клиента заявка «займ с картой партнёра» и идентификация карты ещё не одобрена админом."""
     cur.execute(
-        f"SELECT status, partner_card_status FROM {SCHEMA}.applications "
+        f"SELECT status, partner_card_status, COALESCE(partner_card_url, '') FROM {SCHEMA}.applications "
         f"WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1"
     )
     r = cur.fetchone()
-    return bool(r and r[0] == "partner_card" and (r[1] or "none") != "approved")
+    partner_flow = bool(r and (r[0] == "partner_card" or (r[0] == "approved" and r[2])))
+    return bool(partner_flow and (r[1] or "none") != "approved")
 
 
 PARTNER_BLOCK_MSG = "Сначала отправьте данные карты партнёра на идентификацию и дождитесь одобрения"
@@ -568,7 +569,7 @@ def handler(event: dict, context) -> dict:
         ph_p = phone.replace("'", "''")
         cur.execute(
             f"SELECT id, full_name, partner_card_status FROM {SCHEMA}.applications "
-            f"WHERE phone = '{ph_p}' AND status = 'partner_card' ORDER BY created_at DESC LIMIT 1"
+            f"WHERE phone = '{ph_p}' AND (status = 'partner_card' OR (status = 'approved' AND COALESCE(partner_card_url, '') <> '')) ORDER BY created_at DESC LIMIT 1"
         )
         pa = cur.fetchone()
         if not pa:

@@ -53,6 +53,7 @@ interface Application {
   rejectReason: string;
   cardNumber: string;
   contractUrl: string;
+  partnerCardUrl?: string;
   partnerCard?: { status: string };
 }
 
@@ -116,7 +117,7 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
           {loans.map((loan) => {
             const effectiveStatus = loan.status === "review" && loan.signed ? "signed" : loan.status;
             const st = STATUS_MAP[effectiveStatus] || STATUS_MAP.active;
-            const partnerBlocked = application?.status === "partner_card" && application?.partnerCard?.status !== "approved";
+            const partnerBlocked = (application?.status === "partner_card" || (application?.status === "approved" && !!application?.partnerCardUrl)) && application?.partnerCard?.status !== "approved";
             return (
               <div key={loan.id} className="glass rounded-2xl overflow-hidden">
                 <div className="px-4 sm:px-6 py-4 flex items-center justify-between border-b border-emerald-900/15"

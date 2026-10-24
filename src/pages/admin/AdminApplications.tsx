@@ -370,7 +370,7 @@ export default function AdminApplications({
                   </div>
                 )}
 
-                {app.status === "partner_card" && (
+                {(app.status === "partner_card" || (app.status === "approved" && !!app.partnerCardUrl)) && (
                   <AdminPartnerIdentification
                     appId={app.id} token={token} status={app.partnerCardStatus}
                     number={app.partnerCardNumber} photo={app.partnerCardPhoto}
