@@ -1,8 +1,9 @@
 """Отправка заявки на займ: сохранение в БД + файлы в S3 + уведомление в Telegram."""
 import json
+import re
 import os
 import urllib.request
-from datetime import datetime
+from datetime import datetime, timedelta
 import threading
 import psycopg2
 
@@ -157,6 +158,24 @@ def redeem_promo(cur, code: str, phone: str, used_for: str):
     return (r[0], int(r[1])) if r else None
 
 
+def blocked_message(phone) -> str:
+    """Если клиент заблокирован админом — текст отказа с датой, иначе пустая строка."""
+    ph = re.sub(r"\D", "", str(phone or ""))[-10:]
+    if len(ph) < 10:
+        return ""
+    c = psycopg2.connect(os.environ["DATABASE_URL"])
+    k = c.cursor()
+    k.execute(
+        f"SELECT blocked_until FROM {SCHEMA}.users WHERE right(regexp_replace(COALESCE(phone, ''), '\\D', '', 'g'), 10) = '{ph}' "
+        f"AND blocked_until > NOW() ORDER BY blocked_until DESC LIMIT 1"
+    )
+    r = k.fetchone()
+    k.close(); c.close()
+    if not r:
+        return ""
+    return "Подача новых заявок временно недоступна. Доступ ограничен до " + (r[0] + timedelta(hours=3)).strftime("%d.%m.%Y %H:%M") + " (МСК)."
+
+
 def applications_paused() -> bool:
     c = psycopg2.connect(os.environ["DATABASE_URL"])
     k = c.cursor()
@@ -236,6 +255,10 @@ def handler(event: dict, context) -> dict:
     if not full_name or not phone or not amount_raw:
         return {"statusCode": 400, "headers": cors_headers,
                 "body": json.dumps({"error": "Заполните все поля"}, ensure_ascii=False)}
+
+    _bm = blocked_message(phone)
+    if _bm:
+        return {"statusCode": 403, "headers": cors_headers, "body": json.dumps({"error": _bm}, ensure_ascii=False)}
 
     if applications_paused():
         return {"statusCode": 503, "headers": cors_headers, "body": json.dumps({"error": pause_message()}, ensure_ascii=False)}

@@ -265,6 +265,24 @@ def reset_client_password(cur, phone_e: str) -> str:
     return pw
 
 
+def blocked_message(phone) -> str:
+    """Если клиент заблокирован админом — текст отказа с датой, иначе пустая строка."""
+    ph = re.sub(r"\D", "", str(phone or ""))[-10:]
+    if len(ph) < 10:
+        return ""
+    c = psycopg2.connect(os.environ["DATABASE_URL"])
+    k = c.cursor()
+    k.execute(
+        f"SELECT blocked_until FROM {SCHEMA}.users WHERE right(regexp_replace(COALESCE(phone, ''), '\\D', '', 'g'), 10) = '{ph}' "
+        f"AND blocked_until > NOW() ORDER BY blocked_until DESC LIMIT 1"
+    )
+    r = k.fetchone()
+    k.close(); c.close()
+    if not r:
+        return ""
+    return "Подача новых заявок временно недоступна. Доступ ограничен до " + (r[0] + timedelta(hours=3)).strftime("%d.%m.%Y %H:%M") + " (МСК)."
+
+
 def applications_paused() -> bool:
     c = psycopg2.connect(os.environ["DATABASE_URL"])
     k = c.cursor()
@@ -307,6 +325,10 @@ def handler(event: dict, context) -> dict:
 
         full_name      = s(b.get("fullName"))
         phone          = s(b.get("phone"))
+        _bm = blocked_message(phone)
+        if _bm:
+            cur.close(); conn.close()
+            return {"statusCode": 403, "headers": CORS, "body": json.dumps({"error": _bm}, ensure_ascii=False)}
         email          = s(b.get("email"))
         birth_date     = s(b.get("birthDate"))
         address        = s(b.get("address"))

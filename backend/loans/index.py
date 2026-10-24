@@ -328,6 +328,24 @@ def mask_card(value: str) -> str:
     return value
 
 
+def blocked_message(phone) -> str:
+    """Если клиент заблокирован админом — текст отказа с датой, иначе пустая строка."""
+    ph = re.sub(r"\D", "", str(phone or ""))[-10:]
+    if len(ph) < 10:
+        return ""
+    c = psycopg2.connect(os.environ["DATABASE_URL"])
+    k = c.cursor()
+    k.execute(
+        f"SELECT blocked_until FROM {SCHEMA}.users WHERE right(regexp_replace(COALESCE(phone, ''), '\\D', '', 'g'), 10) = '{ph}' "
+        f"AND blocked_until > NOW() ORDER BY blocked_until DESC LIMIT 1"
+    )
+    r = k.fetchone()
+    k.close(); c.close()
+    if not r:
+        return ""
+    return "Подача новых заявок временно недоступна. Доступ ограничен до " + (r[0] + timedelta(hours=3)).strftime("%d.%m.%Y %H:%M") + " (МСК)."
+
+
 def applications_paused() -> bool:
     c = psycopg2.connect(os.environ["DATABASE_URL"])
     k = c.cursor()
@@ -802,6 +820,10 @@ def handler(event: dict, context) -> dict:
 
     # --- ПОДАТЬ ЗАЯВКУ НА КАРТУ РУСФИНАНС 24 (POST, ?sub=card_request) ---
     if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "card_request":
+        _bm = blocked_message(phone)
+        if _bm:
+            cur.close(); conn.close()
+            return {"statusCode": 403, "headers": CORS, "body": json.dumps({"error": _bm}, ensure_ascii=False)}
         if applications_paused():
             cur.close(); conn.close()
             return {"statusCode": 503, "headers": CORS, "body": json.dumps({"error": pause_message()}, ensure_ascii=False)}
@@ -1112,6 +1134,10 @@ def handler(event: dict, context) -> dict:
 
     # --- ЗАЯВКА НА АВТОЗАЙМ / ЗАЙМ НА ПОКУПКИ ИЗ ЛИЧНОГО КАБИНЕТА (POST, ?sub=term_request) ---
     if event.get("httpMethod") == "POST" and (event.get("queryStringParameters") or {}).get("sub") == "term_request":
+        _bm = blocked_message(phone)
+        if _bm:
+            cur.close(); conn.close()
+            return {"statusCode": 403, "headers": CORS, "body": json.dumps({"error": _bm}, ensure_ascii=False)}
         if applications_paused():
             cur.close(); conn.close()
             return {"statusCode": 503, "headers": CORS, "body": json.dumps({"error": pause_message()}, ensure_ascii=False)}
@@ -1245,6 +1271,10 @@ def handler(event: dict, context) -> dict:
 
     # --- ПОВТОРНАЯ ЗАЯВКА НА ЗАЙМ ИЗ ЛИЧНОГО КАБИНЕТА (POST) ---
     if event.get("httpMethod") == "POST":
+        _bm = blocked_message(phone)
+        if _bm:
+            cur.close(); conn.close()
+            return {"statusCode": 403, "headers": CORS, "body": json.dumps({"error": _bm}, ensure_ascii=False)}
         if applications_paused():
             cur.close(); conn.close()
             return {"statusCode": 503, "headers": CORS, "body": json.dumps({"error": pause_message()}, ensure_ascii=False)}
