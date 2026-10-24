@@ -60,6 +60,7 @@ export default function AdminPage() {
   const [appPartnerUrl, setAppPartnerUrl] = useState("");
   const [rejectReason, setRejectReason] = useState("");
   const [rejectPartnerUrl, setRejectPartnerUrl] = useState("");
+  const [rejectDays, setRejectDays] = useState(30);
   const [appAction, setAppAction] = useState<"approve"|"reject"|null>(null);
   const [appProcessing, setAppProcessing] = useState(false);
   const [appMsg, setAppMsg]     = useState("");
@@ -233,7 +234,7 @@ export default function AdminPage() {
   async function rejectApp() {
     if (!selApp) return;
     setAppProcessing(true); setAppMsg(""); setAppErr2("");
-    const r = await fetch(`${ADMIN_URL}?sub=reject&appId=${selApp.id}`, { method: "POST", headers: hdrs(), body: JSON.stringify({ reason: rejectReason, partnerUrl: rejectPartnerUrl }) });
+    const r = await fetch(`${ADMIN_URL}?sub=reject&appId=${selApp.id}`, { method: "POST", headers: hdrs(), body: JSON.stringify({ reason: rejectReason, partnerUrl: rejectPartnerUrl, days: rejectDays }) });
     const d = await r.json();
     if (!r.ok) { setAppErr2(d.error); setAppProcessing(false); return; }
     setAppMsg("Заявка отклонена.");
@@ -502,6 +503,7 @@ export default function AdminPage() {
             appPartnerUrl={appPartnerUrl} setAppPartnerUrl={setAppPartnerUrl}
             rejectReason={rejectReason} setRejectReason={setRejectReason}
             rejectPartnerUrl={rejectPartnerUrl} setRejectPartnerUrl={setRejectPartnerUrl}
+            rejectDays={rejectDays} setRejectDays={setRejectDays}
             onApprove={approveApp} onReject={rejectApp} onPostpone={postponeApp} onRestore={restoreApp} onPartnerRemind={partnerRemind} onCreditDoctorApprove={creditDoctorApprove} onPartnerApprove={partnerApprove}
             onDeleteApplication={deleteApplication} onBlockClient={blockClient} onUnblockClient={unblockClient} onRequestVideoCall={requestVideoCall}
             onRefresh={() => loadApps()}

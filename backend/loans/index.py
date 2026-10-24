@@ -340,7 +340,11 @@ def blocked_message(phone) -> str:
         f"AND blocked_until > NOW() ORDER BY blocked_until DESC LIMIT 1"
     )
     r = k.fetchone()
+    k.execute(f"SELECT until_at FROM {SCHEMA}.reapply_blocks WHERE phone10 = '{ph}' AND until_at > NOW()")
+    rb = k.fetchone()
     k.close(); c.close()
+    if rb:
+        return "После отказа по заявке повторная подача возможна с " + (rb[0] + timedelta(hours=3)).strftime("%d.%m.%Y") + "."
     if not r:
         return ""
     return "Подача новых заявок временно недоступна. Доступ ограничен до " + (r[0] + timedelta(hours=3)).strftime("%d.%m.%Y %H:%M") + " (МСК)."
@@ -1529,9 +1533,12 @@ def handler(event: dict, context) -> dict:
             app_promo_savings = max(0, round(eff_debt * base_rate_ * approved_days) - approved_interest)
         reviewed_at = app_row[34]
         reapply_days_left = None
-        if app_row[3] == "rejected" and reviewed_at:
-            days_passed = (datetime.now() - reviewed_at).days
-            reapply_days_left = max(0, 30 - days_passed)
+        _ph10 = re.sub(r"\D", "", str(phone))[-10:]
+        cur.execute(f"SELECT until_at FROM {SCHEMA}.reapply_blocks WHERE phone10 = '{_ph10}'")
+        _rb = cur.fetchone()
+        if _rb:
+            _left = (_rb[0] - datetime.now()).total_seconds()
+            reapply_days_left = int(-(-_left // 86400)) if _left > 0 else 0
         vc_days = int(app_row[36]) if app_row[36] else None
 
         # Транзакции (переводы) по карте: каждая — со своим еженедельным графиком погашения
@@ -1759,6 +1766,9 @@ def handler(event: dict, context) -> dict:
     cur.execute(f"SELECT blocked_until FROM {SCHEMA}.users WHERE id = {int(user_id)} AND blocked_until > NOW()")
     _bu = cur.fetchone()
     blocked_until = msk(_bu[0]).strftime("%d.%m.%Y %H:%M") if _bu else None
+    cur.execute(f"SELECT until_at, reason FROM {SCHEMA}.reapply_blocks WHERE phone10 = '{re.sub(chr(92)+'D', '', str(phone))[-10:]}' AND until_at > NOW()")
+    _rb2 = cur.fetchone()
+    reapply_info = {"until": msk(_rb2[0]).strftime("%d.%m.%Y"), "reason": _rb2[1] or ""} if _rb2 else None
     cur.close(); conn.close()
 
     is_cd = bool(application and application.get("isCreditDoctor"))
@@ -1892,5 +1902,6 @@ def handler(event: dict, context) -> dict:
             "addendumPending": addendum_pending,
             "holidays": holidays,
             "blockedUntil": blocked_until,
+            "reapplyBlock": reapply_info,
         }, ensure_ascii=False)
     }

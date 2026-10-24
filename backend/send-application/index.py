@@ -170,7 +170,11 @@ def blocked_message(phone) -> str:
         f"AND blocked_until > NOW() ORDER BY blocked_until DESC LIMIT 1"
     )
     r = k.fetchone()
+    k.execute(f"SELECT until_at FROM {SCHEMA}.reapply_blocks WHERE phone10 = '{ph}' AND until_at > NOW()")
+    rb = k.fetchone()
     k.close(); c.close()
+    if rb:
+        return "После отказа по заявке повторная подача возможна с " + (rb[0] + timedelta(hours=3)).strftime("%d.%m.%Y") + "."
     if not r:
         return ""
     return "Подача новых заявок временно недоступна. Доступ ограничен до " + (r[0] + timedelta(hours=3)).strftime("%d.%m.%Y %H:%M") + " (МСК)."

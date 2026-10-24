@@ -277,10 +277,33 @@ def blocked_message(phone) -> str:
         f"AND blocked_until > NOW() ORDER BY blocked_until DESC LIMIT 1"
     )
     r = k.fetchone()
+    k.execute(f"SELECT until_at FROM {SCHEMA}.reapply_blocks WHERE phone10 = '{ph}' AND until_at > NOW()")
+    rb = k.fetchone()
     k.close(); c.close()
+    if rb:
+        return "После отказа по заявке повторная подача возможна с " + (rb[0] + timedelta(hours=3)).strftime("%d.%m.%Y") + "."
     if not r:
         return ""
     return "Подача новых заявок временно недоступна. Доступ ограничен до " + (r[0] + timedelta(hours=3)).strftime("%d.%m.%Y %H:%M") + " (МСК)."
+
+
+def set_reapply_block(cur, phone, days, reason="", kind=""):
+    """Запрещает клиенту подавать новые заявки на days дней после отказа (0 — без ограничения)."""
+    ph = re.sub(r"\D", "", str(phone or ""))[-10:]
+    try:
+        days = int(days or 0)
+    except (TypeError, ValueError):
+        days = 0
+    if len(ph) < 10:
+        return
+    if days <= 0:
+        cur.execute(f"DELETE FROM {SCHEMA}.reapply_blocks WHERE phone10 = '{ph}'")
+        return
+    r_e = str(reason or "").replace("'", "''")[:500]
+    cur.execute(
+        f"INSERT INTO {SCHEMA}.reapply_blocks (phone10, until_at, reason, kind) VALUES ('{ph}', NOW() + INTERVAL '{days} days', '{r_e}', '{kind}') "
+        f"ON CONFLICT (phone10) DO UPDATE SET until_at = EXCLUDED.until_at, reason = EXCLUDED.reason, kind = EXCLUDED.kind, created_at = NOW()"
+    )
 
 
 def applications_paused() -> bool:
@@ -645,6 +668,8 @@ def handler(event: dict, context) -> dict:
             f"SET {', '.join(parts)} WHERE id = {app_id} RETURNING phone, full_name, loan_amount"
         )
         row = cur.fetchone()
+        if row and b.get("status") == "rejected":
+            set_reapply_block(cur, row[0], b.get("reject_days"), b.get("reject_reason", ""), "shop")
         conn.commit()
 
         if row:

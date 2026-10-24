@@ -1,3 +1,4 @@
+import RejectDaysSelect from "@/components/admin/RejectDaysSelect";
 import TermLoanExtras from "./TermLoanExtras";
 import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
@@ -77,6 +78,7 @@ export default function AdminCarLoans({ token }: Props) {
     approved_months: "",
     approved_rate: "",
     reject_reason: "",
+    reject_days: 30,
     notes: "",
   });
 
@@ -114,6 +116,7 @@ export default function AdminCarLoans({ token }: Props) {
       approved_months: app.approved_months ? String(app.approved_months) : "",
       approved_rate: app.approved_rate ? String(app.approved_rate) : "",
       reject_reason: app.reject_reason || "",
+      reject_days: 30,
       notes: app.notes || "",
     });
   }
@@ -138,6 +141,7 @@ export default function AdminCarLoans({ token }: Props) {
       notes: editForm.notes,
     };
     if (editForm.reject_reason) body.reject_reason = editForm.reject_reason;
+    if (editForm.status === "rejected") body.reject_days = editForm.reject_days;
     if (editForm.approved_amount) body.approved_amount = parseFloat(editForm.approved_amount);
     if (editForm.approved_months) body.approved_months = parseInt(editForm.approved_months);
     if (editForm.approved_rate) body.approved_rate = parseFloat(editForm.approved_rate);
@@ -396,6 +400,9 @@ export default function AdminCarLoans({ token }: Props) {
                   <label style={{ color: "rgba(2,44,34,0.5)", fontSize: 12, display: "block", marginBottom: 6 }}>Причина отказа</label>
                   <textarea style={{ ...inp, minHeight: 70, resize: "vertical" }} placeholder="Укажите причину..."
                     value={editForm.reject_reason} onChange={e => setEditForm(p => ({ ...p, reject_reason: e.target.value }))} />
+                  <div style={{ marginTop: 10 }}>
+                    <RejectDaysSelect value={editForm.reject_days} onChange={v => setEditForm(p => ({ ...p, reject_days: v }))} />
+                  </div>
                 </div>
               )}
 

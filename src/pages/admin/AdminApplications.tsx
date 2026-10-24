@@ -1,3 +1,4 @@
+import RejectDaysSelect from "@/components/admin/RejectDaysSelect";
 import { useState, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 import { App, GLASS } from "./adminTypes";
@@ -43,6 +44,8 @@ interface Props {
   setRejectReason: (v: string) => void;
   rejectPartnerUrl: string;
   setRejectPartnerUrl: (v: string) => void;
+  rejectDays: number;
+  setRejectDays: (v: number) => void;
   onApprove: () => void;
   onReject: () => void;
   onPostpone: (appId: number) => void;
@@ -63,7 +66,7 @@ export default function AdminApplications({
   apps, appsLoading, appFilter, setAppFilter,
   appMsg, appErr2, appProcessing,
   selApp, setSelApp, appAction, setAppAction, setAppMsg, setAppErr2,
-  appRate, setAppRate, appAmount, setAppAmount, appDays, setAppDays, appPartnerUrl, setAppPartnerUrl, rejectReason, setRejectReason, rejectPartnerUrl, setRejectPartnerUrl,
+  appRate, setAppRate, appAmount, setAppAmount, appDays, setAppDays, appPartnerUrl, setAppPartnerUrl, rejectReason, setRejectReason, rejectPartnerUrl, setRejectPartnerUrl, rejectDays, setRejectDays,
   onApprove, onReject, onPostpone, onRestore, onPartnerRemind, onCreditDoctorApprove, onPartnerApprove,
   onDeleteApplication, onBlockClient, onUnblockClient, onRequestVideoCall, onRefresh, setLightbox, token,
 }: Props) {
@@ -767,6 +770,7 @@ export default function AdminApplications({
                       <input type="url" placeholder="Ссылка на займ у партнёра" value={rejectPartnerUrl} onChange={e => setRejectPartnerUrl(e.target.value)}
                         style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 10, padding: "10px 12px", color: "#022c22", fontSize: 13, width: 190, boxSizing: "border-box" }} />
                       <span style={{ color: "rgba(2,44,34,0.45)", fontSize: 11, maxWidth: 190, lineHeight: 1.3 }}>Клиент увидит кнопку «Перейти на сайт партнёра». Можно оставить пустым.</span>
+                      <RejectDaysSelect value={rejectDays} onChange={setRejectDays} width={190} />
                       {appErr2 && <p style={{ color: "#f87171", fontSize: 12, margin: 0 }}>{appErr2}</p>}
                       <button onClick={onReject} disabled={appProcessing}
                         style={{ background: "linear-gradient(135deg,#dc2626,#ef4444)", color: "white", border: "none", borderRadius: 10, padding: "10px", cursor: "pointer", fontWeight: 700, fontSize: 14 }}>

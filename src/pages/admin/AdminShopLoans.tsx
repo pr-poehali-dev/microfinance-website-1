@@ -1,3 +1,4 @@
+import RejectDaysSelect from "@/components/admin/RejectDaysSelect";
 import TermLoanExtras from "./TermLoanExtras";
 import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
@@ -78,7 +79,7 @@ export default function AdminShopLoans({ token }: Props) {
 
   const [ef, setEf] = useState({
     status: "pending", approved_amount: "", approved_months: "",
-    approved_rate: "", reject_reason: "", notes: "",
+    approved_rate: "", reject_reason: "", reject_days: 30, notes: "",
   });
 
   const hdrs = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
@@ -113,6 +114,7 @@ export default function AdminShopLoans({ token }: Props) {
       approved_months:  app.approved_months  ? String(app.approved_months)  : "",
       approved_rate:    app.approved_rate    ? String(app.approved_rate)    : "",
       reject_reason:    app.reject_reason    || "",
+      reject_days:     30,
       notes:            app.notes            || "",
     });
   }
@@ -134,6 +136,7 @@ export default function AdminShopLoans({ token }: Props) {
     setSaving(true); setMsg("");
     const body: Record<string, unknown> = { status: ef.status, notes: ef.notes };
     if (ef.reject_reason)   body.reject_reason   = ef.reject_reason;
+    if (ef.status === "rejected") body.reject_days = ef.reject_days;
     if (ef.approved_amount) body.approved_amount = parseInt(ef.approved_amount);
     if (ef.approved_months) body.approved_months = parseInt(ef.approved_months);
     if (ef.approved_rate)   body.approved_rate   = parseFloat(ef.approved_rate);
@@ -394,6 +397,9 @@ export default function AdminShopLoans({ token }: Props) {
                   <label style={LBL}>ПРИЧИНА ОТКАЗА</label>
                   <textarea style={{ ...INP, minHeight: 70, resize: "vertical" as const }} placeholder="Укажите причину..."
                     value={ef.reject_reason} onChange={e => setEf(p => ({ ...p, reject_reason: e.target.value }))} />
+                  <div style={{ marginTop: 10 }}>
+                    <RejectDaysSelect value={ef.reject_days} onChange={v => setEf(p => ({ ...p, reject_days: v }))} />
+                  </div>
                 </div>
               )}
 

@@ -43,6 +43,25 @@ TELEGRAM_CHAT_ID = "8540431915"
 OVERDUE_DAILY_PENALTY_RATE = 0.0299  # 2,99% от суммы основного долга (loans.amount, с учётом страховки) за каждый день просрочки
 
 
+def set_reapply_block(cur, phone, days, reason="", kind=""):
+    """Запрещает клиенту подавать новые заявки на days дней после отказа (0 — без ограничения)."""
+    ph = re.sub(r"\D", "", str(phone or ""))[-10:]
+    try:
+        days = int(days or 0)
+    except (TypeError, ValueError):
+        days = 0
+    if len(ph) < 10:
+        return
+    if days <= 0:
+        cur.execute(f"DELETE FROM {SCHEMA}.reapply_blocks WHERE phone10 = '{ph}'")
+        return
+    r_e = str(reason or "").replace("'", "''")[:500]
+    cur.execute(
+        f"INSERT INTO {SCHEMA}.reapply_blocks (phone10, until_at, reason, kind) VALUES ('{ph}', NOW() + INTERVAL '{days} days', '{r_e}', '{kind}') "
+        f"ON CONFLICT (phone10) DO UPDATE SET until_at = EXCLUDED.until_at, reason = EXCLUDED.reason, kind = EXCLUDED.kind, created_at = NOW()"
+    )
+
+
 def card_penalty(tx_rows, gross, repaid, hol=None):
     """Штраф по карте: 2,99% в день от непогашенного основного долга по каждому переводу после окончания его срока."""
     if gross <= 0:
@@ -951,6 +970,7 @@ def handler(event: dict, context) -> dict:
         reason_val = f"'{reason_esc}'" if reason_esc else "NULL"
         partner_url_val = f"'{partner_url.replace(chr(39), chr(39)*2)}'" if partner_url else "NULL"
         cur.execute(f"UPDATE {SCHEMA}.applications SET status='rejected', reviewed_at=NOW(), reject_reason={reason_val}, reject_partner_url={partner_url_val}, cd_refund_done=FALSE WHERE id='{app_id_esc}'")
+        set_reapply_block(cur, phone, body.get("days"), reason, "application")
         conn.commit(); cur.close(); conn.close()
 
         now = msk(datetime.now()).strftime("%d.%m.%Y в %H:%M")
@@ -2513,6 +2533,7 @@ def handler(event: dict, context) -> dict:
         cur.execute(
             f"UPDATE {SCHEMA}.card_requests SET status='rejected', reject_reason='{reason}', reviewed_at=NOW() WHERE id='{req_id_e}'"
         )
+        set_reapply_block(cur, phone_r, body.get("days"), reason, "card")
         conn.commit(); cur.close(); conn.close()
         tg(f"❌ <b>Заявка на карту отклонена</b>\n\n👤 {fname_r or phone_r}\n📞 {phone_r}")
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}

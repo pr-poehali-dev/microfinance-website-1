@@ -1,3 +1,4 @@
+import RejectDaysSelect from "@/components/admin/RejectDaysSelect";
 import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 import { waitingStyle, WAITING_BADGE_STYLE } from "./waiting";
@@ -20,6 +21,7 @@ export default function AdminCardRequests({ token }: Props) {
   const [form, setForm] = useState<Record<number, { limit: string; rate: string; days: string }>>({});
   const [rejectOpen, setRejectOpen] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [rejectDays, setRejectDays] = useState(30);
   const [profileToggled, setProfileToggled] = useState<Record<number, boolean>>({});
   const [processing, setProcessing] = useState<Record<number, boolean>>({});
 
@@ -56,7 +58,7 @@ export default function AdminCardRequests({ token }: Props) {
     setProcessing(p => ({ ...p, [req.id]: true }));
     await fetch(`${ADMIN_URL}?sub=card_request_reject&id=${req.id}`, {
       method: "POST", headers: hdrs(),
-      body: JSON.stringify({ reason: rejectReason }),
+      body: JSON.stringify({ reason: rejectReason, days: rejectDays }),
     });
     setProcessing(p => ({ ...p, [req.id]: false }));
     setRejectOpen(null);
@@ -147,6 +149,7 @@ export default function AdminCardRequests({ token }: Props) {
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       <input placeholder="Причина отказа" value={rejectReason} onChange={e => setRejectReason(e.target.value)}
                         style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(239,68,68,0.4)", borderRadius: 8, padding: "8px 10px", color: "#022c22", fontSize: 13, width: "100%", boxSizing: "border-box" }} />
+                      <RejectDaysSelect value={rejectDays} onChange={setRejectDays} />
                       <button onClick={() => rejectRequest(req)} disabled={processing[req.id]}
                         style={{ background: "linear-gradient(135deg,#dc2626,#ef4444)", color: "white", border: "none", borderRadius: 8, padding: "9px", cursor: "pointer", fontWeight: 700, fontSize: 13 }}>
                         {processing[req.id] ? "..." : "Отклонить"}

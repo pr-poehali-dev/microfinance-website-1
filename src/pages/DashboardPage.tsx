@@ -177,6 +177,7 @@ export default function DashboardPage() {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [holidays, setHolidays] = useState<HolidayRequest[]>([]);
   const [blockedUntil, setBlockedUntil] = useState<string | null>(null);
+  const [reapplyBlock, setReapplyBlock] = useState<{ until: string; reason: string } | null>(null);
   const [application, setApplication] = useState<Application | null>(null);
   const [cardRequest, setCardRequest] = useState<CardRequest | null>(null);
   const [isRepeatClient, setIsRepeatClient] = useState(false);
@@ -286,6 +287,7 @@ export default function DashboardPage() {
         setLoans(data.loans || []);
         setHolidays(data.holidays || []);
         setBlockedUntil(data.blockedUntil || null);
+        setReapplyBlock(data.reapplyBlock || null);
         setRateNews(data.rateNews || []);
         setAddendumPending(!!data.addendumPending);
         setLoanNotices(data.loanNotices || []);
@@ -617,6 +619,16 @@ export default function DashboardPage() {
             <div>
               <div className="text-red-700 font-bold text-sm">Подача новых заявок недоступна до {blockedUntil} (МСК)</div>
               <div className="text-emerald-950/60 text-xs mt-0.5">Личный кабинет, оплата и поддержка работают в обычном режиме.</div>
+            </div>
+          </div>
+        )}
+
+        {reapplyBlock && !blockedUntil && !loading && !error && (
+          <div className="mb-4 rounded-2xl p-4 flex items-start gap-3" style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.4)" }}>
+            <Icon name="Ban" size={20} className="text-red-600 shrink-0 mt-0.5" />
+            <div>
+              <div className="text-red-700 font-bold text-sm">По вашей заявке принят отказ. Новую заявку можно подать с {reapplyBlock.until}</div>
+              {reapplyBlock.reason && <div className="text-emerald-950/60 text-xs mt-0.5">Причина: {reapplyBlock.reason}</div>}
             </div>
           </div>
         )}
