@@ -1,3 +1,4 @@
+import DocPhotos from "@/components/admin/DocPhotos";
 import RejectDaysSelect from "@/components/admin/RejectDaysSelect";
 import TermLoanExtras from "./TermLoanExtras";
 import { useState, useEffect, useCallback } from "react";
@@ -281,22 +282,15 @@ export default function AdminShopLoans({ token }: Props) {
                     <TermLoanExtras app={app} kind="shoploan" baseUrl={SHOP_URL} token={token} onSaved={load} />
 
                     {/* Документы */}
-                    {(app.file_passport || app.file_registration || app.file_selfie || app.file_snils || app.file_previous_passports) && (
-                      <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-                        {[
-                          { url: app.file_passport,     label: "Паспорт" },
-                          { url: app.file_registration, label: "Прописка" },
-                          { url: app.file_selfie,       label: "Селфи" },
-                          { url: app.file_snils,        label: "СНИЛС" },
-                          { url: app.file_previous_passports, label: "Прежние паспорта" },
-                        ].filter(d => d.url).map(d => (
-                          <button key={d.label} onClick={() => setLightbox(d.url!)}
-                            style={{ padding: "5px 12px", borderRadius: 8, border: "1px solid rgba(16,185,129,0.3)", background: "rgba(16,185,129,0.1)", color: "#0f766e", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
-                            <Icon name="Image" size={12} /> {d.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                    <div style={{ marginTop: 10 }}>
+                      <DocPhotos photos={[
+                        { url: app.file_passport, label: "Паспорт" },
+                        { url: app.file_registration, label: "Прописка" },
+                        { url: app.file_selfie, label: "Селфи" },
+                        { url: app.file_snils, label: "СНИЛС" },
+                        { url: app.file_previous_passports, label: "Прежние паспорта" },
+                      ]} />
+                    </div>
                   </div>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>

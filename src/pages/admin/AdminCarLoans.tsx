@@ -1,3 +1,4 @@
+import DocPhotos from "@/components/admin/DocPhotos";
 import RejectDaysSelect from "@/components/admin/RejectDaysSelect";
 import TermLoanExtras from "./TermLoanExtras";
 import { useState, useEffect, useCallback } from "react";
@@ -267,22 +268,13 @@ export default function AdminCarLoans({ token }: Props) {
 
                     <TermLoanExtras app={app} kind="carloan" baseUrl={CAR_URL} token={token} onSaved={load} />
 
-                    {(app.file_passport || app.file_registration || app.file_selfie || app.file_previous_passports || app.file_vehicle_doc) && (
-                      <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-                        {[
-                          { url: app.file_passport, label: "Паспорт" },
-                          { url: app.file_registration, label: "Прописка" },
-                          { url: app.file_selfie, label: "Селфи" },
-                          { url: app.file_previous_passports, label: "Прежние паспорта" },
-                          { url: app.file_vehicle_doc, label: "СТС/ПТС" },
-                        ].filter(d => d.url).map(d => (
-                          <a key={d.label} href={d.url!} target="_blank" rel="noreferrer"
-                            style={{ padding: "5px 12px", borderRadius: 8, border: "1px solid rgba(16,185,129,0.3)", background: "rgba(16,185,129,0.1)", color: "#0f766e", fontSize: 12, textDecoration: "none" }}>
-                            {d.label}
-                          </a>
-                        ))}
-                      </div>
-                    )}
+                    <DocPhotos photos={[
+                      { url: app.file_passport, label: "Паспорт" },
+                      { url: app.file_registration, label: "Прописка" },
+                      { url: app.file_selfie, label: "Селфи" },
+                      { url: app.file_previous_passports, label: "Прежние паспорта" },
+                      { url: app.file_vehicle_doc, label: "СТС/ПТС" },
+                    ]} />
 
                     {(app.status === "approved" || app.status === "signing") && (app.approved_amount || app.approved_months || app.approved_rate) && (
                       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", padding: "10px 14px", borderRadius: 10, background: app.status === "approved" ? "rgba(34,197,94,0.08)" : "rgba(96,165,250,0.08)", border: `1px solid ${app.status === "approved" ? "rgba(34,197,94,0.2)" : "rgba(96,165,250,0.2)"}`, marginBottom: 8 }}>

@@ -1,3 +1,4 @@
+import DocPhotos from "@/components/admin/DocPhotos";
 import RejectDaysSelect from "@/components/admin/RejectDaysSelect";
 import { useState, useCallback } from "react";
 import Icon from "@/components/ui/icon";
@@ -498,17 +499,12 @@ export default function AdminApplications({
                 )}
 
                 {/* Документы */}
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
-                  {[["filePassport","Паспорт"],["fileRegistration","Прописка"],["fileSelfie","Селфи"],["filePreviousPassports","Доп.паспорт"]].map(([key, label]) => {
-                    const url = app[key as keyof App] as string;
-                    return url ? (
-                      <button key={key} onClick={() => setLightbox(url)}
-                        style={{ background: "rgba(16,185,129,0.2)", border: "1px solid rgba(16,185,129,0.4)", borderRadius: 8, padding: "6px 12px", color: "#0f766e", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                        <Icon name="Image" size={12} />{label}
-                      </button>
-                    ) : null;
-                  })}
-                </div>
+                <DocPhotos photos={[
+                  { url: app.filePassport, label: "Паспорт" },
+                  { url: app.fileRegistration, label: "Прописка" },
+                  { url: app.fileSelfie, label: "Селфи" },
+                  { url: app.filePreviousPassports, label: "Доп.паспорт" },
+                ]} />
 
                 {/* Данные из анкеты: работа и контакты */}
                 {(app.workPhone || app.cardNumberTransfer) && (
