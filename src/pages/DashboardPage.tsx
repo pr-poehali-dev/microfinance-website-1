@@ -176,6 +176,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loans, setLoans] = useState<Loan[]>([]);
   const [holidays, setHolidays] = useState<HolidayRequest[]>([]);
+  const [blockedUntil, setBlockedUntil] = useState<string | null>(null);
   const [application, setApplication] = useState<Application | null>(null);
   const [cardRequest, setCardRequest] = useState<CardRequest | null>(null);
   const [isRepeatClient, setIsRepeatClient] = useState(false);
@@ -284,6 +285,7 @@ export default function DashboardPage() {
         if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
         setLoans(data.loans || []);
         setHolidays(data.holidays || []);
+        setBlockedUntil(data.blockedUntil || null);
         setRateNews(data.rateNews || []);
         setAddendumPending(!!data.addendumPending);
         setLoanNotices(data.loanNotices || []);
@@ -606,6 +608,16 @@ export default function DashboardPage() {
           <div className="glass rounded-2xl p-5 flex items-center gap-3 mb-6" style={{ border: "1px solid rgba(239,68,68,0.3)" }}>
             <Icon name="AlertCircle" size={20} className="text-red-600 shrink-0" />
             <p className="text-red-600">{error}</p>
+          </div>
+        )}
+
+        {blockedUntil && !loading && !error && (
+          <div className="mb-4 rounded-2xl p-4 flex items-start gap-3" style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.4)" }}>
+            <Icon name="Ban" size={20} className="text-red-600 shrink-0 mt-0.5" />
+            <div>
+              <div className="text-red-700 font-bold text-sm">Подача новых заявок недоступна до {blockedUntil} (МСК)</div>
+              <div className="text-emerald-950/60 text-xs mt-0.5">Личный кабинет, оплата и поддержка работают в обычном режиме.</div>
+            </div>
           </div>
         )}
 

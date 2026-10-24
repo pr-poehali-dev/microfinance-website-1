@@ -1756,6 +1756,9 @@ def handler(event: dict, context) -> dict:
     )
     rate_news = [{"type": t_, "oldRate": float(o_), "newRate": float(n_), "unit": u_} for t_, o_, n_, u_ in cur.fetchall()]
     hol_map = holiday_map(holidays)
+    cur.execute(f"SELECT blocked_until FROM {SCHEMA}.users WHERE id = {int(user_id)} AND blocked_until > NOW()")
+    _bu = cur.fetchone()
+    blocked_until = msk(_bu[0]).strftime("%d.%m.%Y %H:%M") if _bu else None
     cur.close(); conn.close()
 
     is_cd = bool(application and application.get("isCreditDoctor"))
@@ -1888,5 +1891,6 @@ def handler(event: dict, context) -> dict:
             "profileEditable": profile_editable,
             "addendumPending": addendum_pending,
             "holidays": holidays,
+            "blockedUntil": blocked_until,
         }, ensure_ascii=False)
     }
