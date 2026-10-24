@@ -1,5 +1,6 @@
 """Займ на покупку товаров: приём заявок, управление из админки, статус для клиента. v2"""
 import json
+import re
 import os
 import secrets
 import hashlib
