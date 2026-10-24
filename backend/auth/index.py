@@ -149,10 +149,6 @@ def handler(event: dict, context) -> dict:
             cur.close(); conn.close()
             return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Неверный номер телефона или пароль"})}
         clear_fails(cur, lkey)
-        if row[2] and row[2] > datetime.now():
-            cur.close(); conn.close()
-            until_str = msk(row[2]).strftime("%d.%m.%Y %H:%M")
-            return {"statusCode": 403, "headers": CORS, "body": json.dumps({"error": f"Доступ временно заблокирован до {until_str}"})}
         user_id = row[0]
     else:
         cur.close(); conn.close()
