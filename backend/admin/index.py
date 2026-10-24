@@ -2088,19 +2088,26 @@ def handler(event: dict, context) -> dict:
     if sub == "docs_upload" and method == "POST":
         import base64, boto3
         user_id = int(qs.get("userId", 0))
-        if not user_id:
+        by_app = int(qs.get("appId", 0) or 0)
+        if not user_id and not by_app:
             cur.close(); conn.close()
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Не указан userId"})}
 
-        cur.execute(f"SELECT phone FROM {SCHEMA}.users WHERE id = {user_id}")
+        if by_app:
+            cur.execute(f"SELECT phone FROM {SCHEMA}.applications WHERE id = {by_app}")
+        else:
+            cur.execute(f"SELECT phone FROM {SCHEMA}.users WHERE id = {user_id}")
         row = cur.fetchone()
         if not row:
             cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Клиент не найден"})}
         phone = row[0]
 
-        cur.execute(f"SELECT id FROM {SCHEMA}.applications WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1")
-        app_row = cur.fetchone()
+        if by_app:
+            app_row = (by_app,)
+        else:
+            cur.execute(f"SELECT id FROM {SCHEMA}.applications WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1")
+            app_row = cur.fetchone()
         if not app_row:
             cur.close(); conn.close()
             return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"})}

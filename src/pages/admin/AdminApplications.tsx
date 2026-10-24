@@ -499,12 +499,23 @@ export default function AdminApplications({
                 )}
 
                 {/* Документы */}
-                <DocPhotos photos={[
-                  { url: app.filePassport, label: "Паспорт" },
-                  { url: app.fileRegistration, label: "Прописка" },
-                  { url: app.fileSelfie, label: "Селфи" },
-                  { url: app.filePreviousPassports, label: "Доп.паспорт" },
-                ]} />
+                <DocPhotos
+                  photos={[
+                    { url: app.filePassport, label: "Паспорт", field: "passportMain" },
+                    { url: app.fileRegistration, label: "Прописка", field: "registration" },
+                    { url: app.fileSelfie, label: "Селфи", field: "selfie" },
+                    { url: app.filePreviousPassports, label: "Доп.паспорт", field: "previousPassports" },
+                  ]}
+                  onReplace={async (field, data) => {
+                    const r = await fetch(`https://functions.poehali.dev/891e2610-dbe8-47ed-8144-e9df8e0301a6?sub=docs_upload&appId=${app.id}`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                      body: JSON.stringify({ [field]: data }),
+                    });
+                    if (r.ok) onRefresh();
+                    return r.ok;
+                  }}
+                />
 
                 {/* Данные из анкеты: работа и контакты */}
                 {(app.workPhone || app.cardNumberTransfer) && (

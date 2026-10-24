@@ -283,13 +283,20 @@ export default function AdminShopLoans({ token }: Props) {
 
                     {/* Документы */}
                     <div style={{ marginTop: 10 }}>
-                      <DocPhotos photos={[
-                        { url: app.file_passport, label: "Паспорт" },
-                        { url: app.file_registration, label: "Прописка" },
-                        { url: app.file_selfie, label: "Селфи" },
-                        { url: app.file_snils, label: "СНИЛС" },
-                        { url: app.file_previous_passports, label: "Прежние паспорта" },
-                      ]} />
+                      <DocPhotos
+                        photos={[
+                          { url: app.file_passport, label: "Паспорт", field: "file_passport" },
+                          { url: app.file_registration, label: "Прописка", field: "file_registration" },
+                          { url: app.file_selfie, label: "Селфи", field: "file_selfie" },
+                          { url: app.file_snils, label: "СНИЛС", field: "file_snils" },
+                          { url: app.file_previous_passports, label: "Прежние паспорта", field: "file_previous_passports" },
+                        ]}
+                        onReplace={async (field, data) => {
+                          const r = await fetch(`${SHOP_URL}?sub=photo&id=${app.id}`, { method: "PUT", headers: hdrs, body: JSON.stringify({ field, data }) });
+                          if (r.ok) load();
+                          return r.ok;
+                        }}
+                      />
                     </div>
                   </div>
 

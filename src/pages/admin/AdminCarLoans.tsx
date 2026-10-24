@@ -268,13 +268,20 @@ export default function AdminCarLoans({ token }: Props) {
 
                     <TermLoanExtras app={app} kind="carloan" baseUrl={CAR_URL} token={token} onSaved={load} />
 
-                    <DocPhotos photos={[
-                      { url: app.file_passport, label: "Паспорт" },
-                      { url: app.file_registration, label: "Прописка" },
-                      { url: app.file_selfie, label: "Селфи" },
-                      { url: app.file_previous_passports, label: "Прежние паспорта" },
-                      { url: app.file_vehicle_doc, label: "СТС/ПТС" },
-                    ]} />
+                    <DocPhotos
+                      photos={[
+                        { url: app.file_passport, label: "Паспорт", field: "file_passport" },
+                        { url: app.file_registration, label: "Прописка", field: "file_registration" },
+                        { url: app.file_selfie, label: "Селфи", field: "file_selfie" },
+                        { url: app.file_previous_passports, label: "Прежние паспорта", field: "file_previous_passports" },
+                        { url: app.file_vehicle_doc, label: "СТС/ПТС", field: "file_vehicle_doc" },
+                      ]}
+                      onReplace={async (field, data) => {
+                        const r = await fetch(`${CAR_URL}?sub=photo&id=${app.id}`, { method: "PUT", headers: hdrs, body: JSON.stringify({ field, data }) });
+                        if (r.ok) load();
+                        return r.ok;
+                      }}
+                    />
 
                     {(app.status === "approved" || app.status === "signing") && (app.approved_amount || app.approved_months || app.approved_rate) && (
                       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", padding: "10px 14px", borderRadius: 10, background: app.status === "approved" ? "rgba(34,197,94,0.08)" : "rgba(96,165,250,0.08)", border: `1px solid ${app.status === "approved" ? "rgba(34,197,94,0.2)" : "rgba(96,165,250,0.2)"}`, marginBottom: 8 }}>

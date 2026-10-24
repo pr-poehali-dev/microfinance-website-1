@@ -707,6 +707,36 @@ def handler(event: dict, context) -> dict:
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
+    # --- PUT /?sub=photo&id=N — заменить фото документа в заявке (админ, body: {field, data}) ---
+    if method == "PUT" and sub == "photo":
+        if not check_admin(cur, token):
+            cur.close(); conn.close()
+            return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Не авторизован"})}
+        app_id = int(qs.get("id", 0) or 0)
+        raw_b = event.get("body") or "{}"
+        b = json.loads(raw_b) if isinstance(raw_b, str) else raw_b
+        field = str(b.get("field") or "")
+        allowed = ("file_passport","file_registration","file_selfie","file_previous_passports","file_vehicle_doc")
+        if not app_id or field not in allowed or not b.get("data"):
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Некорректные данные"}, ensure_ascii=False)}
+        import base64, boto3
+        cur.execute(f"SELECT phone FROM {SCHEMA}.car_loan_applications WHERE id = {app_id}")
+        pr = cur.fetchone()
+        if not pr:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Заявка не найдена"}, ensure_ascii=False)}
+        s3 = boto3.client("s3", endpoint_url="https://bucket.poehali.dev",
+            aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"])
+        access_key = os.environ["AWS_ACCESS_KEY_ID"]
+        s3_key = f"carloan/{datetime.now().strftime('%Y%m%d_%H%M%S')}_{str(pr[0]).replace('+', '')}_{field}.webp"
+        s3.put_object(Bucket="files", Key=s3_key, Body=base64.b64decode(b["data"]), ContentType="image/webp")
+        url = f"https://cdn.poehali.dev/projects/{access_key}/bucket/{s3_key}"
+        cur.execute(f"UPDATE {SCHEMA}.car_loan_applications SET {field} = '{url}', updated_at = NOW() WHERE id = {app_id}")
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "url": url})}
+
     # --- PUT /?sub=sign&id=N — подписать договор (клиент) ---
     if method == "PUT" and sub == "sign":
         app_id = int(qs.get("id", 0) or 0)
