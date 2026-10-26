@@ -1858,7 +1858,11 @@ def handler(event: dict, context) -> dict:
             e_interest = round(float(amount) * float(rate) * e_days)
             e_interest -= min(int(loan_wheel_db or 0), e_interest)
             e_remaining = max(0.0, float(amount) + e_interest - paid_total)
-            if 0 < e_remaining < loan_data["remaining"]:
+            if paid_total > 0 and e_remaining <= 0:
+                loan_data["status"] = "paid"
+                loan_data["remaining"] = 0
+                status = "paid"
+            elif 0 < e_remaining < loan_data["remaining"]:
                 loan_data["earlyPayoff"] = {
                     "days": e_days,
                     "interest": e_interest,

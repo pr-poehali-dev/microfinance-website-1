@@ -1,0 +1,1 @@
+UPDATE loans SET status = 'paid' WHERE id IN (137, 138, 207) AND status IN ('active', 'overdue');

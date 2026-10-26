@@ -1892,7 +1892,7 @@ def handler(event: dict, context) -> dict:
         # Проверяем существование займа и получаем контакты клиента
         if loan_type == "loan":
             cur.execute(f"""
-                SELECT u.phone, u.full_name, l.amount, l.days, l.rate, l.wheel_discount_rub
+                SELECT u.phone, u.full_name, l.amount, l.days, l.rate, l.wheel_discount_rub, l.disbursed_at
                 FROM {SCHEMA}.loans l JOIN {SCHEMA}.users u ON u.id = l.user_id
                 WHERE l.id = {loan_id}
             """)
@@ -1930,7 +1930,15 @@ def handler(event: dict, context) -> dict:
             total_due = float(loan_amount) + loan_interest
             cur.execute(f"SELECT COALESCE(SUM(amount),0) FROM {SCHEMA}.payments WHERE loan_type='loan' AND loan_id={loan_id}")
             paid_total = float(cur.fetchone()[0])
-            if paid_total >= total_due:
+            early_ok = False
+            if row[6]:
+                _today = (datetime.utcnow() + timedelta(hours=3)).date()
+                _begin = (row[6] + timedelta(hours=3)).date()
+                _e_days = min(int(loan_days), max(0, (_today - _begin).days) + 1)
+                _e_int = round(float(loan_amount) * float(loan_rate) * _e_days)
+                _e_int -= min(int(row[5] or 0), _e_int)
+                early_ok = paid_total >= float(loan_amount) + _e_int
+            if paid_total >= total_due or early_ok:
                 cur.execute(f"SELECT status FROM {SCHEMA}.loans WHERE id={loan_id}")
                 cur_status_row = cur.fetchone()
                 if cur_status_row and cur_status_row[0] != "paid":
