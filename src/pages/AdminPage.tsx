@@ -19,6 +19,7 @@ import AdminEmailLog from "./admin/AdminEmailLog";
 import AdminInvestments from "./admin/AdminInvestments";
 import AdminPromoCodes from "./admin/AdminPromoCodes";
 import AdminWheelPrizes from "./admin/AdminWheelPrizes";
+import AdminGifts from "./admin/AdminGifts";
 import AdminHolidays from "./admin/AdminHolidays";
 import AdminContractsRepair from "./admin/AdminContractsRepair";
 import { App, User, Loan, PURPLE } from "./admin/adminTypes";
@@ -34,7 +35,7 @@ export default function AdminPage() {
 
   const [clientDocsNew, setClientDocsNew] = useState(0);
   const [holidaysNew, setHolidaysNew] = useState(0);
-  const [tab, setTab]   = useState<"apps" | "clients" | "carloan" | "shoploan" | "disbursed" | "cardrequests" | "cards" | "promo" | "wheel" | "yookassa" | "holidays" | "clientdocs" | "invest" | "support" | "duplicates" | "emails">("apps");
+  const [tab, setTab]   = useState<"apps" | "clients" | "carloan" | "shoploan" | "disbursed" | "cardrequests" | "cards" | "promo" | "wheel" | "gifts" | "yookassa" | "holidays" | "clientdocs" | "invest" | "support" | "duplicates" | "emails">("apps");
   const [apps, setApps] = useState<App[]>([]);
   const [appFilter, setAppFilter] = useState<"pending"|"approved"|"rejected"|"postponed"|"partner_card"|"creditdoctor"|"paid_loans">("pending");
   const [appsLoading, setAppsLoading] = useState(false);
@@ -471,6 +472,11 @@ export default function AdminPage() {
             background: tab === "wheel" ? "linear-gradient(135deg,#f59e0b,#ef4444)" : "rgba(245,158,11,0.1)", color: tab === "wheel" ? "white" : "#b45309" }}>
           🎡 Призы колеса
         </button>
+        <button onClick={() => setTab("gifts")}
+          style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
+            background: tab === "gifts" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "gifts" ? "white" : "rgba(2,44,34,0.5)" }}>
+          🎁 Подарки
+        </button>
         <button onClick={() => { loadApps(); loadUsers(); }} style={{ background: "rgba(16,185,129,0.07)", border: "none", borderRadius: 10, padding: 8, cursor: "pointer", color: "rgba(2,44,34,0.5)" }}>
           <Icon name="RefreshCw" size={16} />
         </button>
@@ -529,6 +535,7 @@ export default function AdminPage() {
         {tab === "yookassa" && <AdminYooKassa token={token} />}
         {tab === "holidays" && <AdminHolidays token={token} onChanged={loadClientDocsCount} />}
         {tab === "clientdocs" && <AdminClientDocs token={token} onChange={loadClientDocsCount} />}
+        {tab === "gifts" && <AdminGifts token={token} />}
         {tab === "wheel" && (
           <AdminWheelPrizes token={token} />
         )}

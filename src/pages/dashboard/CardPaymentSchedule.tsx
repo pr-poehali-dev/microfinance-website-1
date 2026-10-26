@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { isPastDue } from "./nextPayment";
 import Icon from "@/components/ui/icon";
 import CardPayModal from "./CardPayModal";
 
@@ -118,12 +119,15 @@ export default function CardPaymentSchedule({ debt, earlyDebt, minPaymentPercent
                         Оплата проверяется
                       </button>
                     ) : (
-                      <button
-                        onClick={() => setPayRow(s)}
-                        className="btn-neon text-white text-xs font-semibold px-3 py-1.5 rounded-lg"
-                      >
-                        Оплатить
-                      </button>
+                      <>
+                        {isPastDue(s.dueDate) && <span className="text-xs font-bold px-2 py-1 rounded-md" style={{ background: "rgba(239,68,68,0.15)", color: "#b91c1c" }}>Платёж просрочен</span>}
+                        <button
+                          onClick={() => setPayRow(s)}
+                          className="btn-neon text-white text-xs font-semibold px-3 py-1.5 rounded-lg"
+                        >
+                          Оплатить
+                        </button>
+                      </>
                     )
                   )}
                 </span>

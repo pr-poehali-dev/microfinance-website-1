@@ -68,8 +68,8 @@ export interface CardRequestItem {
   birthDate?: string;
   debt?: number;
 }
-export interface User { id: number; phone: string; fullName: string; email: string; createdAt: string; loanCount: number; debt: number; password?: string; }
-export interface Loan { id: number; amount: number; days: number; ratePercent: number; status: string; createdAt: string; totalDue?: number; isOverdue?: boolean; overdueDays?: number; penaltyAmount?: number; penaltyWaived?: number; }
+export interface User { id: number; phone: string; fullName: string; email: string; createdAt: string; loanCount: number; debt: number; password?: string; nextDue?: string | null; hasOverdue?: boolean; }
+export interface Loan { id: number; amount: number; days: number; ratePercent: number; status: string; createdAt: string; totalDue?: number; isOverdue?: boolean; overdueDays?: number; penaltyAmount?: number; penaltyWaived?: number; disbursedAt?: string | null; dueDate?: string | null; paidTotal?: number; closedAt?: string | null; payments?: { amount: number; paidAt: string; note: string }[]; }
 
 export const GLASS = { background: "rgba(255,255,255,0.9)", border: "1px solid rgba(16,185,129,0.15)", borderRadius: 16, boxShadow: "0 4px 20px rgba(16,185,129,0.06)" };
 export const PURPLE = { background: "linear-gradient(135deg,#10b981,#14b8a6)" };

@@ -448,7 +448,9 @@ def handler(event: dict, context) -> dict:
             SELECT u.id, u.phone, u.full_name, u.email, u.created_at,
                    COUNT(l.id) AS loan_count,
                    COALESCE(SUM(CASE WHEN l.status != 'paid' THEN l.amount ELSE 0 END), 0) AS debt,
-                   u.plain_password
+                   u.plain_password,
+                   MIN(CASE WHEN l.status IN ('active','overdue') AND l.disbursed_at IS NOT NULL THEN l.disbursed_at + (l.days || ' days')::interval END) AS next_due,
+                   BOOL_OR(l.status = 'overdue') AS has_overdue
             FROM {SCHEMA}.users u
             LEFT JOIN {SCHEMA}.loans l ON l.user_id = u.id
             GROUP BY u.id ORDER BY u.created_at DESC
@@ -456,7 +458,8 @@ def handler(event: dict, context) -> dict:
         rows = cur.fetchall()
         cur.close(); conn.close()
         users = [{"id": r[0], "phone": r[1], "fullName": r[2] or "", "email": r[3] or "",
-                  "createdAt": r[4].strftime("%d.%m.%Y"), "loanCount": r[5], "debt": float(r[6]), "password": r[7] or ""} for r in rows]
+                  "createdAt": r[4].strftime("%d.%m.%Y"), "loanCount": r[5], "debt": float(r[6]), "password": r[7] or "",
+                  "nextDue": msk(r[8]).strftime("%d.%m.%Y") if r[8] else None, "hasOverdue": bool(r[9])} for r in rows]
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"users": users}, ensure_ascii=False)}
 
     # --- ЗАЙМЫ КЛИЕНТА (GET, sub='loans', userId=...) ---
@@ -473,6 +476,29 @@ def handler(event: dict, context) -> dict:
             for lid, s in cur.fetchall():
                 paid_map[lid] = float(s)
         hol_map = load_hol_map(cur)
+        pay_map: dict = {}
+        if loan_ids:
+            cur.execute(f"SELECT loan_id, amount, paid_at, note FROM {SCHEMA}.payments WHERE loan_type='loan' AND loan_id IN ({','.join(loan_ids)}) ORDER BY paid_at")
+            for lid, a_, pa_, n_ in cur.fetchall():
+                pay_map.setdefault(lid, []).append({"amount": float(a_), "paidAt": msk(pa_).strftime("%d.%m.%Y"), "note": n_ or ""})
+        other = []
+        if u:
+            ph_e = u[0].replace("'", "''")
+            for kind, tbl, label in (("carloan", "car_loan_applications", "Автозайм"), ("shoploan", "shopping_loan_applications", "Займ на покупки")):
+                cur.execute(
+                    f"SELECT id, COALESCE(approved_amount, loan_amount), COALESCE(approved_months, loan_months), status, created_at, disbursed_at "
+                    f"FROM {SCHEMA}.{tbl} WHERE phone = '{ph_e}' ORDER BY created_at DESC"
+                )
+                for oid, oa, om, ost, oc, od in cur.fetchall():
+                    cur.execute(f"SELECT amount, paid_at, note FROM {SCHEMA}.payments WHERE loan_type='{kind}' AND loan_id={oid} ORDER BY paid_at")
+                    ops = [{"amount": float(x[0]), "paidAt": msk(x[1]).strftime("%d.%m.%Y"), "note": x[2] or ""} for x in cur.fetchall()]
+                    other.append({
+                        "kind": kind, "label": label, "id": oid, "amount": float(oa or 0), "months": om, "status": ost,
+                        "createdAt": oc.strftime("%d.%m.%Y"),
+                        "disbursedAt": msk(od).strftime("%d.%m.%Y") if od else None,
+                        "dueDate": msk(od + timedelta(days=30 * int(om or 0))).strftime("%d.%m.%Y") if od and om else None,
+                        "paidTotal": sum(x["amount"] for x in ops), "payments": ops,
+                    })
         cur.close(); conn.close()
         loans = []
         for r in rows:
@@ -488,9 +514,14 @@ def handler(event: dict, context) -> dict:
                 "totalDue": total_due, "isOverdue": is_overdue,
                 "overdueDays": overdue_days, "penaltyAmount": penalty,
                 "penaltyWaived": float(penalty_waived or 0),
+                "disbursedAt": msk(disbursed_at).strftime("%d.%m.%Y") if disbursed_at else None,
+                "dueDate": msk(disbursed_at + timedelta(days=int(days))).strftime("%d.%m.%Y") if disbursed_at else None,
+                "paidTotal": paid_total,
+                "payments": pay_map.get(lid, []),
+                "closedAt": pay_map[lid][-1]["paidAt"] if status == "paid" and pay_map.get(lid) else None,
             })
         return {"statusCode": 200, "headers": CORS, "body": json.dumps(
-            {"loans": loans, "user": {"phone": u[0] if u else "", "fullName": u[1] if u else ""}},
+            {"loans": loans, "otherLoans": other, "user": {"phone": u[0] if u else "", "fullName": u[1] if u else ""}},
             ensure_ascii=False
         )}
 

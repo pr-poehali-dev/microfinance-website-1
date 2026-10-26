@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { isPastDue } from "./nextPayment";
 import Icon from "@/components/ui/icon";
 
 export interface ScheduleItem {
@@ -71,6 +72,11 @@ export default function PaymentHistory({ schedule, payments, paidTotal, totalDue
       )}
       {onPay && nextRow && nextDue > 0 && (
         <div className="px-5 pb-4">
+          {isPastDue(nextRow.dueDate) && !holiday[nextIdx] && (
+            <div className="mb-2 rounded-lg px-4 py-2 text-sm font-bold flex items-center gap-2" style={{ background: "rgba(239,68,68,0.12)", color: "#b91c1c", border: "1px solid rgba(239,68,68,0.35)" }}>
+              <Icon name="AlertTriangle" size={16} />Платёж просрочен (срок был {nextRow.dueDate})
+            </div>
+          )}
           <button
             onClick={() => onPay(nextDue)}
             className="w-full btn-neon text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2"

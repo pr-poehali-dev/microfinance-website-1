@@ -1,0 +1,5 @@
+{"tests": [
+  {"name": "OPTIONS preflight", "method": "OPTIONS", "path": "/", "expectedStatus": 200},
+  {"name": "Public gifts list", "method": "GET", "path": "/?sub=list", "expectedStatus": 200},
+  {"name": "Me without token", "method": "GET", "path": "/?sub=me", "expectedStatus": 401}
+]}

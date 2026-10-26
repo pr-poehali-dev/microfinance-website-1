@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 import ClientRateReducer from "./ClientRateReducer";
 import { User, Loan, GLASS, PURPLE, STATUS } from "./adminTypes";
+import ClientLoanHistory from "./ClientLoanHistory";
 import AdminPayoutField from "./AdminPayoutField";
 
 interface Props {
@@ -234,6 +235,7 @@ export default function AdminClients({
                   🔑 Пароль: {u.password ? <b style={{ color: "#047857", letterSpacing: 1, userSelect: "all" }}>{u.password}</b> : <span style={{ color: "rgba(2,44,34,0.3)" }}>неизвестен</span>}
                 </div>
                 {u.debt > 0 && <div style={{ color: "#f87171", fontSize: 12, marginTop: 4 }}>Долг: {u.debt.toLocaleString("ru-RU")} ₽</div>}
+                {u.nextDue && <div style={{ color: u.hasOverdue ? "#dc2626" : "#047857", fontSize: 12, marginTop: 4, fontWeight: 600 }}>📅 {u.hasOverdue ? "Просрочен, срок был" : "Займ до"}: {u.nextDue}</div>}
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); setSelUser(u); setClientView("edit"); setActionMsg(""); setActionErr(""); }}
@@ -452,6 +454,7 @@ export default function AdminClients({
             {clientView === "loans" && selUser && (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {loansLoading && <div style={{ textAlign: "center", padding: 40 }}><Icon name="Loader2" size={28} className="animate-spin text-emerald-600" /></div>}
+                <ClientLoanHistory userId={selUser.id} refreshKey={loans.length} />
                 <ClientRateReducer userId={selUser.id} token={localStorage.getItem("admin_token") || ""} onChanged={() => onLoadLoans(selUser.id)} />
                 {!loansLoading && loans.length === 0 && <div style={{ ...GLASS, padding: 40, textAlign: "center", color: "rgba(2,44,34,0.3)" }}>У клиента нет займов</div>}
                 {loans.map(loan => {
@@ -462,6 +465,7 @@ export default function AdminClients({
                         <div>
                           <span style={{ color: "#022c22", fontWeight: 700, fontSize: 18 }}>{loan.amount.toLocaleString("ru-RU")} ₽</span>
                           <span style={{ color: "rgba(2,44,34,0.4)", fontSize: 13, marginLeft: 12 }}>{loan.days} дн. · {loan.ratePercent}%/день</span>
+                          {loan.dueDate && loan.status !== "paid" && <div style={{ color: loan.isOverdue ? "#dc2626" : "#047857", fontSize: 13, fontWeight: 600, marginTop: 2 }}>Срок до: {loan.dueDate}</div>}
                         </div>
                         <span style={{ background: `${st.color}25`, color: st.color, padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>{st.label}</span>
                       </div>

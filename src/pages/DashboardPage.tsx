@@ -22,8 +22,9 @@ import PromoCodeCard from "./dashboard/PromoCodeCard";
 import PayLoanModal from "./dashboard/PayLoanModal";
 import CardPayModal from "./dashboard/CardPayModal";
 import RateReducedModal, { RateNews } from "./dashboard/RateReducedModal";
+import GiftsSection from "./dashboard/GiftsSection";
 import PaymentsList, { DueItem } from "./dashboard/PaymentsList";
-import { nextPayment } from "./dashboard/nextPayment";
+import { nextPayment, isPastDue } from "./dashboard/nextPayment";
 import TermLoanHistoryCard from "./dashboard/TermLoanHistoryCard";
 import NewRequestHub from "./dashboard/NewRequestHub";
 import CardActivatedModal from "./dashboard/CardActivatedModal";
@@ -192,7 +193,7 @@ export default function DashboardPage() {
     return (l.paidTotal || 0) >= total - 0.5;
   };
   const [payCard, setPayCard] = useState<{ amount: number; dueDate: string } | null>(null);
-  const [payOther, setPayOther] = useState<{ contractNumber: string; amount: number; loanType: "carloan" | "shoploan"; loanId: number; early?: boolean } | null>(null);
+  const [payOther, setPayOther] = useState<{ contractNumber: string; amount: number; loanType: "loan" | "carloan" | "shoploan"; loanId: number; early?: boolean } | null>(null);
   const [loanNotices, setLoanNotices] = useState<string[]>([]);
   const [profileEditable, setProfileEditable] = useState(false);
   const [promo, setPromo] = useState<{ code: string; discount: number } | null>(null);
@@ -262,7 +263,7 @@ export default function DashboardPage() {
   const shopTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [paidToast, setPaidToast] = useState(false);
   const [addendumPending, setAddendumPending] = useState(false);
-  const [section, setSection] = useState<DashboardSection>("apps");
+  const [section, setSection] = useState<DashboardSection>(new URLSearchParams(window.location.search).get("section") === "gifts" ? "gifts" : "apps");
 
   const loadTermLoans = (phone?: string) => {
     if (!phone) return;
@@ -729,6 +730,7 @@ export default function DashboardPage() {
               title,
               subtitle: `${np.month ? `${np.month}-й платёж` : "Платёж"}${np.dueDate ? ` · до ${np.dueDate}` : ""}`,
               amount: np.amount,
+              overdue: isPastDue(np.dueDate),
               onPay: () => setPayOther({ contractNumber: `${pref}-${String(l.id).padStart(12, "0")}`, amount: np.amount, loanType: kind, loanId: l.id }),
             });
           };
@@ -736,12 +738,16 @@ export default function DashboardPage() {
             const left = Math.round(l.remaining ?? l.total);
             if (left <= 0) return;
             const due = l.schedule?.[0]?.dueDate;
+            const weekly = (l.schedule?.length ?? 0) > 1 ? nextPayment(l.schedule || [], l.paidTotal || 0, l.total) : null;
             dues.push({
               key: `loan${l.id}`,
-              title: `Займ ${fmtAppId(l.id)}`,
-              subtitle: l.status === "overdue" ? `Просрочка ${l.overdueDays ?? 0} дн.` : activeHoliday(holidays, "loan", l.id) ? `Кредитные каникулы до ${activeHoliday(holidays, "loan", l.id)}` : due ? `Погашение до ${due}` : "Погашение займа",
-              amount: left,
-              onPay: () => handlePay(l),
+              title: `Долгосрочный займ ${fmtAppId(l.id)}`,
+              subtitle: l.status === "overdue" ? `Просрочка ${l.overdueDays ?? 0} дн.` : activeHoliday(holidays, "loan", l.id) ? `Кредитные каникулы до ${activeHoliday(holidays, "loan", l.id)}` : weekly ? `Еженедельный платёж · до ${weekly.dueDate}` : due ? `Погашение до ${due}` : "Погашение займа",
+              amount: weekly ? Math.min(left, weekly.amount) : left,
+              overdue: l.status === "overdue" || (!!weekly && isPastDue(weekly.dueDate)),
+              onPay: () => weekly && l.status !== "overdue"
+                ? setPayOther({ contractNumber: fmtAppId(l.id), amount: Math.min(left, weekly.amount), loanType: "loan", loanId: l.id })
+                : handlePay(l),
             });
           });
           const vc = application?.virtualCard;
@@ -754,6 +760,7 @@ export default function DashboardPage() {
                 title: "Карта РУСФИНАНС 24",
                 subtitle: vc.holidayUntil ? `Кредитные каникулы до ${vc.holidayUntil}` : `Минимальный платёж · до ${next.dueDate}`,
                 amount: amt,
+                overdue: isPastDue(next.dueDate) && !vc.holidayUntil,
                 onPay: () => setPayCard({ amount: amt, dueDate: next.dueDate }),
               });
             }
@@ -1231,6 +1238,8 @@ export default function DashboardPage() {
             }
           />
         )}
+
+        {section === "gifts" && !loading && !error && user && <GiftsSection defaultName={user.fullName || ""} defaultPhone={user.phone} />}
 
         {section === "photos" && !loading && !error && user && <ClientDocsSection phone={user.phone} />}
 

@@ -5,7 +5,7 @@ interface PaymentItem { amount: number; paidAt: string; note?: string }
 interface LoanLike { id: number; payments?: PaymentItem[] }
 interface CardRepayment { amount: number; note?: string; createdAt: string }
 
-export interface DueItem { key: string; title: string; subtitle: string; amount: number; onPay: () => void }
+export interface DueItem { key: string; title: string; subtitle: string; amount: number; onPay: () => void; overdue?: boolean }
 
 const fmt = (n: number) => `${Math.round(n).toLocaleString("ru-RU")} ₽`;
 
@@ -27,9 +27,12 @@ export default function PaymentsList({ loans, cardRepayments = [], dues = [] }: 
                 <div className="text-emerald-950 text-sm font-semibold">{d.title}</div>
                 <div className="text-emerald-950/50 text-xs">{d.subtitle}</div>
               </div>
-              <button onClick={d.onPay} className="btn-neon text-white text-sm font-semibold px-4 py-2 rounded-lg shrink-0">
-                Оплатить {fmt(d.amount)}
-              </button>
+              <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                {d.overdue && <span className="text-xs font-bold px-2 py-1 rounded-md" style={{ background: "rgba(239,68,68,0.15)", color: "#b91c1c" }}>Платёж просрочен</span>}
+                <button onClick={d.onPay} className="btn-neon text-white text-sm font-semibold px-4 py-2 rounded-lg">
+                  Оплатить {fmt(d.amount)}
+                </button>
+              </div>
             </div>
           ))}
         </div>

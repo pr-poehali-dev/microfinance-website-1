@@ -1822,14 +1822,29 @@ def handler(event: dict, context) -> dict:
                 hol_until = hol_map.get(loan_id)
                 due_dt = (start + timedelta(days=days)).date() if hasattr(start, "date") else None
                 on_holiday = bool(hol_until and due_dt and hol_until > due_dt and datetime.now().date() <= hol_until and status != "paid")
-                schedule = [{
-                    "dueDate": (start + timedelta(days=days)).strftime("%d.%m.%Y"),
-                    "amount": total,
-                    "label": "Погашение полной суммы" if not penalty else f"Погашение с пеней за просрочку ({overdue_days} дн.)",
-                }]
+                weeks = -(-int(days) // 7)
+                if weeks > 1:
+                    base_part = round(base_total / weeks)
+                    acc_w = 0
+                    for w in range(1, weeks + 1):
+                        part = base_part if w < weeks else round(base_total) - acc_w
+                        acc_w += part
+                        due_w = start + timedelta(days=min(7 * w, int(days)))
+                        schedule.append({
+                            "week": w,
+                            "dueDate": due_w.strftime("%d.%m.%Y"),
+                            "amount": part + (penalty if (w == weeks and penalty) else 0),
+                            "label": f"Платёж {w} из {weeks} (раз в неделю)",
+                        })
+                else:
+                    schedule = [{
+                        "dueDate": (start + timedelta(days=days)).strftime("%d.%m.%Y"),
+                        "amount": total,
+                        "label": "Погашение полной суммы" if not penalty else f"Погашение с пеней за просрочку ({overdue_days} дн.)",
+                    }]
                 if on_holiday:
-                    schedule[0]["holidayUntil"] = hol_until.strftime("%d.%m.%Y")
-                    schedule[0]["label"] = f"Кредитные каникулы до {hol_until.strftime('%d.%m.%Y')}"
+                    schedule[-1]["holidayUntil"] = hol_until.strftime("%d.%m.%Y")
+                    schedule[-1]["label"] = f"Кредитные каникулы до {hol_until.strftime('%d.%m.%Y')}"
 
         loan_data = {
             "id": loan_id,

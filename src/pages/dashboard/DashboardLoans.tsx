@@ -295,6 +295,9 @@ export default function DashboardLoans({ loans, application, isRepeatClient, sig
                       </button>
                     )}
                     {loan.status === "overdue" && (
+                      <span className="text-xs font-bold px-3 py-2 rounded-lg" style={{ background: "rgba(239,68,68,0.15)", color: "#b91c1c" }}>Платёж просрочен</span>
+                    )}
+                    {loan.status === "overdue" && (
                       <button
                         onClick={() => onPay(loan)}
                         className="text-white font-semibold px-4 sm:px-6 py-3 rounded-xl flex items-center gap-2"

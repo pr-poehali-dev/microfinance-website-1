@@ -1,0 +1,11 @@
+INSERT INTO gifts (name, description, image_url, points_cost, sort_order) VALUES
+('Кружка РУСФИНАНС 24', 'Керамическая кружка с фирменным логотипом', 'https://cdn.poehali.dev/projects/90d9ac81-f75d-4f07-a891-12ef6edb872c/files/c027f893-c958-4298-a193-a179ef23e14e.jpg', 100, 1),
+('Футболка РУСФИНАНС 24', 'Хлопковая футболка с фирменным принтом', 'https://cdn.poehali.dev/projects/90d9ac81-f75d-4f07-a891-12ef6edb872c/files/5b61e4c3-197a-4036-950b-8deae35a4729.jpg', 250, 2),
+('Подушка РУСФИНАНС 24', 'Мягкие декоративные подушки с вышивкой, комплект 2 шт.', 'https://cdn.poehali.dev/projects/90d9ac81-f75d-4f07-a891-12ef6edb872c/files/d618c401-3e4c-4ba1-a482-93c9963ecb7b.jpg', 300, 3),
+('Кулон с цепочкой', 'Серебристый кулон с гравировкой «Русфинанс24» и цепочкой', 'https://cdn.poehali.dev/projects/90d9ac81-f75d-4f07-a891-12ef6edb872c/files/5bf07a84-4a7b-425e-8541-b5a0582ff6b3.jpg', 400, 4),
+('Джемпер РУСФИНАНС 24', 'Тёплый вязаный джемпер с вышитым логотипом', 'https://cdn.poehali.dev/projects/90d9ac81-f75d-4f07-a891-12ef6edb872c/files/1a7e8c3e-a696-43f3-926b-a7d593eaa102.jpg', 500, 5),
+('Толстовка РУСФИНАНС 24', 'Толстовка без капюшона с принтом на груди', 'https://cdn.poehali.dev/projects/90d9ac81-f75d-4f07-a891-12ef6edb872c/files/4e7cfe6f-2689-44da-9516-56befbd8f49f.jpg', 600, 6),
+('Худи РУСФИНАНС 24', 'Тёплое худи с капюшоном и карманом-кенгуру', 'https://cdn.poehali.dev/projects/90d9ac81-f75d-4f07-a891-12ef6edb872c/files/e6be9215-4da6-4fac-9518-0421774e6adc.jpg', 700, 7),
+('Электрическая зубная щётка', 'Электрощётка с зарядной подставкой и фирменным дизайном', 'https://cdn.poehali.dev/projects/90d9ac81-f75d-4f07-a891-12ef6edb872c/files/61d8d599-56eb-4fb4-8902-9b587c6301c0.jpg', 800, 8),
+('Постельное бельё РУСФИНАНС 24', 'Комплект хлопкового постельного белья', 'https://cdn.poehali.dev/projects/90d9ac81-f75d-4f07-a891-12ef6edb872c/files/05273a0e-fdad-4e44-8823-da681b716917.jpg', 1000, 9),
+('Смартфон РУСФИНАНС 24', 'Современный смартфон — главный приз для самых надёжных заёмщиков', 'https://cdn.poehali.dev/projects/90d9ac81-f75d-4f07-a891-12ef6edb872c/files/d32da9f8-2d26-44e0-adc5-a225be409e69.jpg', 3000, 10);

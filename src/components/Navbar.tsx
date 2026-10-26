@@ -44,6 +44,13 @@ export default function Navbar({ mobileOpen, setMobileOpen, scrollTo }: NavbarPr
             <Icon name="CreditCard" size={14} />
             Карта
           </button>
+          <button
+            onClick={() => navigate("/gifts")}
+            className="text-sm font-semibold whitespace-nowrap text-rose-600 hover:opacity-80 transition-opacity flex items-center gap-1"
+          >
+            <Icon name="Gift" size={14} />
+            Подарки
+          </button>
         </div>
 
         <div className="hidden xl:flex items-center gap-3 shrink-0">
@@ -81,6 +88,13 @@ export default function Navbar({ mobileOpen, setMobileOpen, scrollTo }: NavbarPr
           >
             <Icon name="CreditCard" size={16} />
             Карта РУСФИНАНС 24
+          </button>
+          <button
+            onClick={() => { setMobileOpen(false); navigate("/gifts"); }}
+            className="text-left text-rose-600 font-semibold py-2 flex items-center gap-2"
+          >
+            <Icon name="Gift" size={16} />
+            Подарки
           </button>
           <button
             onClick={() => { setMobileOpen(false); navigate(localStorage.getItem("token") ? "/dashboard" : "/login"); }}
