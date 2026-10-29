@@ -482,7 +482,16 @@ def handler(event: dict, context) -> dict:
             for lid, a_, pa_, n_ in cur.fetchall():
                 pay_map.setdefault(lid, []).append({"amount": float(a_), "paidAt": msk(pa_).strftime("%d.%m.%Y"), "note": n_ or ""})
         other = []
+        bound = None
         if u:
+            ph10_b = re.sub(r"\D", "", str(u[0]))[-10:]
+            cur.execute(
+                f"SELECT card_key, created_at FROM {SCHEMA}.saved_cards WHERE source = 'bound' AND hidden = FALSE "
+                f"AND right(regexp_replace(phone, '\\D', '', 'g'), 10) = '{ph10_b}' ORDER BY id DESC LIMIT 1"
+            )
+            b_row = cur.fetchone()
+            if b_row:
+                bound = {"last4": b_row[0][-4:], "boundAt": msk(b_row[1]).strftime("%d.%m.%Y в %H:%M")}
             ph_e = u[0].replace("'", "''")
             for kind, tbl, label in (("carloan", "car_loan_applications", "Автозайм"), ("shoploan", "shopping_loan_applications", "Займ на покупки")):
                 cur.execute(
@@ -521,7 +530,7 @@ def handler(event: dict, context) -> dict:
                 "closedAt": pay_map[lid][-1]["paidAt"] if status == "paid" and pay_map.get(lid) else None,
             })
         return {"statusCode": 200, "headers": CORS, "body": json.dumps(
-            {"loans": loans, "otherLoans": other, "user": {"phone": u[0] if u else "", "fullName": u[1] if u else ""}},
+            {"loans": loans, "otherLoans": other, "boundCard": bound, "user": {"phone": u[0] if u else "", "fullName": u[1] if u else ""}},
             ensure_ascii=False
         )}
 
