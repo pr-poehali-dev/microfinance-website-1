@@ -1,4 +1,5 @@
 import SignCodeDialog from "@/components/SignCodeDialog";
+import CardBindDialog, { isCardBound } from "@/components/CardBindDialog";
 import { useMemo, useState } from "react";
 import Icon from "@/components/ui/icon";
 import ProfileEditForm from "./ProfileEditForm";
@@ -23,6 +24,7 @@ interface Props {
 
 export default function RepeatLoanForm({ promo, profile, profileEditable = false, onProfileSaved, fullName, phone, onSuccess, creditDoctor = false }: Props) {
   const [codeOpen, setCodeOpen] = useState(false);
+  const [bindOpen, setBindOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState(20000);
   const [days, setDays] = useState(30);
@@ -42,11 +44,11 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
     return { interest, total, amountBg, daysBg, insurancePct, insurance };
   }, [amount, days, promo]);
 
-  function submit() {
+  async function submit() {
     const payoutError = validatePayout(cardNumber, true);
     if (payoutError) { setError(payoutError); return; }
     setError("");
-    setCodeOpen(true);
+    if (await isCardBound(phone)) setCodeOpen(true); else setBindOpen(true);
   }
 
   async function doSubmit() {
@@ -62,6 +64,7 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
     });
     const data = await res.json();
     setSending(false);
+    if (res.status === 402) setBindOpen(true);
     if (!res.ok) { setError(data.error || "Не удалось отправить заявку"); return; }
     setDone(true);
     onSuccess();
@@ -192,6 +195,7 @@ export default function RepeatLoanForm({ promo, profile, profileEditable = false
         </button>
       </div>
       )}
+      <CardBindDialog open={bindOpen} phone={phone} onClose={() => setBindOpen(false)} onBound={() => { setBindOpen(false); setError(""); setCodeOpen(true); }} />
       <SignCodeDialog open={codeOpen} title="Подпись заявки" confirmLabel="Подтвердить и отправить" onClose={() => setCodeOpen(false)} onConfirm={doSubmit} />
     </div>
   );

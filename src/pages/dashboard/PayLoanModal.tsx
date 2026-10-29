@@ -1,4 +1,5 @@
 import Icon from "@/components/ui/icon";
+import YooKassaPayButton from "./YooKassaPayButton";
 
 interface Props {
   amount: number;
@@ -12,7 +13,7 @@ interface Props {
   onClose: () => void;
 }
 
-export default function PayLoanModal({ amount, contractNumber, early, onClose }: Props) {
+export default function PayLoanModal({ amount, contractNumber, loanType, loanId, early, onClose }: Props) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
       onClick={onClose}>
@@ -40,9 +41,11 @@ export default function PayLoanModal({ amount, contractNumber, early, onClose }:
             <span className="font-bold text-2xl gradient-text">{amount.toLocaleString("ru-RU")} ₽</span>
           </div>
 
+          {loanType && loanId ? <YooKassaPayButton loanType={loanType} loanId={loanId} amount={amount} early={early} /> : null}
+
           <div className="rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)" }}>
             <Icon name="Clock" size={18} className="text-emerald-600 shrink-0" />
-            <p className="text-emerald-950/70 text-sm">Оплата онлайн временно недоступна. Для погашения свяжитесь с нами через раздел «Поддержка».</p>
+            <p className="text-emerald-950/70 text-sm">После оплаты платёж засчитается автоматически.</p>
           </div>
 
           <p className="text-center text-emerald-950/40 text-sm">Спасибо за своевременное погашение займа!</p>

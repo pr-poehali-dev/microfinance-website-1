@@ -261,7 +261,7 @@ export default function DashboardPage() {
   const [shopTimerDone, setShopTimerDone] = useState(false);
   const carTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const shopTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [paidToast] = useState(false);
+  const [paidToast, setPaidToast] = useState(false);
   const [addendumPending, setAddendumPending] = useState(false);
   const [section, setSection] = useState<DashboardSection>(new URLSearchParams(window.location.search).get("section") === "gifts" ? "gifts" : "apps");
 
@@ -340,6 +340,28 @@ export default function DashboardPage() {
     const token = localStorage.getItem("token");
     if (!token) { navigate("/login"); return; }
     loadData(token, true);
+
+    const ykId = localStorage.getItem("yk_payment_id");
+    if (ykId) {
+      localStorage.removeItem("yk_payment_id");
+      let tries = 0;
+      const check = () => {
+        tries += 1;
+        fetch("https://functions.poehali.dev/36947c6a-6af8-4e81-a2a4-f16b1a189b6f?sub=check", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}` },
+          body: JSON.stringify({ paymentId: ykId }),
+        })
+          .then((r) => r.json())
+          .then((d) => {
+            if (d.status === "succeeded") { setPaidToast(true); setTimeout(() => setPaidToast(false), 6000); loadData(token, false); }
+            else if (tries < 15) setTimeout(check, 4000);
+            else loadData(token, false);
+          })
+          .catch(() => {});
+      };
+      check();
+    }
 
     // Автообновление каждые 2 минуты, только пока вкладка открыта — чтобы статус одобрения появлялся без перезагрузки
     const interval = setInterval(() => {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import YooKassaPayButton from "./YooKassaPayButton";
 
 export const CREDIT_DOCTOR_PRICE = 1799;
 
@@ -47,7 +48,8 @@ export default function CreditDoctorOffer({ pending = false }: { pending?: boole
             <div className="text-emerald-950/50 text-xs mb-1">Стоимость услуги</div>
             <div className="font-oswald text-4xl font-bold text-emerald-700">{CREDIT_DOCTOR_PRICE.toLocaleString("ru-RU")} ₽</div>
           </div>
-          <p className="text-center text-emerald-950/60 text-sm">Оплата онлайн временно недоступна. Для оформления услуги свяжитесь с нами через раздел «Поддержка».</p>
+          <YooKassaPayButton loanType="creditdoctor" amount={CREDIT_DOCTOR_PRICE} />
+          <p className="text-center text-emerald-950/40 text-xs">После оплаты заявка уйдёт на рассмотрение, ожидайте одобрения займа.</p>
         </DialogContent>
       </Dialog>
     </>

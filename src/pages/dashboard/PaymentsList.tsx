@@ -1,4 +1,5 @@
 import Icon from "@/components/ui/icon";
+import YooKassaHistory from "./YooKassaHistory";
 
 interface PaymentItem { amount: number; paidAt: string; note?: string }
 interface LoanLike { id: number; payments?: PaymentItem[] }
@@ -10,6 +11,7 @@ const fmt = (n: number) => `${Math.round(n).toLocaleString("ru-RU")} ₽`;
 
 export default function PaymentsList({ loans, cardRepayments = [], dues = [] }: { loans: LoanLike[]; cardRepayments?: CardRepayment[]; dues?: DueItem[] }) {
   const rows = loans.flatMap((l) => (l.payments || []).map((p) => ({ ...p, loanId: l.id })));
+  const hasAny = rows.length > 0 || cardRepayments.length > 0;
 
   return (
     <div className="space-y-4">
@@ -74,6 +76,7 @@ export default function PaymentsList({ loans, cardRepayments = [], dues = [] }: 
         </div>
       )}
 
+      <YooKassaHistory showEmpty={!hasAny} />
     </div>
   );
 }
