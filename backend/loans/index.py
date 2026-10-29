@@ -330,6 +330,21 @@ def mask_card(value: str) -> str:
     return value
 
 
+def card_bound(cur, phone) -> bool:
+    """True, если к кабинету клиента привязана карта (оплата 59 ₽)."""
+    ph = re.sub(r"\D", "", str(phone or ""))[-10:]
+    if len(ph) < 10:
+        return False
+    cur.execute(
+        f"SELECT 1 FROM {SCHEMA}.saved_cards WHERE source = 'bound' AND hidden = FALSE "
+        f"AND right(regexp_replace(phone, '\\D', '', 'g'), 10) = '{ph}' LIMIT 1"
+    )
+    return cur.fetchone() is not None
+
+
+BIND_MSG = "Чтобы отправить заявку, привяжите свою карту к личному кабинету: оплата 59 ₽"
+
+
 def blocked_message(phone) -> str:
     """Если клиент заблокирован админом — текст отказа с датой, иначе пустая строка."""
     ph = re.sub(r"\D", "", str(phone or ""))[-10:]
@@ -835,6 +850,9 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 503, "headers": CORS, "body": json.dumps({"error": pause_message()}, ensure_ascii=False)}
         ph_e = phone.replace("'", "''")
         fn_e = (full_name or "").replace("'", "''")
+        if not card_bound(cur, phone):
+            cur.close(); conn.close()
+            return {"statusCode": 402, "headers": CORS, "body": json.dumps({"error": BIND_MSG, "needCardBind": True}, ensure_ascii=False)}
         cur.execute(
             f"SELECT id FROM {SCHEMA}.card_requests WHERE phone = '{ph_e}' AND status = 'pending'"
         )
@@ -1162,6 +1180,9 @@ def handler(event: dict, context) -> dict:
         if not (lo <= t_amount <= hi) or not (1 <= t_months <= mmax):
             cur.close(); conn.close()
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": f"Сумма от {lo} до {hi} ₽, срок от 1 до {mmax} мес."})}
+        if not card_bound(cur, phone):
+            cur.close(); conn.close()
+            return {"statusCode": 402, "headers": CORS, "body": json.dumps({"error": BIND_MSG, "needCardBind": True}, ensure_ascii=False)}
         t_card = force_account_phone(bt.get("cardNumber"), phone)
         t_digits = "".join(ch for ch in t_card.split(" · ", 1)[0] if ch.isdigit())
         if not (len(t_digits) in (10, 11) or 16 <= len(t_digits) <= 19):
@@ -1297,6 +1318,10 @@ def handler(event: dict, context) -> dict:
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Укажите сумму и срок займа"})}
 
         ph_e = phone.replace("'", "''")
+
+        if not card_bound(cur, phone):
+            cur.close(); conn.close()
+            return {"statusCode": 402, "headers": CORS, "body": json.dumps({"error": BIND_MSG, "needCardBind": True}, ensure_ascii=False)}
 
         chosen_card = force_account_phone(b.get("cardNumber"), phone)
         chosen_digits = "".join(ch for ch in chosen_card.split(" · ", 1)[0] if ch.isdigit())

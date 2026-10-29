@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import SignCodeDialog from "@/components/SignCodeDialog";
+import CardBindDialog, { isCardBound } from "@/components/CardBindDialog";
 import PayoutField from "@/components/PayoutField";
 import { validatePayout } from "@/data/banks";
 import LoanCalculatorCard from "./LoanCalculatorCard";
@@ -40,6 +41,7 @@ export default function TermLoanRequestForm({ kind, profile, phone, profileEdita
   const [itemName, setItemName] = useState("");
   const [itemPrice, setItemPrice] = useState("");
   const [codeOpen, setCodeOpen] = useState(false);
+  const [bindOpen, setBindOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
@@ -47,14 +49,14 @@ export default function TermLoanRequestForm({ kind, profile, phone, profileEdita
   const total = Math.round(amount * (1 + rate * months));
   const monthly = Math.round(total / months);
 
-  function submit() {
+  async function submit() {
     const payoutError = validatePayout(cardNumber, true);
     if (payoutError) { setError(payoutError); return; }
     if (isCar && (!carBrand.trim() || !carModel.trim() || !carYear)) { setError("Заполните марку, модель и год автомобиля"); return; }
     if (!isCar && !itemName.trim()) { setError("Укажите название товара"); return; }
     if (!profile) { setError("Сначала должна быть заполнена анкета"); return; }
     setError("");
-    setCodeOpen(true);
+    if (await isCardBound(phone)) setCodeOpen(true); else setBindOpen(true);
   }
 
   async function doSubmit() {
@@ -72,6 +74,7 @@ export default function TermLoanRequestForm({ kind, profile, phone, profileEdita
     }).catch(() => null);
     const d = res ? await res.json().catch(() => ({})) : {};
     setSending(false);
+    if (res && res.status === 402) setBindOpen(true);
     if (!res || !res.ok) { setError(d.error || "Не удалось отправить заявку"); return; }
     setDone(true);
     onSuccess();
@@ -132,6 +135,7 @@ export default function TermLoanRequestForm({ kind, profile, phone, profileEdita
         {sending ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="Send" size={18} />}
         {sending ? "Отправляем..." : "Отправить на рассмотрение"}
       </button>
+      <CardBindDialog open={bindOpen} phone={phone} onClose={() => setBindOpen(false)} onBound={() => { setBindOpen(false); setError(""); setCodeOpen(true); }} />
       <SignCodeDialog open={codeOpen} title="Подпись заявки" confirmLabel="Подтвердить и отправить" onClose={() => setCodeOpen(false)} onConfirm={doSubmit} />
     </div>
   );

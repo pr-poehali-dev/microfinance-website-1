@@ -18,6 +18,7 @@ const CreditDoctorPage = lazy(() => import("./pages/CreditDoctorPage"));
 const ApplyPage = lazy(() => import("./pages/ApplyPage"));
 const CarLoanPage = lazy(() => import("./pages/CarLoanPage"));
 const ShopLoanPage = lazy(() => import("./pages/ShopLoanPage"));
+const PayDonePage = lazy(() => import("./pages/PayDonePage"));
 const GiftsPage = lazy(() => import("./pages/GiftsPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -69,6 +70,7 @@ const App = () => (
             <Route path="/car-loan/apply" element={<ApplyPage product="car" />} />
             <Route path="/shop-loan" element={<ShopLoanPage />} />
             <Route path="/shop-loan/apply" element={<ApplyPage product="shop" />} />
+            <Route path="/pay-done" element={<PayDonePage />} />
             <Route path="/gifts" element={<GiftsPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

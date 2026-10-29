@@ -1,4 +1,5 @@
 import SignCodeDialog from "@/components/SignCodeDialog";
+import CardBindDialog, { isCardBound } from "@/components/CardBindDialog";
 import PayoutField from "@/components/PayoutField";
 import { validatePayout } from "@/data/banks";
 import { useState, useRef, useCallback, useEffect } from "react";
@@ -73,6 +74,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
   const [promoCode, setPromoCode] = useState("");
   const [sameAddress, setSameAddress] = useState(false);
   const [codeOpen, setCodeOpen] = useState(false);
+  const [bindOpen, setBindOpen] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [timerSec, setTimerSec] = useState(15 * 60);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -124,7 +126,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
     return (await res.json()).url as string;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const allRequiredChecked = (cardMode ? CARD_REQUIRED_CONSENT_KEYS : REQUIRED_CONSENT_KEYS).every((k) => consents[k]);
     if (allRequiredChecked && isShop && !form.itemName.trim()) { setSendError("Укажите название товара в разделе «Данные»"); setActiveSection("item"); return; }
@@ -145,7 +147,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
       return;
     }
     setSendError("");
-    setCodeOpen(true);
+    if (await isCardBound(form.phone)) setCodeOpen(true); else setBindOpen(true);
   };
 
   const sendApplication = async () => {
@@ -221,6 +223,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
         setSubmitted(true);
       } else {
         const errData = await res.json().catch(() => ({}));
+        if (res.status === 402) setBindOpen(true);
         setSendError(errData.error || "Ошибка при отправке. Попробуйте ещё раз.");
       }
     } catch {
@@ -852,6 +855,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
 
           </div>
         </form>
+        <CardBindDialog open={bindOpen} phone={form.phone} onClose={() => setBindOpen(false)} onBound={() => { setBindOpen(false); setSendError(""); setCodeOpen(true); }} />
         <SignCodeDialog open={codeOpen} title="Подпись заявки" confirmLabel="Подтвердить и отправить" onClose={() => setCodeOpen(false)} onConfirm={sendApplication} />
 
         {/* Прогресс */}

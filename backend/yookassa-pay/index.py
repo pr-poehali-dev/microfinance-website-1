@@ -1,6 +1,7 @@
 """Оплата займов и карты через PayAnyWay: создание платежа, проверка статуса, вебхук и автоматический зачёт."""
 import hashlib
 import json
+import re
 import os
 import urllib.request
 import urllib.error
@@ -15,6 +16,7 @@ SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
 PW_URL = "https://www.payanyway.ru/assistant.htm"
 TG_CHAT = "8540431915"
 CD_PRICE = 1799.0
+BIND_PRICE = 59.0
 
 CORS = {
     "Access-Control-Allow-Origin": "*",
@@ -67,6 +69,37 @@ def get_user(cur, token):
         f"WHERE s.token = '{t}' AND s.expires_at > NOW()"
     )
     return cur.fetchone()
+
+
+def valid_card(digits: str) -> bool:
+    """Номер карты: 16-19 цифр и контрольная сумма Луна."""
+    if not (16 <= len(digits) <= 19) or digits == digits[0] * len(digits):
+        return False
+    total = 0
+    for i, ch in enumerate(reversed(digits)):
+        d = int(ch)
+        if i % 2 == 1:
+            d *= 2
+            if d > 9:
+                d -= 9
+        total += d
+    return total % 10 == 0
+
+
+def phone10(phone) -> str:
+    return re.sub(r"\D", "", str(phone or ""))[-10:]
+
+
+def bound_card_last4(cur, phone):
+    ph = phone10(phone)
+    if len(ph) < 10:
+        return None
+    cur.execute(
+        f"SELECT card_key FROM {SCHEMA}.saved_cards WHERE source = 'bound' AND hidden = FALSE "
+        f"AND right(regexp_replace(phone, '\\D', '', 'g'), 10) = '{ph}' ORDER BY id DESC LIMIT 1"
+    )
+    r = cur.fetchone()
+    return r[0][-4:] if r else None
 
 
 def card_app_id(cur, phone):
@@ -128,6 +161,18 @@ def credit_payment(cur, row):
         funded = fund_from_balance(cur, loan_id)
         extra = ("\n✅ Оплачены вложения: " + ", ".join(f"{a:,} ₽" for a in funded)).replace(",", " ") if funded else "\nВложений на эту сумму пока нет — деньги на балансе."
         tg(f"💰 <b>Пополнение баланса инвестора</b>\n\n📞 {phone}\n💵 Сумма: {int(amount):,} ₽".replace(",", " ") + extra)
+        return True
+    if loan_type == "cardbind":
+        digits = re.sub(r"\D", "", str(meta.get("card") or ""))
+        if digits:
+            value = " ".join(digits[i:i + 4] for i in range(0, len(digits), 4))
+            ph_s = str(phone or "").replace("'", "''")
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.saved_cards (phone, card_value, card_key, source) "
+                f"VALUES ('{ph_s}', '{value}', '{digits}', 'bound') "
+                f"ON CONFLICT (phone, card_key) DO UPDATE SET hidden = FALSE, source = 'bound', card_value = EXCLUDED.card_value"
+            )
+        tg(f"💳 <b>Клиент привязал карту к кабинету</b>\n\n📞 {phone}\n💳 •••• {digits[-4:]}\n💵 Оплачено: {int(amount)} ₽")
         return True
     if loan_type == "creditdoctor":
         cur.execute(
@@ -295,6 +340,48 @@ def handler(event: dict, context) -> dict:
             conn.commit()
         cur.close(); conn.close()
         return {**plain, "body": "SUCCESS"}
+
+    if sub == "bind_check":
+        last4 = bound_card_last4(cur, body.get("phone"))
+        cur.close(); conn.close()
+        return resp(200, {"bound": bool(last4)})
+
+    if sub == "bind_status":
+        yk_id = str(body.get("paymentId") or "").replace("'", "")
+        cur.execute(f"SELECT credited, status FROM {SCHEMA}.yookassa_payments WHERE yk_payment_id = '{yk_id}' AND loan_type = 'cardbind'")
+        r = cur.fetchone()
+        cur.close(); conn.close()
+        if not r:
+            return resp(404, {"error": "Платёж не найден"})
+        return resp(200, {"status": "succeeded" if r[0] else (r[1] or "pending"), "bound": bool(r[0])})
+
+    if sub == "bind_create":
+        digits = re.sub(r"\D", "", str(body.get("cardNumber") or ""))
+        phone_in = str(body.get("phone") or "").strip()
+        ph10 = phone10(phone_in)
+        return_url = str(body.get("returnUrl") or "")
+        err = None
+        if len(ph10) < 10:
+            err = "Сначала укажите номер телефона"
+        elif not valid_card(digits):
+            err = "Проверьте номер карты (16–19 цифр)"
+        elif not return_url.startswith("http"):
+            err = "Некорректный адрес возврата"
+        if err:
+            cur.close(); conn.close()
+            return resp(400, {"error": err})
+        cur.execute(f"SELECT phone FROM {SCHEMA}.users WHERE right(regexp_replace(phone, '\\D', '', 'g'), 10) = '{ph10}' LIMIT 1")
+        u = cur.fetchone()
+        phone_store = (u[0] if u else phone_in)[:30].replace("'", "")
+        yk_id = uuid.uuid4().hex
+        pay_url = pw_pay_url(yk_id, BIND_PRICE, "Привязка карты к личному кабинету РУСФИНАНС 24", return_url)
+        meta_sql = json.dumps({"card": digits}).replace("'", "''")
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.yookassa_payments (yk_payment_id, loan_type, loan_id, phone, amount, meta) "
+            f"VALUES ('{yk_id}', 'cardbind', 0, '{phone_store}', {BIND_PRICE}, '{meta_sql}')"
+        )
+        conn.commit(); cur.close(); conn.close()
+        return resp(200, {"paymentId": yk_id, "confirmationUrl": pay_url, "amount": BIND_PRICE})
 
     auth = headers.get("x-authorization") or headers.get("authorization") or ""
     token = auth.replace("Bearer ", "").strip()
