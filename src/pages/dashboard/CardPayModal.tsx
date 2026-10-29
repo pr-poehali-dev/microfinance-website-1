@@ -1,5 +1,4 @@
 import Icon from "@/components/ui/icon";
-import YooKassaPayButton from "./YooKassaPayButton";
 
 interface Props {
   amount: number;
@@ -14,7 +13,7 @@ interface Props {
   onReported?: () => void;
 }
 
-export default function CardPayModal({ amount, dueDate, txId, full, early, onClose }: Props) {
+export default function CardPayModal({ amount, dueDate, full, early, onClose }: Props) {
   return (
     <div
       style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
@@ -46,11 +45,9 @@ export default function CardPayModal({ amount, dueDate, txId, full, early, onClo
             <span className="font-bold text-2xl gradient-text">{amount.toLocaleString("ru-RU")} ₽</span>
           </div>
 
-          <YooKassaPayButton loanType="card" amount={amount} txId={txId} dueDate={dueDate} full={full} early={early} />
-
           <div className="rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)" }}>
             <Icon name="Clock" size={18} className="text-emerald-600 shrink-0" />
-            <p className="text-emerald-950/70 text-sm">После оплаты платёж засчитается автоматически.</p>
+            <p className="text-emerald-950/70 text-sm">Оплата онлайн временно недоступна. Для погашения свяжитесь с нами через раздел «Поддержка».</p>
           </div>
 
           <button onClick={onClose} className="w-full text-emerald-950/60 font-semibold py-2.5 rounded-xl" style={{ background: "rgba(16,185,129,0.07)" }}>

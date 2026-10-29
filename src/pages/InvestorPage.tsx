@@ -7,9 +7,8 @@ import InvestorRequest from "./investor/InvestorRequest";
 import InvestorPayouts from "./investor/InvestorPayouts";
 import InvestorCards from "./investor/InvestorCards";
 import InvestorDocs from "./investor/InvestorDocs";
-import InvestorTopup from "./investor/InvestorTopup";
 import SupportChat from "./dashboard/SupportChat";
-import { INVEST_URL, CONTRACT_URL, YK_URL, InvestorMe, authHeaders, fmt } from "./investor/investorTypes";
+import { INVEST_URL, CONTRACT_URL, InvestorMe, authHeaders, fmt } from "./investor/investorTypes";
 
 export default function InvestorPage() {
   const navigate = useNavigate();
@@ -17,7 +16,7 @@ export default function InvestorPage() {
   const [loading, setLoading] = useState(true);
   const [section, setSection] = useState<InvestorSection>("invest");
   const [preparing, setPreparing] = useState(false);
-  const [paidToast, setPaidToast] = useState(false);
+  const [paidToast] = useState(false);
   const token = localStorage.getItem("investor_token") || "";
 
   const load = useCallback(async () => {
@@ -40,19 +39,6 @@ export default function InvestorPage() {
   }, [token, navigate]);
 
   useEffect(() => { load(); }, [load]);
-
-  useEffect(() => {
-    const pid = localStorage.getItem("invest_payment_id");
-    if (!pid || !token) return;
-    localStorage.removeItem("invest_payment_id");
-    fetch(`${YK_URL}?sub=invest_check`, { method: "POST", headers: authHeaders(token), body: JSON.stringify({ paymentId: pid }) })
-      .then((r) => r.json().catch(() => ({})))
-      .then((d) => {
-        if (d.status === "succeeded") { setPaidToast(true); setSection("invest"); setTimeout(() => setPaidToast(false), 7000); }
-        load();
-      })
-      .catch(() => {});
-  }, [token, load]);
 
   const logout = () => { localStorage.removeItem("investor_token"); navigate("/"); };
 
@@ -112,7 +98,6 @@ export default function InvestorPage() {
               <div className="flex-1 min-w-0 w-full">
                 {section === "invest" && <InvestorOverview items={data.investments} />}
                 {section === "request" && <InvestorRequest token={token} requests={data.requests} onSent={load} />}
-                {section === "topup" && <InvestorTopup token={token} items={data.investments} balance={data.balance} />}
                 {section === "payouts" && <InvestorPayouts items={data.investments} />}
                 {section === "cards" && <InvestorCards token={token} cards={data.cards} onChanged={load} />}
                 {section === "docs" && <InvestorDocs items={data.investments} preparing={preparing} />}

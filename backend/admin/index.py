@@ -482,16 +482,7 @@ def handler(event: dict, context) -> dict:
             for lid, a_, pa_, n_ in cur.fetchall():
                 pay_map.setdefault(lid, []).append({"amount": float(a_), "paidAt": msk(pa_).strftime("%d.%m.%Y"), "note": n_ or ""})
         other = []
-        bound = None
         if u:
-            ph10_b = re.sub(r"\D", "", str(u[0]))[-10:]
-            cur.execute(
-                f"SELECT card_key, created_at FROM {SCHEMA}.saved_cards WHERE source = 'bound' AND hidden = FALSE "
-                f"AND right(regexp_replace(phone, '\\D', '', 'g'), 10) = '{ph10_b}' ORDER BY id DESC LIMIT 1"
-            )
-            b_row = cur.fetchone()
-            if b_row:
-                bound = {"last4": b_row[0][-4:], "boundAt": msk(b_row[1]).strftime("%d.%m.%Y в %H:%M")}
             ph_e = u[0].replace("'", "''")
             for kind, tbl, label in (("carloan", "car_loan_applications", "Автозайм"), ("shoploan", "shopping_loan_applications", "Займ на покупки")):
                 cur.execute(
@@ -530,7 +521,7 @@ def handler(event: dict, context) -> dict:
                 "closedAt": pay_map[lid][-1]["paidAt"] if status == "paid" and pay_map.get(lid) else None,
             })
         return {"statusCode": 200, "headers": CORS, "body": json.dumps(
-            {"loans": loans, "otherLoans": other, "boundCard": bound, "user": {"phone": u[0] if u else "", "fullName": u[1] if u else ""}},
+            {"loans": loans, "otherLoans": other, "user": {"phone": u[0] if u else "", "fullName": u[1] if u else ""}},
             ensure_ascii=False
         )}
 
@@ -708,11 +699,7 @@ def handler(event: dict, context) -> dict:
                    a.promo_code, a.promo_discount, a.profile_updated_at, a.profile_changes, a.card_contract_url,
                    a.reg_address, a.living_address, a.work_address, a.contract_url, a.wheel_prize,
                    a.partner_card_number, a.partner_card_photo, a.partner_card_status, a.partner_card_sent_at, a.partner_card_reject_reason,
-                   COALESCE(a.cd_paid, FALSE), a.cd_paid_at, COALESCE(a.cd_refund_done, FALSE),
-                   (SELECT right(sc.card_key, 4) FROM {SCHEMA}.saved_cards sc
-                     WHERE sc.source = 'bound' AND sc.hidden = FALSE
-                       AND right(regexp_replace(sc.phone, '\\D', '', 'g'), 10) = right(regexp_replace(a.phone, '\\D', '', 'g'), 10)
-                     ORDER BY sc.id DESC LIMIT 1) AS bound_last4
+                   COALESCE(a.cd_paid, FALSE), a.cd_paid_at, COALESCE(a.cd_refund_done, FALSE)
             FROM {SCHEMA}.applications a
             LEFT JOIN LATERAL (
                 SELECT lo.id, lo.signed, lo.signed_at, lo.status, lo.disbursed_at, lo.created_at
@@ -799,7 +786,6 @@ def handler(event: dict, context) -> dict:
             "cdPaid": bool(r[71]) if len(r) > 71 else False,
             "cdPaidAt": msk(r[72]).strftime("%d.%m.%Y в %H:%M") if len(r) > 72 and r[72] else None,
             "cdRefundDone": bool(r[73]) if len(r) > 73 else False,
-            "boundCardLast4": r[74] if len(r) > 74 and r[74] else "",
             "virtualCardStatus": r[52] or "none",
             "virtualCardLimit": float(r[53]) if r[53] else None,
             "virtualCardSignedAt": msk(r[54]).strftime("%d.%m.%Y в %H:%M") if r[54] else None,

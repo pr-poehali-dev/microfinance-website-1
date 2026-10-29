@@ -158,21 +158,6 @@ def redeem_promo(cur, code: str, phone: str, used_for: str):
     return (r[0], int(r[1])) if r else None
 
 
-def card_bound(cur, phone) -> bool:
-    """True, если к кабинету клиента привязана карта (оплата 59 ₽)."""
-    ph = re.sub(r"\D", "", str(phone or ""))[-10:]
-    if len(ph) < 10:
-        return False
-    cur.execute(
-        f"SELECT 1 FROM {SCHEMA}.saved_cards WHERE source = 'bound' AND hidden = FALSE "
-        f"AND right(regexp_replace(phone, '\\D', '', 'g'), 10) = '{ph}' LIMIT 1"
-    )
-    return cur.fetchone() is not None
-
-
-BIND_MSG = "Чтобы отправить заявку, привяжите свою карту к личному кабинету: оплата 59 ₽"
-
-
 def blocked_message(phone) -> str:
     """Если клиент заблокирован админом — текст отказа с датой, иначе пустая строка."""
     ph = re.sub(r"\D", "", str(phone or ""))[-10:]
@@ -302,9 +287,6 @@ def handler(event: dict, context) -> dict:
     import hashlib as _h, secrets as _s, string as _str
     conn = psycopg2.connect(os.environ["DATABASE_URL"])
     cur = conn.cursor()
-    if not card_bound(cur, phone):
-        cur.close(); conn.close()
-        return {"statusCode": 402, "headers": cors_headers, "body": json.dumps({"error": BIND_MSG, "needCardBind": True}, ensure_ascii=False)}
     if passport_taken(cur, passport_series, passport_number, phone, (body.get("snils") or "")):
         cur.close(); conn.close()
         return {"statusCode": 409, "headers": cors_headers, "body": json.dumps({"error": DUPLICATE_MSG}, ensure_ascii=False)}

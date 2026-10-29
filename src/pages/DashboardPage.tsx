@@ -27,7 +27,6 @@ import PaymentsList, { DueItem } from "./dashboard/PaymentsList";
 import { nextPayment, isPastDue } from "./dashboard/nextPayment";
 import TermLoanHistoryCard from "./dashboard/TermLoanHistoryCard";
 import NewRequestHub from "./dashboard/NewRequestHub";
-import CardBindBanner from "./dashboard/CardBindBanner";
 import CardActivatedModal from "./dashboard/CardActivatedModal";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
@@ -262,7 +261,7 @@ export default function DashboardPage() {
   const [shopTimerDone, setShopTimerDone] = useState(false);
   const carTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const shopTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [paidToast, setPaidToast] = useState(false);
+  const [paidToast] = useState(false);
   const [addendumPending, setAddendumPending] = useState(false);
   const [section, setSection] = useState<DashboardSection>(new URLSearchParams(window.location.search).get("section") === "gifts" ? "gifts" : "apps");
 
@@ -341,28 +340,6 @@ export default function DashboardPage() {
     const token = localStorage.getItem("token");
     if (!token) { navigate("/login"); return; }
     loadData(token, true);
-
-    const ykId = localStorage.getItem("yk_payment_id");
-    if (ykId) {
-      localStorage.removeItem("yk_payment_id");
-      let tries = 0;
-      const check = () => {
-        tries += 1;
-        fetch("https://functions.poehali.dev/64ba6f22-6243-4b3f-ab24-f5bb294d5bfe?sub=check", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}` },
-          body: JSON.stringify({ paymentId: ykId }),
-        })
-          .then((r) => r.json())
-          .then((d) => {
-            if (d.status === "succeeded") { setPaidToast(true); setTimeout(() => setPaidToast(false), 6000); loadData(token, false); }
-            else if (tries < 15) setTimeout(check, 4000);
-            else loadData(token, false);
-          })
-          .catch(() => {});
-      };
-      check();
-    }
 
     // Автообновление каждые 2 минуты, только пока вкладка открыта — чтобы статус одобрения появлялся без перезагрузки
     const interval = setInterval(() => {
@@ -682,7 +659,6 @@ export default function DashboardPage() {
 
         {!loading && !error && (section === "apps" || section === "cards") && (
           <>
-            {section === "apps" && user?.phone && <CardBindBanner phone={user.phone} />}
             <DashboardApplicationStatus
               phone={user?.phone}
               holidays={holidays}
@@ -1202,7 +1178,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {section === "new" && !loading && !error && user && <CardBindBanner phone={user.phone} />}
         {section === "new" && !loading && !error && user && (
           <NewRequestHub
             phone={user.phone}

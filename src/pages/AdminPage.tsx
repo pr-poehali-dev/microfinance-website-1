@@ -10,7 +10,6 @@ import AdminShopLoans from "./admin/AdminShopLoans";
 import AdminDisbursed from "./admin/AdminDisbursed";
 import AdminCardRequests from "./admin/AdminCardRequests";
 import AdminCards from "./admin/AdminCards";
-import AdminYooKassa from "./admin/AdminYooKassa";
 import AdminClientDocs from "./admin/AdminClientDocs";
 import AdminPauseSwitch from "./admin/AdminPauseSwitch";
 import AdminSupport from "./admin/AdminSupport";
@@ -35,7 +34,7 @@ export default function AdminPage() {
 
   const [clientDocsNew, setClientDocsNew] = useState(0);
   const [holidaysNew, setHolidaysNew] = useState(0);
-  const [tab, setTab]   = useState<"apps" | "clients" | "carloan" | "shoploan" | "disbursed" | "cardrequests" | "cards" | "promo" | "wheel" | "gifts" | "yookassa" | "holidays" | "clientdocs" | "invest" | "support" | "duplicates" | "emails">("apps");
+  const [tab, setTab]   = useState<"apps" | "clients" | "carloan" | "shoploan" | "disbursed" | "cardrequests" | "cards" | "promo" | "wheel" | "gifts" | "holidays" | "clientdocs" | "invest" | "support" | "duplicates" | "emails">("apps");
   const [apps, setApps] = useState<App[]>([]);
   const [appFilter, setAppFilter] = useState<"pending"|"approved"|"rejected"|"postponed"|"partner_card"|"creditdoctor"|"paid_loans">("pending");
   const [appsLoading, setAppsLoading] = useState(false);
@@ -415,11 +414,6 @@ export default function AdminPage() {
             <span style={{ background: "#ef4444", color: "white", borderRadius: 20, padding: "1px 8px", fontSize: 12, fontWeight: 700 }}>{cardNotices}</span>
           )}
         </button>
-        <button onClick={() => setTab("yookassa")}
-          style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
-            background: tab === "yookassa" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "yookassa" ? "white" : "rgba(2,44,34,0.5)" }}>
-          💰 Платежи PayAnyWay
-        </button>
         <button onClick={() => setTab("holidays")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
             background: tab === "holidays" ? "linear-gradient(135deg,#f59e0b,#eab308)" : "rgba(16,185,129,0.07)", color: tab === "holidays" ? "white" : "rgba(2,44,34,0.5)" }}>
@@ -532,7 +526,6 @@ export default function AdminPage() {
         {tab === "cards" && (
           <AdminCards token={token} onChanged={loadCardNotices} />
         )}
-        {tab === "yookassa" && <AdminYooKassa token={token} />}
         {tab === "holidays" && <AdminHolidays token={token} onChanged={loadClientDocsCount} />}
         {tab === "clientdocs" && <AdminClientDocs token={token} onChange={loadClientDocsCount} />}
         {tab === "gifts" && <AdminGifts token={token} />}

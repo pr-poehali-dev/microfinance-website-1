@@ -75,7 +75,6 @@ export default function AdminApplications({
   const [blockDays, setBlockDays] = useState("30");
   const [search, setSearch] = useState("");
   const [onlyUnsigned, setOnlyUnsigned] = useState(false);
-  const [cardFilter, setCardFilter] = useState<"all" | "bound" | "unbound">("all");
   const [sbEdits, setSbEdits] = useState<Record<number, SbFields>>({});
   const [sbSaving, setSbSaving] = useState<Record<number, boolean>>({});
   const [sbSaved, setSbSaved] = useState<Record<number, boolean>>({});
@@ -127,8 +126,6 @@ export default function AdminApplications({
   const identCount = apps.filter(a => a.status === "partner_card" && a.partnerCardStatus === "pending").length;
 
   const filtered = apps.filter(a => {
-    if (cardFilter === "bound" && !a.boundCardLast4) return false;
-    if (cardFilter === "unbound" && a.boundCardLast4) return false;
     if (onlyIdent) {
       if (!(a.status === "partner_card" && a.partnerCardStatus === "pending")) return false;
       const qi = search.toLowerCase();
@@ -199,12 +196,6 @@ export default function AdminApplications({
             ⏳ Только ждут подписи
           </button>
         )}
-        <select value={cardFilter} onChange={(e) => setCardFilter(e.target.value as "all" | "bound" | "unbound")}
-          style={{ padding: "8px 14px", borderRadius: 12, border: "1px solid rgba(16,185,129,0.3)", fontWeight: 600, fontSize: 14, background: cardFilter === "all" ? "rgba(2,44,34,0.07)" : "rgba(16,185,129,0.15)", color: "#022c22", cursor: "pointer" }}>
-          <option value="all">💳 Любые карты</option>
-          <option value="bound">Карта привязана</option>
-          <option value="unbound">Карта не привязана</option>
-        </select>
         <input
           placeholder="Поиск по имени, телефону, email..."
           value={search}
@@ -293,9 +284,6 @@ export default function AdminApplications({
                       ⏳ КД ещё не оплачен
                     </span>
                   )}
-                  <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: app.boundCardLast4 ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.18)", color: app.boundCardLast4 ? "#047857" : "#b45309" }}>
-                    {app.boundCardLast4 ? `💳 Карта •••• ${app.boundCardLast4}` : "💳 Карта не привязана"}
-                  </span>
                   {app.cdPaid && (
                     <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 800, background: "#16a34a", color: "#fff" }}>
                       ✅ КД оплачен 1 799 ₽

@@ -1,11 +1,10 @@
 import Icon from "@/components/ui/icon";
 
-export type InvestorSection = "invest" | "request" | "topup" | "payouts" | "cards" | "docs";
+export type InvestorSection = "invest" | "request" | "payouts" | "cards" | "docs";
 
 const ITEMS: { key: InvestorSection; label: string; icon: string }[] = [
   { key: "invest", label: "Мои инвестиции", icon: "TrendingUp" },
   { key: "request", label: "Заявка на инвестицию", icon: "FilePlus" },
-  { key: "topup", label: "Пополнить баланс", icon: "PlusCircle" },
   { key: "payouts", label: "Выплаты", icon: "Wallet" },
   { key: "cards", label: "Карты", icon: "CreditCard" },
   { key: "docs", label: "Договоры", icon: "FileText" },

@@ -262,21 +262,6 @@ def reset_client_password(cur, phone_e: str) -> str:
     return pw
 
 
-def card_bound(cur, phone) -> bool:
-    """True, если к кабинету клиента привязана карта (оплата 59 ₽)."""
-    ph = re.sub(r"\D", "", str(phone or ""))[-10:]
-    if len(ph) < 10:
-        return False
-    cur.execute(
-        f"SELECT 1 FROM {SCHEMA}.saved_cards WHERE source = 'bound' AND hidden = FALSE "
-        f"AND right(regexp_replace(phone, '\\D', '', 'g'), 10) = '{ph}' LIMIT 1"
-    )
-    return cur.fetchone() is not None
-
-
-BIND_MSG = "Чтобы отправить заявку, привяжите свою карту к личному кабинету: оплата 59 ₽"
-
-
 def blocked_message(phone) -> str:
     """Если клиент заблокирован админом — текст отказа с датой, иначе пустая строка."""
     ph = re.sub(r"\D", "", str(phone or ""))[-10:]
@@ -366,9 +351,6 @@ def handler(event: dict, context) -> dict:
         if _bm:
             cur.close(); conn.close()
             return {"statusCode": 403, "headers": CORS, "body": json.dumps({"error": _bm}, ensure_ascii=False)}
-        if not card_bound(cur, phone):
-            cur.close(); conn.close()
-            return {"statusCode": 402, "headers": CORS, "body": json.dumps({"error": BIND_MSG, "needCardBind": True}, ensure_ascii=False)}
         email           = s("email")
         birth_date      = s("birthDate")
         address         = s("address")

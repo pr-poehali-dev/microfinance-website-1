@@ -19,16 +19,12 @@ const fmt = (n: number) => `${Math.round(n).toLocaleString("ru-RU")} ₽`;
 export default function ClientLoanHistory({ userId, refreshKey }: { userId: number; refreshKey?: number }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [open, setOpen] = useState(false);
-  const [bound, setBound] = useState<{ last4: string; boundAt: string } | null>(null);
-  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("admin_token") || "";
     fetch(`${ADMIN_URL}?sub=loans&userId=${userId}`, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((d) => {
-        setBound(d.boundCard || null);
-        setLoaded(true);
         const main: Row[] = (d.loans || []).map((l: any) => ({
           key: `l${l.id}`, label: "Займ", id: l.id, amount: l.amount, status: l.status, createdAt: l.createdAt,
           disbursedAt: l.disbursedAt, dueDate: l.dueDate, paidTotal: l.paidTotal || 0, payments: l.payments || [], closedAt: l.closedAt, overdue: l.isOverdue,
@@ -42,23 +38,10 @@ export default function ClientLoanHistory({ userId, refreshKey }: { userId: numb
       .catch(() => setRows([]));
   }, [userId, refreshKey]);
 
-  const boundBlock = loaded && (
-    <div style={{ ...GLASS, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, border: bound ? "1px solid rgba(16,185,129,0.4)" : "1px solid rgba(245,158,11,0.5)" }}>
-      <Icon name="CreditCard" size={18} style={{ color: bound ? "#047857" : "#b45309" }} />
-      {bound ? (
-        <span style={{ color: "#022c22", fontSize: 14 }}>Привязанная карта: <b>•••• {bound.last4}</b> · привязана {bound.boundAt}</span>
-      ) : (
-        <span style={{ color: "#b45309", fontSize: 14, fontWeight: 600 }}>Карта не привязана (59 ₽ не оплачены)</span>
-      )}
-    </div>
-  );
-
-  if (rows.length === 0) return boundBlock || null;
+  if (rows.length === 0) return null;
   const nearest = rows.filter((r) => r.dueDate && r.status !== "paid" && r.disbursedAt).map((r) => r.dueDate as string)[0];
 
   return (
-    <>
-    {boundBlock}
     <div style={{ ...GLASS, padding: 16 }}>
       <button onClick={() => setOpen(!open)} style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
         <span style={{ color: "#022c22", fontWeight: 700, fontSize: 15, display: "flex", alignItems: "center", gap: 8 }}>
@@ -94,6 +77,5 @@ export default function ClientLoanHistory({ userId, refreshKey }: { userId: numb
         </div>
       )}
     </div>
-    </>
   );
 }

@@ -1,5 +1,4 @@
 import SignCodeDialog from "@/components/SignCodeDialog";
-import CardBindDialog, { isCardBound } from "@/components/CardBindDialog";
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import ProfileCheck from "./ProfileCheck";
@@ -23,11 +22,8 @@ export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectR
   const [error, setError] = useState("");
   const [justSent, setJustSent] = useState(false);
   const [codeOpen, setCodeOpen] = useState(false);
-  const [bindOpen, setBindOpen] = useState(false);
 
-  async function submit() {
-    if (await isCardBound(phone)) setCodeOpen(true); else setBindOpen(true);
-  }
+  function submit() { setCodeOpen(true); }
 
   async function doSubmit() {
     setCodeOpen(false);
@@ -40,7 +36,6 @@ export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectR
     });
     const data = await res.json();
     setSending(false);
-    if (res.status === 402) setBindOpen(true);
     if (!res.ok) { setError(data.error || "Не удалось отправить заявку"); return; }
     setJustSent(true);
     onSuccess();
@@ -106,7 +101,6 @@ export default function CardRequestBlock({ cardRequestStatus, cardRequestRejectR
           </div>
         </div>
       )}
-      <CardBindDialog open={bindOpen} phone={phone} onClose={() => setBindOpen(false)} onBound={() => { setBindOpen(false); setError(""); setCodeOpen(true); }} />
       <SignCodeDialog open={codeOpen} title="Подпись заявки на карту" confirmLabel="Подтвердить и отправить" onClose={() => setCodeOpen(false)} onConfirm={doSubmit} />
     </div>
   );
