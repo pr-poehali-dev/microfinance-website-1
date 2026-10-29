@@ -284,6 +284,9 @@ export default function AdminApplications({
                       ⏳ КД ещё не оплачен
                     </span>
                   )}
+                  <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: app.boundCardLast4 ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.18)", color: app.boundCardLast4 ? "#047857" : "#b45309" }}>
+                    {app.boundCardLast4 ? `💳 Карта •••• ${app.boundCardLast4}` : "💳 Карта не привязана"}
+                  </span>
                   {app.cdPaid && (
                     <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 800, background: "#16a34a", color: "#fff" }}>
                       ✅ КД оплачен 1 799 ₽
