@@ -1,16 +1,18 @@
-"""Оплата займов и карты через ЮKassa: создание платежа, проверка статуса, вебхук и автоматический зачёт."""
-import base64
+"""Оплата займов и карты через PayAnyWay: создание платежа, проверка статуса, вебхук и автоматический зачёт."""
+import hashlib
 import json
 import os
 import urllib.request
 import urllib.error
 import uuid
+import base64
+from urllib.parse import urlencode, parse_qs
 from datetime import datetime, timedelta
 
 import psycopg2
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p30184577_microfinance_website")
-YK_API = "https://api.yookassa.ru/v3/payments"
+PW_URL = "https://www.payanyway.ru/assistant.htm"
 TG_CHAT = "8540431915"
 CD_PRICE = 1799.0
 
@@ -25,21 +27,25 @@ def resp(code, data):
     return {"statusCode": code, "headers": {**CORS, "Content-Type": "application/json"}, "body": json.dumps(data, ensure_ascii=False)}
 
 
-def yk_request(method, url, payload=None, idem=None):
-    auth = base64.b64encode(f"{os.environ['YOOKASSA_SHOP_ID']}:{os.environ['YOOKASSA_SECRET_KEY']}".encode()).decode()
-    headers = {"Authorization": f"Basic {auth}", "Content-Type": "application/json"}
-    if idem:
-        headers["Idempotence-Key"] = idem
-    data = json.dumps(payload).encode() if payload is not None else None
-    req = urllib.request.Request(url, data=data, headers=headers, method=method)
-    try:
-        with urllib.request.urlopen(req, timeout=10) as r:
-            return r.status, json.loads(r.read().decode())
-    except urllib.error.HTTPError as e:
-        try:
-            return e.code, json.loads(e.read().decode())
-        except Exception:
-            return e.code, {}
+def pw_sign(*parts):
+    return hashlib.md5("".join(parts).encode()).hexdigest()
+
+
+def pw_pay_url(tx_id, amount, desc, return_url):
+    mnt_id = os.environ["PAYANYWAY_ACCOUNT_ID"].strip()
+    amt = f"{amount:.2f}"
+    params = {
+        "MNT_ID": mnt_id,
+        "MNT_TRANSACTION_ID": tx_id,
+        "MNT_CURRENCY_CODE": "RUB",
+        "MNT_AMOUNT": amt,
+        "MNT_TEST_MODE": "0",
+        "MNT_DESCRIPTION": desc,
+        "MNT_SUCCESS_URL": return_url,
+        "MNT_FAIL_URL": return_url,
+        "MNT_SIGNATURE": pw_sign(mnt_id, tx_id, amt, "RUB", "", "0", os.environ["PAYANYWAY_INTEGRITY_CODE"].strip()),
+    }
+    return PW_URL + "?" + urlencode(params)
 
 
 def tg(text):
@@ -113,7 +119,7 @@ def credit_payment(cur, row):
     )
     if not cur.fetchone():
         return False
-    note = "Оплата через ЮKassa"
+    note = "Оплата через PayAnyWay"
     if loan_type == "investor":
         cur.execute(
             f"INSERT INTO {SCHEMA}.investor_topups (investor_id, yk_payment_id, amount) "
@@ -197,7 +203,7 @@ def credit_payment(cur, row):
             )
         label = {"loan": "Займ", "carloan": "Автозайм", "shoploan": "Займ на покупки"}.get(loan_type, "Займ") + f" №{loan_id}"
     tg(
-        f"✅ <b>Оплата через ЮKassa</b>\n\n📞 {phone}\n📄 {label}\n"
+        f"✅ <b>Оплата через PayAnyWay</b>\n\n📞 {phone}\n📄 {label}\n"
         + f"💵 Сумма: {int(amount):,} ₽\nПлатёж зачтён автоматически.".replace(",", " ")
     )
     return True
@@ -233,30 +239,17 @@ def load_row(cur, yk_id):
     return (r[0], r[1], r[2], r[3], r[4], meta)
 
 
-def sync_payment(cur, conn, yk_id):
-    """Сверяем статус в ЮKassa и при успехе зачитываем платёж."""
-    row = load_row(cur, yk_id)
-    if not row:
+def sync_payment(cur, conn, tx_id):
+    """Статус платежа: зачёт делает уведомление PayAnyWay (sub=webhook), здесь только читаем результат."""
+    cur.execute(f"SELECT credited, status FROM {SCHEMA}.yookassa_payments WHERE yk_payment_id = '{tx_id}'")
+    r = cur.fetchone()
+    if not r:
         return "unknown"
-    code, data = yk_request("GET", f"{YK_API}/{yk_id}")
-    if code != 200:
-        return "error"
-    status = data.get("status", "pending")
-    paid_ok = status == "succeeded" and data.get("paid")
-    if paid_ok:
-        paid_amount = float(data.get("amount", {}).get("value", 0))
-        if abs(paid_amount - float(row[4])) < 0.01:
-            credit_payment(cur, row)
-        conn.commit()
-        return "succeeded"
-    if status == "canceled":
-        cur.execute(f"UPDATE {SCHEMA}.yookassa_payments SET status='canceled' WHERE yk_payment_id='{yk_id}' AND credited=FALSE")
-        conn.commit()
-    return status
+    return "succeeded" if r[0] else (r[1] or "pending")
 
 
 def handler(event: dict, context) -> dict:
-    """Создание платежа ЮKassa (sub=create), проверка (sub=check), вебхук (sub=webhook)."""
+    """Создание платежа PayAnyWay (sub=create), проверка (sub=check), вебхук (sub=webhook)."""
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": {**CORS, "Access-Control-Max-Age": "86400"}, "body": ""}
 
@@ -264,18 +257,44 @@ def handler(event: dict, context) -> dict:
     sub = qs.get("sub", "")
     headers = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
     raw = event.get("body") or "{}"
-    body = json.loads(raw) if isinstance(raw, str) else raw
+    try:
+        body = json.loads(raw) if isinstance(raw, str) else raw
+    except ValueError:
+        body = {}
 
     conn = psycopg2.connect(os.environ["DATABASE_URL"])
     cur = conn.cursor()
 
     if sub == "webhook":
-        obj = body.get("object") or {}
-        yk_id = str(obj.get("id") or "").replace("'", "")
-        if body.get("event") == "payment.succeeded" and yk_id:
-            sync_payment(cur, conn, yk_id)
+        params = {k: str(v) for k, v in qs.items()}
+        if raw and raw != "{}":
+            txt = base64.b64decode(raw).decode() if event.get("isBase64Encoded") else str(raw)
+            for k, v in parse_qs(txt).items():
+                params[k] = v[0]
+        tx = params.get("MNT_TRANSACTION_ID", "").replace("'", "")
+        code = os.environ.get("PAYANYWAY_INTEGRITY_CODE", "").strip()
+        expected = pw_sign(
+            params.get("MNT_ID", ""), tx, params.get("MNT_OPERATION_ID", ""), params.get("MNT_AMOUNT", ""),
+            params.get("MNT_CURRENCY_CODE", ""), params.get("MNT_SUBSCRIBER_ID", ""), params.get("MNT_TEST_MODE", ""), code,
+        )
+        ok_sign = params.get("MNT_ID", "") == os.environ.get("PAYANYWAY_ACCOUNT_ID", "").strip() and params.get("MNT_SIGNATURE", "").lower() == expected
+        plain = {"statusCode": 200, "headers": {**CORS, "Content-Type": "text/plain"}}
+        if not ok_sign or not tx:
+            cur.close(); conn.close()
+            return {**plain, "body": "FAIL"}
+        row = load_row(cur, tx)
+        if not row:
+            cur.close(); conn.close()
+            return {**plain, "body": "FAIL"}
+        try:
+            paid = float(params.get("MNT_AMOUNT", "0"))
+        except ValueError:
+            paid = 0
+        if abs(paid - float(row[4])) < 0.01:
+            credit_payment(cur, row)
+            conn.commit()
         cur.close(); conn.close()
-        return resp(200, {"ok": True})
+        return {**plain, "body": "SUCCESS"}
 
     auth = headers.get("x-authorization") or headers.get("authorization") or ""
     token = auth.replace("Bearer ", "").strip()
@@ -308,24 +327,14 @@ def handler(event: dict, context) -> dict:
         if amount < 1000 or amount > 15000000 or not return_url.startswith("http"):
             cur.close(); conn.close()
             return resp(400, {"error": "Сумма пополнения — от 1 000 до 15 000 000 ₽"})
-        payload = {
-            "amount": {"value": f"{amount:.2f}", "currency": "RUB"},
-            "capture": True,
-            "confirmation": {"type": "redirect", "return_url": return_url},
-            "description": "Пополнение баланса инвестиций РУСФИНАНС 24",
-            "metadata": {"loanType": "investor", "loanId": str(inv_id), "phone": inv_phone},
-        }
-        code, data = yk_request("POST", YK_API, payload, idem=str(uuid.uuid4()))
-        if code not in (200, 201) or not data.get("confirmation", {}).get("confirmation_url"):
-            cur.close(); conn.close()
-            return resp(502, {"error": data.get("description") or "Не удалось создать платёж. Попробуйте позже."})
-        yk_id = data["id"]
+        yk_id = uuid.uuid4().hex
+        pay_url = pw_pay_url(yk_id, amount, "Пополнение баланса инвестиций РУСФИНАНС 24", return_url)
         cur.execute(
             f"INSERT INTO {SCHEMA}.yookassa_payments (yk_payment_id, loan_type, loan_id, phone, amount, meta) "
             f"VALUES ('{yk_id}', 'investor', {int(inv_id)}, '{inv_phone.replace(chr(39), '')}', {amount}, '{{}}')"
         )
         conn.commit(); cur.close(); conn.close()
-        return resp(200, {"paymentId": yk_id, "confirmationUrl": data["confirmation"]["confirmation_url"]})
+        return resp(200, {"paymentId": yk_id, "confirmationUrl": pay_url})
 
     user = get_user(cur, token) if token else None
     if not user:
@@ -456,18 +465,8 @@ def handler(event: dict, context) -> dict:
                 return resp(404, {"error": "Займ не найден"})
             desc = f"Погашение займа №{loan_id}"
 
-        payload = {
-            "amount": {"value": f"{amount:.2f}", "currency": "RUB"},
-            "capture": True,
-            "confirmation": {"type": "redirect", "return_url": return_url},
-            "description": desc,
-            "metadata": {"loanType": loan_type, "loanId": str(loan_id), "phone": phone},
-        }
-        code, data = yk_request("POST", YK_API, payload, idem=str(uuid.uuid4()))
-        if code not in (200, 201) or not data.get("confirmation", {}).get("confirmation_url"):
-            cur.close(); conn.close()
-            return resp(502, {"error": data.get("description") or "Не удалось создать платёж. Попробуйте позже."})
-        yk_id = data["id"]
+        yk_id = uuid.uuid4().hex
+        pay_url = pw_pay_url(yk_id, amount, desc, return_url)
         meta_sql = json.dumps(meta, ensure_ascii=False).replace("'", "''")
         cur.execute(
             f"INSERT INTO {SCHEMA}.yookassa_payments (yk_payment_id, loan_type, loan_id, phone, amount, meta) "
@@ -475,7 +474,7 @@ def handler(event: dict, context) -> dict:
         )
         conn.commit()
         cur.close(); conn.close()
-        return resp(200, {"paymentId": yk_id, "confirmationUrl": data["confirmation"]["confirmation_url"]})
+        return resp(200, {"paymentId": yk_id, "confirmationUrl": pay_url})
 
     cur.close(); conn.close()
     return resp(400, {"error": "Неизвестное действие"})

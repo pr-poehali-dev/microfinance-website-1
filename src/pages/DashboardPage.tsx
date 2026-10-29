@@ -344,17 +344,23 @@ export default function DashboardPage() {
     const ykId = localStorage.getItem("yk_payment_id");
     if (ykId) {
       localStorage.removeItem("yk_payment_id");
-      fetch("https://functions.poehali.dev/64ba6f22-6243-4b3f-ab24-f5bb294d5bfe?sub=check", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ paymentId: ykId }),
-      })
-        .then((r) => r.json())
-        .then((d) => {
-          if (d.status === "succeeded") { setPaidToast(true); setTimeout(() => setPaidToast(false), 6000); }
-          loadData(token, false);
+      let tries = 0;
+      const check = () => {
+        tries += 1;
+        fetch("https://functions.poehali.dev/64ba6f22-6243-4b3f-ab24-f5bb294d5bfe?sub=check", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}` },
+          body: JSON.stringify({ paymentId: ykId }),
         })
-        .catch(() => {});
+          .then((r) => r.json())
+          .then((d) => {
+            if (d.status === "succeeded") { setPaidToast(true); setTimeout(() => setPaidToast(false), 6000); loadData(token, false); }
+            else if (tries < 5) setTimeout(check, 4000);
+            else loadData(token, false);
+          })
+          .catch(() => {});
+      };
+      check();
     }
 
     // Автообновление каждые 2 минуты, только пока вкладка открыта — чтобы статус одобрения появлялся без перезагрузки

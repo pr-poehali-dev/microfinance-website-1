@@ -141,7 +141,7 @@ export default function AdminInvestors({ token }: { token: string }) {
                       </div>
                       {i.status === "active" && !i.funded && (
                         <div style={{ marginTop: 8, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                          <span style={{ fontSize: 13, color: "#b45309", fontWeight: 600 }}>Клиент ещё не внёс сумму через ЮKassa</span>
+                          <span style={{ fontSize: 13, color: "#b45309", fontWeight: 600 }}>Клиент ещё не внёс сумму через PayAnyWay</span>
                           <button style={BTN2} onClick={async () => { if (window.confirm("Отметить, что деньги получены (например, переводом)? Вложение начнёт действовать с сегодняшнего дня.")) await post("investment_fund", { investmentId: i.id }, "Вложение отмечено как внесённое"); }}>Отметить как внесённое</button>
                         </div>
                       )}

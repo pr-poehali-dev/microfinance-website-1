@@ -418,7 +418,7 @@ export default function AdminPage() {
         <button onClick={() => setTab("yookassa")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,
             background: tab === "yookassa" ? "linear-gradient(135deg,#10b981,#14b8a6)" : "rgba(16,185,129,0.07)", color: tab === "yookassa" ? "white" : "rgba(2,44,34,0.5)" }}>
-          💰 Платежи ЮKassa
+          💰 Платежи PayAnyWay
         </button>
         <button onClick={() => setTab("holidays")}
           style={{ padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6,

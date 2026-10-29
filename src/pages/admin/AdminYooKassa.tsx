@@ -35,7 +35,7 @@ export default function AdminYooKassa({ token }: { token: string }) {
     <div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 10, marginBottom: 16 }}>
         <div style={{ ...G, padding: 14 }}>
-          <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12 }}>Получено через ЮKassa</div>
+          <div style={{ color: "rgba(2,44,34,0.5)", fontSize: 12 }}>Получено через PayAnyWay</div>
           <div style={{ color: "#047857", fontWeight: 800, fontSize: 22 }}>{fmt(total)}</div>
         </div>
         <div style={{ ...G, padding: 14 }}>

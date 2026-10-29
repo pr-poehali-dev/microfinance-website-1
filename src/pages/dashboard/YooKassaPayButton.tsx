@@ -50,7 +50,7 @@ export default function YooKassaPayButton({ loanType, loanId, amount, txId, dueD
         {loading ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="CreditCard" size={18} />}
         {loading ? "Открываем оплату..." : `Оплатить ${amount.toLocaleString("ru-RU")} ₽`}
       </button>
-      <p className="text-center text-emerald-950/40 text-xs">Безопасная оплата картой через ЮKassa. Платёж зачтётся автоматически.</p>
+      <p className="text-center text-emerald-950/40 text-xs">Безопасная оплата картой через PayAnyWay. Платёж зачтётся автоматически.</p>
     </div>
   );
 }
