@@ -27,6 +27,22 @@ export default function AdminYooKassa({ token }: { token: string }) {
 
   useEffect(() => { load(); }, [load]);
 
+  const [confirming, setConfirming] = useState<string | null>(null);
+
+  const confirmBind = async (id: string) => {
+    if (!window.confirm("Подтвердить оплату и привязать карту клиенту вручную?")) return;
+    setConfirming(id);
+    const r = await fetch(`${ADMIN_URL}?sub=yookassa_confirm`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ paymentId: id }),
+    });
+    const d = await r.json().catch(() => ({}));
+    setConfirming(null);
+    if (!r.ok) window.alert(d.error || "Не удалось подтвердить");
+    load();
+  };
+
   const shown = items.filter(i => filter === "all" || (filter === "paid" ? i.credited : !i.credited));
   const paidItems = items.filter(i => i.credited);
   const total = paidItems.reduce((s, i) => s + i.amount, 0);
@@ -80,6 +96,12 @@ export default function AdminYooKassa({ token }: { token: string }) {
                 color: p.credited ? "#047857" : p.status === "canceled" ? "#b91c1c" : "#b45309" }}>
                 {p.credited ? "Зачтён" : p.status === "canceled" ? "Отменён" : "Ожидает оплаты"}
               </span>
+              {!p.credited && p.loanType === "cardbind" && (
+                <button onClick={() => confirmBind(p.id)} disabled={confirming === p.id}
+                  style={{ padding: "6px 12px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 12, background: "linear-gradient(135deg,#10b981,#14b8a6)", color: "white", opacity: confirming === p.id ? 0.6 : 1 }}>
+                  Подтвердить вручную
+                </button>
+              )}
             </div>
           ))}
         </div>

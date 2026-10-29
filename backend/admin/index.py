@@ -3019,6 +3019,40 @@ def handler(event: dict, context) -> dict:
         cur.close(); conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"payments": items}, ensure_ascii=False)}
 
+    # --- РУЧНОЕ ПОДТВЕРЖДЕНИЕ ПРИВЯЗКИ КАРТЫ (POST, sub='yookassa_confirm') ---
+    if sub == "yookassa_confirm" and method == "POST":
+        pid = str(body.get("paymentId") or "").replace("'", "")
+        cur.execute(
+            f"SELECT loan_type, phone, amount, meta, credited FROM {SCHEMA}.yookassa_payments WHERE yk_payment_id = '{pid}'"
+        )
+        row = cur.fetchone()
+        if not row:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Платёж не найден"}, ensure_ascii=False)}
+        if row[0] != "cardbind":
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "Вручную можно подтвердить только привязку карты"}, ensure_ascii=False)}
+        if row[4]:
+            cur.close(); conn.close()
+            return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "already": True})}
+        meta = row[3] if isinstance(row[3], dict) else json.loads(row[3] or "{}")
+        digits = re.sub(r"\D", "", str(meta.get("card") or ""))
+        if not digits:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "В платеже нет номера карты"}, ensure_ascii=False)}
+        value = " ".join(digits[i:i + 4] for i in range(0, len(digits), 4))
+        ph_s = str(row[1] or "").replace("'", "''")
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.saved_cards (phone, card_value, card_key, source) "
+            f"VALUES ('{ph_s}', '{value}', '{digits}', 'bound') "
+            f"ON CONFLICT (phone, card_key) DO UPDATE SET hidden = FALSE, source = 'bound', card_value = EXCLUDED.card_value"
+        )
+        cur.execute(
+            f"UPDATE {SCHEMA}.yookassa_payments SET credited = TRUE, status = 'succeeded', credited_at = NOW() WHERE yk_payment_id = '{pid}'"
+        )
+        conn.commit(); cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
     # --- ЧИСЛО НОВЫХ СООБЩЕНИЙ ОБ ОПЛАТЕ ПО КАРТАМ (GET, sub='card_notices_count') ---
     if sub == "card_notices_count" and method == "GET":
         cur.execute(f"""
