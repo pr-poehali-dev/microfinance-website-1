@@ -1477,6 +1477,7 @@ def handler(event: dict, context) -> dict:
     rows = cur.fetchall()
 
     # Получаем последнюю заявку пользователя (+ вся анкета)
+    phone10_app = re.sub(r"\D", "", str(phone or ""))[-10:]
     cur.execute(
         f"SELECT id, amount, days, status, created_at, approved_amount, approved_rate, approved_days, reject_reason, card_number, contract_url, "
         f"virtual_card_number, virtual_card_expiry, virtual_card_cvv, virtual_card_holder, virtual_card_limit, virtual_card_rate, virtual_card_status, "
@@ -1484,7 +1485,7 @@ def handler(event: dict, context) -> dict:
         f"workplace, position, work_phone, salary, contact_person, snils, reviewed_at, video_call_requested, virtual_card_days, partner_card_url, insurance_amount, virtual_card_issued_at, "
         f"file_passport, file_registration, file_selfie, file_previous_passports "
         f"FROM {SCHEMA}.applications "
-        f"WHERE phone = '{phone.replace(chr(39), chr(39)*2)}' ORDER BY created_at DESC LIMIT 1"
+        f"WHERE right(regexp_replace(phone, '\\D', '', 'g'), 10) = '{phone10_app}' ORDER BY created_at DESC LIMIT 1"
     )
     app_row = cur.fetchone()
     card_app_id = app_row[0] if app_row else None
