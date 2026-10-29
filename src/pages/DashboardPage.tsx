@@ -355,7 +355,7 @@ export default function DashboardPage() {
           .then((r) => r.json())
           .then((d) => {
             if (d.status === "succeeded") { setPaidToast(true); setTimeout(() => setPaidToast(false), 6000); loadData(token, false); }
-            else if (tries < 5) setTimeout(check, 4000);
+            else if (tries < 15) setTimeout(check, 4000);
             else loadData(token, false);
           })
           .catch(() => {});

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
 
 const YK_URL = "https://functions.poehali.dev/64ba6f22-6243-4b3f-ab24-f5bb294d5bfe";
@@ -11,24 +11,40 @@ const fmt = (n: number) => `${Math.round(n).toLocaleString("ru-RU")} ₽`;
 const STATUS: Record<string, { label: string; bg: string; color: string }> = {
   succeeded: { label: "Оплачено", bg: "rgba(16,185,129,0.15)", color: "#047857" },
   canceled: { label: "Отменено", bg: "rgba(239,68,68,0.12)", color: "#b91c1c" },
-  pending: { label: "Не завершён", bg: "rgba(245,158,11,0.15)", color: "#b45309" },
+  pending: { label: "Ожидает оплаты", bg: "rgba(245,158,11,0.15)", color: "#b45309" },
 };
 
 export default function YooKassaHistory({ showEmpty = false }: { showEmpty?: boolean }) {
   const [items, setItems] = useState<Item[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const startedAt = useRef(Date.now());
 
-  useEffect(() => {
+  const load = useCallback(() => {
     const token = localStorage.getItem("token");
-    if (!token) return;
-    fetch(`${YK_URL}?sub=history`, {
+    if (!token) return Promise.resolve();
+    setRefreshing(true);
+    return fetch(`${YK_URL}?sub=history`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "X-Authorization": `Bearer ${token}` },
       body: "{}",
     })
       .then((r) => r.json())
       .then((d) => setItems(d.payments || []))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setRefreshing(false));
   }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const hasPending = items.some((p) => p.status === "pending");
+  useEffect(() => {
+    if (!hasPending) return;
+    const t = setInterval(() => {
+      if (document.hidden || Date.now() - startedAt.current > 5 * 60 * 1000) return;
+      load();
+    }, 6000);
+    return () => clearInterval(t);
+  }, [hasPending, load]);
 
   if (items.length === 0) {
     if (!showEmpty) return null;
@@ -47,7 +63,11 @@ export default function YooKassaHistory({ showEmpty = false }: { showEmpty?: boo
     <div className="rounded-2xl p-5 space-y-3" style={{ background: "#ffffff", border: "1px solid rgba(16,185,129,0.25)" }}>
       <div className="flex items-center gap-2">
         <Icon name="Receipt" size={18} className="text-emerald-600" />
-        <div className="text-emerald-950 font-bold">История оплат</div>
+        <div className="text-emerald-950 font-bold flex-1">История оплат</div>
+        <button onClick={load} disabled={refreshing} className="text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 disabled:opacity-60"
+          style={{ background: "rgba(16,185,129,0.12)", color: "#047857" }}>
+          <Icon name="RefreshCw" size={13} className={refreshing ? "animate-spin" : ""} />Обновить
+        </button>
       </div>
       <div className="space-y-1.5">
         {items.map((p) => {
