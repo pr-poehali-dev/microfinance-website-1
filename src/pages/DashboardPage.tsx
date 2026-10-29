@@ -27,6 +27,7 @@ import PaymentsList, { DueItem } from "./dashboard/PaymentsList";
 import { nextPayment, isPastDue } from "./dashboard/nextPayment";
 import TermLoanHistoryCard from "./dashboard/TermLoanHistoryCard";
 import NewRequestHub from "./dashboard/NewRequestHub";
+import CardBindBanner from "./dashboard/CardBindBanner";
 import CardActivatedModal from "./dashboard/CardActivatedModal";
 
 const LOANS_URL = "https://functions.poehali.dev/14b84c24-dd0e-4532-8efe-ba8625c760ff";
@@ -681,6 +682,7 @@ export default function DashboardPage() {
 
         {!loading && !error && (section === "apps" || section === "cards") && (
           <>
+            {section === "apps" && user?.phone && <CardBindBanner phone={user.phone} />}
             <DashboardApplicationStatus
               phone={user?.phone}
               holidays={holidays}
@@ -1200,6 +1202,7 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {section === "new" && !loading && !error && user && <CardBindBanner phone={user.phone} />}
         {section === "new" && !loading && !error && user && (
           <NewRequestHub
             phone={user.phone}
