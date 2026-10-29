@@ -16,6 +16,23 @@ export default function CardBindBlock({ phone, bound, onBoundChange }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phone]);
 
+  useEffect(() => {
+    if (bound) return;
+    const recheck = () => {
+      if (document.hidden || phone.replace(/\D/g, "").length < 10) return;
+      isCardBound(phone).then((v) => { if (v) onBoundChange(true); });
+    };
+    document.addEventListener("visibilitychange", recheck);
+    window.addEventListener("focus", recheck);
+    const timer = setInterval(recheck, 5000);
+    return () => {
+      document.removeEventListener("visibilitychange", recheck);
+      window.removeEventListener("focus", recheck);
+      clearInterval(timer);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bound, phone]);
+
   if (bound) {
     return (
       <div className="rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.35)" }}>

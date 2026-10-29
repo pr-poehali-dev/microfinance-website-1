@@ -1,5 +1,6 @@
 import SignCodeDialog from "@/components/SignCodeDialog";
 import CardBindBlock from "@/components/CardBindBlock";
+import { isCardBound } from "@/components/CardBindDialog";
 import PayoutField from "@/components/PayoutField";
 import { validatePayout } from "@/data/banks";
 import { useState, useRef, useCallback, useEffect } from "react";
@@ -126,7 +127,7 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
     return (await res.json()).url as string;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const allRequiredChecked = (cardMode ? CARD_REQUIRED_CONSENT_KEYS : REQUIRED_CONSENT_KEYS).every((k) => consents[k]);
     if (allRequiredChecked && isShop && !form.itemName.trim()) { setSendError("Укажите название товара в разделе «Данные»"); setActiveSection("item"); return; }
@@ -147,8 +148,12 @@ export default function ApplyPage({ cardMode = false, product: productProp }: { 
       return;
     }
     if (!cardBound) {
-      setSendError("Перед отправкой заявки привяжите свою карту (59 ₽) — блок выше кнопки «Отправить заявку»");
-      return;
+      if (await isCardBound(form.phone)) {
+        setCardBound(true);
+      } else {
+        setSendError("Перед отправкой заявки привяжите свою карту (59 ₽) — блок выше кнопки «Отправить заявку»");
+        return;
+      }
     }
     setSendError("");
     setCodeOpen(true);
