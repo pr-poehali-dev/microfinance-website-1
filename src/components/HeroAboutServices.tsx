@@ -36,8 +36,8 @@ const SERVICES = [
   {
     icon: "HeartPulse",
     title: "Кредитный Доктор",
-    desc: "Программа для клиентов с плохой кредитной историей. Одобрение 100%! Сумма от 500 до 200 000 ₽. Услуга платная: стоимость 1 799 ₽.",
-    badge: "Услуга 1 799 ₽",
+    desc: "Программа для клиентов с плохой кредитной историей. Одобрение 100%! Сумма от 500 до 200 000 ₽. Услуга платная, стоимость — при подаче заявки.",
+    badge: "Платная услуга",
     rate: "индивидуально",
     term: "от 1 до 30 мин",
     color: "from-rose-600 to-pink-700",
@@ -156,7 +156,7 @@ function HeroAboutServices({ scrollTo }: HeroAboutServicesProps) {
                 style={{ background: "linear-gradient(135deg,#be123c,#f43f5e)", boxShadow: "0 4px 20px rgba(244,63,94,0.3)" }}
               >
                 <Icon name="HeartPulse" size={20} />
-                Кредитный Доктор · 1 799 ₽
+                Кредитный Доктор
               </button>
               <button
                 onClick={() => scrollTo("#reviews")}
