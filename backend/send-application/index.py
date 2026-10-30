@@ -461,7 +461,7 @@ def handler(event: dict, context) -> dict:
             </td></tr>
           </table>
           <p style="color:rgba(255,255,255,0.3);font-size:12px;margin:0;line-height:1.6;">
-            Сохраните этот пароль. Если возникнут вопросы — звоните: <b style="color:rgba(255,255,255,0.5);">+7 (996) 201-95-00</b>
+            Сохраните этот пароль. Если возникнут вопросы — звоните: <b style="color:rgba(255,255,255,0.5);">8-499-394-70-22</b>
           </p>
         </td></tr>
       </table>

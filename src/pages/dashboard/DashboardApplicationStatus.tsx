@@ -463,13 +463,13 @@ export default function DashboardApplicationStatus({
               })()}
 
               <div className="grid sm:grid-cols-2 gap-3">
-                <a href="tel:+79962019500"
+                <a href="tel:+74993947022"
                   className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:opacity-90"
                   style={{ background: "rgba(16,185,129,0.2)", border: "1px solid rgba(16,185,129,0.4)" }}>
                   <Icon name="Phone" size={18} className="text-emerald-600 shrink-0" />
                   <div>
                     <div className="text-emerald-950 font-medium text-sm">Позвонить менеджеру</div>
-                    <div className="text-emerald-950/40 text-xs">+7 (996) 201-95-00</div>
+                    <div className="text-emerald-950/40 text-xs">8-499-394-70-22</div>
                   </div>
                 </a>
                 <a href="https://t.me/INVESTORFINANS24" target="_blank" rel="noopener noreferrer"

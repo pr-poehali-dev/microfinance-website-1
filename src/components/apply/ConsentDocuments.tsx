@@ -41,7 +41,7 @@ export const DEFAULT_CONSENTS: ConsentState = {
 const LENDER_LINES = [
   "Русфинанс 24",
   "Адрес: г. Москва, Проспект Мира д.112",
-  "Тел.: +7-996-201-95-00",
+  "Тел.: 8-499-394-70-22",
 ];
 
 const DOCS: { key: keyof ConsentState; title: string; required: boolean; text: string }[] = [
