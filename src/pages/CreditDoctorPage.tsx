@@ -108,7 +108,7 @@ export default function CreditDoctorPage() {
           <div className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl mb-10 text-sm sm:text-base"
             style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.4)" }}>
             <Icon name="Info" size={18} className="text-amber-600 shrink-0" />
-            <span className="text-emerald-950/80">Услуга платная: стоимость программы <b className="text-emerald-950">1 799 ₽</b></span>
+            <span className="text-emerald-950/80">Услуга платная: стоимость программы — при подаче заявки</span>
           </div>
 
           <button
