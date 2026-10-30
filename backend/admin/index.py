@@ -654,6 +654,26 @@ def handler(event: dict, context) -> dict:
             "penaltyAmount": penalty_after, "totalDue": total_due, "isOverdue": is_overdue2,
         })}
 
+    # --- УБРАТЬ СТРАХОВКУ (POST, sub='remove_insurance', loanId=...) ---
+    if sub == "remove_insurance" and method == "POST":
+        loan_id = int(qs.get("loanId", 0) or 0)
+        cur.execute(f"SELECT user_id, amount, insurance_amount, status FROM {SCHEMA}.loans WHERE id = {loan_id}")
+        row = cur.fetchone()
+        if not row:
+            cur.close(); conn.close()
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Займ не найден"})}
+        l_user_id, l_amount, l_ins, l_status = row
+        l_ins = float(l_ins or 0)
+        if l_ins <= 0:
+            cur.close(); conn.close()
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "У займа нет страховки"})}
+        new_amount = max(0, float(l_amount) - l_ins)
+        cur.execute(f"UPDATE {SCHEMA}.loans SET amount = {new_amount}, offer_amount = CASE WHEN offer_amount IS NOT NULL THEN GREATEST(0, offer_amount - {l_ins}) END, insurance_amount = 0 WHERE id = {loan_id}")
+        cur.execute(f"UPDATE {SCHEMA}.applications SET insurance_amount = 0 WHERE id = (SELECT id FROM {SCHEMA}.applications WHERE user_id = {l_user_id} AND insurance_amount > 0 ORDER BY id DESC LIMIT 1)")
+        conn.commit()
+        cur.close(); conn.close()
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True, "removed": l_ins, "newAmount": new_amount})}
+
     # --- ЗАРЕГИСТРИРОВАТЬ КЛИЕНТА (POST, sub='register') ---
     if sub == "register" and method == "POST":
         phone     = (body.get("phone") or "").strip()
@@ -1761,7 +1781,7 @@ def handler(event: dict, context) -> dict:
         if loan_type == "loan":
             cur.execute(f"""
                 SELECT l.id, l.amount, l.days, l.rate, l.status, l.created_at, l.signed, l.signed_at, l.disbursed_at,
-                       u.id, u.phone, u.full_name, u.email, l.penalty_waived
+                       u.id, u.phone, u.full_name, u.email, l.penalty_waived, l.insurance_amount
                 FROM {SCHEMA}.loans l JOIN {SCHEMA}.users u ON u.id = l.user_id
                 WHERE l.id = {item_id}
             """)
@@ -1770,7 +1790,7 @@ def handler(event: dict, context) -> dict:
                 cur.close(); conn.close()
                 return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Займ не найден"})}
             (loan_id, amount, days, rate, status, created_at, signed, signed_at, disbursed_at,
-             user_id, phone, full_name, email, penalty_waived) = row
+             user_id, phone, full_name, email, penalty_waived, loan_insurance_amt) = row
 
             cur.execute(f"""
                 SELECT amount, days, birth_date, birth_place, passport_series, passport_number, passport_date,
@@ -1823,6 +1843,7 @@ def handler(event: dict, context) -> dict:
                 "totalDue": total_due, "paidTotal": paid_total, "remaining": max(0, total_due - paid_total),
                 "isOverdue": is_overdue, "overdueDays": overdue_days, "penaltyAmount": penalty,
                 "penaltyWaived": float(penalty_waived or 0),
+                "insuranceAmount": float(loan_insurance_amt or 0),
                 "penaltyRatePercent": round(OVERDUE_DAILY_PENALTY_RATE * 100, 2),
                 "schedule": schedule, "payments": payments, "profile": profile,
             }, ensure_ascii=False)}

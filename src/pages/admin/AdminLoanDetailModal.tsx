@@ -26,6 +26,7 @@ interface Detail {
   approvedAmount?: number | null; approvedMonths?: number | null; approvedRate?: number | null; notes?: string;
   createdAt: string; signed: boolean; signedAt: string | null; disbursedAt: string | null;
   totalDue: number; paidTotal: number; remaining: number;
+  insuranceAmount?: number;
   isOverdue?: boolean; overdueDays?: number; penaltyAmount?: number; penaltyRatePercent?: number;
   schedule: ScheduleItem[]; payments: PaymentItem[]; profile: Profile;
   pendingNotice?: { amount: number; createdAt: string } | null;
@@ -97,6 +98,19 @@ export default function AdminLoanDetailModal({ token, type, id, onClose }: Props
       setWaiveErr("Ошибка при списании пени");
     } finally {
       setWaiveSaving(false);
+    }
+  }
+
+  const [insSaving, setInsSaving] = useState(false);
+  async function handleRemoveInsurance() {
+    if (!window.confirm("Убрать страховку из займа? Сумма долга уменьшится.")) return;
+    setInsSaving(true);
+    try {
+      const r = await fetch(`${ADMIN_URL}?sub=remove_insurance&loanId=${id}`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+      if (!r.ok) { const d = await r.json(); window.alert(d.error || "Не удалось убрать страховку"); return; }
+      await loadDetail();
+    } finally {
+      setInsSaving(false);
     }
   }
 
@@ -239,6 +253,15 @@ export default function AdminLoanDetailModal({ token, type, id, onClose }: Props
                   </div>
                 ))}
               </div>
+              {data.type === "loan" && !!data.insuranceAmount && (
+                <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <span style={{ color: "#022c22", fontSize: 13 }}>Страховка: <b>{fmt(data.insuranceAmount)}</b></span>
+                  <button disabled={insSaving} onClick={handleRemoveInsurance}
+                    style={{ background: "rgba(248,113,113,0.12)", border: "1px solid rgba(248,113,113,0.35)", color: "#dc2626", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: insSaving ? "not-allowed" : "pointer", opacity: insSaving ? 0.6 : 1 }}>
+                    Убрать страховку
+                  </button>
+                </div>
+              )}
               {data.isOverdue && !!data.overdueDays && (
                 <div style={{ marginTop: 10, padding: "10px 14px", borderRadius: 10, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.3)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
